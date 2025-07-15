@@ -76,9 +76,13 @@ const Assistants = () => {
 
 
   const loadAssistants = async () => {
-    if (!session) return;
+    if (!session) {
+      console.log('Sem sessão para carregar agentes');
+      return;
+    }
 
     try {
+      console.log('Carregando agentes...');
       const response = await supabase.functions.invoke('openai-assistants', {
         body: { action: 'list' },
         headers: {
@@ -86,11 +90,17 @@ const Assistants = () => {
         },
       });
 
+      console.log('Resposta completa:', response);
+
       if (response.error) {
+        console.error('Erro na resposta:', response.error);
         throw response.error;
       }
 
       const assistantsList = response.data?.assistants || [];
+      console.log('Lista de agentes recebida:', assistantsList);
+      console.log('Quantidade de agentes:', assistantsList.length);
+      
       setAssistants(assistantsList);
     } catch (error: any) {
       console.error('Error loading assistants:', error);
