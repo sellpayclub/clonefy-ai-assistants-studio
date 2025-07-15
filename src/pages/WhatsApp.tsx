@@ -289,7 +289,14 @@ const WhatsApp = () => {
         throw new Error(response.error.message || 'Erro ao buscar QR Code');
       }
 
-      const qrCodeData = response.data?.qrCode;
+      console.log('fetchQrCode response:', response);
+      console.log('fetchQrCode response.data:', response.data);
+      
+      // O edge function retorna { success: true, qrCode: "..." }
+      // O Supabase coloca isso em response.data
+      const qrCodeData = response.data?.qrCode || response.data?.base64;
+      console.log('fetchQrCode qrCodeData:', qrCodeData);
+      
       if (qrCodeData) {
         setQrCode(qrCodeData);
         setActiveTab("create");
@@ -298,6 +305,7 @@ const WhatsApp = () => {
           description: "Escaneie o código para conectar seu WhatsApp.",
         });
       } else {
+        console.error('No QR code found in response:', response.data);
         toast({
           title: "QR Code não disponível",
           description: "Não foi possível obter o QR Code desta instância.",
