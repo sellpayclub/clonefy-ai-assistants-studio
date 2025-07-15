@@ -16,6 +16,8 @@ interface Assistant {
   id: string;
   name: string;
   description?: string;
+  instructions?: string;
+  model?: string;
 }
 
 interface Message {
@@ -106,11 +108,13 @@ const Conversations = () => {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
-      console.log('Resposta assistentes:', assistantsResponse);
+      console.log('Resposta agentes:', assistantsResponse);
 
       if (!assistantsResponse.error && assistantsResponse.data?.assistants) {
         setAssistants(assistantsResponse.data.assistants);
-        console.log('Assistentes carregados:', assistantsResponse.data.assistants.length);
+        console.log('Agentes carregados:', assistantsResponse.data.assistants.length);
+      } else {
+        console.error('Erro ao carregar agentes:', assistantsResponse.error);
       }
 
       // Load conversations
@@ -307,20 +311,20 @@ const Conversations = () => {
               {/* New Conversation */}
               <div className="space-y-2">
                 <Select value={selectedAssistant} onValueChange={setSelectedAssistant}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Escolha um assistente" />
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Escolha um agente" />
                   </SelectTrigger>
                   <SelectContent className="z-50 bg-background border border-border shadow-lg">
                     {assistants.length === 0 ? (
                       <div className="p-3 text-center text-muted-foreground">
-                        <p className="text-sm">Nenhum assistente encontrado</p>
+                        <p className="text-sm">Nenhum agente encontrado</p>
                         <Button 
                           size="sm" 
                           variant="link" 
                           onClick={() => window.location.href = '/assistants'}
                           className="text-xs mt-1"
                         >
-                          Criar primeiro assistente
+                          Criar primeiro agente
                         </Button>
                       </div>
                     ) : (
@@ -480,7 +484,7 @@ const Conversations = () => {
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Selecione uma conversa</h3>
                     <p className="text-muted-foreground">
-                      Escolha uma conversa existente ou inicie uma nova com seus assistentes
+                      Escolha uma conversa existente ou inicie uma nova com seus agentes
                     </p>
                   </div>
                 </div>

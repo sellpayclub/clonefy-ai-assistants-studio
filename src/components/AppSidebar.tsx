@@ -17,7 +17,7 @@ import {
 
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Assistentes", url: "/assistants", icon: Bot },
+  { title: "Agentes", url: "/assistants", icon: Bot },
   { title: "WhatsApp", url: "/whatsapp", icon: Smartphone },
   { title: "Conversas", url: "/conversations", icon: MessageSquare },
 ];

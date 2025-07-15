@@ -83,7 +83,7 @@ const Assistants = () => {
     if (!session) return;
 
     try {
-      console.log('Carregando assistentes...');
+      console.log('Carregando agentes...');
       const response = await supabase.functions.invoke('openai-assistants', {
         body: { action: 'list' },
         headers: {
@@ -99,15 +99,15 @@ const Assistants = () => {
       }
 
       const assistantsList = response.data?.assistants || [];
-      console.log('Assistentes recebidos:', assistantsList);
+      console.log('Agentes recebidos:', assistantsList);
       
       setAssistants(assistantsList);
       
-      console.log('Estado atualizado com:', assistantsList.length, 'assistentes');
+      console.log('Estado atualizado com:', assistantsList.length, 'agentes');
     } catch (error: any) {
       console.error('Error loading assistants:', error);
       toast({
-        title: "Erro ao carregar assistentes",
+        title: "Erro ao carregar agentes",
         description: error.message,
         variant: "destructive",
       });
@@ -158,10 +158,10 @@ const Assistants = () => {
       }
 
       toast({
-        title: editingAssistant ? "Assistente atualizado!" : "Assistente criado!",
+        title: editingAssistant ? "Agente atualizado!" : "Agente criado!",
         description: editingAssistant 
           ? "As alterações foram salvas com sucesso." 
-          : "Seu novo assistente está pronto para uso.",
+          : "Seu novo agente está pronto para uso.",
       });
 
       setIsCreateOpen(false);
@@ -170,7 +170,7 @@ const Assistants = () => {
     } catch (error: any) {
       console.error('Error saving assistant:', error);
       toast({
-        title: "Erro ao salvar assistente",
+        title: "Erro ao salvar agente",
         description: error.message,
         variant: "destructive",
       });
@@ -182,7 +182,7 @@ const Assistants = () => {
   const handleDelete = async (assistant: Assistant) => {
     if (!session) return;
     
-    if (!confirm(`Tem certeza que deseja excluir o assistente "${assistant.name}"?`)) {
+    if (!confirm(`Tem certeza que deseja excluir o agente "${assistant.name}"?`)) {
       return;
     }
 
@@ -199,15 +199,15 @@ const Assistants = () => {
       }
 
       toast({
-        title: "Assistente excluído!",
-        description: "O assistente foi removido com sucesso.",
+        title: "Agente excluído!",
+        description: "O agente foi removido com sucesso.",
       });
 
       await loadAssistants(); // Aguarda o reload
     } catch (error: any) {
       console.error('Error deleting assistant:', error);
       toast({
-        title: "Erro ao excluir assistente",
+        title: "Erro ao excluir agente",
         description: error.message,
         variant: "destructive",
       });
@@ -237,10 +237,10 @@ const Assistants = () => {
               <div>
                 <h1 className="text-3xl font-bold flex items-center gap-2">
                   <Bot className="h-8 w-8 text-primary" />
-                  Assistentes
+                  Agentes
                 </h1>
                 <p className="text-muted-foreground">
-                  Crie e gerencie seus assistentes de IA personalizados
+                  Crie e gerencie seus agentes de IA personalizados
                 </p>
               </div>
             </div>
@@ -251,7 +251,7 @@ const Assistants = () => {
               </Button>
               <Button onClick={openCreateDialog}>
                 <Plus className="h-4 w-4 mr-2" />
-                Novo Assistente
+                Novo Agente
               </Button>
             </div>
           </div>
@@ -262,13 +262,13 @@ const Assistants = () => {
               <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
                 <Bot className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Nenhum assistente criado</h3>
+              <h3 className="text-lg font-semibold mb-2">Nenhum agente criado</h3>
               <p className="text-muted-foreground mb-4">
-                Crie seu primeiro assistente para começar a automatizar conversas
+                Crie seu primeiro agente para começar a automatizar conversas
               </p>
               <Button onClick={openCreateDialog}>
                 <Plus className="h-4 w-4 mr-2" />
-                Criar Primeiro Assistente
+                Criar Primeiro Agente
               </Button>
             </Card>
           ) : (
@@ -343,22 +343,22 @@ const Assistants = () => {
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>
-                  {editingAssistant ? "Editar Assistente" : "Criar Novo Assistente"}
+                  {editingAssistant ? "Editar Agente" : "Criar Novo Agente"}
                 </DialogTitle>
                 <DialogDescription>
                   {editingAssistant 
-                    ? "Modifique as configurações do seu assistente" 
-                    : "Configure seu assistente de IA personalizado"
+                    ? "Modifique as configurações do seu agente" 
+                    : "Configure seu agente de IA personalizado"
                   }
                 </DialogDescription>
               </DialogHeader>
               
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nome do Assistente</Label>
+                  <Label htmlFor="name">Nome do Agente</Label>
                   <Input
                     id="name"
-                    placeholder="Ex: Atendente Virtual"
+                    placeholder="Ex: Agente Virtual"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
@@ -369,7 +369,7 @@ const Assistants = () => {
                   <Label htmlFor="description">Descrição (Opcional)</Label>
                   <Input
                     id="description"
-                    placeholder="Breve descrição do assistente"
+                    placeholder="Breve descrição do agente"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                   />
@@ -379,14 +379,14 @@ const Assistants = () => {
                   <Label htmlFor="instructions">Instruções</Label>
                   <Textarea
                     id="instructions"
-                    placeholder="Descreva como o assistente deve se comportar, seu tom de voz, conhecimentos específicos..."
+                    placeholder="Descreva como o agente deve se comportar, seu tom de voz, conhecimentos específicos..."
                     rows={6}
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    Seja específico sobre como o assistente deve responder e se comportar.
+                    Seja específico sobre como o agente deve responder e se comportar.
                   </p>
                 </div>
 
@@ -399,7 +399,7 @@ const Assistants = () => {
                     Cancelar
                   </Button>
                   <Button type="submit" disabled={formLoading}>
-                    {formLoading ? "Salvando..." : editingAssistant ? "Salvar Alterações" : "Criar Assistente"}
+                    {formLoading ? "Salvando..." : editingAssistant ? "Salvar Alterações" : "Criar Agente"}
                   </Button>
                 </div>
               </form>
