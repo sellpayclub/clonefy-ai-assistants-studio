@@ -65,10 +65,12 @@ const Dashboard = () => {
 
     try {
       const [assistantsData, connectionsData, conversationsData, messagesData] = await Promise.all([
-        supabase.from('assistants').select('id', { count: 'exact' }).eq('user_id', user.id),
+        supabase.from('assistants').select('id', { count: 'exact' }).eq('user_id', user.id).eq('is_active', true),
         supabase.from('whatsapp_connections').select('id', { count: 'exact' }).eq('user_id', user.id),
-        supabase.from('conversations').select('id', { count: 'exact' }).eq('user_id', user.id),
-        supabase.from('messages').select('id', { count: 'exact' })
+        supabase.from('conversations').select('id', { count: 'exact' }).eq('user_id', user.id).eq('is_active', true),
+        supabase.from('messages').select('id', { count: 'exact' }).in('conversation_id', 
+          (await supabase.from('conversations').select('id').eq('user_id', user.id).eq('is_active', true)).data?.map(c => c.id) || []
+        )
       ]);
 
       setStats({

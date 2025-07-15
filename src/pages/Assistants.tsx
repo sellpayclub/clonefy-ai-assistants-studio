@@ -297,11 +297,11 @@ const Assistants = () => {
                       </p>
                     </div>
                     <div className="flex gap-2 mt-4">
-                      <Button size="sm" className="flex-1">
+                      <Button size="sm" className="flex-1" onClick={() => window.location.href = '/conversations'}>
                         <MessageSquare className="h-3 w-3 mr-1" />
                         Testar
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => openEditDialog(assistant)}>
                         <Settings className="h-3 w-3" />
                       </Button>
                     </div>

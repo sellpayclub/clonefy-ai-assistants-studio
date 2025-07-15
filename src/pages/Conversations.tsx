@@ -346,7 +346,7 @@ const Conversations = () => {
                             e.stopPropagation();
                             deleteConversation(conversation.id);
                           }}
-                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                          className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
