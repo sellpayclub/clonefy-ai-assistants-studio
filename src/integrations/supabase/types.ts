@@ -139,6 +139,36 @@ export type Database = {
           },
         ]
       }
+      daily_checklist: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          date: string
+          id: string
+          task_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          date?: string
+          id?: string
+          task_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          date?: string
+          id?: string
+          task_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       files: {
         Row: {
           created_at: string
@@ -240,6 +270,99 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      progress_tracking: {
+        Row: {
+          created_at: string
+          current_weight: number | null
+          date: string
+          diet_adherence: number | null
+          exercise_completed: boolean | null
+          id: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+          water_intake: number | null
+        }
+        Insert: {
+          created_at?: string
+          current_weight?: number | null
+          date?: string
+          diet_adherence?: number | null
+          exercise_completed?: boolean | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+          water_intake?: number | null
+        }
+        Update: {
+          created_at?: string
+          current_weight?: number | null
+          date?: string
+          diet_adherence?: number | null
+          exercise_completed?: boolean | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+          water_intake?: number | null
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          activity_level: string | null
+          age: number | null
+          created_at: string
+          food_preferences: string | null
+          food_restrictions: string | null
+          gender: string | null
+          goal: string | null
+          height: number | null
+          id: string
+          medical_conditions: string | null
+          name: string
+          target_weight: number | null
+          updated_at: string
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          activity_level?: string | null
+          age?: number | null
+          created_at?: string
+          food_preferences?: string | null
+          food_restrictions?: string | null
+          gender?: string | null
+          goal?: string | null
+          height?: number | null
+          id?: string
+          medical_conditions?: string | null
+          name: string
+          target_weight?: number | null
+          updated_at?: string
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          activity_level?: string | null
+          age?: number | null
+          created_at?: string
+          food_preferences?: string | null
+          food_restrictions?: string | null
+          gender?: string | null
+          goal?: string | null
+          height?: number | null
+          id?: string
+          medical_conditions?: string | null
+          name?: string
+          target_weight?: number | null
+          updated_at?: string
+          user_id?: string
+          weight?: number | null
         }
         Relationships: []
       }
