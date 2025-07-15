@@ -51,51 +51,84 @@ const Conversations = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+    let isMounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        // Set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (!isMounted) return;
+            
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            if (!session?.user) {
+              window.location.href = '/auth';
+              return;
+            }
+
+            // Carregar dados sempre que a sessão mudar
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              setTimeout(async () => {
+                if (isMounted) {
+                  await loadData();
+                  setLoading(false);
+                }
+              }, 100);
+            }
+          }
+        );
+
+        // Check for existing session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (!session?.user) {
           window.location.href = '/auth';
+          return;
         }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (!session?.user) {
-        window.location.href = '/auth';
-        return;
-      }
-      
-      await loadData();
-      setLoading(false);
-      
-      // Verifica se há assistente pré-selecionado
-      const savedAssistantId = localStorage.getItem('selectedAssistantId');
-      const autoStart = localStorage.getItem('autoStartConversation');
-      if (savedAssistantId) {
-        setSelectedAssistant(savedAssistantId);
-        localStorage.removeItem('selectedAssistantId'); // Remove após usar
-        localStorage.removeItem('selectedAssistantName');
         
-        // Auto-inicia uma nova conversa se solicitado
-        if (autoStart === 'true') {
-          localStorage.removeItem('autoStartConversation');
-          // Aguarda um pouco para garantir que o agente foi selecionado
-          setTimeout(() => {
-            startNewConversationAuto(savedAssistantId);
-          }, 500);
+        // Carregar dados iniciais
+        await loadData();
+        setLoading(false);
+        
+        // Verificar agente pré-selecionado
+        const savedAssistantId = localStorage.getItem('selectedAssistantId');
+        const autoStart = localStorage.getItem('autoStartConversation');
+        if (savedAssistantId && isMounted) {
+          setSelectedAssistant(savedAssistantId);
+          localStorage.removeItem('selectedAssistantId');
+          localStorage.removeItem('selectedAssistantName');
+          
+          if (autoStart === 'true') {
+            localStorage.removeItem('autoStartConversation');
+            setTimeout(() => {
+              if (isMounted) {
+                startNewConversationAuto(savedAssistantId);
+              }
+            }, 1000);
+          }
         }
-      }
-    });
 
-    return () => subscription.unsubscribe();
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Erro na inicialização:', error);
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, []); // Array vazio - só executa uma vez
 
   useEffect(() => {
@@ -107,27 +140,33 @@ const Conversations = () => {
   };
 
   const loadData = async () => {
-    if (!session) {
-      console.log('Conversas: Sem sessão para carregar dados');
+    // Aguarda a sessão estar disponível
+    let currentSession = session;
+    if (!currentSession) {
+      const { data } = await supabase.auth.getSession();
+      currentSession = data.session;
+    }
+
+    if (!currentSession) {
+      console.log('Conversas: Sem sessão disponível');
       return;
     }
 
     try {
-      console.log('Conversas: Carregando dados...');
+      console.log('Conversas: Carregando dados com sessão:', !!currentSession);
       
       // Load assistants
       console.log('Conversas: Carregando agentes...');
       const assistantsResponse = await supabase.functions.invoke('openai-assistants', {
         body: { action: 'list' },
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
 
       console.log('Conversas: Resposta agentes:', assistantsResponse);
 
       if (!assistantsResponse.error && assistantsResponse.data?.assistants) {
-        console.log('Conversas: Agentes encontrados:', assistantsResponse.data.assistants);
+        console.log('Conversas: Agentes encontrados:', assistantsResponse.data.assistants.length);
         setAssistants(assistantsResponse.data.assistants);
-        console.log('Conversas: Estado de agentes atualizado');
       } else {
         console.error('Conversas: Erro ao carregar agentes:', assistantsResponse.error);
         setAssistants([]);
@@ -137,7 +176,7 @@ const Conversations = () => {
       console.log('Conversas: Carregando conversas...');
       const conversationsResponse = await supabase.functions.invoke('chat-api', {
         body: { action: 'get_conversations' },
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
 
       console.log('Conversas: Resposta conversas:', conversationsResponse);
@@ -146,7 +185,7 @@ const Conversations = () => {
         setConversations(conversationsResponse.data.conversations);
         console.log('Conversas: Conversas carregadas:', conversationsResponse.data.conversations.length);
       } else {
-        console.log('Conversas: Nenhuma conversa encontrada ou erro');
+        console.log('Conversas: Nenhuma conversa encontrada');
         setConversations([]);
       }
     } catch (error: any) {

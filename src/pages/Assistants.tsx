@@ -45,61 +45,99 @@ const Assistants = () => {
   const [model] = useState("gpt-4o"); // Always use GPT-4o for now
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+    let isMounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        // Set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (!isMounted) return;
+            
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            if (!session?.user) {
+              window.location.href = '/auth';
+              return;
+            }
+
+            // Carregar dados sempre que a sessão mudar
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              setTimeout(async () => {
+                if (isMounted) {
+                  await loadAssistants();
+                }
+              }, 100);
+            }
+          }
+        );
+
+        // Check for existing session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (!session?.user) {
           window.location.href = '/auth';
+          return;
         }
-      }
-    );
+        
+        // Carregar dados iniciais
+        await loadAssistants();
+        setLoading(false);
 
-    // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (!session?.user) {
-        window.location.href = '/auth';
-        return;
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Erro na inicialização:', error);
+        setLoading(false);
       }
-      
-      await loadAssistants();
-      setLoading(false);
-    });
+    };
 
-    return () => subscription.unsubscribe();
-  }, []);
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Array vazio - só executa uma vez
 
 
   const loadAssistants = async () => {
-    if (!session) {
-      console.log('Sem sessão para carregar agentes');
+    // Aguarda a sessão estar disponível
+    let currentSession = session;
+    if (!currentSession) {
+      const { data } = await supabase.auth.getSession();
+      currentSession = data.session;
+    }
+
+    if (!currentSession) {
+      console.log('Agentes: Sem sessão disponível');
       return;
     }
 
     try {
-      console.log('Carregando agentes...');
+      console.log('Agentes: Carregando agentes...');
       const response = await supabase.functions.invoke('openai-assistants', {
         body: { action: 'list' },
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${currentSession.access_token}`,
         },
       });
 
-      console.log('Resposta completa:', response);
+      console.log('Agentes: Resposta completa:', response);
 
       if (response.error) {
-        console.error('Erro na resposta:', response.error);
+        console.error('Agentes: Erro na resposta:', response.error);
         throw response.error;
       }
 
       const assistantsList = response.data?.assistants || [];
-      console.log('Lista de agentes recebida:', assistantsList);
-      console.log('Quantidade de agentes:', assistantsList.length);
+      console.log('Agentes: Lista recebida:', assistantsList.length, 'agentes');
       
       setAssistants(assistantsList);
     } catch (error: any) {
