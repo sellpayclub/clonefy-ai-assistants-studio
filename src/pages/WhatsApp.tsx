@@ -263,6 +263,7 @@ const WhatsApp = () => {
           action: 'get_qr',
           instanceName: connection.NomeInstancia,
         },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
       });
 
       console.log('fetchQrCode: Resposta:', response);
