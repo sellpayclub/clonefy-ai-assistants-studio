@@ -216,10 +216,12 @@ async function setWebhook(instanceName: string) {
       'apikey': EVOLUTION_API_KEY,
     },
     body: JSON.stringify({
-      url: WEBHOOK_URL,
-      events: ['MESSAGES_UPSERT'],
-      webhook_by_events: false,
-      webhook_base64: true,
+      webhook: {
+        enabled: true,
+        url: WEBHOOK_URL,
+        webhookBase64: true,
+        events: ["MESSAGES_UPSERT"]
+      }
     }),
   });
 
