@@ -233,6 +233,34 @@ const WhatsApp = () => {
     }
   };
 
+  const testAPI = async () => {
+    try {
+      const response = await supabase.functions.invoke('whatsapp-evolution', {
+        body: { action: 'test_api' },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+
+      console.log('Test API Response:', response);
+      
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro no teste da API');
+      }
+
+      toast({
+        title: "Teste da API Evolution",
+        description: `Status: ${response.data.status} - ${response.data.success ? 'Sucesso' : 'Falhou'}`,
+        variant: response.data.success ? "default" : "destructive",
+      });
+    } catch (error: any) {
+      console.error('Error testing API:', error);
+      toast({
+        title: "Erro no teste da API",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const getStatusBadge = (connection: WhatsAppConnection) => {
     if (connection.whatsappuser) {
       return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Conectado</Badge>;
@@ -270,10 +298,16 @@ const WhatsApp = () => {
                 </p>
               </div>
             </div>
-            <Button onClick={loadData} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Atualizar
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={testAPI} variant="outline" size="sm">
+                <CheckCircle className="h-4 w-4 mr-1" />
+                Testar API
+              </Button>
+              <Button onClick={loadData} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Atualizar
+              </Button>
+            </div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

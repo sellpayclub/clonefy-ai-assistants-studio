@@ -71,6 +71,9 @@ serve(async (req) => {
       case 'connect':
         console.log('WhatsApp Evolution: Connecting instance:', instanceName);
         return await connectInstance(instanceName!);
+      case 'test_api':
+        console.log('WhatsApp Evolution: Testing API connection');
+        return await testEvolutionAPI();
       case 'set_webhook':
         console.log('WhatsApp Evolution: Setting webhook for:', instanceName);
         return await setWebhook(instanceName!);
@@ -106,6 +109,11 @@ async function createWhatsAppInstance(
     
     const fullInstanceName = `cristina_${instanceName.toLowerCase()}`;
     console.log('createWhatsAppInstance: Full instance name:', fullInstanceName);
+
+    // Primeiro vamos testar se a API está acessível
+    console.log('createWhatsAppInstance: Testing API connectivity...');
+    console.log('createWhatsAppInstance: Evolution API URL:', EVOLUTION_API_URL);
+    console.log('createWhatsAppInstance: Evolution API Key present:', !!EVOLUTION_API_KEY);
     
     // 1. Criar instância na Evolution API
     console.log('createWhatsAppInstance: Creating instance in Evolution API...');
@@ -135,11 +143,14 @@ async function createWhatsAppInstance(
     });
 
     console.log('createWhatsAppInstance: Create response status:', createResponse.status);
+    console.log('createWhatsAppInstance: Create response headers:', Object.fromEntries(createResponse.headers.entries()));
     
     if (!createResponse.ok) {
       const errorData = await createResponse.text();
       console.error('createWhatsAppInstance: Evolution API create error:', errorData);
-      throw new Error(`Failed to create instance: ${errorData}`);
+      console.error('createWhatsAppInstance: Response status:', createResponse.status);
+      console.error('createWhatsAppInstance: Response statusText:', createResponse.statusText);
+      throw new Error(`Failed to create instance (${createResponse.status}): ${errorData}`);
     }
 
     const createData = await createResponse.json();
@@ -302,3 +313,50 @@ async function deleteConnection(instanceName: string, supabaseClient: any) {
     throw error;
   }
 }
+
+async function testEvolutionAPI() {
+  try {
+    console.log('testEvolutionAPI: Testing connection to Evolution API');
+    console.log('testEvolutionAPI: URL:', EVOLUTION_API_URL);
+    console.log('testEvolutionAPI: API Key present:', !!EVOLUTION_API_KEY);
+    
+    // Testar endpoint de listagem de instâncias
+    const testResponse = await fetch(`${EVOLUTION_API_URL}/instance/fetchInstances`, {
+      method: 'GET',
+      headers: {
+        'apikey': EVOLUTION_API_KEY,
+      },
+    });
+    
+    console.log('testEvolutionAPI: Response status:', testResponse.status);
+    console.log('testEvolutionAPI: Response headers:', Object.fromEntries(testResponse.headers.entries()));
+    
+    const responseText = await testResponse.text();
+    console.log('testEvolutionAPI: Response body:', responseText);
+    
+    return new Response(
+      JSON.stringify({
+        success: testResponse.ok,
+        status: testResponse.status,
+        response: responseText,
+        url: `${EVOLUTION_API_URL}/instance/fetchInstances`,
+        hasApiKey: !!EVOLUTION_API_KEY
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  } catch (error: any) {
+    console.error('testEvolutionAPI: Error:', error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message,
+        stack: error.stack
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
