@@ -23,12 +23,12 @@ interface Assistant {
 
 interface WhatsAppConnection {
   id: number;
-  NomeInstancia: string;
-  IDAssistentGPT: string;
-  EmailUSER: string;
+  nomeinstancia: string;
+  idassistentgpt: string;
+  emailuser: string;
   created_at: string;
-  ThreadID?: string;
-  WhatsAppUSER?: string;
+  threadid?: string;
+  whatsappuser?: string;
 }
 
 const WhatsApp = () => {
@@ -200,7 +200,7 @@ const WhatsApp = () => {
       const response = await supabase.functions.invoke('whatsapp-evolution', {
         body: {
           action: 'delete',
-          instanceName: connection.NomeInstancia,
+          instanceName: connection.nomeinstancia,
         },
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
@@ -211,7 +211,7 @@ const WhatsApp = () => {
 
       toast({
         title: "Conexão deletada!",
-        description: `A instância ${connection.NomeInstancia} foi removida.`,
+        description: `A instância ${connection.nomeinstancia} foi removida.`,
       });
 
       await loadData();
@@ -226,7 +226,7 @@ const WhatsApp = () => {
   };
 
   const getStatusBadge = (connection: WhatsAppConnection) => {
-    if (connection.WhatsAppUSER) {
+    if (connection.whatsappuser) {
       return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Conectado</Badge>;
     }
     return <Badge variant="secondary"><AlertCircle className="h-3 w-3 mr-1" />Aguardando QR</Badge>;
@@ -291,10 +291,15 @@ const WhatsApp = () => {
                     <div className="text-center py-8">
                       <Smartphone className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <p className="text-muted-foreground mb-4">Nenhuma conexão WhatsApp encontrada</p>
-                      <Button onClick={() => {
-                        const createTab = document.querySelector('[value="create"]') as HTMLButtonElement;
-                        createTab?.click();
-                      }}>
+                      <Button 
+                        onClick={() => {
+                          const tabs = document.querySelector('[role="tablist"]');
+                          const createTrigger = tabs?.querySelector('[value="create"]') as HTMLButtonElement;
+                          if (createTrigger) {
+                            createTrigger.click();
+                          }
+                        }}
+                      >
                         <Plus className="h-4 w-4 mr-2" />
                         Criar primeira conexão
                       </Button>
@@ -307,14 +312,14 @@ const WhatsApp = () => {
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="font-semibold">{connection.NomeInstancia}</h3>
+                                  <h3 className="font-semibold">{connection.nomeinstancia}</h3>
                                   {getStatusBadge(connection)}
                                 </div>
                                 <p className="text-sm text-muted-foreground mb-1">
-                                  <strong>Agente:</strong> {assistants.find(a => a.openai_assistant_id === connection.IDAssistentGPT)?.name || 'Agente não encontrado'}
+                                  <strong>Agente:</strong> {assistants.find(a => a.openai_assistant_id === connection.idassistentgpt)?.name || 'Agente não encontrado'}
                                 </p>
                                 <p className="text-sm text-muted-foreground mb-1">
-                                  <strong>Email:</strong> {connection.EmailUSER}
+                                  <strong>Email:</strong> {connection.emailuser}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
                                   <strong>Criado em:</strong> {new Date(connection.created_at).toLocaleString('pt-BR')}
@@ -331,7 +336,7 @@ const WhatsApp = () => {
                                     <AlertDialogHeader>
                                       <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Tem certeza que deseja excluir a conexão "{connection.NomeInstancia}"? 
+                                        Tem certeza que deseja excluir a conexão "{connection.nomeinstancia}"? 
                                         Esta ação não pode ser desfeita.
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
