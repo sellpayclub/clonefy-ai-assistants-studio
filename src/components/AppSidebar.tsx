@@ -30,25 +30,26 @@ const AppSidebar = () => {
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-accent text-accent-foreground font-medium" : "hover:bg-accent/50";
+    isActive ? "bg-primary/10 text-primary font-medium border-r-2 border-primary" : "hover:bg-primary/5 hover:text-primary transition-all duration-200";
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
-      <SidebarHeader className="border-b p-4">
+      <SidebarHeader className="border-b p-4 bg-gradient-to-r from-background to-muted/20">
         {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-primary to-primary/60 flex items-center justify-center">
-              <Bot className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-lg bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              CLONEFY
-            </span>
+          <div className="flex items-center gap-3">
+            <img 
+              src="/lovable-uploads/4ad83733-0d3f-4ea8-a2b8-74822c594588.png" 
+              alt="CLONEFY Logo" 
+              className="h-8 w-auto"
+            />
           </div>
         )}
         {collapsed && (
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-primary to-primary/60 flex items-center justify-center mx-auto">
-            <Bot className="h-4 w-4 text-primary-foreground" />
-          </div>
+          <img 
+            src="/lovable-uploads/929d6edf-5859-4b0c-8ebc-9ee077349b6a.png" 
+            alt="CLONEFY Icon" 
+            className="w-8 h-8 mx-auto"
+          />
         )}
       </SidebarHeader>
 

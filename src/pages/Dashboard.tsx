@@ -187,54 +187,60 @@ const Dashboard = () => {
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/assistants')}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bot className="h-5 w-5" />
+            <Card className="cursor-pointer hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-card to-muted/20" onClick={() => navigate('/assistants')}>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow">
+                    <Bot className="h-5 w-5 text-primary-foreground" />
+                  </div>
                   Criar Assistente
                 </CardTitle>
                 <CardDescription>
                   Configure um novo assistente de IA personalizado
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button className="w-full" onClick={() => navigate('/assistants')}>
+              <CardContent className="pt-0">
+                <Button className="w-full bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary shadow-lg" onClick={() => navigate('/assistants')}>
                   <Plus className="h-4 w-4 mr-2" />
                   Novo Assistente
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/whatsapp')}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Smartphone className="h-5 w-5" />
+            <Card className="cursor-pointer hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-card to-muted/20" onClick={() => navigate('/whatsapp')}>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow">
+                    <Smartphone className="h-5 w-5 text-primary-foreground" />
+                  </div>
                   Conectar WhatsApp
                 </CardTitle>
                 <CardDescription>
                   Adicione uma nova conexão WhatsApp via QR Code
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="outline" onClick={() => navigate('/whatsapp')}>
+              <CardContent className="pt-0">
+                <Button className="w-full bg-gradient-to-r from-secondary/80 to-muted hover:from-primary/20 hover:to-primary/10 border border-primary/20" variant="outline" onClick={() => navigate('/whatsapp')}>
                   <Plus className="h-4 w-4 mr-2" />
                   Nova Conexão
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/conversations')}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
+            <Card className="cursor-pointer hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-card to-muted/20" onClick={() => navigate('/conversations')}>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow">
+                    <MessageSquare className="h-5 w-5 text-primary-foreground" />
+                  </div>
                   Iniciar Chat
                 </CardTitle>
                 <CardDescription>
                   Teste seus assistentes em uma conversa
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="secondary" onClick={() => navigate('/conversations')}>
+              <CardContent className="pt-0">
+                <Button className="w-full bg-gradient-to-r from-accent/80 to-muted hover:from-primary/30 hover:to-primary/20 border border-primary/30" variant="secondary" onClick={() => navigate('/conversations')}>
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Chat de Teste
                 </Button>
