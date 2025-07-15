@@ -186,9 +186,16 @@ const WhatsApp = () => {
 
     } catch (error: any) {
       console.error('Error creating connection:', error);
+      let errorMessage = error.message;
+      
+      // Try to extract more detailed error info
+      if (error.message === 'Edge Function returned a non-2xx status code') {
+        errorMessage = 'Erro na comunicação com a API Evolution. Verifique os logs da função.';
+      }
+      
       toast({
         title: "Erro ao criar conexão",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

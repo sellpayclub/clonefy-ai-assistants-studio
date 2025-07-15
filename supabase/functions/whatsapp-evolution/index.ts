@@ -78,10 +78,15 @@ serve(async (req) => {
         console.error('WhatsApp Evolution: Invalid action:', action);
         throw new Error('Invalid action');
     }
-  } catch (error) {
-    console.error('Error in whatsapp-evolution function:', error);
+  } catch (error: any) {
+    console.error('WhatsApp Evolution: Main error:', error);
+    console.error('WhatsApp Evolution: Error stack:', error.stack);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack,
+        timestamp: new Date().toISOString()
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -104,22 +109,29 @@ async function createWhatsAppInstance(
     
     // 1. Criar instância na Evolution API
     console.log('createWhatsAppInstance: Creating instance in Evolution API...');
+    
+    const createBody = {
+      instanceName: fullInstanceName,
+      integration: "WHATSAPP-BAILEYS",
+      reject_call: false,
+      groupsIgnore: true,
+      alwaysOnline: true,
+      readMessages: true,
+      readStatus: false,
+      syncFullHistory: true
+    };
+    
+    console.log('createWhatsAppInstance: Request URL:', `${EVOLUTION_API_URL}/instance/create`);
+    console.log('createWhatsAppInstance: Request body:', JSON.stringify(createBody));
+    console.log('createWhatsAppInstance: API key:', EVOLUTION_API_KEY ? 'Present' : 'Missing');
+    
     const createResponse = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': EVOLUTION_API_KEY,
       },
-      body: JSON.stringify({
-        instanceName: fullInstanceName,
-        integration: 'WHATSAPP-BAILEYS',
-        reject_call: false,
-        groupsIgnore: true,
-        alwaysOnline: true,
-        readMessages: true,
-        readStatus: false,
-        syncFullHistory: true,
-      }),
+      body: JSON.stringify(createBody),
     });
 
     console.log('createWhatsAppInstance: Create response status:', createResponse.status);
@@ -175,8 +187,10 @@ async function createWhatsAppInstance(
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
-  } catch (error) {
-    console.error('Error in createWhatsAppInstance:', error);
+  } catch (error: any) {
+    console.error('createWhatsAppInstance: Caught error:', error);
+    console.error('createWhatsAppInstance: Error message:', error.message);
+    console.error('createWhatsAppInstance: Error stack:', error.stack);
     throw error;
   }
 }
