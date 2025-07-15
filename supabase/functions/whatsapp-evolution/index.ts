@@ -429,6 +429,8 @@ async function testEvolutionAPI() {
 async function getQrCode(instanceName: string) {
   try {
     console.log('getQrCode: Getting QR code for instance:', instanceName);
+    console.log('getQrCode: Using URL:', `${EVOLUTION_API_URL}/instance/connect/${instanceName}`);
+    console.log('getQrCode: API Key present:', !!EVOLUTION_API_KEY);
     
     const qrResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
       method: 'GET',
@@ -439,17 +441,46 @@ async function getQrCode(instanceName: string) {
     });
 
     console.log('getQrCode: Response status:', qrResponse.status);
+    console.log('getQrCode: Response headers:', Object.fromEntries(qrResponse.headers.entries()));
+    
+    const responseText = await qrResponse.text();
+    console.log('getQrCode: Raw response body:', responseText);
     
     if (qrResponse.ok) {
-      const qrData = await qrResponse.json();
-      console.log('getQrCode: QR code data received');
+      let qrData;
+      try {
+        qrData = JSON.parse(responseText);
+        console.log('getQrCode: Parsed QR data:', JSON.stringify(qrData));
+      } catch (parseError) {
+        console.error('getQrCode: Failed to parse response as JSON:', parseError);
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: 'Invalid response format from Evolution API',
+          rawResponse: responseText
+        }), {
+          status: 500,
+          headers: corsHeaders,
+        });
+      }
       
       let qrCodeBase64 = null;
+      
+      // Verificar diferentes formatos possíveis
       if (qrData.base64) {
         qrCodeBase64 = qrData.base64.replace('data:image/png;base64,', '');
+        console.log('getQrCode: Found QR in base64 field');
       } else if (qrData.qrcode) {
         qrCodeBase64 = qrData.qrcode.replace('data:image/png;base64,', '');
+        console.log('getQrCode: Found QR in qrcode field');
+      } else if (qrData.code) {
+        qrCodeBase64 = qrData.code.replace('data:image/png;base64,', '');
+        console.log('getQrCode: Found QR in code field');
+      } else if (typeof qrData === 'string' && qrData.includes('data:image')) {
+        qrCodeBase64 = qrData.replace('data:image/png;base64,', '');
+        console.log('getQrCode: QR data is a base64 string');
       }
+      
+      console.log('getQrCode: Final QR code found:', !!qrCodeBase64);
       
       if (qrCodeBase64) {
         return new Response(JSON.stringify({ 
@@ -459,22 +490,36 @@ async function getQrCode(instanceName: string) {
           status: 200,
           headers: corsHeaders,
         });
+      } else {
+        console.log('getQrCode: No QR code found in any expected field');
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: 'QR Code não encontrado na resposta da API',
+          responseData: qrData
+        }), {
+          status: 400,
+          headers: corsHeaders,
+        });
       }
+    } else {
+      console.error('getQrCode: API returned error status:', qrResponse.status);
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: `API Evolution retornou erro: ${qrResponse.status}`,
+        responseBody: responseText
+      }), {
+        status: qrResponse.status,
+        headers: corsHeaders,
+      });
     }
     
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: 'QR Code não disponível' 
-    }), {
-      status: 400,
-      headers: corsHeaders,
-    });
-    
   } catch (error: any) {
-    console.error('getQrCode: Error:', error);
+    console.error('getQrCode: Caught error:', error);
+    console.error('getQrCode: Error stack:', error.stack);
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message 
+      error: error.message,
+      stack: error.stack
     }), {
       status: 500,
       headers: corsHeaders,
