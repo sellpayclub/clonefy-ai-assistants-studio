@@ -74,18 +74,11 @@ const Assistants = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Effect separado para recarregar quando session muda
-  useEffect(() => {
-    if (session && user && !loading) {
-      loadAssistants();
-    }
-  }, [session, user, loading]);
 
   const loadAssistants = async () => {
     if (!session) return;
 
     try {
-      console.log('Carregando agentes...');
       const response = await supabase.functions.invoke('openai-assistants', {
         body: { action: 'list' },
         headers: {
@@ -93,19 +86,12 @@ const Assistants = () => {
         },
       });
 
-      console.log('Resposta da API:', response);
-
       if (response.error) {
-        console.error('Erro na resposta:', response.error);
         throw response.error;
       }
 
       const assistantsList = response.data?.assistants || [];
-      console.log('Agentes recebidos:', assistantsList);
-      
       setAssistants(assistantsList);
-      
-      console.log('Estado atualizado com:', assistantsList.length, 'agentes');
     } catch (error: any) {
       console.error('Error loading assistants:', error);
       toast({

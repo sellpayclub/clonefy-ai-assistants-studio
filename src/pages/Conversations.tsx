@@ -96,7 +96,7 @@ const Conversations = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, []); // Array vazio - só executa uma vez
 
   useEffect(() => {
     scrollToBottom();
@@ -118,15 +118,10 @@ const Conversations = () => {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
-      console.log('Resposta da API:', assistantsResponse);
-
       if (!assistantsResponse.error && assistantsResponse.data?.assistants) {
-        console.log('Dados encontrados:', assistantsResponse.data.assistants);
         setAssistants(assistantsResponse.data.assistants);
-        console.log('Agentes setados no state:', assistantsResponse.data.assistants.length);
       } else {
         console.error('Erro ao carregar agentes:', assistantsResponse.error);
-        console.log('Estado atual dos assistants:', assistants);
       }
 
       // Load conversations
@@ -135,11 +130,8 @@ const Conversations = () => {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
-      console.log('Resposta conversas:', conversationsResponse);
-
       if (!conversationsResponse.error && conversationsResponse.data?.conversations) {
         setConversations(conversationsResponse.data.conversations);
-        console.log('Conversas carregadas:', conversationsResponse.data.conversations.length);
       }
     } catch (error: any) {
       console.error('Error loading data:', error);
