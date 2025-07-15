@@ -12,7 +12,7 @@ const EVOLUTION_API_KEY = '2eb6dd69c0cc273101c4efc974419be5';
 const WEBHOOK_URL = 'https://webhook.dcsaudeautomacao.com/webhook/fluxogptdaniel';
 
 interface CreateInstanceRequest {
-  action: 'create' | 'list' | 'delete' | 'connect' | 'set_webhook';
+  action: 'create' | 'list' | 'delete' | 'connect' | 'set_webhook' | 'test_api';
   instanceName?: string;
   assistantId?: string;
   userEmail?: string;
@@ -110,11 +110,6 @@ async function createWhatsAppInstance(
     const fullInstanceName = `cristina_${instanceName.toLowerCase()}`;
     console.log('createWhatsAppInstance: Full instance name:', fullInstanceName);
 
-    // Primeiro vamos testar se a API está acessível
-    console.log('createWhatsAppInstance: Testing API connectivity...');
-    console.log('createWhatsAppInstance: Evolution API URL:', EVOLUTION_API_URL);
-    console.log('createWhatsAppInstance: Evolution API Key present:', !!EVOLUTION_API_KEY);
-    
     // 1. Criar instância na Evolution API
     console.log('createWhatsAppInstance: Creating instance in Evolution API...');
     
@@ -131,7 +126,6 @@ async function createWhatsAppInstance(
     
     console.log('createWhatsAppInstance: Request URL:', `${EVOLUTION_API_URL}/instance/create`);
     console.log('createWhatsAppInstance: Request body:', JSON.stringify(createBody));
-    console.log('createWhatsAppInstance: API key:', EVOLUTION_API_KEY ? 'Present' : 'Missing');
     
     const createResponse = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
       method: 'POST',
@@ -143,13 +137,10 @@ async function createWhatsAppInstance(
     });
 
     console.log('createWhatsAppInstance: Create response status:', createResponse.status);
-    console.log('createWhatsAppInstance: Create response headers:', Object.fromEntries(createResponse.headers.entries()));
     
     if (!createResponse.ok) {
       const errorData = await createResponse.text();
       console.error('createWhatsAppInstance: Evolution API create error:', errorData);
-      console.error('createWhatsAppInstance: Response status:', createResponse.status);
-      console.error('createWhatsAppInstance: Response statusText:', createResponse.statusText);
       throw new Error(`Failed to create instance (${createResponse.status}): ${errorData}`);
     }
 
@@ -158,46 +149,91 @@ async function createWhatsAppInstance(
 
     // 2. Configurar webhook
     console.log('createWhatsAppInstance: Setting webhook...');
-    await setWebhook(fullInstanceName);
+    try {
+      await setWebhook(fullInstanceName);
+      console.log('createWhatsAppInstance: Webhook set successfully');
+    } catch (webhookError: any) {
+      console.error('createWhatsAppInstance: Webhook error:', webhookError.message);
+      // Continue mesmo se o webhook falhar
+    }
 
     // 3. Conectar e obter QR Code
     console.log('createWhatsAppInstance: Connecting instance...');
-    const qrResponse = await connectInstance(fullInstanceName);
-    const qrData = await qrResponse.json();
-    console.log('createWhatsAppInstance: QR Data:', qrData);
+    try {
+      const qrResponse = await connectInstance(fullInstanceName);
+      const qrData = await qrResponse.json();
+      console.log('createWhatsAppInstance: QR Data:', qrData);
+      
+      // 4. Salvar no Supabase
+      console.log('createWhatsAppInstance: Saving to Supabase...');
+      const uniqueId = Date.now() + Math.floor(Math.random() * 1000);
+      
+      const { data: insertData, error: insertError } = await supabaseClient
+        .from('n8n_fluxogpt')
+        .insert({
+          id: uniqueId,
+          nomeinstancia: fullInstanceName,
+          idassistentgpt: assistantId,
+          emailuser: userEmail,
+          created_at: new Date().toISOString(),
+        });
 
-    // 4. Salvar no Supabase
-    const uniqueId = Date.now() + Math.floor(Math.random() * 1000);
-    
-    const { data: insertData, error: insertError } = await supabaseClient
-      .from('n8n_fluxogpt')
-      .insert({
-        id: uniqueId,
-        nomeinstancia: fullInstanceName,
-        idassistentgpt: assistantId,
-        emailuser: userEmail,
-        created_at: new Date().toISOString(),
-      });
-
-    if (insertError) {
-      console.error('Error saving to Supabase:', insertError);
-      throw new Error(`Failed to save to database: ${insertError.message}`);
-    }
-
-    console.log('Data saved to Supabase successfully');
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        instanceName: fullInstanceName,
-        qrCode: qrData.base64 || qrData.qrcode || qrData.code || qrData,
-        data: insertData,
-        qrRaw: qrData, // Para debug
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      if (insertError) {
+        console.error('createWhatsAppInstance: Error saving to Supabase:', insertError);
+        throw new Error(`Failed to save to database: ${insertError.message}`);
       }
-    );
+
+      console.log('createWhatsAppInstance: Data saved to Supabase successfully');
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          instanceName: fullInstanceName,
+          qrCode: qrData.base64 || qrData.qrcode || qrData.code || qrData,
+          data: insertData,
+          qrRaw: qrData, // Para debug
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+      
+    } catch (qrError: any) {
+      console.error('createWhatsAppInstance: QR Code error:', qrError.message);
+      
+      // Se falhar no QR, ainda salva no Supabase mas sem QR code
+      console.log('createWhatsAppInstance: Saving to Supabase without QR...');
+      const uniqueId = Date.now() + Math.floor(Math.random() * 1000);
+      
+      const { data: insertData, error: insertError } = await supabaseClient
+        .from('n8n_fluxogpt')
+        .insert({
+          id: uniqueId,
+          nomeinstancia: fullInstanceName,
+          idassistentgpt: assistantId,
+          emailuser: userEmail,
+          created_at: new Date().toISOString(),
+        });
+
+      if (insertError) {
+        console.error('createWhatsAppInstance: Error saving to Supabase after QR failure:', insertError);
+        throw new Error(`Failed to save to database: ${insertError.message}`);
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          instanceName: fullInstanceName,
+          qrCode: null,
+          data: insertData,
+          warning: 'Instance created but QR code failed to generate',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+    
   } catch (error: any) {
     console.error('createWhatsAppInstance: Caught error:', error);
     console.error('createWhatsAppInstance: Error message:', error.message);
@@ -310,7 +346,7 @@ async function deleteConnection(instanceName: string, supabaseClient: any) {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in deleteConnection:', error);
     throw error;
   }
