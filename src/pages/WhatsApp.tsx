@@ -187,6 +187,11 @@ const WhatsApp = () => {
       const data = response.data;
       console.log('Response data:', data);
       
+      if (!data || !data.success) {
+        console.error('Invalid response data:', data);
+        throw new Error(data?.error || 'Resposta inválida do servidor');
+      }
+      
       toast({
         title: "Conexão criada com sucesso!",
         description: `Instância ${data.instanceName} criada. Buscando QR Code...`,
@@ -197,17 +202,28 @@ const WhatsApp = () => {
       setSelectedAssistant("");
       
       // Reload connections
+      console.log('Reloading connections...');
       await loadData();
+      console.log('Connections reloaded');
       
       // Auto-fetch QR code after creating connection
       if (data.instanceName) {
+        console.log(`Auto-fetching QR code for instance: ${data.instanceName}`);
         setTimeout(async () => {
-          const connection = { 
-            instance_name: data.instanceName,
-            nomeinstancia: data.instanceName 
-          } as WhatsAppConnection;
-          await fetchQrCode(connection);
+          try {
+            const connection = { 
+              instance_name: data.instanceName,
+              nomeinstancia: data.instanceName 
+            } as WhatsAppConnection;
+            console.log('Calling fetchQrCode with connection:', connection);
+            await fetchQrCode(connection);
+            console.log('QR code fetch completed');
+          } catch (qrError) {
+            console.error('Error fetching QR code:', qrError);
+          }
         }, 2000); // Wait 2 seconds for instance to be fully created
+      } else {
+        console.error('No instanceName in response data');
       }
 
     } catch (error: any) {
