@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { Badge } from "@/components/ui/badge";
 import { Bot, Plus, Edit, Trash2, MessageSquare, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -40,7 +40,7 @@ const Assistants = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [instructions, setInstructions] = useState("");
-  const [model, setModel] = useState("gpt-4o");
+  const [model] = useState("gpt-4o-mini"); // Always use GPT-4o Mini
 
   useEffect(() => {
     // Set up auth state listener
@@ -102,7 +102,6 @@ const Assistants = () => {
     setName("");
     setDescription("");
     setInstructions("");
-    setModel("gpt-4o");
     setEditingAssistant(null);
   };
 
@@ -115,7 +114,6 @@ const Assistants = () => {
     setName(assistant.name);
     setDescription(assistant.description || "");
     setInstructions(assistant.instructions || "");
-    setModel(assistant.model);
     setEditingAssistant(assistant);
     setIsCreateOpen(true);
   };
@@ -129,8 +127,8 @@ const Assistants = () => {
     try {
       const action = editingAssistant ? 'update' : 'create';
       const body = editingAssistant 
-        ? { action, assistantId: editingAssistant.id, name, description, instructions, model }
-        : { action, name, description, instructions, model };
+        ? { action, assistantId: editingAssistant.id, name, description, instructions, model: "gpt-4o-mini" }
+        : { action, name, description, instructions, model: "gpt-4o-mini" };
 
       const response = await supabase.functions.invoke('openai-assistants', {
         body,
@@ -329,29 +327,15 @@ const Assistants = () => {
               </DialogHeader>
               
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome do Assistente</Label>
-                    <Input
-                      id="name"
-                      placeholder="Ex: Atendente Virtual"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="model">Modelo</Label>
-                    <Select value={model} onValueChange={setModel}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="gpt-4o">GPT-4o (Recomendado)</SelectItem>
-                        <SelectItem value="gpt-4o-mini">GPT-4o Mini (Mais rápido)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome do Assistente</Label>
+                  <Input
+                    id="name"
+                    placeholder="Ex: Atendente Virtual"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
                 </div>
 
                 <div className="space-y-2">
