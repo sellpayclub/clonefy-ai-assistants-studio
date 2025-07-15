@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { Badge } from "@/components/ui/badge";
-import { Bot, Plus, Edit, Trash2, MessageSquare, Settings } from "lucide-react";
+import { Bot, Plus, Edit, Trash2, MessageSquare, Settings, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AppSidebar from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -56,7 +56,7 @@ const Assistants = () => {
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -65,17 +65,25 @@ const Assistants = () => {
         return;
       }
       
-      loadAssistants();
+      await loadAssistants();
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  // Effect separado para recarregar quando session muda
+  useEffect(() => {
+    if (session && user && !loading) {
+      loadAssistants();
+    }
+  }, [session, user, loading]);
+
   const loadAssistants = async () => {
     if (!session) return;
 
     try {
+      console.log('Carregando assistentes...');
       const response = await supabase.functions.invoke('openai-assistants', {
         body: { action: 'list' },
         headers: {
@@ -83,11 +91,19 @@ const Assistants = () => {
         },
       });
 
+      console.log('Resposta da API:', response);
+
       if (response.error) {
+        console.error('Erro na resposta:', response.error);
         throw response.error;
       }
 
-      setAssistants(response.data.assistants || []);
+      const assistantsList = response.data?.assistants || [];
+      console.log('Assistentes recebidos:', assistantsList);
+      
+      setAssistants(assistantsList);
+      
+      console.log('Estado atualizado com:', assistantsList.length, 'assistentes');
     } catch (error: any) {
       console.error('Error loading assistants:', error);
       toast({
@@ -228,10 +244,16 @@ const Assistants = () => {
                 </p>
               </div>
             </div>
-            <Button onClick={openCreateDialog}>
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Assistente
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={loadAssistants} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Recarregar
+              </Button>
+              <Button onClick={openCreateDialog}>
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Assistente
+              </Button>
+            </div>
           </div>
 
           {/* Assistants Grid */}
