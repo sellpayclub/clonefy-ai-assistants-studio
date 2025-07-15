@@ -108,13 +108,15 @@ const Conversations = () => {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
-      console.log('Resposta agentes:', assistantsResponse);
+      console.log('Resposta da API:', assistantsResponse);
 
       if (!assistantsResponse.error && assistantsResponse.data?.assistants) {
+        console.log('Dados encontrados:', assistantsResponse.data.assistants);
         setAssistants(assistantsResponse.data.assistants);
-        console.log('Agentes carregados:', assistantsResponse.data.assistants.length);
+        console.log('Agentes setados no state:', assistantsResponse.data.assistants.length);
       } else {
         console.error('Erro ao carregar agentes:', assistantsResponse.error);
+        console.log('Estado atual dos assistants:', assistants);
       }
 
       // Load conversations
