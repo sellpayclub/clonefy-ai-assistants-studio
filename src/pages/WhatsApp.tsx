@@ -3,212 +3,233 @@ import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from '@supabase/supabase-js';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Smartphone, Plus, QrCode, Trash2, RefreshCw, CheckCircle, XCircle, Clock } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Smartphone, QrCode, Plus, Trash2, RefreshCw, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AppSidebar from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
-interface WhatsAppConnection {
+interface Assistant {
   id: string;
-  instance_name: string;
-  instance_id: string;
-  status: string;
-  phone_number?: string;
-  qr_code?: string;
-  connected_at?: string;
+  name: string;
+  description?: string;
+  openai_assistant_id: string;
+}
+
+interface WhatsAppConnection {
+  id: number;
+  NomeInstancia: string;
+  IDAssistentGPT: string;
+  EmailUSER: string;
   created_at: string;
+  ThreadID?: string;
+  WhatsAppUSER?: string;
 }
 
 const WhatsApp = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [assistants, setAssistants] = useState<Assistant[]>([]);
   const [connections, setConnections] = useState<WhatsAppConnection[]>([]);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [qrDialogOpen, setQrDialogOpen] = useState(false);
-  const [selectedConnection, setSelectedConnection] = useState<WhatsAppConnection | null>(null);
-  const [formLoading, setFormLoading] = useState(false);
-  const { toast } = useToast();
-
+  const [creating, setCreating] = useState(false);
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  
   // Form states
   const [instanceName, setInstanceName] = useState("");
+  const [selectedAssistant, setSelectedAssistant] = useState("");
+  
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+    let isMounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        // Set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (!isMounted) return;
+            
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            if (!session?.user) {
+              window.location.href = '/auth';
+              return;
+            }
+
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              setTimeout(async () => {
+                if (isMounted) {
+                  await loadData();
+                  setLoading(false);
+                }
+              }, 100);
+            }
+          }
+        );
+
+        // Check for existing session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (!session?.user) {
           window.location.href = '/auth';
+          return;
         }
-      }
-    );
+        
+        await loadData();
+        setLoading(false);
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (!session?.user) {
-        window.location.href = '/auth';
-        return;
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Erro na inicialização WhatsApp:', error);
+        setLoading(false);
       }
-      
-      loadConnections();
-      setLoading(false);
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const loadConnections = async () => {
-    if (!session) return;
-
-    try {
-      const response = await supabase.functions.invoke('evolution-api', {
-        body: { action: 'get_instances' },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (response.error) {
-        throw response.error;
-      }
-
-      setConnections(response.data.connections || []);
-    } catch (error: any) {
-      console.error('Error loading connections:', error);
-      toast({
-        title: "Erro ao carregar conexões",
-        description: error.message,
-        variant: "destructive",
-      });
+  const loadData = async () => {
+    let currentSession = session;
+    if (!currentSession) {
+      const { data } = await supabase.auth.getSession();
+      currentSession = data.session;
     }
-  };
 
-  const handleCreateInstance = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!session) return;
-    
-    setFormLoading(true);
-
-    try {
-      const response = await supabase.functions.invoke('evolution-api', {
-        body: { action: 'create_instance', instanceName },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (response.error) {
-        throw response.error;
-      }
-
-      toast({
-        title: "Instância criada!",
-        description: "Sua instância WhatsApp foi criada com sucesso.",
-      });
-
-      setIsCreateOpen(false);
-      setInstanceName("");
-      loadConnections();
-    } catch (error: any) {
-      console.error('Error creating instance:', error);
-      toast({
-        title: "Erro ao criar instância",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  const handleGenerateQR = async (connection: WhatsAppConnection) => {
-    if (!session) return;
-
-    try {
-      const response = await supabase.functions.invoke('evolution-api', {
-        body: { action: 'generate_qr', instanceId: connection.instance_id },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (response.error) {
-        throw response.error;
-      }
-
-      setSelectedConnection({ ...connection, qr_code: response.data.base64 || response.data.qrcode });
-      setQrDialogOpen(true);
-      
-      // Reload connections to get updated QR
-      setTimeout(() => {
-        loadConnections();
-      }, 1000);
-    } catch (error: any) {
-      console.error('Error generating QR:', error);
-      toast({
-        title: "Erro ao gerar QR Code",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteInstance = async (connection: WhatsAppConnection) => {
-    if (!session) return;
-    
-    if (!confirm(`Tem certeza que deseja excluir a instância "${connection.instance_name}"?`)) {
+    if (!currentSession) {
+      console.log('WhatsApp: Sem sessão disponível');
       return;
     }
 
     try {
-      const response = await supabase.functions.invoke('evolution-api', {
-        body: { action: 'delete_instance', instanceId: connection.instance_id },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
+      console.log('WhatsApp: Carregando dados...');
+      
+      // Load assistants
+      const assistantsResponse = await supabase.functions.invoke('openai-assistants', {
+        body: { action: 'list' },
+        headers: { Authorization: `Bearer ${currentSession.access_token}` },
+      });
+
+      if (!assistantsResponse.error && assistantsResponse.data?.assistants) {
+        setAssistants(assistantsResponse.data.assistants);
+      }
+
+      // Load WhatsApp connections
+      const connectionsResponse = await supabase.functions.invoke('whatsapp-evolution', {
+        body: { action: 'list' },
+        headers: { Authorization: `Bearer ${currentSession.access_token}` },
+      });
+
+      if (!connectionsResponse.error && connectionsResponse.data?.connections) {
+        setConnections(connectionsResponse.data.connections);
+      }
+    } catch (error: any) {
+      console.error('WhatsApp: Error loading data:', error);
+    }
+  };
+
+  const createConnection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!instanceName || !selectedAssistant || !user?.email) return;
+
+    setCreating(true);
+    setQrCode(null);
+
+    try {
+      const response = await supabase.functions.invoke('whatsapp-evolution', {
+        body: {
+          action: 'create',
+          instanceName: instanceName,
+          assistantId: selectedAssistant,
+          userEmail: user.email,
         },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
       });
 
       if (response.error) {
-        throw response.error;
+        throw new Error(response.error.message || 'Erro ao criar conexão');
+      }
+
+      const data = response.data;
+      setQrCode(data.qrCode);
+      
+      toast({
+        title: "Conexão criada com sucesso!",
+        description: `Instância ${data.instanceName} criada. Escaneie o QR Code para conectar.`,
+      });
+
+      // Reset form
+      setInstanceName("");
+      setSelectedAssistant("");
+      
+      // Reload connections
+      await loadData();
+
+    } catch (error: any) {
+      console.error('Error creating connection:', error);
+      toast({
+        title: "Erro ao criar conexão",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const deleteConnection = async (connection: WhatsAppConnection) => {
+    try {
+      const response = await supabase.functions.invoke('whatsapp-evolution', {
+        body: {
+          action: 'delete',
+          instanceName: connection.NomeInstancia,
+        },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro ao deletar conexão');
       }
 
       toast({
-        title: "Instância excluída!",
-        description: "A instância foi removida com sucesso.",
+        title: "Conexão deletada!",
+        description: `A instância ${connection.NomeInstancia} foi removida.`,
       });
 
-      loadConnections();
+      await loadData();
     } catch (error: any) {
-      console.error('Error deleting instance:', error);
+      console.error('Error deleting connection:', error);
       toast({
-        title: "Erro ao excluir instância",
+        title: "Erro ao deletar conexão",
         description: error.message,
         variant: "destructive",
       });
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'open':
-        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Conectado</Badge>;
-      case 'connecting':
-        return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />Conectando</Badge>;
-      case 'created':
-        return <Badge variant="outline"><QrCode className="h-3 w-3 mr-1" />Aguardando QR</Badge>;
-      default:
-        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Desconectado</Badge>;
+  const getStatusBadge = (connection: WhatsAppConnection) => {
+    if (connection.WhatsAppUSER) {
+      return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Conectado</Badge>;
     }
+    return <Badge variant="secondary"><AlertCircle className="h-3 w-3 mr-1" />Aguardando QR</Badge>;
   };
 
   if (loading) {
@@ -237,171 +258,223 @@ const WhatsApp = () => {
                   WhatsApp
                 </h1>
                 <p className="text-muted-foreground">
-                  Gerencie suas conexões WhatsApp via QR Code
+                  Conecte suas instâncias WhatsApp aos agentes de IA
                 </p>
               </div>
             </div>
-            <Button onClick={() => setIsCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Conexão
+            <Button onClick={loadData} variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Atualizar
             </Button>
           </div>
 
-          {/* Connections Grid */}
-          {connections.length === 0 ? (
-            <Card className="p-12 text-center">
-              <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
-                <Smartphone className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Nenhuma conexão criada</h3>
-              <p className="text-muted-foreground mb-4">
-                Crie sua primeira conexão WhatsApp para começar a usar os assistentes
-              </p>
-              <Button onClick={() => setIsCreateOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Criar Primeira Conexão
-              </Button>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {connections.map((connection) => (
-                <Card key={connection.id} className="hover:shadow-lg transition-shadow">
+          <Tabs defaultValue="connections" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="connections">Gerenciar Conexões</TabsTrigger>
+              <TabsTrigger value="create">Nova Conexão</TabsTrigger>
+            </TabsList>
+
+            {/* Lista de Conexões */}
+            <TabsContent value="connections" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Smartphone className="h-5 w-5" />
+                    Suas Conexões WhatsApp
+                  </CardTitle>
+                  <CardDescription>
+                    Gerencie suas instâncias WhatsApp conectadas
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {connections.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Smartphone className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground mb-4">Nenhuma conexão WhatsApp encontrada</p>
+                      <Button onClick={() => {
+                        const createTab = document.querySelector('[value="create"]') as HTMLButtonElement;
+                        createTab?.click();
+                      }}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar primeira conexão
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid gap-4">
+                      {connections.map((connection) => (
+                        <Card key={connection.id} className="hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h3 className="font-semibold">{connection.NomeInstancia}</h3>
+                                  {getStatusBadge(connection)}
+                                </div>
+                                <p className="text-sm text-muted-foreground mb-1">
+                                  <strong>Agente:</strong> {assistants.find(a => a.openai_assistant_id === connection.IDAssistentGPT)?.name || 'Agente não encontrado'}
+                                </p>
+                                <p className="text-sm text-muted-foreground mb-1">
+                                  <strong>Email:</strong> {connection.EmailUSER}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  <strong>Criado em:</strong> {new Date(connection.created_at).toLocaleString('pt-BR')}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button size="sm" variant="destructive">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Tem certeza que deseja excluir a conexão "{connection.NomeInstancia}"? 
+                                        Esta ação não pode ser desfeita.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                      <AlertDialogAction 
+                                        onClick={() => deleteConnection(connection)}
+                                        className="bg-destructive hover:bg-destructive/90"
+                                      >
+                                        Excluir
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Criar Nova Conexão */}
+            <TabsContent value="create" className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Formulário */}
+                <Card>
                   <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
-                          <Smartphone className="h-4 w-4 text-green-600" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg">{connection.instance_name}</CardTitle>
-                          {connection.phone_number && (
-                            <p className="text-sm text-muted-foreground">{connection.phone_number}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => loadConnections()}
-                        >
-                          <RefreshCw className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteInstance(connection)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {getStatusBadge(connection.status)}
-                    </div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Plus className="h-5 w-5" />
+                      Nova Conexão WhatsApp
+                    </CardTitle>
+                    <CardDescription>
+                      Crie uma nova instância WhatsApp e conecte a um agente
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      {connection.status !== 'open' && (
-                        <Button 
-                          size="sm" 
-                          className="w-full"
-                          onClick={() => handleGenerateQR(connection)}
-                        >
-                          <QrCode className="h-3 w-3 mr-1" />
-                          Gerar QR Code
-                        </Button>
-                      )}
-                      {connection.connected_at && (
+                    <form onSubmit={createConnection} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="instanceName">Nome da Instância</Label>
+                        <Input
+                          id="instanceName"
+                          value={instanceName}
+                          onChange={(e) => setInstanceName(e.target.value)}
+                          placeholder="Ex: empresa_vendas"
+                          required
+                          disabled={creating}
+                        />
                         <p className="text-xs text-muted-foreground">
-                          Conectado em: {new Date(connection.connected_at).toLocaleString('pt-BR')}
+                          Nome será: cristina_{instanceName.toLowerCase()}
                         </p>
-                      )}
-                    </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="assistant">Selecionar Agente</Label>
+                        <Select value={selectedAssistant} onValueChange={setSelectedAssistant} disabled={creating}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Escolha um agente" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {assistants.length === 0 ? (
+                              <div className="p-3 text-center text-muted-foreground">
+                                <p className="text-sm">Nenhum agente encontrado</p>
+                                <Button 
+                                  size="sm" 
+                                  variant="link" 
+                                  onClick={() => window.location.href = '/assistants'}
+                                  className="text-xs mt-1"
+                                >
+                                  Criar primeiro agente
+                                </Button>
+                              </div>
+                            ) : (
+                              assistants.map((assistant) => (
+                                <SelectItem key={assistant.id} value={assistant.openai_assistant_id}>
+                                  {assistant.name}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <Button 
+                        type="submit" 
+                        className="w-full" 
+                        disabled={creating || !instanceName || !selectedAssistant}
+                      >
+                        {creating ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Criando instância...
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Criar Conexão
+                          </>
+                        )}
+                      </Button>
+                    </form>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          )}
 
-          {/* Create Instance Dialog */}
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Nova Conexão WhatsApp</DialogTitle>
-                <DialogDescription>
-                  Crie uma nova instância para conectar um WhatsApp
-                </DialogDescription>
-              </DialogHeader>
-              
-              <form onSubmit={handleCreateInstance} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="instanceName">Nome da Conexão</Label>
-                  <Input
-                    id="instanceName"
-                    placeholder="Ex: Vendas, Suporte, Principal"
-                    value={instanceName}
-                    onChange={(e) => setInstanceName(e.target.value)}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Escolha um nome descritivo para identificar esta conexão
-                  </p>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsCreateOpen(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button type="submit" disabled={formLoading}>
-                    {formLoading ? "Criando..." : "Criar Conexão"}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-
-          {/* QR Code Dialog */}
-          <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Conectar WhatsApp</DialogTitle>
-                <DialogDescription>
-                  Escaneie o QR Code com seu WhatsApp
-                </DialogDescription>
-              </DialogHeader>
-              
-              {selectedConnection?.qr_code && (
-                <div className="flex flex-col items-center space-y-4">
-                  <img 
-                    src={`data:image/png;base64,${selectedConnection.qr_code}`}
-                    alt="QR Code WhatsApp"
-                    className="w-64 h-64 border rounded-lg"
-                  />
-                  <div className="text-center space-y-2">
-                    <p className="text-sm font-medium">Como conectar:</p>
-                    <ol className="text-xs text-muted-foreground space-y-1 text-left">
-                      <li>1. Abra o WhatsApp no seu celular</li>
-                      <li>2. Toque em Menu ⋮ &gt; Dispositivos conectados</li>
-                      <li>3. Toque em "Conectar um dispositivo"</li>
-                      <li>4. Escaneie este QR Code</li>
-                    </ol>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => selectedConnection && handleGenerateQR(selectedConnection)}
-                  >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Gerar Novo QR
-                  </Button>
-                </div>
-              )}
-            </DialogContent>
-          </Dialog>
+                {/* QR Code */}
+                {qrCode && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <QrCode className="h-5 w-5" />
+                        QR Code WhatsApp
+                      </CardTitle>
+                      <CardDescription>
+                        Escaneie este QR Code no seu WhatsApp para conectar
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center">
+                      <div className="bg-white p-4 rounded-lg inline-block mb-4">
+                        <img 
+                          src={`data:image/png;base64,${qrCode}`} 
+                          alt="QR Code WhatsApp"
+                          className="w-64 h-64"
+                        />
+                      </div>
+                      <div className="space-y-2 text-sm text-muted-foreground">
+                        <p className="font-medium text-foreground">Como conectar:</p>
+                        <ol className="text-left space-y-1">
+                          <li>1. Abra o WhatsApp no seu celular</li>
+                          <li>2. Toque em "Mais opções" ou "Configurações"</li>
+                          <li>3. Toque em "Aparelhos conectados"</li>
+                          <li>4. Toque em "Conectar um aparelho"</li>
+                          <li>5. Aponte a câmera para este QR Code</li>
+                        </ol>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </main>
       </div>
     </SidebarProvider>

@@ -243,6 +243,42 @@ export type Database = {
           },
         ]
       }
+      n8n_fluxogpt: {
+        Row: {
+          created_at: string | null
+          emailuser: string | null
+          id: number
+          idassistentgpt: string | null
+          message: string | null
+          nomeinstancia: string | null
+          threadid: string | null
+          timeout: string | null
+          whatsappuser: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          emailuser?: string | null
+          id: number
+          idassistentgpt?: string | null
+          message?: string | null
+          nomeinstancia?: string | null
+          threadid?: string | null
+          timeout?: string | null
+          whatsappuser?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          emailuser?: string | null
+          id?: number
+          idassistentgpt?: string | null
+          message?: string | null
+          nomeinstancia?: string | null
+          threadid?: string | null
+          timeout?: string | null
+          whatsappuser?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
