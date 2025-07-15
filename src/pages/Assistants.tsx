@@ -1,0 +1,403 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { User, Session } from '@supabase/supabase-js';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Bot, Plus, Edit, Trash2, MessageSquare, Settings } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import AppSidebar from "@/components/AppSidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+
+interface Assistant {
+  id: string;
+  name: string;
+  description: string;
+  instructions: string;
+  model: string;
+  openai_assistant_id: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+const Assistants = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [assistants, setAssistants] = useState<Assistant[]>([]);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingAssistant, setEditingAssistant] = useState<Assistant | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const { toast } = useToast();
+
+  // Form states
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [instructions, setInstructions] = useState("");
+  const [model, setModel] = useState("gpt-4o");
+
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (!session?.user) {
+          window.location.href = '/auth';
+        }
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (!session?.user) {
+        window.location.href = '/auth';
+        return;
+      }
+      
+      loadAssistants();
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loadAssistants = async () => {
+    if (!session) return;
+
+    try {
+      const response = await supabase.functions.invoke('openai-assistants', {
+        body: { action: 'list' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      setAssistants(response.data.assistants || []);
+    } catch (error: any) {
+      console.error('Error loading assistants:', error);
+      toast({
+        title: "Erro ao carregar assistentes",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const resetForm = () => {
+    setName("");
+    setDescription("");
+    setInstructions("");
+    setModel("gpt-4o");
+    setEditingAssistant(null);
+  };
+
+  const openCreateDialog = () => {
+    resetForm();
+    setIsCreateOpen(true);
+  };
+
+  const openEditDialog = (assistant: Assistant) => {
+    setName(assistant.name);
+    setDescription(assistant.description || "");
+    setInstructions(assistant.instructions || "");
+    setModel(assistant.model);
+    setEditingAssistant(assistant);
+    setIsCreateOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!session) return;
+    
+    setFormLoading(true);
+
+    try {
+      const action = editingAssistant ? 'update' : 'create';
+      const body = editingAssistant 
+        ? { action, assistantId: editingAssistant.id, name, description, instructions, model }
+        : { action, name, description, instructions, model };
+
+      const response = await supabase.functions.invoke('openai-assistants', {
+        body,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      toast({
+        title: editingAssistant ? "Assistente atualizado!" : "Assistente criado!",
+        description: editingAssistant 
+          ? "As alterações foram salvas com sucesso." 
+          : "Seu novo assistente está pronto para uso.",
+      });
+
+      setIsCreateOpen(false);
+      resetForm();
+      loadAssistants();
+    } catch (error: any) {
+      console.error('Error saving assistant:', error);
+      toast({
+        title: "Erro ao salvar assistente",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleDelete = async (assistant: Assistant) => {
+    if (!session) return;
+    
+    if (!confirm(`Tem certeza que deseja excluir o assistente "${assistant.name}"?`)) {
+      return;
+    }
+
+    try {
+      const response = await supabase.functions.invoke('openai-assistants', {
+        body: { action: 'delete', assistantId: assistant.id },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      toast({
+        title: "Assistente excluído!",
+        description: "O assistente foi removido com sucesso.",
+      });
+
+      loadAssistants();
+    } catch (error: any) {
+      console.error('Error deleting assistant:', error);
+      toast({
+        title: "Erro ao excluir assistente",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        
+        <main className="flex-1 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger />
+              <div>
+                <h1 className="text-3xl font-bold flex items-center gap-2">
+                  <Bot className="h-8 w-8 text-primary" />
+                  Assistentes
+                </h1>
+                <p className="text-muted-foreground">
+                  Crie e gerencie seus assistentes de IA personalizados
+                </p>
+              </div>
+            </div>
+            <Button onClick={openCreateDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Assistente
+            </Button>
+          </div>
+
+          {/* Assistants Grid */}
+          {assistants.length === 0 ? (
+            <Card className="p-12 text-center">
+              <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
+                <Bot className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Nenhum assistente criado</h3>
+              <p className="text-muted-foreground mb-4">
+                Crie seu primeiro assistente para começar a automatizar conversas
+              </p>
+              <Button onClick={openCreateDialog}>
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Primeiro Assistente
+              </Button>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {assistants.map((assistant) => (
+                <Card key={assistant.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Bot className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">{assistant.name}</CardTitle>
+                          <Badge variant="secondary" className="text-xs">
+                            {assistant.model}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => openEditDialog(assistant)}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDelete(assistant)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                    {assistant.description && (
+                      <CardDescription>{assistant.description}</CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="text-sm text-muted-foreground">
+                        <strong>Instruções:</strong>
+                      </div>
+                      <p className="text-sm line-clamp-3">
+                        {assistant.instructions || "Nenhuma instrução definida"}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <Button size="sm" className="flex-1">
+                        <MessageSquare className="h-3 w-3 mr-1" />
+                        Testar
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        <Settings className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Create/Edit Dialog */}
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingAssistant ? "Editar Assistente" : "Criar Novo Assistente"}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingAssistant 
+                    ? "Modifique as configurações do seu assistente" 
+                    : "Configure seu assistente de IA personalizado"
+                  }
+                </DialogDescription>
+              </DialogHeader>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nome do Assistente</Label>
+                    <Input
+                      id="name"
+                      placeholder="Ex: Atendente Virtual"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="model">Modelo</Label>
+                    <Select value={model} onValueChange={setModel}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="gpt-4o">GPT-4o (Recomendado)</SelectItem>
+                        <SelectItem value="gpt-4o-mini">GPT-4o Mini (Mais rápido)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Descrição (Opcional)</Label>
+                  <Input
+                    id="description"
+                    placeholder="Breve descrição do assistente"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="instructions">Instruções</Label>
+                  <Textarea
+                    id="instructions"
+                    placeholder="Descreva como o assistente deve se comportar, seu tom de voz, conhecimentos específicos..."
+                    rows={6}
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Seja específico sobre como o assistente deve responder e se comportar.
+                  </p>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsCreateOpen(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={formLoading}>
+                    {formLoading ? "Salvando..." : editingAssistant ? "Salvar Alterações" : "Criar Assistente"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </main>
+      </div>
+    </SidebarProvider>
+  );
+};
+
+export default Assistants;
