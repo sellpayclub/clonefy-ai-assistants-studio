@@ -407,75 +407,61 @@ async function testEvolutionAPI() {
 
 async function getQrCode(instanceName: string) {
   try {
-    console.log('getQrCode: Getting QR code for instance:', instanceName);
-    console.log('getQrCode: API Key:', EVOLUTION_API_KEY);
+    console.log(`WhatsApp Evolution: Getting QR code for instance: ${instanceName}`);
     
-    // Usar o endpoint oficial da documentação: GET /instance/connect/{instance}
-    console.log('getQrCode: Using official connect endpoint');
-    const connectUrl = `${EVOLUTION_API_URL}/instance/connect/${instanceName}`;
-    console.log('getQrCode: URL:', connectUrl);
+    // URL correta da Evolution API conforme especificação do usuário
+    const evolutionUrl = `https://evolutionapi.chatsellpay.com/instance/connect/${instanceName}`;
+    const apiKey = '2eb6dd69c0cc273101c4efc974419be5';
     
-    const connectResponse = await fetch(connectUrl, {
+    console.log(`WhatsApp Evolution: Calling Evolution API at: ${evolutionUrl}`);
+    
+    const response = await fetch(evolutionUrl, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
-        'apikey': EVOLUTION_API_KEY
-      },
+        'apikey': apiKey,
+        'Content-Type': 'application/json'
+      }
     });
 
-    console.log('getQrCode: Response status:', connectResponse.status);
+    console.log(`WhatsApp Evolution: Evolution API response status: ${response.status}`);
     
-    if (!connectResponse.ok) {
-      const errorData = await connectResponse.text();
-      console.error('getQrCode: API error:', errorData);
-      
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`WhatsApp Evolution: Evolution API error: ${response.status} - ${errorText}`);
       return new Response(JSON.stringify({ 
         success: false, 
-        error: 'Instância não encontrada ou QR Code não disponível.',
-        apiError: errorData
+        error: `Evolution API error: ${response.status}`,
+        details: errorText
       }), {
-        status: 400,
-        headers: corsHeaders,
-      });
-    }
-    
-    const responseText = await connectResponse.text();
-    console.log('getQrCode: Raw response:', responseText);
-    
-    const connectData = JSON.parse(responseText);
-    console.log('getQrCode: Parsed data:', JSON.stringify(connectData, null, 2));
-    
-    // Retornar dados conforme documentação oficial
-    if (connectData.code || connectData.pairingCode) {
-      return new Response(JSON.stringify({ 
-        success: true, 
-        qrCode: connectData.code,
-        pairingCode: connectData.pairingCode,
-        count: connectData.count,
-        rawResponse: connectData
-      }), {
-        status: 200,
+        status: response.status,
         headers: corsHeaders,
       });
     }
 
-    // Se não encontrou QR code
-    console.log('getQrCode: No QR code found in response');
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: 'QR Code não disponível. Instância pode estar conectada ou não pronta.',
-      rawResponse: connectData
+    const evolutionData = await response.json();
+    console.log('WhatsApp Evolution: Evolution API response data:', evolutionData);
+    
+    // A API Evolution retorna: { pairingCode: "XXXX", code: "2@...", count: 1, base64: "data:image/png..." }
+    // Retornar exatamente o que a API retorna, com campos extras para compatibilidade
+    return new Response(JSON.stringify({
+      success: true,
+      pairingCode: evolutionData.pairingCode,
+      code: evolutionData.code,
+      count: evolutionData.count,
+      base64: evolutionData.base64,
+      // Para compatibilidade com código antigo
+      qrCode: evolutionData.code
     }), {
-      status: 400,
+      status: 200,
       headers: corsHeaders,
     });
     
   } catch (error: any) {
-    console.error('getQrCode: Fatal error:', error);
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: error.message,
-      stack: error.stack
+    console.error('WhatsApp Evolution: Error getting QR code:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to get QR code',
+      details: error.message
     }), {
       status: 500,
       headers: corsHeaders,

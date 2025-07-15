@@ -277,63 +277,61 @@ const WhatsApp = () => {
 
   const fetchQrCode = async (connection: WhatsAppConnection) => {
     try {
+      console.log('fetchQrCode: Iniciando busca do QR code para:', connection.nomeinstancia);
+      
       const response = await supabase.functions.invoke('whatsapp-evolution', {
         body: {
           action: 'get_qr',
-          instanceName: connection.nomeinstancia || connection.instance_name,
+          instanceName: connection.nomeinstancia,
         },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
       });
 
+      console.log('fetchQrCode: Resposta completa:', response);
+      console.log('fetchQrCode: Data da resposta:', response.data);
+
       if (response.error) {
-        throw new Error(response.error.message || 'Erro ao buscar QR Code');
+        throw new Error(response.error.message || 'Erro na requisição');
       }
 
-      console.log('fetchQrCode response:', response);
-      console.log('fetchQrCode response.data:', response.data);
-      
-      // Verificar se a resposta está dentro de um wrapper
-      let qrData = response.data;
-      
-      // Se response.data tem um campo "value" que é uma string JSON, parse ela
-      if (qrData && typeof qrData.value === 'string') {
-        try {
-          qrData = JSON.parse(qrData.value);
-          console.log('Parsed QR data from value field:', qrData);
-        } catch (parseError) {
-          console.error('Error parsing QR data from value field:', parseError);
-        }
+      if (!response.data) {
+        throw new Error('Nenhum dado retornado');
       }
+
+      // A resposta do backend: { success: true, pairingCode, code, count, base64, qrCode }
+      const data = response.data;
       
-      // A API Evolution retorna: { pairingCode: "XXXX", code: "2@...", count: 1, base64: "data:image/png..." }
-      const qrCodeData = qrData?.code || qrData?.qrCode; // Verificar ambos os campos
-      const qrBase64 = qrData?.base64; // Imagem base64 se disponível
-      console.log('fetchQrCode qrCodeData:', qrCodeData);
-      console.log('fetchQrCode qrBase64:', qrBase64);
-      console.log('fetchQrCode pairingCode:', qrData?.pairingCode);
-      console.log('fetchQrCode count:', qrData?.count);
+      console.log('fetchQrCode: Dados processados:', {
+        success: data.success,
+        hasPairingCode: !!data.pairingCode,
+        hasCode: !!data.code,
+        hasBase64: !!data.base64,
+        hasQrCode: !!data.qrCode,
+      });
+
+      if (!data.success) {
+        throw new Error(data.error || 'Falha ao obter QR code');
+      }
+
+      // Usar a imagem base64 se disponível, senão usar o código
+      const qrCodeToDisplay = data.base64 || data.code || data.qrCode;
       
-      if (qrCodeData || qrBase64) {
-        // Preferir a imagem base64 se disponível, senão usar o código
-        setQrCode(qrBase64 || qrCodeData);
+      if (qrCodeToDisplay) {
+        console.log('fetchQrCode: QR code encontrado, exibindo...');
+        setQrCode(qrCodeToDisplay);
         setActiveTab("qr-code");
         toast({
           title: "QR Code gerado",
-          description: "Escaneie o código para conectar seu WhatsApp.",
+          description: `Escaneie o código para conectar o WhatsApp. ${data.pairingCode ? `Pairing Code: ${data.pairingCode}` : ''}`,
         });
       } else {
-        console.error('No QR code found in response:', qrData);
-        toast({
-          title: "QR Code não disponível",
-          description: "Não foi possível obter o QR Code desta instância.",
-          variant: "destructive",
-        });
+        throw new Error('QR code não encontrado na resposta');
       }
+
     } catch (error: any) {
-      console.error('Error fetching QR code:', error);
+      console.error('fetchQrCode: Erro:', error);
       toast({
-        title: "Erro ao buscar QR Code",
-        description: error.message,
+        title: "Erro ao obter QR Code",
+        description: error.message || "Não foi possível obter o QR Code desta instância.",
         variant: "destructive",
       });
     }
@@ -679,11 +677,27 @@ const WhatsApp = () => {
                   </p>
                   
                   <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6 inline-block shadow-sm">
-                    <img 
-                      src={`data:image/png;base64,${qrCode}`} 
-                      alt="QR Code WhatsApp"
-                      className="w-64 h-64 mx-auto"
-                    />
+                    {qrCode.startsWith('data:image') ? (
+                      // Se for uma imagem base64 completa
+                      <img 
+                        src={qrCode} 
+                        alt="QR Code WhatsApp"
+                        className="w-64 h-64 mx-auto"
+                      />
+                    ) : qrCode.startsWith('iVBORw0KGgo') || qrCode.includes('base64') ? (
+                      // Se for base64 puro
+                      <img 
+                        src={`data:image/png;base64,${qrCode}`} 
+                        alt="QR Code WhatsApp"
+                        className="w-64 h-64 mx-auto"
+                      />
+                    ) : (
+                      // Se for um código de texto, exibir como texto
+                      <div className="bg-gray-100 p-4 rounded border break-all text-xs font-mono">
+                        <p className="text-red-600 mb-2 text-sm">⚠️ QR Code não disponível como imagem</p>
+                        <p className="text-gray-700">Código: {qrCode.substring(0, 100)}...</p>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800">
