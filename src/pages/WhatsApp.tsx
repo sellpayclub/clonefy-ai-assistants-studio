@@ -305,16 +305,20 @@ const WhatsApp = () => {
         }
       }
       
-      // A API Evolution retorna: { success: true, qrCode: "código", pairingCode: "XXXX", count: 1 }
-      const qrCodeData = qrData?.qrCode;
+      // A API Evolution retorna: { pairingCode: "XXXX", code: "2@...", count: 1, base64: "data:image/png..." }
+      const qrCodeData = qrData?.code || qrData?.qrCode; // Verificar ambos os campos
+      const qrBase64 = qrData?.base64; // Imagem base64 se disponível
       console.log('fetchQrCode qrCodeData:', qrCodeData);
+      console.log('fetchQrCode qrBase64:', qrBase64);
       console.log('fetchQrCode pairingCode:', qrData?.pairingCode);
+      console.log('fetchQrCode count:', qrData?.count);
       
-      if (qrCodeData) {
-        setQrCode(qrCodeData);
-        setActiveTab("create");
+      if (qrCodeData || qrBase64) {
+        // Preferir a imagem base64 se disponível, senão usar o código
+        setQrCode(qrBase64 || qrCodeData);
+        setActiveTab("qr-code");
         toast({
-          title: "QR Code gerado!",
+          title: "QR Code gerado",
           description: "Escaneie o código para conectar seu WhatsApp.",
         });
       } else {
