@@ -33,10 +33,10 @@ interface WhatsAppConnection {
   connected_at?: string;
   created_at: string;
   updated_at: string;
-  // Legacy fields from n8n_fluxogpt table
-  nomeinstancia?: string;
-  idassistentgpt?: string;
-  emailuser?: string;
+  // Campos corretos conforme especificação
+  NomeInstancia?: string;
+  IDAssistentGPT?: string;
+  EmailUSER?: string;
   threadid?: string;
   whatsappuser?: string;
 }
@@ -62,7 +62,6 @@ const WhatsApp = () => {
 
     const initializeAuth = async () => {
       try {
-        // Set up auth state listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             if (!isMounted) return;
@@ -86,7 +85,6 @@ const WhatsApp = () => {
           }
         );
 
-        // Check for existing session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!isMounted) return;
@@ -194,7 +192,7 @@ const WhatsApp = () => {
       
       toast({
         title: "Conexão criada com sucesso!",
-        description: `Instância ${data.instanceName} criada. Buscando QR Code...`,
+        description: `Instância ${data.instanceName} criada.`,
       });
 
       // Reset form
@@ -202,42 +200,23 @@ const WhatsApp = () => {
       setSelectedAssistant("");
       
       // Reload connections
-      console.log('Reloading connections...');
       await loadData();
-      console.log('Connections reloaded');
       
-      // Auto-fetch QR code after creating connection
-      if (data.instanceName) {
-        console.log(`Auto-fetching QR code for instance: ${data.instanceName}`);
-        setTimeout(async () => {
-          try {
-            const connection = { 
-              instance_name: data.instanceName,
-              nomeinstancia: data.instanceName 
-            } as WhatsAppConnection;
-            console.log('Calling fetchQrCode with connection:', connection);
-            await fetchQrCode(connection);
-            console.log('QR code fetch completed');
-          } catch (qrError) {
-            console.error('Error fetching QR code:', qrError);
-          }
-        }, 2000); // Wait 2 seconds for instance to be fully created
-      } else {
-        console.error('No instanceName in response data');
+      // Show QR code if available
+      if (data.qrCode) {
+        setQrCode(data.qrCode);
+        setActiveTab("qr-code");
+        toast({
+          title: "QR Code disponível",
+          description: "Escaneie o código para conectar o WhatsApp.",
+        });
       }
 
     } catch (error: any) {
       console.error('Error creating connection:', error);
-      let errorMessage = error.message;
-      
-      // Try to extract more detailed error info
-      if (error.message === 'Edge Function returned a non-2xx status code') {
-        errorMessage = 'Erro na comunicação com a API Evolution. Verifique os logs da função.';
-      }
-      
       toast({
         title: "Erro ao criar conexão",
-        description: errorMessage,
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -250,7 +229,7 @@ const WhatsApp = () => {
       const response = await supabase.functions.invoke('whatsapp-evolution', {
         body: {
           action: 'delete',
-          instanceName: connection.nomeinstancia || connection.instance_name,
+          instanceName: connection.NomeInstancia || connection.instance_name,
         },
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
@@ -277,17 +256,16 @@ const WhatsApp = () => {
 
   const fetchQrCode = async (connection: WhatsAppConnection) => {
     try {
-      console.log('fetchQrCode: Iniciando busca do QR code para:', connection.nomeinstancia);
+      console.log('fetchQrCode: Buscando QR code para:', connection.NomeInstancia);
       
       const response = await supabase.functions.invoke('whatsapp-evolution', {
         body: {
           action: 'get_qr',
-          instanceName: connection.nomeinstancia,
+          instanceName: connection.NomeInstancia,
         },
       });
 
-      console.log('fetchQrCode: Resposta completa:', response);
-      console.log('fetchQrCode: Data da resposta:', response.data);
+      console.log('fetchQrCode: Resposta:', response);
 
       if (response.error) {
         throw new Error(response.error.message || 'Erro na requisição');
@@ -297,31 +275,20 @@ const WhatsApp = () => {
         throw new Error('Nenhum dado retornado');
       }
 
-      // A resposta do backend: { success: true, pairingCode, code, count, base64, qrCode }
       const data = response.data;
       
-      console.log('fetchQrCode: Dados processados:', {
-        success: data.success,
-        hasPairingCode: !!data.pairingCode,
-        hasCode: !!data.code,
-        hasBase64: !!data.base64,
-        hasQrCode: !!data.qrCode,
-      });
-
       if (!data.success) {
         throw new Error(data.error || 'Falha ao obter QR code');
       }
 
-      // Usar a imagem base64 se disponível, senão usar o código
-      const qrCodeToDisplay = data.base64 || data.code || data.qrCode;
-      
-      if (qrCodeToDisplay) {
-        console.log('fetchQrCode: QR code encontrado, exibindo...');
-        setQrCode(qrCodeToDisplay);
+      // Conforme especificação: usar campo base64
+      if (data.base64) {
+        console.log('fetchQrCode: QR code encontrado');
+        setQrCode(data.base64);
         setActiveTab("qr-code");
         toast({
           title: "QR Code gerado",
-          description: `Escaneie o código para conectar o WhatsApp. ${data.pairingCode ? `Pairing Code: ${data.pairingCode}` : ''}`,
+          description: "Escaneie o código para conectar o WhatsApp.",
         });
       } else {
         throw new Error('QR code não encontrado na resposta');
@@ -408,9 +375,10 @@ const WhatsApp = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="connections">Gerenciar Conexões</TabsTrigger>
               <TabsTrigger value="create">Nova Conexão</TabsTrigger>
+              <TabsTrigger value="qr-code">QR Code</TabsTrigger>
             </TabsList>
 
             {/* Lista de Conexões */}
@@ -441,7 +409,7 @@ const WhatsApp = () => {
                     <div className="space-y-6">
                       {connections.map((connection, index) => {
                         const isConnected = connection.status === 'open' || connection.whatsappuser;
-                        const assistant = assistants.find(a => a.openai_assistant_id === connection.idassistentgpt);
+                        const assistant = assistants.find(a => a.openai_assistant_id === connection.IDAssistentGPT);
                         
                         return (
                           <div key={connection.id || index} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
@@ -452,7 +420,7 @@ const WhatsApp = () => {
                                 </div>
                                 <div>
                                   <h3 className="text-lg font-semibold text-gray-900">
-                                    {connection.instance_name || connection.nomeinstancia || 'Instância sem nome'}
+                                    {connection.instance_name || connection.NomeInstancia || 'Instância sem nome'}
                                   </h3>
                                   {isConnected ? (
                                     <Badge className="bg-green-100 text-green-800 border-green-200">
@@ -482,88 +450,49 @@ const WhatsApp = () => {
                                 )}
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
-                                    <Button size="sm" variant="destructive" className="h-8 w-8 p-0">
-                                      <Trash2 className="h-4 w-4" />
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      className="h-8 border-red-300 text-red-700 hover:bg-red-50"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-1" />
+                                      Deletar
                                     </Button>
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
-                                      <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                                      <AlertDialogTitle>Deletar Conexão</AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Tem certeza que deseja excluir a conexão "{connection.instance_name || connection.nomeinstancia}"? 
-                                        Esta ação não pode ser desfeita.
+                                        Tem certeza que deseja deletar esta conexão WhatsApp? Esta ação não pode ser desfeita.
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                       <AlertDialogAction 
                                         onClick={() => deleteConnection(connection)}
-                                        className="bg-destructive hover:bg-destructive/90"
+                                        className="bg-red-600 hover:bg-red-700"
                                       >
-                                        Excluir
+                                        Deletar
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
                                 </AlertDialog>
                               </div>
                             </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                                    <span className="text-white text-xs">👤</span>
-                                  </div>
-                                  <span className="text-green-800 font-medium text-sm">NOME</span>
-                                </div>
-                                <p className="text-green-900 font-semibold">
-                                  {assistant?.name || 'Agente não encontrado'}
-                                </p>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                              <div>
+                                <span className="font-medium">Assistente:</span> {assistant?.name || 'Não encontrado'}
                               </div>
-
-                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                                    <span className="text-white text-xs">📱</span>
-                                  </div>
-                                  <span className="text-blue-800 font-medium text-sm">NÚMERO</span>
-                                </div>
-                                <p className="text-blue-900 font-semibold">
-                                  {connection.phone_number || connection.whatsappuser || 'Não conectado'}
-                                </p>
+                              <div>
+                                <span className="font-medium">Status:</span> {isConnected ? 'Conectado' : 'Desconectado'}
                               </div>
-                            </div>
-
-                            {isConnected && (
-                              <div className="bg-green-100 border border-green-200 rounded-lg p-4 text-center">
-                                <div className="flex items-center justify-center gap-2">
-                                  <CheckCircle className="w-5 h-5 text-green-600" />
-                                  <span className="text-green-800 font-medium">Agente de IA ativo e pronto para atender</span>
-                                </div>
+                              <div>
+                                <span className="font-medium">Email:</span> {connection.EmailUSER || 'N/A'}
                               </div>
-                            )}
-
-                            {!isConnected && (
-                              <div className="bg-orange-100 border border-orange-200 rounded-lg p-4 text-center">
-                                <div className="flex items-center justify-center gap-2 mb-2">
-                                  <AlertCircle className="w-5 h-5 text-orange-600" />
-                                  <span className="text-orange-800 font-medium">Status: Conectando...</span>
-                                </div>
-                                <div className="bg-orange-200 rounded-full h-2 overflow-hidden">
-                                  <div className="bg-orange-500 h-full w-3/4 rounded-full animate-pulse"></div>
-                                </div>
-                                <p className="text-orange-700 text-sm mt-2">Aguardando scan do QR Code...</p>
+                              <div>
+                                <span className="font-medium">Criado em:</span> {new Date(connection.created_at).toLocaleDateString('pt-BR')}
                               </div>
-                            )}
-
-                            <div className="mt-4 pt-4 border-t border-gray-200">
-                              <p className="text-gray-500 text-sm">
-                                Criado em: {new Date(connection.created_at).toLocaleDateString('pt-BR', {
-                                  day: '2-digit',
-                                  month: '2-digit', 
-                                  year: 'numeric'
-                                })}
-                              </p>
                             </div>
                           </div>
                         );
@@ -575,178 +504,133 @@ const WhatsApp = () => {
             </TabsContent>
 
             {/* Criar Nova Conexão */}
-            <TabsContent value="create" className="space-y-6">
-              {/* Formulário no topo */}
-              {!qrCode && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Plus className="h-5 w-5" />
-                      Nova Conexão WhatsApp
-                    </CardTitle>
-                    <CardDescription>
-                      Crie uma nova instância WhatsApp e conecte a um agente
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={createConnection} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="instanceName">Nome da Instância</Label>
-                        <Input
-                          id="instanceName"
-                          value={instanceName}
-                          onChange={(e) => setInstanceName(e.target.value)}
-                          placeholder="Ex: empresa_vendas"
-                          required
-                          disabled={creating}
+            <TabsContent value="create" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Plus className="h-5 w-5" />
+                    Criar Nova Conexão WhatsApp
+                  </CardTitle>
+                  <CardDescription>
+                    Configure uma nova instância WhatsApp e conecte a um assistente de IA
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={createConnection} className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="instanceName">Nome da Instância</Label>
+                      <Input
+                        id="instanceName"
+                        value={instanceName}
+                        onChange={(e) => setInstanceName(e.target.value)}
+                        placeholder="Ex: atendimento_loja"
+                        required
+                        disabled={creating}
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Use apenas letras, números e underscore (_)
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="assistant">Assistente de IA</Label>
+                      <Select 
+                        value={selectedAssistant} 
+                        onValueChange={setSelectedAssistant}
+                        disabled={creating}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um assistente" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {assistants.map((assistant) => (
+                            <SelectItem key={assistant.id} value={assistant.openai_assistant_id}>
+                              {assistant.name}
+                              {assistant.description && (
+                                <span className="text-muted-foreground ml-2">
+                                  - {assistant.description}
+                                </span>
+                              )}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {assistants.length === 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          Nenhum assistente encontrado. Crie um assistente primeiro.
+                        </p>
+                      )}
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={creating || !instanceName || !selectedAssistant}
+                    >
+                      {creating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Criando conexão...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Criar Conexão WhatsApp
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* QR Code Tab */}
+            <TabsContent value="qr-code" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <QrCode className="h-5 w-5" />
+                    QR Code do WhatsApp
+                  </CardTitle>
+                  <CardDescription>
+                    Escaneie este código QR com seu WhatsApp para conectar
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {qrCode ? (
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
+                        <img 
+                          src={qrCode}
+                          alt="QR Code do WhatsApp" 
+                          className="w-64 h-64 object-contain"
                         />
                       </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="assistant">Selecionar Agente</Label>
-                        <Select value={selectedAssistant} onValueChange={setSelectedAssistant} disabled={creating}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Escolha um agente" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {assistants.length === 0 ? (
-                              <div className="p-3 text-center text-muted-foreground">
-                                <p className="text-sm">Nenhum agente encontrado</p>
-                                <Button 
-                                  size="sm" 
-                                  variant="link" 
-                                  onClick={() => window.location.href = '/assistants'}
-                                  className="text-xs mt-1"
-                                >
-                                  Criar primeiro agente
-                                </Button>
-                              </div>
-                            ) : (
-                              assistants.map((assistant) => (
-                                <SelectItem key={assistant.id} value={assistant.openai_assistant_id}>
-                                  {assistant.name}
-                                </SelectItem>
-                              ))
-                            )}
-                          </SelectContent>
-                        </Select>
+                      <div className="text-center space-y-2">
+                        <p className="font-medium text-gray-900">
+                          Como conectar:
+                        </p>
+                        <ol className="text-sm text-gray-600 text-left space-y-1">
+                          <li>1. Abra o WhatsApp no seu celular</li>
+                          <li>2. Toque nos três pontos (⋮) e selecione "Aparelhos conectados"</li>
+                          <li>3. Toque em "Conectar um aparelho"</li>
+                          <li>4. Aponte a câmera para este QR Code</li>
+                        </ol>
                       </div>
-
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3" 
-                        disabled={creating || !instanceName || !selectedAssistant}
-                      >
-                        {creating ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Criando instância...
-                          </>
-                        ) : (
-                          <>
-                            <QrCode className="h-4 w-4 mr-2" />
-                            Gerar QR Code
-                          </>
-                        )}
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              )}
-              
-              {creating && (
-                <div className="bg-green-100 border border-green-200 rounded-2xl p-8 text-center">
-                  <div className="flex items-center justify-center gap-3 mb-4">
-                    <Loader2 className="w-6 h-6 text-green-600 animate-spin" />
-                    <span className="text-green-800 font-semibold text-lg">Criando Conexão...</span>
-                  </div>
-                </div>
-              )}
-
-              {qrCode && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center shadow-sm">
-                  <div className="flex items-center justify-center gap-3 mb-6">
-                    <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
-                      <QrCode className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900">QR Code do WhatsApp</h3>
-                  </div>
-                  
-                  <p className="text-gray-600 mb-6">
-                    Escaneie este código com seu WhatsApp para conectar
-                  </p>
-                  
-                  <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6 inline-block shadow-sm">
-                    {qrCode.startsWith('data:image') ? (
-                      // Se for uma imagem base64 completa
-                      <img 
-                        src={qrCode} 
-                        alt="QR Code WhatsApp"
-                        className="w-64 h-64 mx-auto"
-                      />
-                    ) : qrCode.startsWith('iVBORw0KGgo') || qrCode.includes('base64') ? (
-                      // Se for base64 puro
-                      <img 
-                        src={`data:image/png;base64,${qrCode}`} 
-                        alt="QR Code WhatsApp"
-                        className="w-64 h-64 mx-auto"
-                      />
-                    ) : (
-                      // Se for um código de texto, exibir como texto
-                      <div className="bg-gray-100 p-4 rounded border break-all text-xs font-mono">
-                        <p className="text-red-600 mb-2 text-sm">⚠️ QR Code não disponível como imagem</p>
-                        <p className="text-gray-700">Código: {qrCode.substring(0, 100)}...</p>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800">
-                    <div className="flex items-center gap-2 justify-center">
-                      <Smartphone className="w-4 h-4" />
-                      <span className="text-sm font-medium">Abra o WhatsApp e escaneie o código acima</span>
+                  ) : (
+                    <div className="text-center py-8">
+                      <QrCode className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground mb-4">
+                        Nenhum QR Code disponível
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Clique em "QR Code" em uma conexão desconectada para gerar o código
+                      </p>
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Instruções embaixo */}
-              {!creating && !qrCode && (
-                <div className="bg-green-50 border border-green-200 rounded-2xl p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center">
-                      <span className="text-white text-lg">⚡</span>
-                    </div>
-                    <h3 className="text-lg font-semibold text-green-900">Como conectar:</h3>
-                  </div>
-                  
-                  <div className="space-y-3 text-green-800">
-                    <div className="flex items-center gap-3">
-                      <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">1</span>
-                      <span>Clique em <strong>"Gerar QR Code"</strong> acima</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">2</span>
-                      <span>Abra o <strong>WhatsApp</strong> no seu celular</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">3</span>
-                      <span>Vá em <strong>Menu (⋮) → Dispositivos conectados</strong></span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">4</span>
-                      <span>Toque em <strong>"Conectar um dispositivo"</strong></span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">5</span>
-                      <span>Escaneie o QR Code que aparecerá na tela</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">6</span>
-                      <span>Aguarde a confirmação da conexão</span>
-                    </div>
-                  </div>
-                </div>
-              )}
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </main>

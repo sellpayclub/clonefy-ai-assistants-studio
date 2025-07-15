@@ -109,29 +109,22 @@ async function createWhatsAppInstance(
 ) {
   try {
     console.log('createWhatsAppInstance: Starting with params:', { instanceName, assistantId, userEmail });
-    
-    // Create full instance name using user email prefix
-    const emailPrefix = userEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, '_');
-    const fullInstanceName = `${emailPrefix}_${instanceName.toLowerCase()}`;
-    console.log('createWhatsAppInstance: Email prefix:', emailPrefix);
-    console.log('createWhatsAppInstance: Full instance name:', fullInstanceName);
 
-    // 1. Criar instância na Evolution API
-    console.log('createWhatsAppInstance: Creating instance in Evolution API...');
+    // 1. Criar instância na Evolution API (fluxo exato do usuário)
+    console.log('Step 1: Creating instance...');
     
     const createBody = {
-      instanceName: fullInstanceName,
+      instanceName: instanceName,
       integration: "WHATSAPP-BAILEYS",
-      qrcode: true, // Gerar QR code automaticamente
       reject_call: false,
-      groups_ignore: true,
-      always_online: true,
-      read_messages: true,
-      read_status: false
+      groupsIgnore: true,
+      alwaysOnline: true,
+      readMessages: true,
+      readStatus: false,
+      syncFullHistory: true
     };
     
-    console.log('createWhatsAppInstance: Request URL:', `${EVOLUTION_API_URL}/instance/create`);
-    console.log('createWhatsAppInstance: Request body:', JSON.stringify(createBody));
+    console.log('Create request:', JSON.stringify(createBody));
     
     const createResponse = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
       method: 'POST',
@@ -142,91 +135,95 @@ async function createWhatsAppInstance(
       body: JSON.stringify(createBody),
     });
 
-    console.log('createWhatsAppInstance: Create response status:', createResponse.status);
+    console.log('Create response status:', createResponse.status);
     
     if (!createResponse.ok) {
       const errorData = await createResponse.text();
-      console.error('createWhatsAppInstance: Evolution API create error:', errorData);
+      console.error('Evolution API create error:', errorData);
       throw new Error(`Failed to create instance (${createResponse.status}): ${errorData}`);
     }
 
     const createData = await createResponse.json();
-    console.log('createWhatsAppInstance: Instance created successfully:', createData);
+    console.log('Instance created:', createData);
 
     // 2. Configurar webhook
-    console.log('createWhatsAppInstance: Setting webhook...');
-    try {
-      await setWebhook(fullInstanceName);
-      console.log('createWhatsAppInstance: Webhook set successfully');
-    } catch (webhookError: any) {
-      console.error('createWhatsAppInstance: Webhook error:', webhookError.message);
-      // Continue mesmo se o webhook falhar
+    console.log('Step 2: Setting webhook...');
+    
+    const webhookResponse = await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': EVOLUTION_API_KEY,
+      },
+      body: JSON.stringify({
+        webhook: {
+          enabled: true,
+          url: WEBHOOK_URL,
+          webhookBase64: true,
+          events: ["MESSAGES_UPSERT"]
+        }
+      }),
+    });
+
+    console.log('Webhook response status:', webhookResponse.status);
+    
+    if (!webhookResponse.ok) {
+      const errorData = await webhookResponse.text();
+      console.error('Failed to set webhook:', errorData);
+      // Continue even if webhook fails
+    } else {
+      const webhookData = await webhookResponse.json();
+      console.log('Webhook configured:', webhookData);
     }
 
-    // 3. Obter QR Code se foi gerado na criação
-    console.log('createWhatsAppInstance: Checking for QR code...');
-    let qrCodeBase64 = null;
+    // 3. Conectar e obter QR Code
+    console.log('Step 3: Connecting and getting QR...');
     
-    // Se qrcode: true foi especificado, o QR pode já estar na resposta da criação
-    if (createData.qrCode || createData.base64) {
-      qrCodeBase64 = createData.qrCode || createData.base64;
-      console.log('createWhatsAppInstance: QR found in create response');
-    } else {
-      // Tentar obter QR code via endpoint fetchInstances (documentação oficial)
-      try {
-        const fetchUrl = `${EVOLUTION_API_URL}/instance/fetchInstances?instanceName=${fullInstanceName}`;
-        console.log('createWhatsAppInstance: Fetch URL:', fetchUrl);
-        
-        const fetchResponse = await fetch(fetchUrl, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': EVOLUTION_API_KEY,
-          },
-        });
-        
-        if (fetchResponse.ok) {
-          const fetchData = await fetchResponse.json();
-          console.log('createWhatsAppInstance: Fetch Data:', JSON.stringify(fetchData));
-          
-          // Verificar se há QR code na resposta
-          qrCodeBase64 = extractQrCodeFromResponse(fetchData);
-        }
-      } catch (qrError: any) {
-        console.error('createWhatsAppInstance: QR generation failed:', qrError.message);
-      }
+    const connectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': EVOLUTION_API_KEY,
+      },
+    });
+
+    console.log('Connect response status:', connectResponse.status);
+    
+    let qrBase64 = null;
+    if (connectResponse.ok) {
+      const connectData = await connectResponse.json();
+      console.log('Connect data:', connectData);
+      qrBase64 = connectData.base64;
     }
+
+    // 4. Salvar no Supabase (campos conforme especificação do usuário)
+    console.log('Step 4: Saving to Supabase...');
     
-    console.log('createWhatsAppInstance: Final QR Code present:', !!qrCodeBase64);
-    
-    // 4. Salvar no Supabase
-    console.log('createWhatsAppInstance: Saving to Supabase...');
-    const uniqueId = Date.now() + Math.floor(Math.random() * 1000);
+    const uniqueId = Date.now();
     
     const { data: insertData, error: insertError } = await supabaseClient
       .from('n8n_fluxogpt')
       .insert({
         id: uniqueId,
-        nomeinstancia: fullInstanceName,
-        idassistentgpt: assistantId,
-        emailuser: userEmail,
+        NomeInstancia: instanceName,
+        IDAssistentGPT: assistantId,
+        EmailUSER: instanceName,  // Conforme especificação
         created_at: new Date().toISOString(),
       });
 
     if (insertError) {
-      console.error('createWhatsAppInstance: Error saving to Supabase:', insertError);
+      console.error('Error saving to Supabase:', insertError);
       throw new Error(`Failed to save to database: ${insertError.message}`);
     }
 
-    console.log('createWhatsAppInstance: Data saved to Supabase successfully');
+    console.log('Data saved to Supabase successfully');
 
     return new Response(
       JSON.stringify({
         success: true,
-        instanceName: fullInstanceName,
-        qrCode: qrCodeBase64,
+        instanceName: instanceName,
+        qrCode: qrBase64,
         data: insertData,
-        warning: qrCodeBase64 ? null : 'Instance created but QR code failed to generate',
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -234,9 +231,7 @@ async function createWhatsAppInstance(
     );
     
   } catch (error: any) {
-    console.error('createWhatsAppInstance: Caught error:', error);
-    console.error('createWhatsAppInstance: Error message:', error.message);
-    console.error('createWhatsAppInstance: Error stack:', error.stack);
+    console.error('createWhatsAppInstance error:', error);
     throw error;
   }
 }
@@ -276,10 +271,6 @@ async function setWebhook(instanceName: string) {
 async function connectInstance(instanceName: string) {
   console.log('connectInstance: Connecting instance:', instanceName);
   
-  // Aguardar um pouco antes de tentar conectar para garantir que a instância foi criada
-  console.log('connectInstance: Waiting 2 seconds before connecting...');
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
   const connectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
     method: 'GET',
     headers: {
@@ -289,7 +280,6 @@ async function connectInstance(instanceName: string) {
   });
 
   console.log('connectInstance: Connect response status:', connectResponse.status);
-  console.log('connectInstance: Connect response headers:', Object.fromEntries(connectResponse.headers.entries()));
 
   if (!connectResponse.ok) {
     const errorData = await connectResponse.text();
@@ -335,11 +325,11 @@ async function deleteConnection(instanceName: string, supabaseClient: any) {
       console.warn('Failed to delete from Evolution API, continuing with database deletion');
     }
 
-    // 2. Deletar do Supabase
+    // 2. Deletar do Supabase (usar campo correto)
     const { error } = await supabaseClient
       .from('n8n_fluxogpt')
       .delete()
-      .eq('nomeinstancia', instanceName);
+      .eq('NomeInstancia', instanceName);
 
     if (error) {
       throw new Error(`Failed to delete from database: ${error.message}`);
@@ -360,10 +350,7 @@ async function deleteConnection(instanceName: string, supabaseClient: any) {
 async function testEvolutionAPI() {
   try {
     console.log('testEvolutionAPI: Testing connection to Evolution API');
-    console.log('testEvolutionAPI: URL:', EVOLUTION_API_URL);
-    console.log('testEvolutionAPI: API Key present:', !!EVOLUTION_API_KEY);
     
-    // Testar endpoint de listagem de instâncias
     const testResponse = await fetch(`${EVOLUTION_API_URL}/instance/fetchInstances`, {
       method: 'GET',
       headers: {
@@ -372,7 +359,6 @@ async function testEvolutionAPI() {
     });
     
     console.log('testEvolutionAPI: Response status:', testResponse.status);
-    console.log('testEvolutionAPI: Response headers:', Object.fromEntries(testResponse.headers.entries()));
     
     const responseText = await testResponse.text();
     console.log('testEvolutionAPI: Response body:', responseText);
@@ -407,102 +393,53 @@ async function testEvolutionAPI() {
 
 async function getQrCode(instanceName: string) {
   try {
-    console.log(`WhatsApp Evolution: Getting QR code for instance: ${instanceName}`);
+    console.log(`getQrCode: Getting QR code for instance: ${instanceName}`);
     
-    // URL correta da Evolution API conforme especificação do usuário
-    const evolutionUrl = `https://evolutionapi.chatsellpay.com/instance/connect/${instanceName}`;
-    const apiKey = '2eb6dd69c0cc273101c4efc974419be5';
-    
-    console.log(`WhatsApp Evolution: Calling Evolution API at: ${evolutionUrl}`);
-    
-    const response = await fetch(evolutionUrl, {
+    // Endpoint correto conforme especificação do usuário
+    const response = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
       method: 'GET',
       headers: {
-        'apikey': apiKey,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'apikey': EVOLUTION_API_KEY,
       }
     });
 
-    console.log(`WhatsApp Evolution: Evolution API response status: ${response.status}`);
+    console.log(`getQrCode: Response status: ${response.status}`);
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`WhatsApp Evolution: Evolution API error: ${response.status} - ${errorText}`);
+      console.error(`getQrCode: API error: ${response.status} - ${errorText}`);
       return new Response(JSON.stringify({ 
         success: false, 
         error: `Evolution API error: ${response.status}`,
         details: errorText
       }), {
         status: response.status,
-        headers: corsHeaders,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const evolutionData = await response.json();
-    console.log('WhatsApp Evolution: Evolution API response data:', evolutionData);
+    const data = await response.json();
+    console.log('getQrCode: API response data:', data);
     
-    // A API Evolution retorna: { pairingCode: "XXXX", code: "2@...", count: 1, base64: "data:image/png..." }
-    // Retornar exatamente o que a API retorna, com campos extras para compatibilidade
+    // Resposta conforme especificação: { base64: "data:image/png;base64,..." }
     return new Response(JSON.stringify({
       success: true,
-      pairingCode: evolutionData.pairingCode,
-      code: evolutionData.code,
-      count: evolutionData.count,
-      base64: evolutionData.base64,
-      // Para compatibilidade com código antigo
-      qrCode: evolutionData.code
+      base64: data.base64,
     }), {
       status: 200,
-      headers: corsHeaders,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
     
   } catch (error: any) {
-    console.error('WhatsApp Evolution: Error getting QR code:', error);
+    console.error('getQrCode: Error:', error);
     return new Response(JSON.stringify({
       success: false,
       error: 'Failed to get QR code',
       details: error.message
     }), {
       status: 500,
-      headers: corsHeaders,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-}
-
-// Função auxiliar para extrair QR code baseada na documentação oficial
-function extractQrCodeFromResponse(responseData: any): string | null {
-  console.log('extractQrCodeFromResponse: Analyzing response:', JSON.stringify(responseData, null, 2));
-  
-  // Para fetchInstances, pode ser um array ou objeto único
-  let instanceData = responseData;
-  
-  // Se for array, pegar o primeiro item
-  if (Array.isArray(responseData) && responseData.length > 0) {
-    instanceData = responseData[0];
-    console.log('extractQrCodeFromResponse: Using first instance from array');
-  }
-  
-  // Verificar campos possíveis para QR code
-  const possibleQrFields = ['qrcode', 'qr', 'qrCode', 'base64', 'code'];
-  
-  for (const field of possibleQrFields) {
-    if (instanceData[field] && typeof instanceData[field] === 'string') {
-      let qrCode = instanceData[field];
-      console.log(`extractQrCodeFromResponse: Found QR in field "${field}"`);
-      
-      // Remover prefixo data:image se existir
-      if (qrCode.includes('data:image')) {
-        qrCode = qrCode.replace(/^data:image\/[a-z]+;base64,/, '');
-      }
-      
-      // Verificar se parece ser válido (string não vazia)
-      if (qrCode.length > 10) {
-        console.log('extractQrCodeFromResponse: Valid QR code found');
-        return qrCode;
-      }
-    }
-  }
-  
-  console.log('extractQrCodeFromResponse: No QR code found in response');
-  return null;
 }
