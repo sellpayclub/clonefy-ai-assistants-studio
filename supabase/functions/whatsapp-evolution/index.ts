@@ -108,7 +108,7 @@ async function createWhatsAppInstance(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apiKey': EVOLUTION_API_KEY,
+        'apikey': EVOLUTION_API_KEY,
       },
       body: JSON.stringify({
         instanceName: fullInstanceName,
@@ -122,31 +122,26 @@ async function createWhatsAppInstance(
       }),
     });
 
-    console.log('createWhatsAppInstance: API request body:', JSON.stringify({
-      instanceName: fullInstanceName,
-      integration: 'WHATSAPP-BAILEYS',
-      reject_call: false,
-      groupsIgnore: true,
-      alwaysOnline: true,
-      readMessages: true,
-      readStatus: false,
-      syncFullHistory: true,
-    }));
-
+    console.log('createWhatsAppInstance: Create response status:', createResponse.status);
+    
     if (!createResponse.ok) {
       const errorData = await createResponse.text();
-      console.error('createWhatsAppInstance: Evolution API error:', errorData);
+      console.error('createWhatsAppInstance: Evolution API create error:', errorData);
       throw new Error(`Failed to create instance: ${errorData}`);
     }
 
-    console.log('Instance created successfully');
+    const createData = await createResponse.json();
+    console.log('createWhatsAppInstance: Instance created successfully:', createData);
 
     // 2. Configurar webhook
+    console.log('createWhatsAppInstance: Setting webhook...');
     await setWebhook(fullInstanceName);
 
     // 3. Conectar e obter QR Code
+    console.log('createWhatsAppInstance: Connecting instance...');
     const qrResponse = await connectInstance(fullInstanceName);
     const qrData = await qrResponse.json();
+    console.log('createWhatsAppInstance: QR Data:', qrData);
 
     // 4. Salvar no Supabase
     const uniqueId = Date.now() + Math.floor(Math.random() * 1000);
@@ -172,8 +167,9 @@ async function createWhatsAppInstance(
       JSON.stringify({
         success: true,
         instanceName: fullInstanceName,
-        qrCode: qrData.base64 || qrData.qrcode,
+        qrCode: qrData.base64 || qrData.qrcode || qrData.code || qrData,
         data: insertData,
+        qrRaw: qrData, // Para debug
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -186,13 +182,13 @@ async function createWhatsAppInstance(
 }
 
 async function setWebhook(instanceName: string) {
-  console.log('Setting webhook for:', instanceName);
+  console.log('setWebhook: Setting webhook for:', instanceName);
   
   const webhookResponse = await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'apiKey': EVOLUTION_API_KEY,
+      'apikey': EVOLUTION_API_KEY,
     },
     body: JSON.stringify({
       url: WEBHOOK_URL,
@@ -202,31 +198,39 @@ async function setWebhook(instanceName: string) {
     }),
   });
 
+  console.log('setWebhook: Webhook response status:', webhookResponse.status);
+  
   if (!webhookResponse.ok) {
     const errorData = await webhookResponse.text();
+    console.error('setWebhook: Failed to set webhook:', errorData);
     throw new Error(`Failed to set webhook: ${errorData}`);
   }
 
-  console.log('Webhook configured successfully');
+  const webhookData = await webhookResponse.json();
+  console.log('setWebhook: Webhook configured successfully:', webhookData);
   return webhookResponse;
 }
 
 async function connectInstance(instanceName: string) {
-  console.log('Connecting instance:', instanceName);
+  console.log('connectInstance: Connecting instance:', instanceName);
   
   const connectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
     method: 'GET',
     headers: {
-      'apiKey': EVOLUTION_API_KEY,
+      'apikey': EVOLUTION_API_KEY,
     },
   });
 
+  console.log('connectInstance: Connect response status:', connectResponse.status);
+
   if (!connectResponse.ok) {
     const errorData = await connectResponse.text();
+    console.error('connectInstance: Failed to connect instance:', errorData);
     throw new Error(`Failed to connect instance: ${errorData}`);
   }
 
-  console.log('Instance connected successfully');
+  const connectData = await connectResponse.json();
+  console.log('connectInstance: Instance connected successfully:', connectData);
   return connectResponse;
 }
 
@@ -255,7 +259,7 @@ async function deleteConnection(instanceName: string, supabaseClient: any) {
     const deleteResponse = await fetch(`${EVOLUTION_API_URL}/instance/delete/${instanceName}`, {
       method: 'DELETE',
       headers: {
-        'apiKey': EVOLUTION_API_KEY,
+        'apikey': EVOLUTION_API_KEY,
       },
     });
 
