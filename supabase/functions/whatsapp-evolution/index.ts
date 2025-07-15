@@ -162,13 +162,14 @@ async function createWhatsAppInstance(
 
     // 3. Conectar e obter QR Code
     console.log('createWhatsAppInstance: Connecting instance...');
+    let qrCodeBase64 = null;
+    
     try {
       const qrResponse = await connectInstance(fullInstanceName);
       const qrData = await qrResponse.json();
       console.log('createWhatsAppInstance: QR Data received:', JSON.stringify(qrData));
       
       // Extrair QR Code de diferentes possíveis formatos
-      let qrCodeBase64 = null;
       if (qrData.base64) {
         qrCodeBase64 = qrData.base64;
         console.log('createWhatsAppInstance: Found QR in base64 field');
@@ -183,77 +184,72 @@ async function createWhatsAppInstance(
         console.log('createWhatsAppInstance: QR data is a string');
       }
       
-      console.log('createWhatsAppInstance: Final QR Code present:', !!qrCodeBase64);
-      
-      // 4. Salvar no Supabase
-      console.log('createWhatsAppInstance: Saving to Supabase...');
-      const uniqueId = Date.now() + Math.floor(Math.random() * 1000);
-      
-      const { data: insertData, error: insertError } = await supabaseClient
-        .from('n8n_fluxogpt')
-        .insert({
-          id: uniqueId,
-          nomeinstancia: fullInstanceName,
-          idassistentgpt: assistantId,
-          emailuser: userEmail,
-          created_at: new Date().toISOString(),
-        });
-
-      if (insertError) {
-        console.error('createWhatsAppInstance: Error saving to Supabase:', insertError);
-        throw new Error(`Failed to save to database: ${insertError.message}`);
-      }
-
-      console.log('createWhatsAppInstance: Data saved to Supabase successfully');
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          instanceName: fullInstanceName,
-          qrCode: qrCodeBase64,
-          data: insertData,
-          qrRaw: qrData, // Para debug
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-      
     } catch (qrError: any) {
-      console.error('createWhatsAppInstance: QR Code error:', qrError.message);
+      console.error('createWhatsAppInstance: Primary QR generation failed:', qrError.message);
       
-      // Se falhar no QR, ainda salva no Supabase mas sem QR code
-      console.log('createWhatsAppInstance: Saving to Supabase without QR...');
-      const uniqueId = Date.now() + Math.floor(Math.random() * 1000);
-      
-      const { data: insertData, error: insertError } = await supabaseClient
-        .from('n8n_fluxogpt')
-        .insert({
-          id: uniqueId,
-          nomeinstancia: fullInstanceName,
-          idassistentgpt: assistantId,
-          emailuser: userEmail,
-          created_at: new Date().toISOString(),
+      // Tentar método alternativo - endpoint específico de QR
+      console.log('createWhatsAppInstance: Trying alternative QR endpoint...');
+      try {
+        const qrResponse = await fetch(`${EVOLUTION_API_URL}/instance/qrcode/${fullInstanceName}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': EVOLUTION_API_KEY,
+          },
         });
-
-      if (insertError) {
-        console.error('createWhatsAppInstance: Error saving to Supabase after QR failure:', insertError);
-        throw new Error(`Failed to save to database: ${insertError.message}`);
-      }
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          instanceName: fullInstanceName,
-          qrCode: null,
-          data: insertData,
-          warning: 'Instance created but QR code failed to generate',
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        
+        if (qrResponse.ok) {
+          const qrData = await qrResponse.json();
+          console.log('createWhatsAppInstance: Alternative QR Data:', JSON.stringify(qrData));
+          
+          if (qrData.base64) {
+            qrCodeBase64 = qrData.base64;
+            console.log('createWhatsAppInstance: Found QR in alternative endpoint base64 field');
+          } else if (qrData.qrcode) {
+            qrCodeBase64 = qrData.qrcode;
+            console.log('createWhatsAppInstance: Found QR in alternative endpoint qrcode field');
+          }
         }
-      );
+      } catch (altError: any) {
+        console.error('createWhatsAppInstance: Alternative QR generation also failed:', altError.message);
+      }
     }
+    
+    console.log('createWhatsAppInstance: Final QR Code present:', !!qrCodeBase64);
+    
+    // 4. Salvar no Supabase
+    console.log('createWhatsAppInstance: Saving to Supabase...');
+    const uniqueId = Date.now() + Math.floor(Math.random() * 1000);
+    
+    const { data: insertData, error: insertError } = await supabaseClient
+      .from('n8n_fluxogpt')
+      .insert({
+        id: uniqueId,
+        nomeinstancia: fullInstanceName,
+        idassistentgpt: assistantId,
+        emailuser: userEmail,
+        created_at: new Date().toISOString(),
+      });
+
+    if (insertError) {
+      console.error('createWhatsAppInstance: Error saving to Supabase:', insertError);
+      throw new Error(`Failed to save to database: ${insertError.message}`);
+    }
+
+    console.log('createWhatsAppInstance: Data saved to Supabase successfully');
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        instanceName: fullInstanceName,
+        qrCode: qrCodeBase64,
+        data: insertData,
+        warning: qrCodeBase64 ? null : 'Instance created but QR code failed to generate',
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
     
   } catch (error: any) {
     console.error('createWhatsAppInstance: Caught error:', error);
@@ -298,14 +294,20 @@ async function setWebhook(instanceName: string) {
 async function connectInstance(instanceName: string) {
   console.log('connectInstance: Connecting instance:', instanceName);
   
+  // Aguardar um pouco antes de tentar conectar para garantir que a instância foi criada
+  console.log('connectInstance: Waiting 2 seconds before connecting...');
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
   const connectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
     method: 'GET',
     headers: {
+      'Content-Type': 'application/json',
       'apikey': EVOLUTION_API_KEY,
     },
   });
 
   console.log('connectInstance: Connect response status:', connectResponse.status);
+  console.log('connectInstance: Connect response headers:', Object.fromEntries(connectResponse.headers.entries()));
 
   if (!connectResponse.ok) {
     const errorData = await connectResponse.text();
@@ -314,7 +316,7 @@ async function connectInstance(instanceName: string) {
   }
 
   const connectData = await connectResponse.json();
-  console.log('connectInstance: Instance connected successfully:', connectData);
+  console.log('connectInstance: Instance connected successfully:', JSON.stringify(connectData));
   return connectResponse;
 }
 
