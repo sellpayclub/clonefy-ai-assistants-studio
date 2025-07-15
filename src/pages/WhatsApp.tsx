@@ -198,6 +198,17 @@ const WhatsApp = () => {
       
       // Reload connections
       await loadData();
+      
+      // Auto-fetch QR code after creating connection
+      if (data.instanceName) {
+        setTimeout(async () => {
+          const connection = { 
+            instance_name: data.instanceName,
+            nomeinstancia: data.instanceName 
+          } as WhatsAppConnection;
+          await fetchQrCode(connection);
+        }, 2000); // Wait 2 seconds for instance to be fully created
+      }
 
     } catch (error: any) {
       console.error('Error creating connection:', error);
