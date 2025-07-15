@@ -165,7 +165,25 @@ async function createWhatsAppInstance(
     try {
       const qrResponse = await connectInstance(fullInstanceName);
       const qrData = await qrResponse.json();
-      console.log('createWhatsAppInstance: QR Data:', qrData);
+      console.log('createWhatsAppInstance: QR Data received:', JSON.stringify(qrData));
+      
+      // Extrair QR Code de diferentes possíveis formatos
+      let qrCodeBase64 = null;
+      if (qrData.base64) {
+        qrCodeBase64 = qrData.base64;
+        console.log('createWhatsAppInstance: Found QR in base64 field');
+      } else if (qrData.qrcode) {
+        qrCodeBase64 = qrData.qrcode;
+        console.log('createWhatsAppInstance: Found QR in qrcode field');
+      } else if (qrData.code) {
+        qrCodeBase64 = qrData.code;
+        console.log('createWhatsAppInstance: Found QR in code field');
+      } else if (typeof qrData === 'string') {
+        qrCodeBase64 = qrData;
+        console.log('createWhatsAppInstance: QR data is a string');
+      }
+      
+      console.log('createWhatsAppInstance: Final QR Code present:', !!qrCodeBase64);
       
       // 4. Salvar no Supabase
       console.log('createWhatsAppInstance: Saving to Supabase...');
@@ -192,7 +210,7 @@ async function createWhatsAppInstance(
         JSON.stringify({
           success: true,
           instanceName: fullInstanceName,
-          qrCode: qrData.base64 || qrData.qrcode || qrData.code || qrData,
+          qrCode: qrCodeBase64,
           data: insertData,
           qrRaw: qrData, // Para debug
         }),

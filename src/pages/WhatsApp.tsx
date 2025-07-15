@@ -155,6 +155,8 @@ const WhatsApp = () => {
     setQrCode(null);
 
     try {
+      console.log('Creating connection with params:', { instanceName, selectedAssistant, userEmail: user.email });
+      
       const response = await supabase.functions.invoke('whatsapp-evolution', {
         body: {
           action: 'create',
@@ -165,16 +167,42 @@ const WhatsApp = () => {
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
 
+      console.log('Response from whatsapp-evolution:', response);
+
       if (response.error) {
+        console.error('Response error:', response.error);
         throw new Error(response.error.message || 'Erro ao criar conexão');
       }
 
       const data = response.data;
-      setQrCode(data.qrCode);
+      console.log('Response data:', data);
+      console.log('QR Code data:', data.qrCode);
+      
+      // Verificar diferentes possíveis formatos do QR Code
+      let qrCodeData = null;
+      if (data.qrCode) {
+        // Se já é uma string base64, usar diretamente
+        if (typeof data.qrCode === 'string') {
+          qrCodeData = data.qrCode.replace('data:image/png;base64,', '');
+        } else if (data.qrCode.base64) {
+          qrCodeData = data.qrCode.base64.replace('data:image/png;base64,', '');
+        } else if (data.qrCode.code) {
+          qrCodeData = data.qrCode.code.replace('data:image/png;base64,', '');
+        }
+      }
+
+      console.log('Processed QR Code data:', qrCodeData ? 'Found' : 'Not found');
+      
+      if (qrCodeData) {
+        setQrCode(qrCodeData);
+        console.log('QR Code set successfully');
+      } else {
+        console.warn('No QR Code found in response, showing data for debugging:', data);
+      }
       
       toast({
         title: "Conexão criada com sucesso!",
-        description: `Instância ${data.instanceName} criada. Escaneie o QR Code para conectar.`,
+        description: `Instância ${data.instanceName} criada.${qrCodeData ? ' Escaneie o QR Code para conectar.' : ' QR Code não disponível.'}`,
       });
 
       // Reset form
@@ -425,7 +453,7 @@ const WhatsApp = () => {
                           disabled={creating}
                         />
                         <p className="text-xs text-muted-foreground">
-                          Nome será: cristina_{instanceName.toLowerCase()}
+                          Nome será: {user?.email?.split('@')[0].replace(/[^a-zA-Z0-9]/g, '_')}_{instanceName.toLowerCase() || 'nome_instancia'}
                         </p>
                       </div>
 
