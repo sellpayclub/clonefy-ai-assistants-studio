@@ -172,9 +172,12 @@ async function createWhatsAppInstance(
       qrCodeBase64 = createData.qrCode || createData.base64;
       console.log('createWhatsAppInstance: QR found in create response');
     } else {
-      // Tentar obter QR code via endpoint connect (documentação oficial)
+      // Tentar obter QR code via endpoint fetchInstances (documentação oficial)
       try {
-        const qrResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${fullInstanceName}`, {
+        const fetchUrl = `${EVOLUTION_API_URL}/instance/fetchInstances?instanceName=${fullInstanceName}`;
+        console.log('createWhatsAppInstance: Fetch URL:', fetchUrl);
+        
+        const fetchResponse = await fetch(fetchUrl, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -182,12 +185,12 @@ async function createWhatsAppInstance(
           },
         });
         
-        if (qrResponse.ok) {
-          const qrData = await qrResponse.json();
-          console.log('createWhatsAppInstance: Connect QR Data:', JSON.stringify(qrData));
+        if (fetchResponse.ok) {
+          const fetchData = await fetchResponse.json();
+          console.log('createWhatsAppInstance: Fetch Data:', JSON.stringify(fetchData));
           
-          // Baseado na documentação: { "pairingCode": "WZYEH1YY", "code": "2@y8eK+bjtEjUWy9/FOM...", "count": 1 }
-          qrCodeBase64 = extractQrCodeFromResponse(qrData);
+          // Verificar se há QR code na resposta
+          qrCodeBase64 = extractQrCodeFromResponse(fetchData);
         }
       } catch (qrError: any) {
         console.error('createWhatsAppInstance: QR generation failed:', qrError.message);
@@ -407,12 +410,12 @@ async function getQrCode(instanceName: string) {
     console.log('getQrCode: Getting QR code for instance:', instanceName);
     console.log('getQrCode: API Key:', EVOLUTION_API_KEY);
     
-    // Usar o endpoint oficial da documentação: GET /instance/connect/{instance}
-    console.log('getQrCode: Using official connect endpoint');
-    const connectUrl = `${EVOLUTION_API_URL}/instance/connect/${instanceName}`;
-    console.log('getQrCode: URL:', connectUrl);
+    // Usar o endpoint oficial da documentação: GET /instance/fetchInstances?instanceName={nome}
+    console.log('getQrCode: Using official fetchInstances endpoint');
+    const fetchUrl = `${EVOLUTION_API_URL}/instance/fetchInstances?instanceName=${instanceName}`;
+    console.log('getQrCode: URL:', fetchUrl);
     
-    const connectResponse = await fetch(connectUrl, {
+    const fetchResponse = await fetch(fetchUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -420,15 +423,15 @@ async function getQrCode(instanceName: string) {
       },
     });
 
-    console.log('getQrCode: Response status:', connectResponse.status);
+    console.log('getQrCode: Response status:', fetchResponse.status);
     
-    if (!connectResponse.ok) {
-      const errorData = await connectResponse.text();
+    if (!fetchResponse.ok) {
+      const errorData = await fetchResponse.text();
       console.error('getQrCode: API error:', errorData);
       
       return new Response(JSON.stringify({ 
         success: false, 
-        error: 'QR Code não disponível. Instância pode não estar pronta.',
+        error: 'Instância não encontrada ou QR Code não disponível.',
         apiError: errorData
       }), {
         status: 400,
@@ -436,21 +439,20 @@ async function getQrCode(instanceName: string) {
       });
     }
     
-    const responseText = await connectResponse.text();
+    const responseText = await fetchResponse.text();
     console.log('getQrCode: Raw response:', responseText);
     
-    const qrData = JSON.parse(responseText);
-    console.log('getQrCode: Parsed data:', JSON.stringify(qrData, null, 2));
+    const fetchData = JSON.parse(responseText);
+    console.log('getQrCode: Parsed data:', JSON.stringify(fetchData, null, 2));
     
-    // Extrair QR code baseado na documentação oficial
-    const qrCode = extractQrCodeFromResponse(qrData);
+    // Extrair QR code da resposta da fetchInstances
+    const qrCode = extractQrCodeFromResponse(fetchData);
     
     if (qrCode) {
       return new Response(JSON.stringify({ 
         success: true, 
         qrCode: qrCode,
-        pairingCode: qrData.pairingCode,
-        count: qrData.count
+        instanceData: fetchData
       }), {
         status: 200,
         headers: corsHeaders,
@@ -462,8 +464,8 @@ async function getQrCode(instanceName: string) {
     console.log('getQrCode: No QR code found in response');
     return new Response(JSON.stringify({ 
       success: false, 
-      error: 'QR Code não disponível. Instância pode não estar pronta para conexão.',
-      responseData: qrData
+      error: 'QR Code não disponível. Instância pode estar conectada ou não pronta.',
+      instanceData: fetchData
     }), {
       status: 400,
       headers: corsHeaders,
@@ -483,24 +485,24 @@ async function getQrCode(instanceName: string) {
 }
 
 // Função auxiliar para extrair QR code baseada na documentação oficial
-function extractQrCodeFromResponse(qrData: any): string | null {
-  console.log('extractQrCodeFromResponse: Analyzing response:', JSON.stringify(qrData, null, 2));
+function extractQrCodeFromResponse(responseData: any): string | null {
+  console.log('extractQrCodeFromResponse: Analyzing response:', JSON.stringify(responseData, null, 2));
   
-  // Baseado na documentação oficial:
-  // { "pairingCode": "WZYEH1YY", "code": "2@y8eK+bjtEjUWy9/FOM...", "count": 1 }
+  // Para fetchInstances, pode ser um array ou objeto único
+  let instanceData = responseData;
   
-  // O campo "code" contém o QR code string para gerar a imagem
-  if (qrData.code && typeof qrData.code === 'string') {
-    console.log('extractQrCodeFromResponse: Found QR code in "code" field');
-    return qrData.code;
+  // Se for array, pegar o primeiro item
+  if (Array.isArray(responseData) && responseData.length > 0) {
+    instanceData = responseData[0];
+    console.log('extractQrCodeFromResponse: Using first instance from array');
   }
   
-  // Fallback para outros possíveis campos
-  const possibleFields = ['base64', 'qrcode', 'qr', 'qrCode', 'data'];
+  // Verificar campos possíveis para QR code
+  const possibleQrFields = ['qrcode', 'qr', 'qrCode', 'base64', 'code'];
   
-  for (const field of possibleFields) {
-    if (qrData[field] && typeof qrData[field] === 'string') {
-      let qrCode = qrData[field];
+  for (const field of possibleQrFields) {
+    if (instanceData[field] && typeof instanceData[field] === 'string') {
+      let qrCode = instanceData[field];
       console.log(`extractQrCodeFromResponse: Found QR in field "${field}"`);
       
       // Remover prefixo data:image se existir
