@@ -292,10 +292,10 @@ const WhatsApp = () => {
       console.log('fetchQrCode response:', response);
       console.log('fetchQrCode response.data:', response.data);
       
-      // O edge function retorna { success: true, qrCode: "..." }
-      // O Supabase coloca isso em response.data
-      const qrCodeData = response.data?.qrCode || response.data?.base64;
+      // A API Evolution retorna: { success: true, qrCode: "código", pairingCode: "XXXX", count: 1 }
+      const qrCodeData = response.data?.qrCode;
       console.log('fetchQrCode qrCodeData:', qrCodeData);
+      console.log('fetchQrCode pairingCode:', response.data?.pairingCode);
       
       if (qrCodeData) {
         setQrCode(qrCodeData);

@@ -122,12 +122,12 @@ async function createWhatsAppInstance(
     const createBody = {
       instanceName: fullInstanceName,
       integration: "WHATSAPP-BAILEYS",
+      qrcode: true, // Gerar QR code automaticamente
       reject_call: false,
-      groupsIgnore: true,
-      alwaysOnline: true,
-      readMessages: true,
-      readStatus: false,
-      syncFullHistory: true
+      groups_ignore: true,
+      always_online: true,
+      read_messages: true,
+      read_status: false
     };
     
     console.log('createWhatsAppInstance: Request URL:', `${EVOLUTION_API_URL}/instance/create`);
@@ -163,37 +163,18 @@ async function createWhatsAppInstance(
       // Continue mesmo se o webhook falhar
     }
 
-    // 3. Conectar e obter QR Code
-    console.log('createWhatsAppInstance: Connecting instance...');
+    // 3. Obter QR Code se foi gerado na criação
+    console.log('createWhatsAppInstance: Checking for QR code...');
     let qrCodeBase64 = null;
     
-    try {
-      const qrResponse = await connectInstance(fullInstanceName);
-      const qrData = await qrResponse.json();
-      console.log('createWhatsAppInstance: QR Data received:', JSON.stringify(qrData));
-      
-      // Extrair QR Code de diferentes possíveis formatos
-      if (qrData.base64) {
-        qrCodeBase64 = qrData.base64;
-        console.log('createWhatsAppInstance: Found QR in base64 field');
-      } else if (qrData.qrcode) {
-        qrCodeBase64 = qrData.qrcode;
-        console.log('createWhatsAppInstance: Found QR in qrcode field');
-      } else if (qrData.code) {
-        qrCodeBase64 = qrData.code;
-        console.log('createWhatsAppInstance: Found QR in code field');
-      } else if (typeof qrData === 'string') {
-        qrCodeBase64 = qrData;
-        console.log('createWhatsAppInstance: QR data is a string');
-      }
-      
-    } catch (qrError: any) {
-      console.error('createWhatsAppInstance: Primary QR generation failed:', qrError.message);
-      
-      // Tentar método alternativo - endpoint específico de QR
-      console.log('createWhatsAppInstance: Trying alternative QR endpoint...');
+    // Se qrcode: true foi especificado, o QR pode já estar na resposta da criação
+    if (createData.qrCode || createData.base64) {
+      qrCodeBase64 = createData.qrCode || createData.base64;
+      console.log('createWhatsAppInstance: QR found in create response');
+    } else {
+      // Tentar obter QR code via endpoint connect (documentação oficial)
       try {
-        const qrResponse = await fetch(`${EVOLUTION_API_URL}/instance/qrcode/${fullInstanceName}`, {
+        const qrResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${fullInstanceName}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -203,18 +184,13 @@ async function createWhatsAppInstance(
         
         if (qrResponse.ok) {
           const qrData = await qrResponse.json();
-          console.log('createWhatsAppInstance: Alternative QR Data:', JSON.stringify(qrData));
+          console.log('createWhatsAppInstance: Connect QR Data:', JSON.stringify(qrData));
           
-          if (qrData.base64) {
-            qrCodeBase64 = qrData.base64;
-            console.log('createWhatsAppInstance: Found QR in alternative endpoint base64 field');
-          } else if (qrData.qrcode) {
-            qrCodeBase64 = qrData.qrcode;
-            console.log('createWhatsAppInstance: Found QR in alternative endpoint qrcode field');
-          }
+          // Baseado na documentação: { "pairingCode": "WZYEH1YY", "code": "2@y8eK+bjtEjUWy9/FOM...", "count": 1 }
+          qrCodeBase64 = extractQrCodeFromResponse(qrData);
         }
-      } catch (altError: any) {
-        console.error('createWhatsAppInstance: Alternative QR generation also failed:', altError.message);
+      } catch (qrError: any) {
+        console.error('createWhatsAppInstance: QR generation failed:', qrError.message);
       }
     }
     
@@ -429,145 +405,65 @@ async function testEvolutionAPI() {
 async function getQrCode(instanceName: string) {
   try {
     console.log('getQrCode: Getting QR code for instance:', instanceName);
+    console.log('getQrCode: API Key:', EVOLUTION_API_KEY);
     
-    const apiKey = '2eb6dd69c0cc273101c4efc974419be5';
-    console.log('getQrCode: API Key:', apiKey);
+    // Usar o endpoint oficial da documentação: GET /instance/connect/{instance}
+    console.log('getQrCode: Using official connect endpoint');
+    const connectUrl = `${EVOLUTION_API_URL}/instance/connect/${instanceName}`;
+    console.log('getQrCode: URL:', connectUrl);
     
-    // Estratégia 1: Tentar endpoint específico de QR Code
-    console.log('getQrCode: Strategy 1 - Trying QR specific endpoint');
-    try {
-      const qrUrl = `https://evolutionapi.chatsellpay.com/instance/qrcode/${instanceName}`;
-      console.log('getQrCode: Strategy 1 URL:', qrUrl);
-      
-      const qrResponse = await fetch(qrUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': apiKey
-        },
-      });
+    const connectResponse = await fetch(connectUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': EVOLUTION_API_KEY
+      },
+    });
 
-      console.log('getQrCode: Strategy 1 response status:', qrResponse.status);
+    console.log('getQrCode: Response status:', connectResponse.status);
+    
+    if (!connectResponse.ok) {
+      const errorData = await connectResponse.text();
+      console.error('getQrCode: API error:', errorData);
       
-      if (qrResponse.ok) {
-        const responseText = await qrResponse.text();
-        console.log('getQrCode: Strategy 1 raw response:', responseText);
-        
-        let qrData = JSON.parse(responseText);
-        console.log('getQrCode: Strategy 1 parsed data:', JSON.stringify(qrData, null, 2));
-        
-        const qrCode = extractQrCode(qrData);
-        if (qrCode) {
-          return new Response(JSON.stringify({ 
-            success: true, 
-            qrCode: qrCode,
-            method: 'qrcode_endpoint'
-          }), {
-            status: 200,
-            headers: corsHeaders,
-          });
-        }
-      }
-    } catch (e) {
-      console.log('getQrCode: Strategy 1 failed:', e);
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'QR Code não disponível. Instância pode não estar pronta.',
+        apiError: errorData
+      }), {
+        status: 400,
+        headers: corsHeaders,
+      });
+    }
+    
+    const responseText = await connectResponse.text();
+    console.log('getQrCode: Raw response:', responseText);
+    
+    const qrData = JSON.parse(responseText);
+    console.log('getQrCode: Parsed data:', JSON.stringify(qrData, null, 2));
+    
+    // Extrair QR code baseado na documentação oficial
+    const qrCode = extractQrCodeFromResponse(qrData);
+    
+    if (qrCode) {
+      return new Response(JSON.stringify({ 
+        success: true, 
+        qrCode: qrCode,
+        pairingCode: qrData.pairingCode,
+        count: qrData.count
+      }), {
+        status: 200,
+        headers: corsHeaders,
+      });
     }
 
-    // Estratégia 2: Tentar endpoint connect
-    console.log('getQrCode: Strategy 2 - Trying connect endpoint');
-    try {
-      const connectUrl = `https://evolutionapi.chatsellpay.com/instance/connect/${instanceName}`;
-      console.log('getQrCode: Strategy 2 URL:', connectUrl);
-      
-      const connectResponse = await fetch(connectUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': apiKey
-        },
-      });
 
-      console.log('getQrCode: Strategy 2 response status:', connectResponse.status);
-      
-      if (connectResponse.ok) {
-        const responseText = await connectResponse.text();
-        console.log('getQrCode: Strategy 2 raw response:', responseText);
-        
-        let qrData = JSON.parse(responseText);
-        console.log('getQrCode: Strategy 2 parsed data:', JSON.stringify(qrData, null, 2));
-        
-        const qrCode = extractQrCode(qrData);
-        if (qrCode) {
-          return new Response(JSON.stringify({ 
-            success: true, 
-            qrCode: qrCode,
-            method: 'connect_endpoint'
-          }), {
-            status: 200,
-            headers: corsHeaders,
-          });
-        }
-      }
-    } catch (e) {
-      console.log('getQrCode: Strategy 2 failed:', e);
-    }
-
-    // Estratégia 3: Tentar forçar reconexão e depois buscar QR
-    console.log('getQrCode: Strategy 3 - Force reconnect then get QR');
-    try {
-      // Primeiro, tentar reconectar
-      const reconnectUrl = `https://evolutionapi.chatsellpay.com/instance/restart/${instanceName}`;
-      console.log('getQrCode: Strategy 3 restart URL:', reconnectUrl);
-      
-      const restartResponse = await fetch(reconnectUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': apiKey
-        },
-      });
-
-      console.log('getQrCode: Strategy 3 restart status:', restartResponse.status);
-      
-      // Aguardar um pouco
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Tentar buscar QR novamente
-      const qrUrl = `https://evolutionapi.chatsellpay.com/instance/connect/${instanceName}`;
-      const qrResponse = await fetch(qrUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': apiKey
-        },
-      });
-
-      if (qrResponse.ok) {
-        const responseText = await qrResponse.text();
-        console.log('getQrCode: Strategy 3 raw response:', responseText);
-        
-        let qrData = JSON.parse(responseText);
-        const qrCode = extractQrCode(qrData);
-        if (qrCode) {
-          return new Response(JSON.stringify({ 
-            success: true, 
-            qrCode: qrCode,
-            method: 'restart_then_connect'
-          }), {
-            status: 200,
-            headers: corsHeaders,
-          });
-        }
-      }
-    } catch (e) {
-      console.log('getQrCode: Strategy 3 failed:', e);
-    }
-
-    // Se todas as estratégias falharam
-    console.log('getQrCode: All strategies failed');
+    // Se não encontrou QR code
+    console.log('getQrCode: No QR code found in response');
     return new Response(JSON.stringify({ 
       success: false, 
-      error: 'QR Code não disponível. Tente criar uma nova instância.',
-      allStrategiesFailed: true
+      error: 'QR Code não disponível. Instância pode não estar pronta para conexão.',
+      responseData: qrData
     }), {
       status: 400,
       headers: corsHeaders,
@@ -586,45 +482,40 @@ async function getQrCode(instanceName: string) {
   }
 }
 
-// Função auxiliar para extrair QR code de diferentes formatos de resposta
-function extractQrCode(qrData: any): string | null {
-  console.log('extractQrCode: Analyzing data keys:', Object.keys(qrData));
+// Função auxiliar para extrair QR code baseada na documentação oficial
+function extractQrCodeFromResponse(qrData: any): string | null {
+  console.log('extractQrCodeFromResponse: Analyzing response:', JSON.stringify(qrData, null, 2));
   
-  // Verificar diferentes possíveis campos
-  const possibleFields = ['base64', 'qrcode', 'code', 'qr', 'qrCode', 'data'];
+  // Baseado na documentação oficial:
+  // { "pairingCode": "WZYEH1YY", "code": "2@y8eK+bjtEjUWy9/FOM...", "count": 1 }
+  
+  // O campo "code" contém o QR code string para gerar a imagem
+  if (qrData.code && typeof qrData.code === 'string') {
+    console.log('extractQrCodeFromResponse: Found QR code in "code" field');
+    return qrData.code;
+  }
+  
+  // Fallback para outros possíveis campos
+  const possibleFields = ['base64', 'qrcode', 'qr', 'qrCode', 'data'];
   
   for (const field of possibleFields) {
-    if (qrData[field]) {
+    if (qrData[field] && typeof qrData[field] === 'string') {
       let qrCode = qrData[field];
-      console.log(`extractQrCode: Found QR in field "${field}":`, qrCode.substring(0, 100) + '...');
+      console.log(`extractQrCodeFromResponse: Found QR in field "${field}"`);
       
       // Remover prefixo data:image se existir
-      if (typeof qrCode === 'string' && qrCode.includes('data:image')) {
+      if (qrCode.includes('data:image')) {
         qrCode = qrCode.replace(/^data:image\/[a-z]+;base64,/, '');
       }
       
-      // Verificar se parece ser um base64 válido
-      if (typeof qrCode === 'string' && qrCode.length > 100) {
-        console.log('extractQrCode: Valid QR code found');
+      // Verificar se parece ser válido (string não vazia)
+      if (qrCode.length > 10) {
+        console.log('extractQrCodeFromResponse: Valid QR code found');
         return qrCode;
       }
     }
   }
   
-  // Se não encontrou em campos específicos, verificar se a resposta inteira é uma string base64
-  if (typeof qrData === 'string' && qrData.length > 100) {
-    console.log('extractQrCode: Response is a string, treating as QR code');
-    return qrData.replace(/^data:image\/[a-z]+;base64,/, '');
-  }
-  
-  // Verificar se existe um campo que contém 'qr' no nome
-  for (const [key, value] of Object.entries(qrData)) {
-    if (key.toLowerCase().includes('qr') && typeof value === 'string' && value.length > 100) {
-      console.log(`extractQrCode: Found QR in dynamic field "${key}"`);
-      return value.replace(/^data:image\/[a-z]+;base64,/, '');
-    }
-  }
-  
-  console.log('extractQrCode: No QR code found in response');
+  console.log('extractQrCodeFromResponse: No QR code found in response');
   return null;
 }
