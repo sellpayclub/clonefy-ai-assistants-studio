@@ -292,10 +292,23 @@ const WhatsApp = () => {
       console.log('fetchQrCode response:', response);
       console.log('fetchQrCode response.data:', response.data);
       
+      // Verificar se a resposta está dentro de um wrapper
+      let qrData = response.data;
+      
+      // Se response.data tem um campo "value" que é uma string JSON, parse ela
+      if (qrData && typeof qrData.value === 'string') {
+        try {
+          qrData = JSON.parse(qrData.value);
+          console.log('Parsed QR data from value field:', qrData);
+        } catch (parseError) {
+          console.error('Error parsing QR data from value field:', parseError);
+        }
+      }
+      
       // A API Evolution retorna: { success: true, qrCode: "código", pairingCode: "XXXX", count: 1 }
-      const qrCodeData = response.data?.qrCode;
+      const qrCodeData = qrData?.qrCode;
       console.log('fetchQrCode qrCodeData:', qrCodeData);
-      console.log('fetchQrCode pairingCode:', response.data?.pairingCode);
+      console.log('fetchQrCode pairingCode:', qrData?.pairingCode);
       
       if (qrCodeData) {
         setQrCode(qrCodeData);
@@ -305,7 +318,7 @@ const WhatsApp = () => {
           description: "Escaneie o código para conectar seu WhatsApp.",
         });
       } else {
-        console.error('No QR code found in response:', response.data);
+        console.error('No QR code found in response:', qrData);
         toast({
           title: "QR Code não disponível",
           description: "Não foi possível obter o QR Code desta instância.",
