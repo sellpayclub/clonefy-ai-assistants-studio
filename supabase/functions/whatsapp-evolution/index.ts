@@ -410,12 +410,12 @@ async function getQrCode(instanceName: string) {
     console.log('getQrCode: Getting QR code for instance:', instanceName);
     console.log('getQrCode: API Key:', EVOLUTION_API_KEY);
     
-    // Usar o endpoint oficial da documentação: GET /instance/fetchInstances?instanceName={nome}
-    console.log('getQrCode: Using official fetchInstances endpoint');
-    const fetchUrl = `${EVOLUTION_API_URL}/instance/fetchInstances?instanceName=${instanceName}`;
-    console.log('getQrCode: URL:', fetchUrl);
+    // Usar o endpoint oficial da documentação: GET /instance/connect/{instance}
+    console.log('getQrCode: Using official connect endpoint');
+    const connectUrl = `${EVOLUTION_API_URL}/instance/connect/${instanceName}`;
+    console.log('getQrCode: URL:', connectUrl);
     
-    const fetchResponse = await fetch(fetchUrl, {
+    const connectResponse = await fetch(connectUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -423,10 +423,10 @@ async function getQrCode(instanceName: string) {
       },
     });
 
-    console.log('getQrCode: Response status:', fetchResponse.status);
+    console.log('getQrCode: Response status:', connectResponse.status);
     
-    if (!fetchResponse.ok) {
-      const errorData = await fetchResponse.text();
+    if (!connectResponse.ok) {
+      const errorData = await connectResponse.text();
       console.error('getQrCode: API error:', errorData);
       
       return new Response(JSON.stringify({ 
@@ -439,33 +439,32 @@ async function getQrCode(instanceName: string) {
       });
     }
     
-    const responseText = await fetchResponse.text();
+    const responseText = await connectResponse.text();
     console.log('getQrCode: Raw response:', responseText);
     
-    const fetchData = JSON.parse(responseText);
-    console.log('getQrCode: Parsed data:', JSON.stringify(fetchData, null, 2));
+    const connectData = JSON.parse(responseText);
+    console.log('getQrCode: Parsed data:', JSON.stringify(connectData, null, 2));
     
-    // Extrair QR code da resposta da fetchInstances
-    const qrCode = extractQrCodeFromResponse(fetchData);
-    
-    if (qrCode) {
+    // Retornar dados conforme documentação oficial
+    if (connectData.code || connectData.pairingCode) {
       return new Response(JSON.stringify({ 
         success: true, 
-        qrCode: qrCode,
-        instanceData: fetchData
+        qrCode: connectData.code,
+        pairingCode: connectData.pairingCode,
+        count: connectData.count,
+        rawResponse: connectData
       }), {
         status: 200,
         headers: corsHeaders,
       });
     }
 
-
     // Se não encontrou QR code
     console.log('getQrCode: No QR code found in response');
     return new Response(JSON.stringify({ 
       success: false, 
       error: 'QR Code não disponível. Instância pode estar conectada ou não pronta.',
-      instanceData: fetchData
+      rawResponse: connectData
     }), {
       status: 400,
       headers: corsHeaders,
