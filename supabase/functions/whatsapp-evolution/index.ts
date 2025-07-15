@@ -450,14 +450,17 @@ async function getQrCode(instanceName: string) {
     
     const responseText = await qrResponse.text();
     console.log('getQrCode: Raw response body:', responseText);
+    console.log('getQrCode: Response length:', responseText.length);
     
     if (qrResponse.ok) {
       let qrData;
       try {
         qrData = JSON.parse(responseText);
-        console.log('getQrCode: Parsed QR data:', JSON.stringify(qrData));
+        console.log('getQrCode: Parsed QR data keys:', Object.keys(qrData));
+        console.log('getQrCode: Full parsed data:', JSON.stringify(qrData, null, 2));
       } catch (parseError) {
         console.error('getQrCode: Failed to parse response as JSON:', parseError);
+        console.log('getQrCode: Raw response was:', responseText);
         return new Response(JSON.stringify({ 
           success: false, 
           error: 'Invalid response format from Evolution API',
@@ -470,19 +473,30 @@ async function getQrCode(instanceName: string) {
       
       let qrCodeBase64 = null;
       
-      // Verificar diferentes formatos possíveis
+      // Verificar TODOS os campos possíveis na resposta
+      console.log('getQrCode: Checking for QR code in response...');
+      
       if (qrData.base64) {
-        qrCodeBase64 = qrData.base64.replace('data:image/png;base64,', '');
+        qrCodeBase64 = qrData.base64;
         console.log('getQrCode: Found QR in base64 field');
       } else if (qrData.qrcode) {
-        qrCodeBase64 = qrData.qrcode.replace('data:image/png;base64,', '');
+        qrCodeBase64 = qrData.qrcode;
         console.log('getQrCode: Found QR in qrcode field');
       } else if (qrData.code) {
-        qrCodeBase64 = qrData.code.replace('data:image/png;base64,', '');
+        qrCodeBase64 = qrData.code;
         console.log('getQrCode: Found QR in code field');
       } else if (typeof qrData === 'string' && qrData.includes('data:image')) {
-        qrCodeBase64 = qrData.replace('data:image/png;base64,', '');
+        qrCodeBase64 = qrData;
         console.log('getQrCode: QR data is a base64 string');
+      } else {
+        // Procurar em qualquer campo que possa conter base64
+        for (const [key, value] of Object.entries(qrData)) {
+          if (typeof value === 'string' && (value.includes('data:image') || value.includes('base64'))) {
+            qrCodeBase64 = value;
+            console.log(`getQrCode: Found QR in field "${key}"`);
+            break;
+          }
+        }
       }
       
       console.log('getQrCode: Final QR code found:', !!qrCodeBase64);
