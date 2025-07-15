@@ -40,7 +40,7 @@ const Assistants = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [instructions, setInstructions] = useState("");
-  const [model] = useState("gpt-4o-mini"); // Always use GPT-4o Mini
+  const [model] = useState("gpt-4o"); // Always use GPT-4o for now
 
   useEffect(() => {
     // Set up auth state listener
@@ -127,8 +127,8 @@ const Assistants = () => {
     try {
       const action = editingAssistant ? 'update' : 'create';
       const body = editingAssistant 
-        ? { action, assistantId: editingAssistant.id, name, description, instructions, model: "gpt-4o-mini" }
-        : { action, name, description, instructions, model: "gpt-4o-mini" };
+        ? { action, assistantId: editingAssistant.id, name, description, instructions, model: "gpt-4o" }
+        : { action, name, description, instructions, model: "gpt-4o" };
 
       const response = await supabase.functions.invoke('openai-assistants', {
         body,
@@ -262,7 +262,7 @@ const Assistants = () => {
                         <div>
                           <CardTitle className="text-lg">{assistant.name}</CardTitle>
                           <Badge variant="secondary" className="text-xs">
-                            {assistant.model}
+                            GPT-4o
                           </Badge>
                         </div>
                       </div>

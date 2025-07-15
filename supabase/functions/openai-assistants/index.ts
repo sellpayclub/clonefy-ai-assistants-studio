@@ -80,7 +80,7 @@ async function createAssistant(userId: string, data: any) {
   console.log('createAssistant called with data:', data);
   console.log('OpenAI API Key available:', !!openAIApiKey);
   
-  const { name, description, instructions, model = 'gpt-4o-mini' } = data;
+  const { name, description, instructions, model = 'gpt-4o' } = data;
 
   console.log('Creating assistant with model:', model);
   
@@ -94,19 +94,32 @@ async function createAssistant(userId: string, data: any) {
     },
     body: JSON.stringify({
       name,
-      description,
-      instructions,
+      description: description || null,
+      instructions: instructions || null,
       model,
-      tools: []
+      tools: [] // Default empty array as per documentation
     }),
   });
 
+  console.log('OpenAI Response status:', openAIResponse.status);
+  
   if (!openAIResponse.ok) {
-    const error = await openAIResponse.json();
+    const errorText = await openAIResponse.text();
+    console.error('OpenAI API error response:', errorText);
+    
+    let error;
+    try {
+      error = JSON.parse(errorText);
+    } catch {
+      error = { error: { message: errorText } };
+    }
+    
     throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
   }
 
   const openAIAssistant = await openAIResponse.json();
+  
+  console.log('Assistant created successfully:', openAIAssistant.id);
 
   // Save assistant in Supabase
   const { data: assistant, error } = await supabase
@@ -115,8 +128,8 @@ async function createAssistant(userId: string, data: any) {
       user_id: userId,
       openai_assistant_id: openAIAssistant.id,
       name,
-      description,
-      instructions,
+      description: description || null,
+      instructions: instructions || null,
       model,
       tools: [],
       metadata: openAIAssistant
