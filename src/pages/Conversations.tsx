@@ -107,34 +107,50 @@ const Conversations = () => {
   };
 
   const loadData = async () => {
-    if (!session) return;
+    if (!session) {
+      console.log('Conversas: Sem sessão para carregar dados');
+      return;
+    }
 
     try {
-      console.log('Carregando dados das conversas...');
+      console.log('Conversas: Carregando dados...');
       
       // Load assistants
+      console.log('Conversas: Carregando agentes...');
       const assistantsResponse = await supabase.functions.invoke('openai-assistants', {
         body: { action: 'list' },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
+      console.log('Conversas: Resposta agentes:', assistantsResponse);
+
       if (!assistantsResponse.error && assistantsResponse.data?.assistants) {
+        console.log('Conversas: Agentes encontrados:', assistantsResponse.data.assistants);
         setAssistants(assistantsResponse.data.assistants);
+        console.log('Conversas: Estado de agentes atualizado');
       } else {
-        console.error('Erro ao carregar agentes:', assistantsResponse.error);
+        console.error('Conversas: Erro ao carregar agentes:', assistantsResponse.error);
+        setAssistants([]);
       }
 
       // Load conversations
+      console.log('Conversas: Carregando conversas...');
       const conversationsResponse = await supabase.functions.invoke('chat-api', {
         body: { action: 'get_conversations' },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
+      console.log('Conversas: Resposta conversas:', conversationsResponse);
+
       if (!conversationsResponse.error && conversationsResponse.data?.conversations) {
         setConversations(conversationsResponse.data.conversations);
+        console.log('Conversas: Conversas carregadas:', conversationsResponse.data.conversations.length);
+      } else {
+        console.log('Conversas: Nenhuma conversa encontrada ou erro');
+        setConversations([]);
       }
     } catch (error: any) {
-      console.error('Error loading data:', error);
+      console.error('Conversas: Error loading data:', error);
     }
   };
 
@@ -359,15 +375,19 @@ const Conversations = () => {
                   <SelectContent className="z-50 bg-background border border-border shadow-lg">
                     {assistants.length === 0 ? (
                       <div className="p-3 text-center text-muted-foreground">
-                        <p className="text-sm">Nenhum agente encontrado</p>
-                        <Button 
-                          size="sm" 
-                          variant="link" 
-                          onClick={() => window.location.href = '/assistants'}
-                          className="text-xs mt-1"
-                        >
-                          Criar primeiro agente
-                        </Button>
+                        <p className="text-sm">
+                          {loading ? "Carregando agentes..." : "Nenhum agente encontrado"}
+                        </p>
+                        {!loading && (
+                          <Button 
+                            size="sm" 
+                            variant="link" 
+                            onClick={() => window.location.href = '/assistants'}
+                            className="text-xs mt-1"
+                          >
+                            Criar primeiro agente
+                          </Button>
+                        )}
                       </div>
                     ) : (
                       assistants.map((assistant) => (
