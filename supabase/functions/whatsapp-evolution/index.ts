@@ -429,14 +429,19 @@ async function testEvolutionAPI() {
 async function getQrCode(instanceName: string) {
   try {
     console.log('getQrCode: Getting QR code for instance:', instanceName);
-    console.log('getQrCode: Using URL:', `${EVOLUTION_API_URL}/instance/connect/${instanceName}`);
-    console.log('getQrCode: API Key present:', !!EVOLUTION_API_KEY);
     
-    const qrResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
+    // URL e API key exatos conforme especificação do usuário
+    const url = `https://evolutionapi.chatsellpay.com/instance/connect/${instanceName}`;
+    const apiKey = '2eb6dd69c0cc273101c4efc974419be5';
+    
+    console.log('getQrCode: Using URL:', url);
+    console.log('getQrCode: API Key:', apiKey);
+    
+    const qrResponse = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': EVOLUTION_API_KEY,
+        'apikey': apiKey
       },
     });
 
