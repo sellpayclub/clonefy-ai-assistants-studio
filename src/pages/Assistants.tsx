@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Bot, Plus, Edit, Trash2, MessageSquare, Settings, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
@@ -35,6 +36,7 @@ const Assistants = () => {
   const [editingAssistant, setEditingAssistant] = useState<Assistant | null>(null);
   const [formLoading, setFormLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Form states
   const [name, setName] = useState("");
@@ -323,7 +325,8 @@ const Assistants = () => {
                         // Salva o assistente no localStorage para seleção automática
                         localStorage.setItem('selectedAssistantId', assistant.id);
                         localStorage.setItem('selectedAssistantName', assistant.name);
-                        window.location.href = '/conversations';
+                        localStorage.setItem('autoStartConversation', 'true');
+                        navigate('/conversations');
                       }}>
                         <MessageSquare className="h-3 w-3 mr-1" />
                         Testar

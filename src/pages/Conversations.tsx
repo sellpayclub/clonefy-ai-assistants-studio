@@ -78,10 +78,20 @@ const Conversations = () => {
       
       // Verifica se há assistente pré-selecionado
       const savedAssistantId = localStorage.getItem('selectedAssistantId');
+      const autoStart = localStorage.getItem('autoStartConversation');
       if (savedAssistantId) {
         setSelectedAssistant(savedAssistantId);
         localStorage.removeItem('selectedAssistantId'); // Remove após usar
         localStorage.removeItem('selectedAssistantName');
+        
+        // Auto-inicia uma nova conversa se solicitado
+        if (autoStart === 'true') {
+          localStorage.removeItem('autoStartConversation');
+          // Aguarda um pouco para garantir que o agente foi selecionado
+          setTimeout(() => {
+            startNewConversationAuto(savedAssistantId);
+          }, 500);
+        }
       }
     });
 
@@ -154,6 +164,44 @@ const Conversations = () => {
       console.error('Error loading messages:', error);
       toast({
         title: "Erro ao carregar mensagens",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const startNewConversationAuto = async (assistantId: string) => {
+    if (!session) return;
+
+    try {
+      const assistant = assistants.find(a => a.id === assistantId);
+      if (!assistant) return;
+      
+      const response = await supabase.functions.invoke('chat-api', {
+        body: { 
+          action: 'create_thread', 
+          assistantId: assistantId,
+          title: `Conversa com ${assistant.name}`
+        },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      toast({
+        title: "Nova conversa criada!",
+        description: `Conversa iniciada com ${assistant.name}`,
+      });
+
+      await loadData();
+      setSelectedConversation(response.data.conversation.id);
+      setMessages([]);
+    } catch (error: any) {
+      console.error('Error creating conversation:', error);
+      toast({
+        title: "Erro ao criar conversa",
         description: error.message,
         variant: "destructive",
       });

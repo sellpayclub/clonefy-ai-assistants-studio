@@ -40,7 +40,7 @@ const AppSidebar = () => {
             <img 
               src="/lovable-uploads/4ad83733-0d3f-4ea8-a2b8-74822c594588.png" 
               alt="CLONEFY Logo" 
-              className="h-8 w-auto"
+              className="h-12 w-auto"
             />
           </div>
         )}
