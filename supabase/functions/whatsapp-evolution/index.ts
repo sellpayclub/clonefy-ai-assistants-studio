@@ -196,27 +196,8 @@ async function createWhatsAppInstance(
       qrBase64 = connectData.base64;
     }
 
-    // 4. Salvar no Supabase (campos conforme especificação do usuário)
-    console.log('Step 4: Saving to Supabase...');
-    
-    const uniqueId = Date.now();
-    
-    const { data: insertData, error: insertError } = await supabaseClient
-      .from('n8n_fluxogpt')
-      .insert({
-        id: uniqueId,
-        NomeInstancia: instanceName,
-        IDAssistentGPT: assistantId,
-        EmailUSER: instanceName,  // Conforme especificação
-        created_at: new Date().toISOString(),
-      });
-
-    if (insertError) {
-      console.error('Error saving to Supabase:', insertError);
-      throw new Error(`Failed to save to database: ${insertError.message}`);
-    }
-
-    console.log('Data saved to Supabase successfully');
+    // NOTE: Supabase save will happen ONLY after QR code is successfully scanned/connected
+    console.log('Instance created successfully. Supabase save will occur after QR connection.');
 
     return new Response(
       JSON.stringify({
