@@ -107,7 +107,10 @@ async function createWhatsAppInstance(
   try {
     console.log('createWhatsAppInstance: Starting with params:', { instanceName, assistantId, userEmail });
     
-    const fullInstanceName = `cristina_${instanceName.toLowerCase()}`;
+    // Create full instance name using user email prefix
+    const emailPrefix = userEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, '_');
+    const fullInstanceName = `${emailPrefix}_${instanceName.toLowerCase()}`;
+    console.log('createWhatsAppInstance: Email prefix:', emailPrefix);
     console.log('createWhatsAppInstance: Full instance name:', fullInstanceName);
 
     // 1. Criar instância na Evolution API

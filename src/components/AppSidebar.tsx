@@ -36,45 +36,45 @@ const AppSidebar = () => {
 
   return (
     <Sidebar className={collapsed ? "w-16" : "w-72"} collapsible="icon">
-      <SidebarHeader className="border-b-0 p-6 bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
+      <SidebarHeader className="border-b-0 p-4 bg-gradient-to-br from-primary/5 via-background to-accent/5 relative min-h-[80px] flex items-center justify-center">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-30"></div>
         {!collapsed && (
-          <div className="flex items-center justify-center relative z-10">
+          <div className="flex items-center justify-center relative z-10 w-full">
             <img 
               src="/lovable-uploads/4ad83733-0d3f-4ea8-a2b8-74822c594588.png" 
               alt="CLONEFY Logo" 
-              className="h-16 w-auto transition-all duration-300 hover:scale-105"
+              className="h-14 w-auto transition-all duration-300 hover:scale-105"
             />
           </div>
         )}
         {collapsed && (
-          <div className="flex items-center justify-center relative z-10">
+          <div className="flex items-center justify-center relative z-10 w-full">
             <img 
               src="/lovable-uploads/929d6edf-5859-4b0c-8ebc-9ee077349b6a.png" 
               alt="CLONEFY Icon" 
-              className="w-10 h-10 transition-all duration-300 hover:scale-110"
+              className="w-8 h-8 transition-all duration-300 hover:scale-110"
             />
           </div>
         )}
       </SidebarHeader>
 
-      <SidebarContent className="px-3 pt-6">
+      <SidebarContent className="px-2 pt-4">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground/70 text-xs font-semibold uppercase tracking-wider mb-4 px-3">
-            Menu Principal
+          <SidebarGroupLabel className={`text-muted-foreground/70 text-xs font-semibold uppercase tracking-wider mb-3 transition-all duration-200 ${collapsed ? 'opacity-0' : 'opacity-100 px-3'}`}>
+            {!collapsed && "Menu Principal"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-2">
+            <SidebarMenu className="space-y-1">
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-12">
+                  <SidebarMenuButton asChild className="h-11">
                     <NavLink to={item.url} end className={getNavCls}>
-                      <div className="flex items-center w-full">
-                        <div className="flex items-center justify-center w-6 h-6 mr-3">
+                      <div className={`flex items-center ${collapsed ? 'justify-center w-full' : 'w-full'}`}>
+                        <div className={`flex items-center justify-center ${collapsed ? 'w-full' : 'w-6 h-6 mr-3'}`}>
                           <item.icon className="h-5 w-5" />
                         </div>
                         {!collapsed && (
-                          <span className="text-sm font-medium">{item.title}</span>
+                          <span className="text-sm font-medium transition-all duration-200">{item.title}</span>
                         )}
                       </div>
                     </NavLink>
