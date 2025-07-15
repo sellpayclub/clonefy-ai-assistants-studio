@@ -9,8 +9,10 @@ const corsHeaders = {
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
+console.log('OpenAI API Key check:', openAIApiKey ? 'Key found' : 'Key NOT found');
+
 if (!openAIApiKey) {
-  console.error('OPENAI_API_KEY is not configured');
+  console.error('OPENAI_API_KEY is not configured - please set it in Supabase Edge Function secrets');
 }
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -75,8 +77,13 @@ serve(async (req) => {
 });
 
 async function createAssistant(userId: string, data: any) {
-  const { name, description, instructions, model = 'gpt-4o' } = data;
+  console.log('createAssistant called with data:', data);
+  console.log('OpenAI API Key available:', !!openAIApiKey);
+  
+  const { name, description, instructions, model = 'gpt-4o-mini' } = data;
 
+  console.log('Creating assistant with model:', model);
+  
   // Create assistant in OpenAI
   const openAIResponse = await fetch('https://api.openai.com/v1/assistants', {
     method: 'POST',
