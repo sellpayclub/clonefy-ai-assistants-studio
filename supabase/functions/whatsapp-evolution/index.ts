@@ -122,9 +122,9 @@ async function createWhatsAppInstance(
       .from('n8n_fluxogpt')
       .insert({
         id: uniqueId,
-        NomeInstancia: fullInstanceName,
-        IDAssistentGPT: assistantId,
-        EmailUSER: userEmail,
+        nomeinstancia: fullInstanceName,
+        idassistentgpt: assistantId,
+        emailuser: userEmail,
         created_at: new Date().toISOString(),
       });
 
@@ -201,7 +201,7 @@ async function listConnections(supabaseClient: any, userEmail: string) {
   const { data, error } = await supabaseClient
     .from('n8n_fluxogpt')
     .select('*')
-    .eq('EmailUSER', userEmail)
+    .eq('emailuser', userEmail)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -234,7 +234,7 @@ async function deleteConnection(instanceName: string, supabaseClient: any) {
     const { error } = await supabaseClient
       .from('n8n_fluxogpt')
       .delete()
-      .eq('NomeInstancia', instanceName);
+      .eq('nomeinstancia', instanceName);
 
     if (error) {
       throw new Error(`Failed to delete from database: ${error.message}`);
