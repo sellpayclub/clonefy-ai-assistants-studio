@@ -186,33 +186,10 @@ const WhatsApp = () => {
 
       const data = response.data;
       console.log('Response data:', data);
-      console.log('QR Code data:', data.qrCode);
-      
-      // Verificar diferentes possíveis formatos do QR Code
-      let qrCodeData = null;
-      if (data.qrCode) {
-        // Se já é uma string base64, usar diretamente
-        if (typeof data.qrCode === 'string') {
-          qrCodeData = data.qrCode.replace('data:image/png;base64,', '');
-        } else if (data.qrCode.base64) {
-          qrCodeData = data.qrCode.base64.replace('data:image/png;base64,', '');
-        } else if (data.qrCode.code) {
-          qrCodeData = data.qrCode.code.replace('data:image/png;base64,', '');
-        }
-      }
-
-      console.log('Processed QR Code data:', qrCodeData ? 'Found' : 'Not found');
-      
-      if (qrCodeData) {
-        setQrCode(qrCodeData);
-        console.log('QR Code set successfully');
-      } else {
-        console.warn('No QR Code found in response, showing data for debugging:', data);
-      }
       
       toast({
         title: "Conexão criada com sucesso!",
-        description: `Instância ${data.instanceName} criada.${qrCodeData ? ' Escaneie o QR Code para conectar.' : ' QR Code não disponível.'}`,
+        description: `Instância ${data.instanceName} criada. Buscando QR Code...`,
       });
 
       // Reset form
@@ -246,7 +223,7 @@ const WhatsApp = () => {
       const response = await supabase.functions.invoke('whatsapp-evolution', {
         body: {
           action: 'delete',
-          instanceName: connection.nomeinstancia,
+          instanceName: connection.nomeinstancia || connection.instance_name,
         },
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
@@ -257,7 +234,7 @@ const WhatsApp = () => {
 
       toast({
         title: "Conexão deletada!",
-        description: `A instância ${connection.nomeinstancia} foi removida.`,
+        description: `A instância foi removida.`,
       });
 
       await loadData();
@@ -265,6 +242,45 @@ const WhatsApp = () => {
       console.error('Error deleting connection:', error);
       toast({
         title: "Erro ao deletar conexão",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchQrCode = async (connection: WhatsAppConnection) => {
+    try {
+      const response = await supabase.functions.invoke('whatsapp-evolution', {
+        body: {
+          action: 'get_qr',
+          instanceName: connection.nomeinstancia || connection.instance_name,
+        },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro ao buscar QR Code');
+      }
+
+      const qrCodeData = response.data?.qrCode;
+      if (qrCodeData) {
+        setQrCode(qrCodeData);
+        setActiveTab("create");
+        toast({
+          title: "QR Code gerado!",
+          description: "Escaneie o código para conectar seu WhatsApp.",
+        });
+      } else {
+        toast({
+          title: "QR Code não disponível",
+          description: "Não foi possível obter o QR Code desta instância.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error fetching QR code:', error);
+      toast({
+        title: "Erro ao buscar QR Code",
         description: error.message,
         variant: "destructive",
       });
@@ -297,13 +313,6 @@ const WhatsApp = () => {
         variant: "destructive",
       });
     }
-  };
-
-  const getStatusBadge = (connection: WhatsAppConnection) => {
-    if (connection.whatsappuser) {
-      return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Conectado</Badge>;
-    }
-    return <Badge variant="secondary"><AlertCircle className="h-3 w-3 mr-1" />Aguardando QR</Badge>;
   };
 
   if (loading) {
@@ -388,7 +397,7 @@ const WhatsApp = () => {
                           <div key={connection.id || index} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
                             <div className="flex items-start justify-between mb-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                                <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
                                   <Smartphone className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
@@ -409,31 +418,44 @@ const WhatsApp = () => {
                                 </div>
                               </div>
                               
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button size="sm" variant="destructive" className="h-8 w-8 p-0">
-                                    <Trash2 className="h-4 w-4" />
+                              <div className="flex gap-2">
+                                {!isConnected && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="h-8 border-green-300 text-green-700 hover:bg-green-50"
+                                    onClick={() => fetchQrCode(connection)}
+                                  >
+                                    <QrCode className="h-4 w-4 mr-1" />
+                                    QR Code
                                   </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Tem certeza que deseja excluir a conexão "{connection.instance_name || connection.nomeinstancia}"? 
-                                      Esta ação não pode ser desfeita.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction 
-                                      onClick={() => deleteConnection(connection)}
-                                      className="bg-destructive hover:bg-destructive/90"
-                                    >
-                                      Excluir
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
+                                )}
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button size="sm" variant="destructive" className="h-8 w-8 p-0">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Tem certeza que deseja excluir a conexão "{connection.instance_name || connection.nomeinstancia}"? 
+                                        Esta ação não pode ser desfeita.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                      <AlertDialogAction 
+                                        onClick={() => deleteConnection(connection)}
+                                        className="bg-destructive hover:bg-destructive/90"
+                                      >
+                                        Excluir
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -504,97 +526,7 @@ const WhatsApp = () => {
 
             {/* Criar Nova Conexão */}
             <TabsContent value="create" className="space-y-6">
-              {!creating && !qrCode && (
-                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">💡</span>
-                    </div>
-                    <span className="text-blue-800 font-medium">Este nome será usado para identificar sua conexão.</span>
-                  </div>
-                  <p className="text-blue-700 text-sm">
-                    Será criado como: <strong>{user?.email?.split('@')[0].replace(/[^a-zA-Z0-9]/g, '_')}_{instanceName.toLowerCase() || 'nome_instancia'}</strong>
-                  </p>
-                </div>
-              )}
-              
-              {creating && (
-                <div className="bg-purple-100 border border-purple-200 rounded-2xl p-8 text-center">
-                  <div className="flex items-center justify-center gap-3 mb-4">
-                    <Loader2 className="w-6 h-6 text-purple-600 animate-spin" />
-                    <span className="text-purple-800 font-semibold text-lg">Criando Conexão...</span>
-                  </div>
-                </div>
-              )}
-
-              {qrCode && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center shadow-sm">
-                  <div className="flex items-center justify-center gap-3 mb-6">
-                    <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
-                      <QrCode className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900">QR Code do WhatsApp</h3>
-                  </div>
-                  
-                  <p className="text-gray-600 mb-6">
-                    Escaneie este código com seu WhatsApp para conectar
-                  </p>
-                  
-                  <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6 inline-block shadow-sm">
-                    <img 
-                      src={`data:image/png;base64,${qrCode}`} 
-                      alt="QR Code WhatsApp"
-                      className="w-64 h-64 mx-auto"
-                    />
-                  </div>
-                  
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800">
-                    <div className="flex items-center gap-2 justify-center">
-                      <Smartphone className="w-4 h-4" />
-                      <span className="text-sm font-medium">Abra o WhatsApp e escaneie o código acima</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {!creating && !qrCode && (
-                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
-                      <span className="text-white text-lg">⚡</span>
-                    </div>
-                    <h3 className="text-lg font-semibold text-blue-900">Como conectar:</h3>
-                  </div>
-                  
-                  <div className="space-y-3 text-blue-800">
-                    <div className="flex items-center gap-3">
-                      <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">1</span>
-                      <span>Clique em <strong>"Gerar QR Code"</strong> abaixo</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">2</span>
-                      <span>Abra o <strong>WhatsApp</strong> no seu celular</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">3</span>
-                      <span>Vá em <strong>Menu (⋮) → Dispositivos conectados</strong></span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">4</span>
-                      <span>Toque em <strong>"Conectar um dispositivo"</strong></span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">5</span>
-                      <span>Escaneie o QR Code que aparecerá na tela</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">6</span>
-                      <span>Aguarde a confirmação da conexão</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
+              {/* Formulário no topo */}
               {!qrCode && (
                 <Card>
                   <CardHeader>
@@ -652,7 +584,7 @@ const WhatsApp = () => {
 
                       <Button 
                         type="submit" 
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3" 
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3" 
                         disabled={creating || !instanceName || !selectedAssistant}
                       >
                         {creating ? (
@@ -670,6 +602,84 @@ const WhatsApp = () => {
                     </form>
                   </CardContent>
                 </Card>
+              )}
+              
+              {creating && (
+                <div className="bg-green-100 border border-green-200 rounded-2xl p-8 text-center">
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    <Loader2 className="w-6 h-6 text-green-600 animate-spin" />
+                    <span className="text-green-800 font-semibold text-lg">Criando Conexão...</span>
+                  </div>
+                </div>
+              )}
+
+              {qrCode && (
+                <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center shadow-sm">
+                  <div className="flex items-center justify-center gap-3 mb-6">
+                    <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                      <QrCode className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900">QR Code do WhatsApp</h3>
+                  </div>
+                  
+                  <p className="text-gray-600 mb-6">
+                    Escaneie este código com seu WhatsApp para conectar
+                  </p>
+                  
+                  <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6 inline-block shadow-sm">
+                    <img 
+                      src={`data:image/png;base64,${qrCode}`} 
+                      alt="QR Code WhatsApp"
+                      className="w-64 h-64 mx-auto"
+                    />
+                  </div>
+                  
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800">
+                    <div className="flex items-center gap-2 justify-center">
+                      <Smartphone className="w-4 h-4" />
+                      <span className="text-sm font-medium">Abra o WhatsApp e escaneie o código acima</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Instruções embaixo */}
+              {!creating && !qrCode && (
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center">
+                      <span className="text-white text-lg">⚡</span>
+                    </div>
+                    <h3 className="text-lg font-semibold text-green-900">Como conectar:</h3>
+                  </div>
+                  
+                  <div className="space-y-3 text-green-800">
+                    <div className="flex items-center gap-3">
+                      <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">1</span>
+                      <span>Clique em <strong>"Gerar QR Code"</strong> acima</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">2</span>
+                      <span>Abra o <strong>WhatsApp</strong> no seu celular</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">3</span>
+                      <span>Vá em <strong>Menu (⋮) → Dispositivos conectados</strong></span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">4</span>
+                      <span>Toque em <strong>"Conectar um dispositivo"</strong></span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">5</span>
+                      <span>Escaneie o QR Code que aparecerá na tela</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">6</span>
+                      <span>Aguarde a confirmação da conexão</span>
+                    </div>
+                  </div>
+                </div>
               )}
             </TabsContent>
           </Tabs>

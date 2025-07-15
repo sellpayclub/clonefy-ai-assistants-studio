@@ -12,7 +12,7 @@ const EVOLUTION_API_KEY = '2eb6dd69c0cc273101c4efc974419be5';
 const WEBHOOK_URL = 'https://webhook.dcsaudeautomacao.com/webhook/fluxogptdaniel';
 
 interface CreateInstanceRequest {
-  action: 'create' | 'list' | 'delete' | 'connect' | 'set_webhook' | 'test_api';
+  action: 'create' | 'list' | 'delete' | 'connect' | 'set_webhook' | 'test_api' | 'get_qr';
   instanceName?: string;
   assistantId?: string;
   userEmail?: string;
@@ -77,6 +77,9 @@ serve(async (req) => {
       case 'set_webhook':
         console.log('WhatsApp Evolution: Setting webhook for:', instanceName);
         return await setWebhook(instanceName!);
+      case 'get_qr':
+        console.log('WhatsApp Evolution: Getting QR code for:', instanceName);
+        return await getQrCode(instanceName!);
       default:
         console.error('WhatsApp Evolution: Invalid action:', action);
         throw new Error('Invalid action');
@@ -420,5 +423,61 @@ async function testEvolutionAPI() {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
+  }
+}
+
+async function getQrCode(instanceName: string) {
+  try {
+    console.log('getQrCode: Getting QR code for instance:', instanceName);
+    
+    const qrResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': EVOLUTION_API_KEY,
+      },
+    });
+
+    console.log('getQrCode: Response status:', qrResponse.status);
+    
+    if (qrResponse.ok) {
+      const qrData = await qrResponse.json();
+      console.log('getQrCode: QR code data received');
+      
+      let qrCodeBase64 = null;
+      if (qrData.base64) {
+        qrCodeBase64 = qrData.base64.replace('data:image/png;base64,', '');
+      } else if (qrData.qrcode) {
+        qrCodeBase64 = qrData.qrcode.replace('data:image/png;base64,', '');
+      }
+      
+      if (qrCodeBase64) {
+        return new Response(JSON.stringify({ 
+          success: true, 
+          qrCode: qrCodeBase64
+        }), {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
+    }
+    
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: 'QR Code não disponível' 
+    }), {
+      status: 400,
+      headers: corsHeaders,
+    });
+    
+  } catch (error: any) {
+    console.error('getQrCode: Error:', error);
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: error.message 
+    }), {
+      status: 500,
+      headers: corsHeaders,
+    });
   }
 }
