@@ -62,7 +62,7 @@ const Conversations = () => {
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -71,8 +71,16 @@ const Conversations = () => {
         return;
       }
       
-      loadData();
+      await loadData();
       setLoading(false);
+      
+      // Verifica se há assistente pré-selecionado
+      const savedAssistantId = localStorage.getItem('selectedAssistantId');
+      if (savedAssistantId) {
+        setSelectedAssistant(savedAssistantId);
+        localStorage.removeItem('selectedAssistantId'); // Remove após usar
+        localStorage.removeItem('selectedAssistantName');
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -90,14 +98,19 @@ const Conversations = () => {
     if (!session) return;
 
     try {
+      console.log('Carregando dados das conversas...');
+      
       // Load assistants
       const assistantsResponse = await supabase.functions.invoke('openai-assistants', {
         body: { action: 'list' },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
-      if (!assistantsResponse.error) {
-        setAssistants(assistantsResponse.data.assistants || []);
+      console.log('Resposta assistentes:', assistantsResponse);
+
+      if (!assistantsResponse.error && assistantsResponse.data?.assistants) {
+        setAssistants(assistantsResponse.data.assistants);
+        console.log('Assistentes carregados:', assistantsResponse.data.assistants.length);
       }
 
       // Load conversations
@@ -106,8 +119,11 @@ const Conversations = () => {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
-      if (!conversationsResponse.error) {
-        setConversations(conversationsResponse.data.conversations || []);
+      console.log('Resposta conversas:', conversationsResponse);
+
+      if (!conversationsResponse.error && conversationsResponse.data?.conversations) {
+        setConversations(conversationsResponse.data.conversations);
+        console.log('Conversas carregadas:', conversationsResponse.data.conversations.length);
       }
     } catch (error: any) {
       console.error('Error loading data:', error);
@@ -294,12 +310,29 @@ const Conversations = () => {
                   <SelectTrigger>
                     <SelectValue placeholder="Escolha um assistente" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {assistants.map((assistant) => (
-                      <SelectItem key={assistant.id} value={assistant.id}>
-                        {assistant.name}
-                      </SelectItem>
-                    ))}
+                  <SelectContent className="z-50 bg-background border border-border shadow-lg">
+                    {assistants.length === 0 ? (
+                      <div className="p-3 text-center text-muted-foreground">
+                        <p className="text-sm">Nenhum assistente encontrado</p>
+                        <Button 
+                          size="sm" 
+                          variant="link" 
+                          onClick={() => window.location.href = '/assistants'}
+                          className="text-xs mt-1"
+                        >
+                          Criar primeiro assistente
+                        </Button>
+                      </div>
+                    ) : (
+                      assistants.map((assistant) => (
+                        <SelectItem key={assistant.id} value={assistant.id}>
+                          <div className="flex items-center gap-2">
+                            <Bot className="h-3 w-3" />
+                            {assistant.name}
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
                 <Button 

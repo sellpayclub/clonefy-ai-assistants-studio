@@ -319,7 +319,12 @@ const Assistants = () => {
                       </p>
                     </div>
                     <div className="flex gap-2 mt-4">
-                      <Button size="sm" className="flex-1" onClick={() => window.location.href = '/conversations'}>
+                      <Button size="sm" className="flex-1" onClick={() => {
+                        // Salva o assistente no localStorage para seleção automática
+                        localStorage.setItem('selectedAssistantId', assistant.id);
+                        localStorage.setItem('selectedAssistantName', assistant.name);
+                        window.location.href = '/conversations';
+                      }}>
                         <MessageSquare className="h-3 w-3 mr-1" />
                         Testar
                       </Button>
