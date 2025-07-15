@@ -8,6 +8,10 @@ const corsHeaders = {
 };
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+
+if (!openAIApiKey) {
+  console.error('OPENAI_API_KEY is not configured');
+}
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -20,6 +24,16 @@ serve(async (req) => {
   }
 
   try {
+    // Check if OpenAI API key is configured
+    if (!openAIApiKey) {
+      return new Response(JSON.stringify({ 
+        error: 'OpenAI API key não configurada. Por favor, configure a OPENAI_API_KEY nas configurações do projeto.' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { action, ...data } = await req.json();
     
     // Get user from auth header
