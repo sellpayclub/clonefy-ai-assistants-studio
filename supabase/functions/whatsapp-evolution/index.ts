@@ -25,6 +25,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('WhatsApp Evolution: Starting request processing');
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -35,29 +37,45 @@ serve(async (req) => {
       }
     );
 
+    console.log('WhatsApp Evolution: Supabase client created');
+
     // Get the user from the request
     const {
       data: { user },
     } = await supabaseClient.auth.getUser();
 
+    console.log('WhatsApp Evolution: User authenticated:', user?.email);
+
     if (!user) {
+      console.error('WhatsApp Evolution: Unauthorized - no user found');
       throw new Error('Unauthorized');
     }
 
-    const { action, instanceName, assistantId, userEmail }: CreateInstanceRequest = await req.json();
+    const body = await req.json();
+    console.log('WhatsApp Evolution: Request body:', JSON.stringify(body));
+    
+    const { action, instanceName, assistantId, userEmail } = body;
+
+    console.log('WhatsApp Evolution: Action:', action);
 
     switch (action) {
       case 'create':
+        console.log('WhatsApp Evolution: Creating instance with params:', { instanceName, assistantId, userEmail });
         return await createWhatsAppInstance(instanceName!, assistantId!, userEmail!, supabaseClient);
       case 'list':
+        console.log('WhatsApp Evolution: Listing connections for user:', user.email);
         return await listConnections(supabaseClient, user.email!);
       case 'delete':
+        console.log('WhatsApp Evolution: Deleting instance:', instanceName);
         return await deleteConnection(instanceName!, supabaseClient);
       case 'connect':
+        console.log('WhatsApp Evolution: Connecting instance:', instanceName);
         return await connectInstance(instanceName!);
       case 'set_webhook':
+        console.log('WhatsApp Evolution: Setting webhook for:', instanceName);
         return await setWebhook(instanceName!);
       default:
+        console.error('WhatsApp Evolution: Invalid action:', action);
         throw new Error('Invalid action');
     }
   } catch (error) {
@@ -79,10 +97,13 @@ async function createWhatsAppInstance(
   supabaseClient: any
 ) {
   try {
+    console.log('createWhatsAppInstance: Starting with params:', { instanceName, assistantId, userEmail });
+    
     const fullInstanceName = `cristina_${instanceName.toLowerCase()}`;
+    console.log('createWhatsAppInstance: Full instance name:', fullInstanceName);
     
     // 1. Criar instância na Evolution API
-    console.log('Creating instance:', fullInstanceName);
+    console.log('createWhatsAppInstance: Creating instance in Evolution API...');
     const createResponse = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
       method: 'POST',
       headers: {
@@ -101,8 +122,20 @@ async function createWhatsAppInstance(
       }),
     });
 
+    console.log('createWhatsAppInstance: API request body:', JSON.stringify({
+      instanceName: fullInstanceName,
+      integration: 'WHATSAPP-BAILEYS',
+      reject_call: false,
+      groupsIgnore: true,
+      alwaysOnline: true,
+      readMessages: true,
+      readStatus: false,
+      syncFullHistory: true,
+    }));
+
     if (!createResponse.ok) {
       const errorData = await createResponse.text();
+      console.error('createWhatsAppInstance: Evolution API error:', errorData);
       throw new Error(`Failed to create instance: ${errorData}`);
     }
 

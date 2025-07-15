@@ -39,6 +39,7 @@ const WhatsApp = () => {
   const [connections, setConnections] = useState<WhatsAppConnection[]>([]);
   const [creating, setCreating] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("connections");
   
   // Form states
   const [instanceName, setInstanceName] = useState("");
@@ -268,7 +269,7 @@ const WhatsApp = () => {
             </Button>
           </div>
 
-          <Tabs defaultValue="connections" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="connections">Gerenciar Conexões</TabsTrigger>
               <TabsTrigger value="create">Nova Conexão</TabsTrigger>
@@ -292,13 +293,7 @@ const WhatsApp = () => {
                       <Smartphone className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <p className="text-muted-foreground mb-4">Nenhuma conexão WhatsApp encontrada</p>
                       <Button 
-                        onClick={() => {
-                          const tabs = document.querySelector('[role="tablist"]');
-                          const createTrigger = tabs?.querySelector('[value="create"]') as HTMLButtonElement;
-                          if (createTrigger) {
-                            createTrigger.click();
-                          }
-                        }}
+                        onClick={() => setActiveTab("create")}
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Criar primeira conexão
