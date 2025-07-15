@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bot, MessageSquare, Smartphone, Settings, LayoutDashboard, Files } from "lucide-react";
+import { Bot, MessageSquare, Smartphone, LayoutDashboard } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
 import {
@@ -20,8 +20,6 @@ const items = [
   { title: "Assistentes", url: "/assistants", icon: Bot },
   { title: "WhatsApp", url: "/whatsapp", icon: Smartphone },
   { title: "Conversas", url: "/conversations", icon: MessageSquare },
-  { title: "Arquivos", url: "/files", icon: Files },
-  { title: "Configurações", url: "/settings", icon: Settings },
 ];
 
 const AppSidebar = () => {

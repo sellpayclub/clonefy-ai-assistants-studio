@@ -150,7 +150,7 @@ const Assistants = () => {
 
       setIsCreateOpen(false);
       resetForm();
-      loadAssistants();
+      await loadAssistants(); // Aguarda o reload
     } catch (error: any) {
       console.error('Error saving assistant:', error);
       toast({
@@ -187,7 +187,7 @@ const Assistants = () => {
         description: "O assistente foi removido com sucesso.",
       });
 
-      loadAssistants();
+      await loadAssistants(); // Aguarda o reload
     } catch (error: any) {
       console.error('Error deleting assistant:', error);
       toast({
