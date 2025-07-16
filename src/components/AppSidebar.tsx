@@ -123,7 +123,7 @@ const AppSidebar = () => {
                           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
                         )}
                         
-                          <div className="flex items-center ${collapsed ? '' : 'gap-3'}">
+                        <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
                           <item.icon className={`flex-shrink-0 ${collapsed ? 'w-5 h-5' : 'w-4 h-4'}`} />
                           {!collapsed && (
                             <div className="flex flex-col">
