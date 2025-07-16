@@ -34,9 +34,9 @@ interface WhatsAppConnection {
   created_at: string;
   updated_at: string;
   // Campos corretos conforme especificação
-  NomeInstancia?: string;
-  IDAssistentGPT?: string;
-  EmailUSER?: string;
+  nomeinstancia?: string;
+  idassistentgpt?: string;
+  emailuser?: string;
   threadid?: string;
   whatsappuser?: string;
 }
@@ -253,7 +253,7 @@ const WhatsApp = () => {
       const response = await supabase.functions.invoke('whatsapp-evolution', {
         body: {
           action: 'delete',
-          instanceName: connection.NomeInstancia || connection.instance_name,
+          instanceName: connection.nomeinstancia || connection.instance_name,
         },
         headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
@@ -292,12 +292,12 @@ const WhatsApp = () => {
     }
 
     try {
-      console.log('fetchQrCode: Buscando QR code para:', connection.NomeInstancia);
+      console.log('fetchQrCode: Buscando QR code para:', connection.nomeinstancia);
       
       const response = await supabase.functions.invoke('whatsapp-evolution', {
         body: {
           action: 'get_qr',
-          instanceName: connection.NomeInstancia,
+          instanceName: connection.nomeinstancia,
         },
         headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
@@ -458,7 +458,7 @@ const WhatsApp = () => {
                     <div className="space-y-6">
                       {connections.map((connection, index) => {
                         const isConnected = connection.status === 'open' || connection.whatsappuser;
-                        const assistant = assistants.find(a => a.openai_assistant_id === connection.IDAssistentGPT);
+                        const assistant = assistants.find(a => a.openai_assistant_id === connection.idassistentgpt);
                         
                         return (
                           <div key={connection.id || index} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
@@ -469,7 +469,7 @@ const WhatsApp = () => {
                                 </div>
                                 <div>
                                   <h3 className="text-lg font-semibold text-gray-900">
-                                    {connection.instance_name || connection.NomeInstancia || 'Instância sem nome'}
+                                    {connection.instance_name || connection.nomeinstancia || 'Instância sem nome'}
                                   </h3>
                                   {isConnected ? (
                                     <Badge className="bg-green-100 text-green-800 border-green-200">
@@ -537,7 +537,7 @@ const WhatsApp = () => {
                                 <span className="font-medium">Status:</span> {isConnected ? 'Conectado' : 'Desconectado'}
                               </div>
                               <div>
-                                <span className="font-medium">Email:</span> {connection.EmailUSER || 'N/A'}
+                                <span className="font-medium">Email:</span> {connection.emailuser || 'N/A'}
                               </div>
                               <div>
                                 <span className="font-medium">Criado em:</span> {new Date(connection.created_at).toLocaleDateString('pt-BR')}

@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const EVOLUTION_API_URL = 'https://evolutionapi.chatsellpay.com';
 const EVOLUTION_API_KEY = '2eb6dd69c0cc273101c4efc974419be5';
-const WEBHOOK_URL = 'https://webhookurl.com';
+const WEBHOOK_URL = 'https://webhook.dcsaudeautomacao.com/webhook/fluxogptdaniel';
 
 interface CreateInstanceRequest {
   action: 'create' | 'list' | 'delete' | 'test_api';
@@ -146,16 +146,19 @@ async function createWhatsAppInstanceSequential(
       if (!retryWebhookResponse.ok) {
         throw new Error(`Failed to set webhook after retry`);
       }
+      
+      const webhookData = await retryWebhookResponse.json();
+      console.log('Step 2 SUCCESS (retry):', webhookData);
+    } else {
+      const webhookData = await webhookResponse.json();
+      console.log('Step 2 SUCCESS:', webhookData);
     }
-
-    const webhookData = await webhookResponse.json();
-    console.log('Step 2 SUCCESS:', webhookData);
 
     console.log('=== STEP 3: Connecting and generating QR ===');
     
     // 3. Conectar e Gerar QR (Terceira chamada - só após webhook configurado)
     const connectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
-      method: 'POST',
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'apikey': EVOLUTION_API_KEY,
@@ -183,7 +186,6 @@ async function createWhatsAppInstanceSequential(
     const { data: insertData, error } = await supabaseClient
       .from('n8n_fluxogpt')
       .insert({
-        id: Date.now(), // ID único baseado em timestamp
         nomeinstancia: instanceName,
         idassistentgpt: assistantId,
         emailuser: userEmail,
