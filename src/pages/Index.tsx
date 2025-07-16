@@ -19,12 +19,11 @@ const Index = () => {
       {/* Header */}
       <header className="container mx-auto px-4 py-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-primary to-primary/60 flex items-center justify-center">
-            <Bot className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="font-bold text-xl bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            CLONEFY
-          </span>
+          <img 
+            src="/lovable-uploads/a49c53ef-ee9d-47be-8b56-db4d0c8768ed.png" 
+            alt="CLONEFY Logo" 
+            className="h-8 w-auto"
+          />
         </div>
         <div className="flex items-center gap-4">
           <Link to="/auth">
@@ -244,14 +243,11 @@ const Index = () => {
       <footer className="border-t bg-muted/50">
         <div className="container mx-auto px-4 py-12">
           <div className="flex items-center justify-center">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-r from-primary to-primary/60 flex items-center justify-center">
-                <Bot className="h-3 w-3 text-primary-foreground" />
-              </div>
-              <span className="font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                CLONEFY
-              </span>
-            </div>
+            <img 
+              src="/lovable-uploads/a49c53ef-ee9d-47be-8b56-db4d0c8768ed.png" 
+              alt="CLONEFY Logo" 
+              className="h-6 w-auto"
+            />
           </div>
           <p className="text-center text-muted-foreground mt-4">
             © 2024 CLONEFY. Todos os direitos reservados.
