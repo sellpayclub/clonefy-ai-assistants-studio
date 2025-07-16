@@ -197,15 +197,29 @@ async function createWhatsAppInstanceSequential(
       throw new Error('QR Code not generated or invalid format');
     }
 
-    console.log('=== STEP 4: Saving to Supabase ===');
+    console.log('=== STEP 4: Getting OpenAI Assistant ID ===');
     
-    // 4. Salvar no Supabase (Quarta ação - só após QR gerado)
+    // 4. Buscar o openai_assistant_id do assistente
+    const { data: assistantData, error: assistantError } = await supabaseClient
+      .from('assistants')
+      .select('openai_assistant_id')
+      .eq('id', assistantId)
+      .single();
+
+    if (assistantError || !assistantData) {
+      console.error('Failed to get assistant data:', assistantError);
+      throw new Error(`Assistente não encontrado: ${assistantError?.message}`);
+    }
+
+    console.log('=== STEP 5: Saving to Supabase ===');
+    
+    // 5. Salvar no Supabase com o openai_assistant_id correto
     const { data: insertData, error } = await supabaseClient
       .from('n8n_fluxogpt')
       .insert({
         id: Date.now(), // bigint precisa de valor explícito
         nomeinstancia: instanceName,
-        idassistentgpt: assistantId,
+        idassistentgpt: assistantData.openai_assistant_id, // Usar openai_assistant_id
         emailuser: userEmail,
         timeout: '45' // QR expira em 45 segundos
       })
@@ -213,11 +227,11 @@ async function createWhatsAppInstanceSequential(
       .single();
 
     if (error) {
-      console.error('Step 4 failed:', error);
+      console.error('Step 5 failed:', error);
       throw new Error(`Failed to save to database: ${error.message}`);
     }
 
-    console.log('Step 4 SUCCESS:', insertData);
+    console.log('Step 5 SUCCESS:', insertData);
 
     return new Response(
       JSON.stringify({
