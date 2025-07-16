@@ -26,7 +26,7 @@ const menuItems = [
   { title: "Agentes", url: "/assistants", icon: Bot, description: "IA Assistentes" },
   { title: "WhatsApp", url: "/whatsapp", icon: Smartphone, description: "Conexões" },
   { title: "Conversas", url: "/conversations", icon: MessageSquare, description: "Chats ativos" },
-  { title: "Admin", url: "/admin", icon: Settings, description: "Gerenciar limites" },
+  { title: "Admin", url: "/admin", icon: Settings, description: "Admin" },
 ];
 
 const AppSidebar = () => {

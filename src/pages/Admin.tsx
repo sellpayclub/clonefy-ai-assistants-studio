@@ -4,6 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Settings, Search, Save, AlertCircle } from "lucide-react";
@@ -31,11 +32,30 @@ const Admin = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editLimits, setEditLimits] = useState<{assistants: number, connections: number}>({assistants: 0, connections: 0});
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Admin user ID - You should replace this with your actual user ID
-  const ADMIN_USER_ID = "139b35c6-af34-4b26-8c58-6020d520c266"; // Replace with your user ID
+  // Admin credentials
+  const ADMIN_PASSWORD = "Danncarlos@123";
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      toast({
+        title: "Acesso liberado",
+        description: "Bem-vindo ao painel admin!",
+      });
+    } else {
+      toast({
+        title: "Senha incorreta",
+        description: "Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -50,18 +70,6 @@ const Admin = () => {
           return;
         }
         
-        // Check if user is admin
-        if (session.user.id !== ADMIN_USER_ID) {
-          toast({
-            title: "Acesso negado",
-            description: "Você não tem permissão para acessar o painel admin.",
-            variant: "destructive",
-          });
-          navigate('/dashboard');
-          return;
-        }
-        
-        await loadUsers();
         setLoading(false);
       } catch (error) {
         console.error('Erro na inicialização:', error);
@@ -71,6 +79,12 @@ const Admin = () => {
 
     initializeAuth();
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadUsers();
+    }
+  }, [isAuthenticated]);
 
   const loadUsers = async () => {
     try {
@@ -183,6 +197,40 @@ const Admin = () => {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p>Carregando...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Show password form if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center flex items-center justify-center gap-2">
+              <Settings className="h-6 w-6" />
+              Acesso Admin
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="password">Senha de Acesso</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Digite a senha admin"
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                Acessar Painel
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     );
   }

@@ -438,6 +438,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_quotas: {
+        Row: {
+          created_at: string
+          id: string
+          max_assistants: number
+          max_whatsapp_connections: number
+          plan_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          max_assistants?: number
+          max_whatsapp_connections?: number
+          plan_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          max_assistants?: number
+          max_whatsapp_connections?: number
+          plan_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       whatsapp_connections: {
         Row: {
           connected_at: string | null
@@ -485,7 +515,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_usage_stats: {
+        Args: { target_user_id?: string }
+        Returns: {
+          user_id: string
+          max_assistants: number
+          max_whatsapp_connections: number
+          current_assistants: number
+          current_whatsapp_connections: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
