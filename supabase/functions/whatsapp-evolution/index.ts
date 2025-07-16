@@ -9,10 +9,10 @@ const corsHeaders = {
 
 const EVOLUTION_API_URL = 'https://evolutionapi.chatsellpay.com';
 const EVOLUTION_API_KEY = '2eb6dd69c0cc273101c4efc974419be5';
-const WEBHOOK_URL = 'https://webhook.dcsaudeautomacao.com/webhook/fluxogptdaniel';
+const WEBHOOK_URL = 'https://webhookurl.com';
 
 interface CreateInstanceRequest {
-  action: 'create' | 'list' | 'delete' | 'connect' | 'set_webhook' | 'test_api' | 'get_qr';
+  action: 'create' | 'list' | 'delete' | 'test_api';
   instanceName?: string;
   assistantId?: string;
   userEmail?: string;
@@ -37,60 +37,37 @@ serve(async (req) => {
       }
     );
 
-    console.log('WhatsApp Evolution: Supabase client created');
-
     // Get the user from the request
     const {
       data: { user },
     } = await supabaseClient.auth.getUser();
 
-    console.log('WhatsApp Evolution: User authenticated:', user?.email);
-
     if (!user) {
-      console.error('WhatsApp Evolution: Unauthorized - no user found');
       throw new Error('Unauthorized');
     }
 
     const body = await req.json();
-    console.log('WhatsApp Evolution: Request body:', JSON.stringify(body));
-    
     const { action, instanceName, assistantId, userEmail } = body;
 
     console.log('WhatsApp Evolution: Action:', action);
 
     switch (action) {
       case 'create':
-        console.log('WhatsApp Evolution: Creating instance with params:', { instanceName, assistantId, userEmail });
-        return await createWhatsAppInstance(instanceName!, assistantId!, userEmail!, supabaseClient);
+        return await createWhatsAppInstanceSequential(instanceName!, assistantId!, userEmail!, supabaseClient);
       case 'list':
-        console.log('WhatsApp Evolution: Listing connections for user:', user.email);
         return await listConnections(supabaseClient, user.email!);
       case 'delete':
-        console.log('WhatsApp Evolution: Deleting instance:', instanceName);
         return await deleteConnection(instanceName!, supabaseClient);
-      case 'connect':
-        console.log('WhatsApp Evolution: Connecting instance:', instanceName);
-        return await connectInstance(instanceName!);
       case 'test_api':
-        console.log('WhatsApp Evolution: Testing API connection');
         return await testEvolutionAPI();
-      case 'set_webhook':
-        console.log('WhatsApp Evolution: Setting webhook for:', instanceName);
-        return await setWebhook(instanceName!);
-      case 'get_qr':
-        console.log('WhatsApp Evolution: Getting QR code for:', instanceName);
-        return await getQrCode(instanceName!);
       default:
-        console.error('WhatsApp Evolution: Invalid action:', action);
         throw new Error('Invalid action');
     }
   } catch (error: any) {
-    console.error('WhatsApp Evolution: Main error:', error);
-    console.error('WhatsApp Evolution: Error stack:', error.stack);
+    console.error('WhatsApp Evolution: Error:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        details: error.stack,
         timestamp: new Date().toISOString()
       }),
       {
@@ -101,54 +78,40 @@ serve(async (req) => {
   }
 });
 
-async function createWhatsAppInstance(
+async function createWhatsAppInstanceSequential(
   instanceName: string,
   assistantId: string,
   userEmail: string,
   supabaseClient: any
 ) {
   try {
-    console.log('createWhatsAppInstance: Starting with params:', { instanceName, assistantId, userEmail });
-
-    // 1. Criar instância na Evolution API (fluxo exato do usuário)
-    console.log('Step 1: Creating instance...');
+    console.log('=== STEP 1: Creating instance ===');
     
-    const createBody = {
-      instanceName: instanceName,
-      integration: "WHATSAPP-BAILEYS",
-      reject_call: false,
-      groupsIgnore: true,
-      alwaysOnline: true,
-      readMessages: true,
-      readStatus: false,
-      syncFullHistory: true
-    };
-    
-    console.log('Create request:', JSON.stringify(createBody));
-    
+    // 1. Criar Instância (Primeira chamada)
     const createResponse = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': EVOLUTION_API_KEY,
       },
-      body: JSON.stringify(createBody),
+      body: JSON.stringify({
+        instanceName: instanceName,
+        token: crypto.randomUUID() // TOKEN_GERADO
+      }),
     });
 
-    console.log('Create response status:', createResponse.status);
-    
     if (!createResponse.ok) {
       const errorData = await createResponse.text();
-      console.error('Evolution API create error:', errorData);
-      throw new Error(`Failed to create instance (${createResponse.status}): ${errorData}`);
+      console.error('Step 1 failed:', errorData);
+      throw new Error(`Failed to create instance: ${errorData}`);
     }
 
     const createData = await createResponse.json();
-    console.log('Instance created:', createData);
+    console.log('Step 1 SUCCESS:', createData);
 
-    // 2. Configurar webhook
-    console.log('Step 2: Setting webhook...');
+    console.log('=== STEP 2: Setting webhook ===');
     
+    // 2. Configurar Webhook (Segunda chamada - só após sucesso da primeira)
     const webhookResponse = await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
       method: 'POST',
       headers: {
@@ -156,55 +119,92 @@ async function createWhatsAppInstance(
         'apikey': EVOLUTION_API_KEY,
       },
       body: JSON.stringify({
-        webhook: {
-          enabled: true,
-          url: WEBHOOK_URL,
-          webhookBase64: true,
-          events: ["MESSAGES_UPSERT"]
-        }
+        url: WEBHOOK_URL,
+        events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE"]
       }),
     });
 
-    console.log('Webhook response status:', webhookResponse.status);
-    
     if (!webhookResponse.ok) {
       const errorData = await webhookResponse.text();
-      console.error('Failed to set webhook:', errorData);
-      // Continue even if webhook fails
-    } else {
-      const webhookData = await webhookResponse.json();
-      console.log('Webhook configured:', webhookData);
+      console.error('Step 2 failed:', errorData);
+      // Aguardar e tentar novamente
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const retryWebhookResponse = await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': EVOLUTION_API_KEY,
+        },
+        body: JSON.stringify({
+          url: WEBHOOK_URL,
+          events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE"]
+        }),
+      });
+      
+      if (!retryWebhookResponse.ok) {
+        throw new Error(`Failed to set webhook after retry`);
+      }
     }
 
-    // 3. Conectar e obter QR Code
-    console.log('Step 3: Connecting and getting QR...');
+    const webhookData = await webhookResponse.json();
+    console.log('Step 2 SUCCESS:', webhookData);
+
+    console.log('=== STEP 3: Connecting and generating QR ===');
     
+    // 3. Conectar e Gerar QR (Terceira chamada - só após webhook configurado)
     const connectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
-      method: 'GET',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': EVOLUTION_API_KEY,
       },
     });
 
-    console.log('Connect response status:', connectResponse.status);
-    
-    let qrBase64 = null;
-    if (connectResponse.ok) {
-      const connectData = await connectResponse.json();
-      console.log('Connect data:', connectData);
-      qrBase64 = connectData.base64;
+    if (!connectResponse.ok) {
+      const errorData = await connectResponse.text();
+      console.error('Step 3 failed:', errorData);
+      throw new Error(`Failed to connect instance: ${errorData}`);
     }
 
-    // NOTE: Supabase save will happen ONLY after QR code is successfully scanned/connected
-    console.log('Instance created successfully. Supabase save will occur after QR connection.');
+    const connectData = await connectResponse.json();
+    console.log('Step 3 SUCCESS:', connectData);
+
+    const qrCode = connectData.base64;
+    
+    if (!qrCode) {
+      throw new Error('QR Code not generated');
+    }
+
+    console.log('=== STEP 4: Saving to Supabase ===');
+    
+    // 4. Salvar no Supabase (Quarta ação - só após QR gerado)
+    const { data: insertData, error } = await supabaseClient
+      .from('n8n_fluxogpt')
+      .insert({
+        id: Date.now(), // ID único baseado em timestamp
+        nomeinstancia: instanceName,
+        idassistentgpt: assistantId,
+        emailuser: userEmail,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Step 4 failed:', error);
+      throw new Error(`Failed to save to database: ${error.message}`);
+    }
+
+    console.log('Step 4 SUCCESS:', insertData);
 
     return new Response(
       JSON.stringify({
         success: true,
         instanceName: instanceName,
-        qrCode: qrBase64,
-        message: 'Instance created successfully',
+        qrCode: qrCode,
+        message: 'Instance created successfully! QR Code expires in 45 seconds.',
+        data: insertData
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -212,65 +212,9 @@ async function createWhatsAppInstance(
     );
     
   } catch (error: any) {
-    console.error('createWhatsAppInstance error:', error);
+    console.error('createWhatsAppInstanceSequential error:', error);
     throw error;
   }
-}
-
-async function setWebhook(instanceName: string) {
-  console.log('setWebhook: Setting webhook for:', instanceName);
-  
-  const webhookResponse = await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': EVOLUTION_API_KEY,
-    },
-    body: JSON.stringify({
-      webhook: {
-        enabled: true,
-        url: WEBHOOK_URL,
-        webhookBase64: true,
-        events: ["MESSAGES_UPSERT"]
-      }
-    }),
-  });
-
-  console.log('setWebhook: Webhook response status:', webhookResponse.status);
-  
-  if (!webhookResponse.ok) {
-    const errorData = await webhookResponse.text();
-    console.error('setWebhook: Failed to set webhook:', errorData);
-    throw new Error(`Failed to set webhook: ${errorData}`);
-  }
-
-  const webhookData = await webhookResponse.json();
-  console.log('setWebhook: Webhook configured successfully:', webhookData);
-  return webhookResponse;
-}
-
-async function connectInstance(instanceName: string) {
-  console.log('connectInstance: Connecting instance:', instanceName);
-  
-  const connectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': EVOLUTION_API_KEY,
-    },
-  });
-
-  console.log('connectInstance: Connect response status:', connectResponse.status);
-
-  if (!connectResponse.ok) {
-    const errorData = await connectResponse.text();
-    console.error('connectInstance: Failed to connect instance:', errorData);
-    throw new Error(`Failed to connect instance: ${errorData}`);
-  }
-
-  const connectData = await connectResponse.json();
-  console.log('connectInstance: Instance connected successfully:', JSON.stringify(connectData));
-  return connectResponse;
 }
 
 async function listConnections(supabaseClient: any, userEmail: string) {
@@ -306,7 +250,7 @@ async function deleteConnection(instanceName: string, supabaseClient: any) {
       console.warn('Failed to delete from Evolution API, continuing with database deletion');
     }
 
-    // 2. Deletar do Supabase (usar campo correto)
+    // 2. Deletar do Supabase
     const { error } = await supabaseClient
       .from('n8n_fluxogpt')
       .delete()
@@ -330,8 +274,6 @@ async function deleteConnection(instanceName: string, supabaseClient: any) {
 
 async function testEvolutionAPI() {
   try {
-    console.log('testEvolutionAPI: Testing connection to Evolution API');
-    
     const testResponse = await fetch(`${EVOLUTION_API_URL}/instance/fetchInstances`, {
       method: 'GET',
       headers: {
@@ -339,10 +281,7 @@ async function testEvolutionAPI() {
       },
     });
     
-    console.log('testEvolutionAPI: Response status:', testResponse.status);
-    
     const responseText = await testResponse.text();
-    console.log('testEvolutionAPI: Response body:', responseText);
     
     return new Response(
       JSON.stringify({
@@ -357,70 +296,15 @@ async function testEvolutionAPI() {
       }
     );
   } catch (error: any) {
-    console.error('testEvolutionAPI: Error:', error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
-        stack: error.stack
+        error: error.message
       }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
-  }
-}
-
-async function getQrCode(instanceName: string) {
-  try {
-    console.log(`getQrCode: Getting QR code for instance: ${instanceName}`);
-    
-    // Endpoint correto conforme especificação do usuário
-    const response = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': EVOLUTION_API_KEY,
-      }
-    });
-
-    console.log(`getQrCode: Response status: ${response.status}`);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`getQrCode: API error: ${response.status} - ${errorText}`);
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: `Evolution API error: ${response.status}`,
-        details: errorText
-      }), {
-        status: response.status,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const data = await response.json();
-    console.log('getQrCode: API response data:', data);
-    
-    // Resposta conforme especificação: { base64: "data:image/png;base64,..." }
-    return new Response(JSON.stringify({
-      success: true,
-      base64: data.base64,
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-    
-  } catch (error: any) {
-    console.error('getQrCode: Error:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Failed to get QR code',
-      details: error.message
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
   }
 }
