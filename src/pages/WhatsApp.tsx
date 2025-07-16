@@ -610,23 +610,23 @@ const WhatsApp = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="connections">Gerenciar Conexões</TabsTrigger>
-              <TabsTrigger value="create">Nova Conexão</TabsTrigger>
-              <TabsTrigger value="qr-code">QR Code</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 h-auto md:h-10">
+              <TabsTrigger value="connections" className="text-xs md:text-sm">Gerenciar Conexões</TabsTrigger>
+              <TabsTrigger value="create" className="text-xs md:text-sm">Nova Conexão</TabsTrigger>
+              <TabsTrigger value="qr-code" className="text-xs md:text-sm">QR Code</TabsTrigger>
             </TabsList>
 
             {/* Lista de Conexões */}
             <TabsContent value="connections" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Smartphone className="h-5 w-5" />
+                      <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                        <Smartphone className="h-4 w-4 md:h-5 md:w-5" />
                         Suas Conexões WhatsApp
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-sm">
                         Gerencie suas instâncias WhatsApp conectadas
                       </CardDescription>
                     </div>
@@ -634,10 +634,10 @@ const WhatsApp = () => {
                       onClick={loadData} 
                       variant="outline" 
                       size="sm"
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 w-full md:w-auto"
                     >
                       <RefreshCw className="h-4 w-4" />
-                      Atualizar Conexões
+                      <span className="md:inline">Atualizar Conexões</span>
                     </Button>
                   </div>
                 </CardHeader>
@@ -645,37 +645,41 @@ const WhatsApp = () => {
                   {connections.length === 0 ? (
                     <div className="text-center py-8">
                       <Smartphone className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground mb-4">Nenhuma conexão WhatsApp encontrada</p>
-                    <Button 
-                      onClick={() => {
-                        if (limits && !limits.can_create_whatsapp_connection) {
-                          toast({
-                            title: "Limite atingido",
-                            description: `Você já criou ${limits.max_whatsapp_connections} conexão(s). Para criar mais, solicite um aumento de limite.`,
-                            variant: "destructive",
-                          });
-                          return;
-                        }
-                        setActiveTab("create");
-                      }}
-                      disabled={limits && !limits.can_create_whatsapp_connection}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Criar primeira conexão
-                    </Button>
-                    {limits && !limits.can_create_whatsapp_connection && (
+                      <p className="text-muted-foreground mb-4 text-sm md:text-base">Nenhuma conexão WhatsApp encontrada</p>
+                    <div className="flex flex-col sm:flex-row gap-2 justify-center">
                       <Button 
-                        variant="outline" 
                         onClick={() => {
-                          toast({
-                            title: "Solicitar mais conexões",
-                            description: "Entre em contato para solicitar mais conexões WhatsApp.",
-                          });
+                          if (limits && !limits.can_create_whatsapp_connection) {
+                            toast({
+                              title: "Limite atingido",
+                              description: `Você já criou ${limits.max_whatsapp_connections} conexão(s). Para criar mais, solicite um aumento de limite.`,
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          setActiveTab("create");
                         }}
+                        disabled={limits && !limits.can_create_whatsapp_connection}
+                        className="w-full sm:w-auto"
                       >
-                        Solicitar Mais
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar primeira conexão
                       </Button>
-                    )}
+                      {limits && !limits.can_create_whatsapp_connection && (
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            toast({
+                              title: "Solicitar mais conexões",
+                              description: "Entre em contato para solicitar mais conexões WhatsApp.",
+                            });
+                          }}
+                          className="w-full sm:w-auto"
+                        >
+                          Solicitar Mais
+                        </Button>
+                      )}
+                    </div>
                     </div>
                   ) : (
                     <div className="space-y-6">

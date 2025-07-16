@@ -397,10 +397,12 @@ const Conversations = () => {
         
         <main className="flex-1 flex flex-col lg:flex-row">
           {/* Conversations Sidebar */}
-          <div className="w-full lg:w-80 border-r border-b lg:border-b-0 bg-muted/20 flex flex-col max-h-96 lg:max-h-none">
+          <div className="w-full lg:w-80 border-r border-b lg:border-b-0 bg-muted/20 flex flex-col min-h-[300px] lg:min-h-full max-h-[50vh] lg:max-h-none">
             <div className="p-3 md:p-4 border-b">
               <div className="flex items-center gap-2 mb-4">
-                <SidebarTrigger />
+                <div className="lg:hidden">
+                  <SidebarTrigger />
+                </div>
                 <h2 className="font-semibold flex items-center gap-2 text-sm md:text-base">
                   <MessageSquare className="h-4 w-4 md:h-5 md:w-5" />
                   Conversas
@@ -410,7 +412,7 @@ const Conversations = () => {
               {/* New Conversation */}
               <div className="space-y-2">
                 <Select value={selectedAssistant} onValueChange={setSelectedAssistant}>
-                  <SelectTrigger className="bg-background">
+                  <SelectTrigger className="bg-background w-full">
                     <SelectValue placeholder="Escolha um agente" />
                   </SelectTrigger>
                   <SelectContent className="z-50 bg-background border border-border shadow-lg">
@@ -435,7 +437,7 @@ const Conversations = () => {
                         <SelectItem key={assistant.id} value={assistant.id}>
                           <div className="flex items-center gap-2">
                             <Bot className="h-3 w-3" />
-                            {assistant.name}
+                            <span className="truncate">{assistant.name}</span>
                           </div>
                         </SelectItem>
                       ))
@@ -445,7 +447,7 @@ const Conversations = () => {
                 <Button 
                   onClick={startNewConversation} 
                   disabled={!selectedAssistant}
-                  className="w-full"
+                  className="w-full text-sm"
                   size="sm"
                 >
                   <Plus className="h-3 w-3 mr-1" />
@@ -486,7 +488,7 @@ const Conversations = () => {
                             e.stopPropagation();
                             deleteConversation(conversation.id);
                           }}
-                          className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                          className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground flex-shrink-0"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -499,57 +501,60 @@ const Conversations = () => {
           </div>
 
           {/* Chat Area */}
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-h-[50vh] lg:min-h-full">
             {selectedConversation ? (
               <>
                 {/* Chat Header */}
-                <div className="p-4 border-b">
+                <div className="p-3 md:p-4 border-b">
                   <div className="flex items-center gap-2">
-                    <Bot className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold">
+                    <div className="lg:hidden">
+                      <SidebarTrigger />
+                    </div>
+                    <Bot className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                    <h3 className="font-semibold text-sm md:text-base truncate">
                       {conversations.find(c => c.id === selectedConversation)?.assistants.name}
                     </h3>
                   </div>
                 </div>
 
                 {/* Messages */}
-                <ScrollArea className="flex-1 p-4">
+                <ScrollArea className="flex-1 p-3 md:p-4">
                   <div className="space-y-4">
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        className={`flex gap-2 md:gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
                         {message.role === 'assistant' && (
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <Bot className="h-4 w-4 text-primary" />
+                          <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <Bot className="h-3 w-3 md:h-4 md:w-4 text-primary" />
                           </div>
                         )}
                         <div
-                          className={`max-w-[70%] p-3 rounded-lg ${
+                          className={`max-w-[80%] md:max-w-[70%] p-2 md:p-3 rounded-lg ${
                             message.role === 'user'
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted'
                           }`}
                         >
-                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                          <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{message.content}</p>
                           <p className="text-xs opacity-70 mt-1">
                             {new Date(message.created_at).toLocaleTimeString('pt-BR')}
                           </p>
                         </div>
                         {message.role === 'user' && (
-                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                            <UserIcon className="h-4 w-4" />
+                          <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                            <UserIcon className="h-3 w-3 md:h-4 md:w-4" />
                           </div>
                         )}
                       </div>
                     ))}
                     {sending && (
-                      <div className="flex gap-3 justify-start">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Bot className="h-4 w-4 text-primary" />
+                      <div className="flex gap-2 md:gap-3 justify-start">
+                        <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Bot className="h-3 w-3 md:h-4 md:w-4 text-primary" />
                         </div>
-                        <div className="bg-muted p-3 rounded-lg">
+                        <div className="bg-muted p-2 md:p-3 rounded-lg">
                           <div className="flex space-x-1">
                             <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
                             <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -563,30 +568,30 @@ const Conversations = () => {
                 </ScrollArea>
 
                 {/* Message Input */}
-                <div className="p-4 border-t">
+                <div className="p-3 md:p-4 border-t">
                   <form onSubmit={sendMessage} className="flex gap-2">
                     <Input
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       placeholder="Digite sua mensagem..."
                       disabled={sending}
-                      className="flex-1"
+                      className="flex-1 text-sm"
                     />
-                    <Button type="submit" disabled={sending || !newMessage.trim()}>
-                      <Send className="h-4 w-4" />
+                    <Button type="submit" disabled={sending || !newMessage.trim()} size="sm" className="px-3">
+                      <Send className="h-3 w-3 md:h-4 md:w-4" />
                     </Button>
                   </form>
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
-                    <MessageSquare className="h-8 w-8 text-muted-foreground" />
+              <div className="flex-1 flex items-center justify-center p-4">
+                <div className="text-center space-y-4 max-w-sm">
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
+                    <MessageSquare className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">Selecione uma conversa</h3>
-                    <p className="text-muted-foreground">
+                    <h3 className="text-base md:text-lg font-semibold mb-2">Selecione uma conversa</h3>
+                    <p className="text-muted-foreground text-sm md:text-base">
                       Escolha uma conversa existente ou inicie uma nova com seus agentes
                     </p>
                   </div>
