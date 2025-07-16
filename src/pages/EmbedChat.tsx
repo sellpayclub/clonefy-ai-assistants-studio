@@ -18,6 +18,65 @@ interface Agent {
   description: string;
 }
 
+// Função para formatar o texto das mensagens
+const formatMessageContent = (content: string) => {
+  // Quebra o texto em parágrafos e formata
+  const paragraphs = content.split('\n\n').filter(p => p.trim());
+  
+  return paragraphs.map((paragraph, index) => {
+    const trimmedParagraph = paragraph.trim();
+    
+    // Detecta listas numeradas
+    if (/^\d+\./.test(trimmedParagraph)) {
+      const items = trimmedParagraph.split(/(?=\d+\.)/g).filter(item => item.trim());
+      return (
+        <ol key={index} className="list-decimal list-inside space-y-1 ml-2">
+          {items.map((item, itemIndex) => (
+            <li key={itemIndex} className="text-sm leading-relaxed">
+              {item.replace(/^\d+\.\s*/, '')}
+            </li>
+          ))}
+        </ol>
+      );
+    }
+    
+    // Detecta listas com bullets
+    if (/^[-•*]/.test(trimmedParagraph)) {
+      const items = trimmedParagraph.split(/(?=[-•*])/g).filter(item => item.trim());
+      return (
+        <ul key={index} className="list-disc list-inside space-y-1 ml-2">
+          {items.map((item, itemIndex) => (
+            <li key={itemIndex} className="text-sm leading-relaxed">
+              {item.replace(/^[-•*]\s*/, '')}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+    
+    // Detecta títulos/cabeçalhos (linhas que terminam com :)
+    if (trimmedParagraph.endsWith(':') && trimmedParagraph.length < 100) {
+      return (
+        <h4 key={index} className="font-semibold text-sm mb-1 text-foreground">
+          {trimmedParagraph}
+        </h4>
+      );
+    }
+    
+    // Quebra linhas simples dentro do parágrafo
+    const lines = trimmedParagraph.split('\n').filter(line => line.trim());
+    return (
+      <div key={index} className="space-y-1">
+        {lines.map((line, lineIndex) => (
+          <p key={lineIndex} className="text-sm leading-relaxed break-words">
+            {line.trim()}
+          </p>
+        ))}
+      </div>
+    );
+  });
+};
+
 const EmbedChat = () => {
   const { agentId } = useParams();
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -29,11 +88,14 @@ const EmbedChat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   };
 
   useEffect(() => {
-    scrollToBottom();
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+    return () => clearTimeout(timer);
   }, [messages]);
 
   useEffect(() => {
@@ -168,7 +230,7 @@ const EmbedChat = () => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 space-y-4 scroll-smooth">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -177,21 +239,29 @@ const EmbedChat = () => {
             }`}
           >
             {message.role === 'assistant' && (
-              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
                 <Bot className="h-3 w-3 text-primary" />
               </div>
             )}
             <div
-              className={`max-w-[80%] p-3 rounded-lg text-sm ${
+              className={`max-w-[85%] p-3 rounded-lg ${
                 message.role === 'user'
                   ? 'bg-primary text-primary-foreground ml-auto'
-                  : 'bg-muted'
+                  : 'bg-muted text-foreground'
               }`}
             >
-              {message.content}
+              <div className="space-y-3">
+                {message.role === 'user' ? (
+                  <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
+                    {message.content}
+                  </p>
+                ) : (
+                  formatMessageContent(message.content)
+                )}
+              </div>
             </div>
             {message.role === 'user' && (
-              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-1">
                 <User className="h-3 w-3" />
               </div>
             )}
@@ -199,7 +269,7 @@ const EmbedChat = () => {
         ))}
         {isLoading && (
           <div className="flex gap-2">
-            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mt-1">
               <Bot className="h-3 w-3 text-primary" />
             </div>
             <div className="bg-muted p-3 rounded-lg">
@@ -211,11 +281,11 @@ const EmbedChat = () => {
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-1" />
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t">
+      <div className="p-4 border-t bg-background/50">
         <div className="flex gap-2">
           <Input
             value={input}
@@ -223,13 +293,13 @@ const EmbedChat = () => {
             onKeyPress={handleKeyPress}
             placeholder="Digite sua mensagem..."
             disabled={isLoading}
-            className="flex-1 text-sm"
+            className="flex-1 text-sm resize-none"
           />
           <Button
             onClick={sendMessage}
             disabled={!input.trim() || isLoading}
             size="sm"
-            className="px-3"
+            className="px-3 transition-all duration-200 hover:scale-105"
           >
             <Send className="h-4 w-4" />
           </Button>
