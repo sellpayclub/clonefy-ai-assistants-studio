@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import SupportChatWidget from "@/components/SupportChatWidget";
 
 interface DashboardStats {
   assistants: number;
@@ -303,6 +304,9 @@ const Dashboard = () => {
           </div>
 
         </main>
+        
+        {/* Support Chat Widget for internal system */}
+        <SupportChatWidget />
       </div>
     </SidebarProvider>
   );

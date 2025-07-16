@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, X } from 'lucide-react';
+import { HeadphonesIcon, X } from 'lucide-react';
 
-const ChatWidget = () => {
+const SupportChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -22,30 +22,30 @@ const ChatWidget = () => {
 
   return (
     <>
-      {/* Chat Button */}
+      {/* Support Chat Button */}
       <button
         onClick={toggleChat}
         className={`
-          fixed bottom-6 right-6 z-[9999] 
+          fixed bottom-6 left-6 z-[9999] 
           w-16 h-16 rounded-full 
-          bg-gradient-to-r from-primary to-primary/80
-          hover:from-primary/90 hover:to-primary/70
+          bg-gradient-to-r from-blue-600 to-blue-500
+          hover:from-blue-700 hover:to-blue-600
           text-white shadow-lg hover:shadow-xl
           flex items-center justify-center
           transition-all duration-300 ease-in-out
           hover:scale-110 active:scale-95
           ${isOpen ? 'rotate-180' : 'rotate-0'}
         `}
-        title="Chat com clonefy ia tira duvidas"
+        title="Suporte Técnico - Clonefy"
       >
         {isOpen ? (
           <X size={24} />
         ) : (
-          <MessageCircle size={24} />
+          <HeadphonesIcon size={24} />
         )}
       </button>
 
-      {/* Chat Iframe */}
+      {/* Support Chat Iframe */}
       {isOpen && (
         <div
           className={`
@@ -53,14 +53,14 @@ const ChatWidget = () => {
             transition-all duration-300 ease-in-out
             ${isMobile 
               ? 'inset-0 w-screen h-screen bg-black' 
-              : 'bottom-24 right-6 w-[500px] h-[700px] rounded-xl bg-black shadow-2xl'
+              : 'bottom-24 left-6 w-[500px] h-[700px] rounded-xl bg-black shadow-2xl'
             }
           `}
         >
           <iframe
-            src="https://clonefy.app/embed/chat/7a218984-6ada-4581-b1b6-2119b4771260?hideHeader=true&fullscreen=true"
+            src="https://clonefy.app/embed/chat/d9b3b811-73ea-40c0-bc55-9f0ef87a6091?hideHeader=true&fullscreen=true"
             className={`w-full h-full border-none ${isMobile ? '' : 'rounded-xl'}`}
-            title="Clonefy Chat Support"
+            title="Clonefy Support Chat"
             loading="lazy"
             allow="microphone; camera"
             sandbox="allow-same-origin allow-scripts allow-forms allow-downloads"
@@ -77,4 +77,4 @@ const ChatWidget = () => {
   );
 };
 
-export default ChatWidget;
+export default SupportChatWidget;

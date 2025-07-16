@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import AppSidebar from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
+import SupportChatWidget from "@/components/SupportChatWidget";
 
 interface Assistant {
   id: string;
@@ -587,6 +588,9 @@ const Conversations = () => {
             )}
           </div>
         </main>
+        
+        {/* Support Chat Widget for internal system */}
+        <SupportChatWidget />
       </div>
     </SidebarProvider>
   );

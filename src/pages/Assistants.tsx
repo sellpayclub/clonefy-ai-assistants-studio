@@ -19,6 +19,7 @@ import AgentTutorial from "@/components/AgentTutorial";
 import { AssistantMediaUpload } from "@/components/AssistantMediaUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
+import SupportChatWidget from "@/components/SupportChatWidget";
 
 interface Assistant {
   id: string;
@@ -758,6 +759,9 @@ const Assistants = () => {
             </DialogContent>
           </Dialog>
         </main>
+        
+        {/* Support Chat Widget for internal system */}
+        <SupportChatWidget />
       </div>
     </SidebarProvider>
   );
