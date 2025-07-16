@@ -256,21 +256,21 @@ const Admin = () => {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         
-        <main className="flex-1 p-6">
-          <div className="flex items-center justify-between mb-6">
+        <main className="flex-1 p-4 md:p-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div>
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                  <Settings className="h-8 w-8 text-primary" />
+                <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                  <Settings className="h-6 md:h-8 w-6 md:w-8 text-primary" />
                   Painel Admin
                 </h1>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-sm md:text-base">
                   Gerencie limites de usuários do sistema
                 </p>
               </div>
             </div>
-            <Button onClick={loadUsers} variant="outline">
+            <Button onClick={loadUsers} variant="outline" className="self-start md:self-auto">
               Recarregar
             </Button>
           </div>
@@ -293,115 +293,229 @@ const Admin = () => {
             </CardContent>
           </Card>
 
-          {/* Users Table */}
+          {/* Users Table - Desktop / Cards - Mobile */}
           <Card>
             <CardHeader>
               <CardTitle>Usuários e Limites ({filteredUsers.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Usuário</TableHead>
-                    <TableHead>Plano</TableHead>
-                    <TableHead>Agentes</TableHead>
-                    <TableHead>Conexões WhatsApp</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.user_id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{user.email}</div>
-                          <div className="text-sm text-muted-foreground">
-                            ID: {user.user_id.substring(0, 8)}...
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <div className="min-w-[700px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="min-w-[200px]">Usuário</TableHead>
+                        <TableHead className="min-w-[80px]">Plano</TableHead>
+                        <TableHead className="min-w-[120px]">Agentes</TableHead>
+                        <TableHead className="min-w-[140px]">Conexões WhatsApp</TableHead>
+                        <TableHead className="min-w-[120px]">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map((user) => (
+                        <TableRow key={user.user_id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{user.email}</div>
+                              <div className="text-sm text-muted-foreground">
+                                ID: {user.user_id.substring(0, 8)}...
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{user.plan_type}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {editingUserId === user.user_id ? (
+                              <Input
+                                type="number"
+                                min="0"
+                                value={editLimits.assistants}
+                                onChange={(e) => setEditLimits(prev => ({
+                                  ...prev,
+                                  assistants: parseInt(e.target.value) || 0
+                                }))}
+                                className="w-20"
+                              />
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span className={user.current_assistants >= user.max_assistants ? "text-red-600 font-medium" : ""}>
+                                  {user.current_assistants}/{user.max_assistants}
+                                </span>
+                                {user.current_assistants >= user.max_assistants && (
+                                  <AlertCircle className="h-4 w-4 text-red-600" />
+                                )}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {editingUserId === user.user_id ? (
+                              <Input
+                                type="number"
+                                min="0"
+                                value={editLimits.connections}
+                                onChange={(e) => setEditLimits(prev => ({
+                                  ...prev,
+                                  connections: parseInt(e.target.value) || 0
+                                }))}
+                                className="w-20"
+                              />
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span className={user.current_whatsapp_connections >= user.max_whatsapp_connections ? "text-red-600 font-medium" : ""}>
+                                  {user.current_whatsapp_connections}/{user.max_whatsapp_connections}
+                                </span>
+                                {user.current_whatsapp_connections >= user.max_whatsapp_connections && (
+                                  <AlertCircle className="h-4 w-4 text-red-600" />
+                                )}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {editingUserId === user.user_id ? (
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={() => updateUserLimits(user.user_id, editLimits.assistants, editLimits.connections)}
+                                >
+                                  <Save className="h-3 w-3 mr-1" />
+                                  Salvar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setEditingUserId(null)}
+                                >
+                                  Cancelar
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => startEditing(user)}
+                              >
+                                <Settings className="h-3 w-3 mr-1" />
+                                Editar
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              {/* Mobile Cards View */}
+              <div className="md:hidden space-y-4">
+                {filteredUsers.map((user) => (
+                  <Card key={user.user_id} className="border border-border/40">
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        {/* User Info */}
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="font-medium text-sm">{user.email}</div>
+                            <div className="text-xs text-muted-foreground">
+                              ID: {user.user_id.substring(0, 8)}...
+                            </div>
+                          </div>
+                          <Badge variant="secondary" className="text-xs">{user.plan_type}</Badge>
+                        </div>
+                        
+                        {/* Limits */}
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Agentes</Label>
+                            {editingUserId === user.user_id ? (
+                              <Input
+                                type="number"
+                                min="0"
+                                value={editLimits.assistants}
+                                onChange={(e) => setEditLimits(prev => ({
+                                  ...prev,
+                                  assistants: parseInt(e.target.value) || 0
+                                }))}
+                                className="h-8 text-sm"
+                              />
+                            ) : (
+                              <div className="flex items-center gap-1 mt-1">
+                                <span className={user.current_assistants >= user.max_assistants ? "text-red-600 font-medium" : ""}>
+                                  {user.current_assistants}/{user.max_assistants}
+                                </span>
+                                {user.current_assistants >= user.max_assistants && (
+                                  <AlertCircle className="h-3 w-3 text-red-600" />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Conexões</Label>
+                            {editingUserId === user.user_id ? (
+                              <Input
+                                type="number"
+                                min="0"
+                                value={editLimits.connections}
+                                onChange={(e) => setEditLimits(prev => ({
+                                  ...prev,
+                                  connections: parseInt(e.target.value) || 0
+                                }))}
+                                className="h-8 text-sm"
+                              />
+                            ) : (
+                              <div className="flex items-center gap-1 mt-1">
+                                <span className={user.current_whatsapp_connections >= user.max_whatsapp_connections ? "text-red-600 font-medium" : ""}>
+                                  {user.current_whatsapp_connections}/{user.max_whatsapp_connections}
+                                </span>
+                                {user.current_whatsapp_connections >= user.max_whatsapp_connections && (
+                                  <AlertCircle className="h-3 w-3 text-red-600" />
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{user.plan_type}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        {editingUserId === user.user_id ? (
-                          <Input
-                            type="number"
-                            min="0"
-                            value={editLimits.assistants}
-                            onChange={(e) => setEditLimits(prev => ({
-                              ...prev,
-                              assistants: parseInt(e.target.value) || 0
-                            }))}
-                            className="w-20"
-                          />
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className={user.current_assistants >= user.max_assistants ? "text-red-600 font-medium" : ""}>
-                              {user.current_assistants}/{user.max_assistants}
-                            </span>
-                            {user.current_assistants >= user.max_assistants && (
-                              <AlertCircle className="h-4 w-4 text-red-600" />
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {editingUserId === user.user_id ? (
-                          <Input
-                            type="number"
-                            min="0"
-                            value={editLimits.connections}
-                            onChange={(e) => setEditLimits(prev => ({
-                              ...prev,
-                              connections: parseInt(e.target.value) || 0
-                            }))}
-                            className="w-20"
-                          />
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className={user.current_whatsapp_connections >= user.max_whatsapp_connections ? "text-red-600 font-medium" : ""}>
-                              {user.current_whatsapp_connections}/{user.max_whatsapp_connections}
-                            </span>
-                            {user.current_whatsapp_connections >= user.max_whatsapp_connections && (
-                              <AlertCircle className="h-4 w-4 text-red-600" />
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {editingUserId === user.user_id ? (
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => updateUserLimits(user.user_id, editLimits.assistants, editLimits.connections)}
-                            >
-                              <Save className="h-3 w-3 mr-1" />
-                              Salvar
-                            </Button>
+                        
+                        {/* Actions */}
+                        <div className="pt-2 border-t border-border/40">
+                          {editingUserId === user.user_id ? (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => updateUserLimits(user.user_id, editLimits.assistants, editLimits.connections)}
+                                className="flex-1"
+                              >
+                                <Save className="h-3 w-3 mr-1" />
+                                Salvar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingUserId(null)}
+                                className="flex-1"
+                              >
+                                Cancelar
+                              </Button>
+                            </div>
+                          ) : (
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => setEditingUserId(null)}
+                              onClick={() => startEditing(user)}
+                              className="w-full"
                             >
-                              Cancelar
+                              <Settings className="h-3 w-3 mr-1" />
+                              Editar Limites
                             </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => startEditing(user)}
-                          >
-                            <Settings className="h-3 w-3 mr-1" />
-                            Editar
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
               
               {filteredUsers.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">

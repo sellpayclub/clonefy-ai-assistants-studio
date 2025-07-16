@@ -206,24 +206,24 @@ const Dashboard = () => {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         
-        <main className="flex-1 p-6">
-          <div className="flex items-center justify-between mb-6">
+        <main className="flex-1 p-4 md:p-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div>
-                <h1 className="text-3xl font-bold">Dashboard</h1>
-                <p className="text-muted-foreground">
+                <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
+                <p className="text-muted-foreground text-sm md:text-base">
                   Bem-vindo de volta, {user?.user_metadata?.full_name || user?.email}!
                 </p>
               </div>
             </div>
-            <Button onClick={handleSignOut} variant="outline">
+            <Button onClick={handleSignOut} variant="outline" className="self-start md:self-auto">
               Sair
             </Button>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Agentes</CardTitle>
@@ -253,7 +253,7 @@ const Dashboard = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             <Card className="cursor-pointer hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-card to-muted/20" onClick={() => navigate('/assistants')}>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-3">

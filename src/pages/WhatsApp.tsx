@@ -576,20 +576,20 @@ const WhatsApp = () => {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         
-        <main className="flex-1 p-6">
-          <div className="flex items-center justify-between mb-6">
+        <main className="flex-1 p-4 md:p-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div>
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                  <Smartphone className="h-8 w-8 text-primary" />
+                <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                  <Smartphone className="h-6 md:h-8 w-6 md:w-8 text-primary" />
                   WhatsApp
                 </h1>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-sm md:text-base">
                   Conecte suas instâncias WhatsApp aos agentes de IA
                 </p>
                 {limits && (
-                  <div className="text-sm text-muted-foreground mt-1">
+                  <div className="text-xs md:text-sm text-muted-foreground mt-1">
                     <span className={limits.can_create_whatsapp_connection ? "text-green-600" : "text-red-600"}>
                       {limits.current_whatsapp_connections}/{limits.max_whatsapp_connections} conexões utilizadas
                     </span>
@@ -597,12 +597,12 @@ const WhatsApp = () => {
                 )}
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={testAPI} variant="outline" size="sm">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button onClick={testAPI} variant="outline" size="sm" className="w-full sm:w-auto">
                 <CheckCircle className="h-4 w-4 mr-1" />
                 Testar API
               </Button>
-              <Button onClick={loadData} variant="outline" size="sm">
+              <Button onClick={loadData} variant="outline" size="sm" className="w-full sm:w-auto">
                 <RefreshCw className="h-4 w-4 mr-1" />
                 Atualizar
               </Button>

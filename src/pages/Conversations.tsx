@@ -395,14 +395,14 @@ const Conversations = () => {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         
-        <main className="flex-1 flex">
+        <main className="flex-1 flex flex-col lg:flex-row">
           {/* Conversations Sidebar */}
-          <div className="w-80 border-r bg-muted/20 flex flex-col">
-            <div className="p-4 border-b">
+          <div className="w-full lg:w-80 border-r border-b lg:border-b-0 bg-muted/20 flex flex-col max-h-96 lg:max-h-none">
+            <div className="p-3 md:p-4 border-b">
               <div className="flex items-center gap-2 mb-4">
                 <SidebarTrigger />
-                <h2 className="font-semibold flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
+                <h2 className="font-semibold flex items-center gap-2 text-sm md:text-base">
+                  <MessageSquare className="h-4 w-4 md:h-5 md:w-5" />
                   Conversas
                 </h2>
               </div>

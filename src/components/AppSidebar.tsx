@@ -55,33 +55,33 @@ const AppSidebar = () => {
 
   return (
     <Sidebar 
-      className={`transition-all duration-300 ${collapsed ? "w-16" : "w-64"} border-r border-border/40 bg-gradient-to-b from-background via-background to-muted/20`} 
+      className={`transition-all duration-300 ${collapsed ? "w-14 md:w-16" : "w-72 md:w-80"} border-r border-border/40 bg-gradient-to-b from-background via-background to-muted/20 backdrop-blur-sm`} 
       collapsible="icon"
     >
       {/* Header com Logo */}
-      <SidebarHeader className="border-b border-border/40 p-6 bg-gradient-to-r from-primary/5 to-transparent">
-        <div className="flex items-center justify-center h-16">
+      <SidebarHeader className="border-b border-border/40 p-4 md:p-6 bg-gradient-to-r from-primary/5 to-transparent">
+        <div className="flex items-center justify-center h-12 md:h-16">
           {!collapsed ? (
             <div className="flex items-center gap-3">
               {/* Logo para modo claro */}
               <img 
                 src="/lovable-uploads/fbe6c7af-7d70-474d-af99-5f513f7a14dc.png" 
                 alt="CLONEFY" 
-                className="h-12 w-auto dark:hidden"
+                className="h-16 w-auto dark:hidden md:h-20"
               />
               {/* Logo para modo escuro */}
               <img 
                 src="/lovable-uploads/8f2944d9-660f-4eb7-bae6-e226176b6a6d.png" 
                 alt="CLONEFY" 
-                className="h-12 w-auto hidden dark:block"
+                className="h-16 w-auto hidden dark:block md:h-20"
               />
             </div>
           ) : (
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-sm">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow">
               <img 
                 src="/lovable-uploads/59070bb1-9779-4bbb-a3d5-a65bacf38b70.png" 
                 alt="CLONEFY" 
-                className="w-6 h-6"
+                className="w-8 h-8"
               />
             </div>
           )}

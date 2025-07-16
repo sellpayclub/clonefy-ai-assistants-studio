@@ -283,20 +283,20 @@ const Assistants = () => {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         
-        <main className="flex-1 p-6">
-          <div className="flex items-center justify-between mb-6">
+        <main className="flex-1 p-4 md:p-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div>
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                  <Bot className="h-8 w-8 text-primary" />
+                <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                  <Bot className="h-6 md:h-8 w-6 md:w-8 text-primary" />
                   Agentes
                 </h1>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-sm md:text-base">
                   Crie e gerencie seus agentes de IA personalizados
                 </p>
                 {limits && (
-                  <div className="text-sm text-muted-foreground mt-1">
+                  <div className="text-xs md:text-sm text-muted-foreground mt-1">
                     <span className={limits.can_create_assistant ? "text-green-600" : "text-red-600"}>
                       {limits.current_assistants}/{limits.max_assistants} agentes utilizados
                     </span>
@@ -304,14 +304,15 @@ const Assistants = () => {
                 )}
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={loadAssistants} variant="outline" size="sm">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button onClick={loadAssistants} variant="outline" size="sm" className="w-full sm:w-auto">
                 <RefreshCw className="h-4 w-4 mr-1" />
                 Recarregar
               </Button>
               <Button 
                 onClick={openCreateDialog}
                 disabled={limits && !limits.can_create_assistant}
+                className="w-full sm:w-auto"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Agente
@@ -325,6 +326,7 @@ const Assistants = () => {
                       description: "Entre em contato para solicitar mais agentes.",
                     });
                   }}
+                  className="w-full sm:w-auto"
                 >
                   Solicitar Mais
                 </Button>
@@ -348,7 +350,7 @@ const Assistants = () => {
               </Button>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {assistants.map((assistant) => (
                 <Card key={assistant.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
