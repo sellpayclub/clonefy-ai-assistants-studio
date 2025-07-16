@@ -30,7 +30,7 @@ const Index = () => {
           <img 
             src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png" 
             alt="CLONEFY Logo" 
-            className="h-8 w-auto"
+            className="h-16 w-auto"
           />
         </div>
         <div className="flex items-center gap-4">
@@ -255,7 +255,7 @@ const Index = () => {
             <img 
               src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png" 
               alt="CLONEFY Logo" 
-              className="h-6 w-auto"
+              className="h-12 w-auto"
             />
           </div>
           <p className="text-center text-muted-foreground mt-4">
