@@ -32,6 +32,8 @@ const Index = () => {
               src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png" 
               alt="CLONEFY Logo" 
               className="h-14 w-auto sm:h-12 lg:h-16"
+              loading="eager"
+              fetchPriority="high"
             />
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
@@ -150,6 +152,7 @@ const Index = () => {
               src="/lovable-uploads/78405cc7-ac71-4962-a65b-41f013b48492.png"
               alt="Criar Agente - Interface simples para começar"
               className="rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl border w-full max-w-sm sm:max-w-md mx-auto"
+              loading="lazy"
             />
           </div>
         </div>
@@ -161,6 +164,7 @@ const Index = () => {
               src="/lovable-uploads/840c4611-5645-4a58-98c5-fea65bbb08fc.png"
               alt="Configurar Agente - Personalização completa"
               className="rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl border w-full"
+              loading="lazy"
             />
           </div>
           <div className="order-1 lg:order-2 px-2">
@@ -220,6 +224,7 @@ const Index = () => {
               src="/lovable-uploads/18248d32-3b27-4c30-b5b7-0fdcc905ae7b.png"
               alt="Lista de Agentes - Gerenciamento fácil"
               className="rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl border w-full"
+              loading="lazy"
             />
           </div>
         </div>
@@ -231,6 +236,7 @@ const Index = () => {
               src="/lovable-uploads/6997528e-0637-4e0e-b1c5-189e6c76f917.png"
               alt="Conectar WhatsApp - Integração simples"
               className="rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl border w-full"
+              loading="lazy"
             />
           </div>
           <div className="order-1 lg:order-2 px-2">
@@ -290,6 +296,7 @@ const Index = () => {
               src="/lovable-uploads/1c3acef0-0f93-4eef-b3a5-2cb3614deb57.png"
               alt="Chat Flutuante - Widget para site"
               className="rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl border w-full"
+              loading="lazy"
             />
           </div>
         </div>
@@ -301,6 +308,7 @@ const Index = () => {
               src="/lovable-uploads/a9dc3a05-1c17-4478-9cc9-51f472d73ed6.png"
               alt="Conversa Real - Agente funcionando"
               className="rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl border w-full"
+              loading="lazy"
             />
           </div>
           <div className="order-1 lg:order-2 px-2">
@@ -510,6 +518,7 @@ const Index = () => {
               src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png" 
               alt="CLONEFY Logo" 
               className="h-12 sm:h-10 lg:h-12 w-auto"
+              loading="lazy"
             />
           </div>
           <p className="text-center text-muted-foreground mt-3 sm:mt-4 text-sm sm:text-base px-2">
