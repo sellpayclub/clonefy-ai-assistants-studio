@@ -18,7 +18,7 @@ export default {
     titleEnd: "com IA!",
     subtitle: "Tenha Agentes IA treinados para sua empresa, atendendo no WhatsApp, 24 horas por dia.",
     subtitleBold: "100% automática e humanizada!",
-    createAssistant: "Criar Meu Primeiro Assistente",
+    createAssistant: "Criar Meu Primeiro Clone de IA",
     watchDemo: "Ver Demonstração",
     description1: "Ensine seu Clone a Seguir o Seu Script de Vendas ou Seu atendimento e Automatize 100% seu WhatsApp",
     description2: "Seu Funcionário Disponível 24horas por dia, sem descanso e pagando 10% de um salário."
@@ -98,7 +98,7 @@ export default {
   // Páginas internas
   auth: {
     title: "CLONEFY",
-    subtitle: "Plataforma de Assistentes IA para WhatsApp",
+    subtitle: "Plataforma de Clones de IA para WhatsApp",
     signin: "Login",
     signup: "Cadastro",
     email: "Email",
@@ -142,7 +142,7 @@ export default {
       },
       startChat: {
         title: "Iniciar Chat",
-        description: "Teste seus assistentes em uma conversa",
+        description: "Teste seus clones de IA em uma conversa",
         button: "Chat de Teste"
       }
     }
@@ -155,8 +155,8 @@ export default {
       description: "Visão geral"
     },
     agents: {
-      title: "Agentes",
-      description: "IA Assistentes"
+      title: "Clones de IA",
+      description: "Seus Agentes"
     },
     whatsapp: {
       title: "WhatsApp",
@@ -176,7 +176,7 @@ export default {
   // Navigation
   nav: {
     dashboard: "Dashboard",
-    assistants: "Assistentes", 
+    assistants: "Clones de IA", 
     conversations: "Conversas",
     whatsapp: "WhatsApp",
     settings: "Configurações",
