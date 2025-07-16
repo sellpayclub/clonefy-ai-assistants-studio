@@ -539,6 +539,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_email: {
+        Args: { target_user_id: string }
+        Returns: string
+      }
       get_user_usage_stats: {
         Args: { target_user_id?: string }
         Returns: {
