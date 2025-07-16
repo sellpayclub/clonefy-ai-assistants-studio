@@ -32,7 +32,7 @@ const Index = () => {
             <img 
               src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png" 
               alt="CLONEFY Logo" 
-              className="h-10 w-auto sm:h-12 lg:h-14"
+              className="h-12 w-auto sm:h-16 lg:h-20 xl:h-24"
               loading="eager"
               fetchPriority="high"
             />
