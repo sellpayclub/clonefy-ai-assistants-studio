@@ -2,7 +2,7 @@ export default {
   // Header
   header: {
     login: "Login",
-    startFree: "Começar Grátis"
+    startFree: "Começar Agora"
   },
   
   // Hero Section
