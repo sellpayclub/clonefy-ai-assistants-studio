@@ -23,10 +23,40 @@ interface LanguageProviderProps {
   children: React.ReactNode;
 }
 
+// Helper function to detect user's preferred language
+const detectUserLanguage = (): Language => {
+  // Check for saved language first
+  const saved = localStorage.getItem('clonefy-language') as Language;
+  if (saved && ['pt', 'es', 'en', 'de'].includes(saved)) {
+    return saved;
+  }
+  
+  // Detect browser language
+  const browserLang = navigator.language.toLowerCase();
+  
+  // Map browser languages to supported languages
+  if (browserLang.startsWith('pt')) return 'pt';
+  if (browserLang.startsWith('es')) return 'es';
+  if (browserLang.startsWith('en')) return 'en';
+  if (browserLang.startsWith('de')) return 'de';
+  
+  // Check additional languages from navigator.languages
+  const browserLanguages = navigator.languages || [navigator.language];
+  for (const lang of browserLanguages) {
+    const langCode = lang.toLowerCase();
+    if (langCode.startsWith('pt')) return 'pt';
+    if (langCode.startsWith('es')) return 'es';
+    if (langCode.startsWith('en')) return 'en';
+    if (langCode.startsWith('de')) return 'de';
+  }
+  
+  // Default fallback
+  return 'pt';
+};
+
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem('clonefy-language') as Language;
-    return saved && ['pt', 'es', 'en', 'de'].includes(saved) ? saved : 'pt';
+    return detectUserLanguage();
   });
 
   const [translations, setTranslations] = useState<Record<string, any>>({});
