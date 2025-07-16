@@ -41,6 +41,7 @@ const WhatsApp = () => {
   const [connections, setConnections] = useState<WhatsAppConnection[]>([]);
   const [creating, setCreating] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
+  const [qrCodeTimeout, setQrCodeTimeout] = useState<NodeJS.Timeout | null>(null);
   const [activeTab, setActiveTab] = useState("connections");
   
   // Form states
@@ -131,6 +132,9 @@ const WhatsApp = () => {
 
       if (!assistantsResponse.error && assistantsResponse.data?.assistants) {
         setAssistants(assistantsResponse.data.assistants);
+      } else {
+        console.warn('No assistants found or error:', assistantsResponse.error);
+        setAssistants([]);
       }
 
       // Load WhatsApp connections
@@ -141,6 +145,9 @@ const WhatsApp = () => {
 
       if (!connectionsResponse.error && connectionsResponse.data?.connections) {
         setConnections(connectionsResponse.data.connections);
+      } else {
+        console.warn('No connections found or error:', connectionsResponse.error);
+        setConnections([]);
       }
     } catch (error: any) {
       console.error('WhatsApp: Error loading data:', error);
@@ -160,11 +167,28 @@ const WhatsApp = () => {
       });
       return;
     }
+
+    // Verificar se instância já existe
+    const existingConnection = connections.find(c => c.nomeinstancia === instanceName);
+    if (existingConnection) {
+      toast({
+        title: "Nome já existe",
+        description: "Escolha um nome diferente para a instância",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!instanceName || !selectedAssistant || !user?.email) return;
 
     setCreating(true);
     setQrCode(null);
+    
+    // Limpar timeout anterior se existir
+    if (qrCodeTimeout) {
+      clearTimeout(qrCodeTimeout);
+      setQrCodeTimeout(null);
+    }
 
     // Get current session like in loadData
     let currentSession = session;
@@ -224,14 +248,16 @@ const WhatsApp = () => {
         setActiveTab("qr-code");
         
         // QR Code expires in 45 seconds
-        setTimeout(() => {
+        const timeout = setTimeout(() => {
           setQrCode(null);
+          setQrCodeTimeout(null);
           toast({
             title: "QR Code expirado",
             description: "Gere um novo QR Code para conectar.",
             variant: "destructive",
           });
         }, 45000);
+        setQrCodeTimeout(timeout);
         
         toast({
           title: "QR Code disponível",
@@ -339,15 +365,22 @@ const WhatsApp = () => {
         setQrCode(data.base64);
         setActiveTab("qr-code");
         
+        // Limpar timeout anterior se existir
+        if (qrCodeTimeout) {
+          clearTimeout(qrCodeTimeout);
+        }
+        
         // QR Code expires in 45 seconds
-        setTimeout(() => {
+        const timeout = setTimeout(() => {
           setQrCode(null);
+          setQrCodeTimeout(null);
           toast({
             title: "QR Code expirado",
             description: "Gere um novo QR Code para conectar.",
             variant: "destructive",
           });
         }, 45000);
+        setQrCodeTimeout(timeout);
         
         toast({
           title: "QR Code gerado",

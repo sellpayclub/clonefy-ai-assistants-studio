@@ -162,7 +162,6 @@ async function createWhatsAppInstanceSequential(
     const connectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         'apikey': EVOLUTION_API_KEY,
       },
     });
