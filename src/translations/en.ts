@@ -152,7 +152,7 @@ export default {
     mainMenu: "Main Menu",
     dashboard: {
       title: "Dashboard",
-      description: "Overview"
+      description: "System overview"
     },
     agents: {
       title: "AI Clones",

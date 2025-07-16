@@ -537,10 +537,10 @@ const Assistants = () => {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Code className="h-5 w-5" />
-                  Widget de Chat Embarcável
+                  Chat Flutuante
                 </DialogTitle>
                 <DialogDescription>
-                  Incorpore este agente em qualquer site como um chat de suporte
+                  Incorpore este agente em qualquer site como um chat flutuante de suporte
                 </DialogDescription>
               </DialogHeader>
               
@@ -560,8 +560,28 @@ const Assistants = () => {
                         </div>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Este widget aparecerá como um botão flutuante no site do usuário
+                        Este chat aparecerá como um botão flutuante azul no site do usuário
                       </p>
+                      
+                      {/* Preview Demo */}
+                      <div className="mt-3 p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 rounded-lg border">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                            💡 Demonstração
+                          </span>
+                          <a 
+                            href={`/embed/chat/${selectedAgentForEmbed.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:text-blue-700 underline"
+                          >
+                            Testar agora →
+                          </a>
+                        </div>
+                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                          Clique em "Testar agora" para ver como ficará para seus visitantes
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -573,23 +593,35 @@ const Assistants = () => {
                         size="sm" 
                         variant="outline"
                         onClick={() => {
-                          const code = `<!-- Widget de Chat CLONEFY -->
+                          // Usar domínio customizado se disponível
+                          const baseUrl = window.location.hostname.includes('lovableproject.com') 
+                            ? window.location.origin 
+                            : window.location.origin; // Aqui você pode colocar seu domínio customizado
+                          
+                          const code = `<!-- Chat Flutuante CLONEFY -->
 <script>
   (function(){
     var w=window,d=document;
     var chatWidget = {
       agentId: '${selectedAgentForEmbed.id}',
       agentName: '${selectedAgentForEmbed.name}',
+      baseUrl: '${baseUrl}',
       init: function() {
         var iframe = d.createElement('iframe');
-        iframe.src = '${window.location.origin}/embed/chat/' + this.agentId;
+        iframe.src = this.baseUrl + '/embed/chat/' + this.agentId;
         iframe.style.cssText = 'position:fixed;bottom:20px;right:20px;width:400px;height:600px;border:none;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999999;display:none;';
         iframe.id = 'clonefy-chat-widget';
+        
+        // Responsivo para mobile
+        if(window.innerWidth <= 768) {
+          iframe.style.cssText = 'position:fixed;bottom:10px;left:10px;right:10px;top:80px;width:auto;height:auto;border:none;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999999;display:none;';
+        }
+        
         d.body.appendChild(iframe);
         
         var button = d.createElement('div');
         button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-        button.style.cssText = 'position:fixed;bottom:20px;right:20px;width:60px;height:60px;border-radius:50%;background:#007bff;color:white;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999998;transition:all 0.3s ease;';
+        button.style.cssText = 'position:fixed;bottom:20px;right:20px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#007bff,#0056b3);color:white;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,123,255,0.3);z-index:999998;transition:all 0.3s ease;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;';
         button.title = 'Chat com ' + this.agentName;
         button.id = 'clonefy-chat-button';
         
@@ -603,6 +635,15 @@ const Assistants = () => {
           button.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
         };
         
+        // Responsividade
+        window.addEventListener('resize', function() {
+          if(window.innerWidth <= 768 && isOpen) {
+            iframe.style.cssText = 'position:fixed;bottom:10px;left:10px;right:10px;top:80px;width:auto;height:auto;border:none;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999999;display:block;';
+          } else if(isOpen) {
+            iframe.style.cssText = 'position:fixed;bottom:20px;right:20px;width:400px;height:600px;border:none;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999999;display:block;';
+          }
+        });
+        
         d.body.appendChild(button);
       }
     };
@@ -614,7 +655,7 @@ const Assistants = () => {
     }
   })();
 </script>
-<!-- Fim Widget CLONEFY -->`;
+<!-- Fim Chat Flutuante CLONEFY -->`;
                           
                           navigator.clipboard.writeText(code);
                           toast({
@@ -624,21 +665,19 @@ const Assistants = () => {
                         }}
                       >
                         <Copy className="h-4 w-4 mr-1" />
-                        Copiar
+                        Copiar Código
                       </Button>
                     </div>
-                    <div className="p-4 bg-muted rounded-lg">
-                      <code className="text-xs text-muted-foreground break-all">
-                        {`<!-- Widget de Chat CLONEFY -->
+                    <div className="p-4 bg-muted rounded-lg overflow-auto">
+                      <code className="text-xs text-muted-foreground break-all whitespace-pre-wrap">
+                        {`<!-- Chat Flutuante CLONEFY -->
 <script>
   (function(){
-    var w=window,d=document;
     var chatWidget = {
       agentId: '${selectedAgentForEmbed.id}',
       agentName: '${selectedAgentForEmbed.name}',
-      init: function() {
-        // Código do widget...
-      }
+      baseUrl: '${window.location.origin}',
+      // Código do chat flutuante...
     };
     // Inicialização automática...
   })();
@@ -647,43 +686,78 @@ const Assistants = () => {
                     </div>
                   </div>
 
-                  {/* Instruções */}
+                  {/* Instruções melhoradas */}
                   <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg">
-                    <h4 className="font-medium text-sm mb-2">📋 Como usar:</h4>
-                    <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                      <li>Copie o código acima</li>
-                      <li>Cole antes da tag <code>&lt;/body&gt;</code> do seu site</li>
-                      <li>O widget aparecerá como um botão flutuante</li>
-                      <li>Visitantes podem clicar para chat com sua IA</li>
-                    </ol>
+                    <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                      📋 Como usar o Chat Flutuante:
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex gap-3">
+                        <div className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">1</div>
+                        <div className="text-sm">
+                          <strong>Copie o código</strong> clicando no botão "Copiar Código"
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">2</div>
+                        <div className="text-sm">
+                          <strong>Cole no seu site</strong> antes da tag <code className="bg-white dark:bg-gray-800 px-1 rounded">&lt;/body&gt;</code>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">3</div>
+                        <div className="text-sm">
+                          <strong>Aparecerá um botão azul</strong> flutuante no canto inferior direito
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="w-6 h-6 rounded-full bg-green-500 text-white text-xs flex items-center justify-center font-bold">✓</div>
+                        <div className="text-sm">
+                          <strong>Visitantes clicam e conversam</strong> com sua IA automaticamente!
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Link direto */}
+                  {/* Link direto responsivo */}
                   <div>
-                    <Label className="text-sm font-medium">Link Direto do Chat</Label>
-                    <div className="flex gap-2 mt-2">
+                    <Label className="text-sm font-medium">Link Direto do Chat (Responsivo)</Label>
+                    <div className="flex flex-col sm:flex-row gap-2 mt-2">
                       <Input 
                         value={`${window.location.origin}/embed/chat/${selectedAgentForEmbed.id}`}
                         readOnly
-                        className="flex-1"
+                        className="flex-1 text-xs sm:text-sm"
                       />
                       <Button 
                         size="sm" 
                         variant="outline"
+                        className="w-full sm:w-auto"
                         onClick={() => {
-                          navigator.clipboard.writeText(`${window.location.origin}/embed/chat/${selectedAgentForEmbed.id}`);
+                          const url = `${window.location.origin}/embed/chat/${selectedAgentForEmbed.id}`;
+                          navigator.clipboard.writeText(url);
                           toast({
                             title: "Link copiado!",
                             description: "Compartilhe este link para acesso direto ao chat.",
                           });
                         }}
                       >
-                        <Copy className="h-4 w-4" />
+                        <Copy className="h-4 w-4 mr-1" />
+                        Copiar Link
                       </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Link direto para teste ou compartilhamento
-                    </p>
+                    <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                      <p className="text-xs text-muted-foreground flex-1">
+                        Link direto para teste ou compartilhamento - totalmente responsivo
+                      </p>
+                      <a 
+                        href={`/embed/chat/${selectedAgentForEmbed.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:text-blue-700 underline"
+                      >
+                        Abrir chat em nova aba →
+                      </a>
+                    </div>
                   </div>
                 </div>
               )}

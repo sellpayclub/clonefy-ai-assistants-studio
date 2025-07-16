@@ -152,7 +152,7 @@ export default {
     mainMenu: "Menú Principal",
     dashboard: {
       title: "Panel",
-      description: "Vista general"
+      description: "Vista general del sistema"
     },
     agents: {
       title: "Clones de IA",
