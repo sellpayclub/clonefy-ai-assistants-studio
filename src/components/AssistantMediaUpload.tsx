@@ -32,6 +32,11 @@ export const AssistantMediaUpload = ({ assistantId, onUploadComplete }: Assistan
   const loadMediaFiles = async () => {
     setLoading(true);
     try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) {
+        throw new Error('Usuário não autenticado');
+      }
+
       const { data, error } = await supabase
         .from('assistant_media')
         .select('*')
