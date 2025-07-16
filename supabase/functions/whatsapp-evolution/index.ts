@@ -234,10 +234,12 @@ async function listConnections(supabaseClient: any, userEmail: string) {
     throw new Error(`Failed to fetch connections: ${error.message}`);
   }
 
-  // Check status of each connection in Evolution API
+  // Check status of each connection in Evolution API and update database
   const connectionsWithStatus = await Promise.all(
     (data || []).map(async (connection) => {
       try {
+        console.log(`Checking connection status for: ${connection.nomeinstancia}`);
+        
         const statusResponse = await fetch(`${EVOLUTION_API_URL}/instance/connectionState/${connection.nomeinstancia}`, {
           method: 'GET',
           headers: {
@@ -247,12 +249,36 @@ async function listConnections(supabaseClient: any, userEmail: string) {
 
         if (statusResponse.ok) {
           const statusData = await statusResponse.json();
+          console.log(`Status data for ${connection.nomeinstancia}:`, statusData);
+          
           // Update whatsappuser based on connection state
+          let newWhatsAppUser = null;
           if (statusData.instance?.state === 'open' && statusData.instance?.owner) {
-            connection.whatsappuser = statusData.instance.owner;
+            newWhatsAppUser = statusData.instance.owner;
+            console.log(`Connection ${connection.nomeinstancia} is CONNECTED with user: ${newWhatsAppUser}`);
           } else {
-            connection.whatsappuser = null;
+            console.log(`Connection ${connection.nomeinstancia} is DISCONNECTED. State: ${statusData.instance?.state}`);
           }
+          
+          // Update database if status changed
+          if (newWhatsAppUser !== connection.whatsappuser) {
+            console.log(`Updating database for ${connection.nomeinstancia}: ${connection.whatsappuser} -> ${newWhatsAppUser}`);
+            
+            const { error: updateError } = await supabaseClient
+              .from('n8n_fluxogpt')
+              .update({ whatsappuser: newWhatsAppUser })
+              .eq('id', connection.id);
+              
+            if (updateError) {
+              console.error(`Failed to update whatsappuser for ${connection.nomeinstancia}:`, updateError);
+            } else {
+              console.log(`Successfully updated whatsappuser for ${connection.nomeinstancia}`);
+            }
+          }
+          
+          connection.whatsappuser = newWhatsAppUser;
+        } else {
+          console.warn(`Failed to fetch status for ${connection.nomeinstancia}: ${statusResponse.status}`);
         }
       } catch (error) {
         console.warn(`Failed to check status for ${connection.nomeinstancia}:`, error);

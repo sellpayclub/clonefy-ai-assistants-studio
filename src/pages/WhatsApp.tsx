@@ -769,14 +769,30 @@ const WhatsApp = () => {
                         />
                       </div>
                       
-                      {/* Timer e botão de atualizar */}
-                      <div className="flex items-center gap-4">
-                        {qrTimeLeft > 0 && (
-                          <div className="flex items-center gap-2 px-3 py-2 bg-orange-100 text-orange-800 rounded-lg">
-                            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                            <span className="font-medium">Expira em {qrTimeLeft}s</span>
+                      {/* Timer progressivo e botão de atualizar */}
+                      <div className="flex flex-col items-center gap-4">
+                        {qrTimeLeft > 0 ? (
+                          <div className="flex flex-col items-center gap-3">
+                            {/* Progress bar */}
+                            <div className="w-64 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-orange-500 h-2 rounded-full transition-all duration-1000"
+                                style={{ width: `${(qrTimeLeft / 45) * 100}%` }}
+                              ></div>
+                            </div>
+                            {/* Timer display */}
+                            <div className="flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-800 rounded-lg">
+                              <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                              <span className="font-medium text-lg">Expira em {qrTimeLeft}s</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-800 rounded-lg">
+                            <AlertCircle className="h-4 w-4" />
+                            <span className="font-medium">QR Code expirado</span>
                           </div>
                         )}
+                        
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -784,10 +800,10 @@ const WhatsApp = () => {
                             const lastConnection = connections.find(c => !c.whatsappuser);
                             if (lastConnection) refreshQrCode(lastConnection);
                           }}
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-2 bg-green-50 border-green-300 text-green-700 hover:bg-green-100"
                         >
                           <RefreshCw className="h-4 w-4" />
-                          Atualizar QR
+                          Atualizar QR Code
                         </Button>
                       </div>
                       
