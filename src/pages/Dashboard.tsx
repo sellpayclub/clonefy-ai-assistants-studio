@@ -30,6 +30,54 @@ const Dashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const loadDashboardStats = useCallback(async (currentUser?: User) => {
+    const userToUse = currentUser || user;
+    if (!userToUse) return;
+
+    try {
+      // Parallel requests for better performance
+      const [assistantsResult, connectionsResult, conversationsResult] = await Promise.all([
+        supabase
+          .from('assistants')
+          .select('*', { count: 'exact' })
+          .eq('user_id', userToUse.id)
+          .eq('is_active', true),
+        supabase
+          .from('n8n_fluxogpt')
+          .select('*', { count: 'exact' })
+          .eq('emailuser', userToUse.email),
+        supabase
+          .from('conversations')
+          .select('*', { count: 'exact' })
+          .eq('user_id', userToUse.id)
+          .eq('is_active', true)
+      ]);
+
+      // Get messages count only if there are conversations
+      let messagesCount = 0;
+      if (conversationsResult.data && conversationsResult.data.length > 0) {
+        const conversationIds = conversationsResult.data.map(c => c.id);
+        const { count: totalMessages } = await supabase
+          .from('messages')
+          .select('*', { count: 'exact' })
+          .in('conversation_id', conversationIds);
+        messagesCount = totalMessages || 0;
+      }
+
+      const newStats = {
+        assistants: assistantsResult.count || 0,
+        connections: connectionsResult.count || 0,
+        conversations: conversationsResult.count || 0,
+        messages: messagesCount
+      };
+
+      setStats(newStats);
+
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error);
+    }
+  }, [user]);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -87,55 +135,7 @@ const Dashboard = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
-
-  const loadDashboardStats = useCallback(async (currentUser?: User) => {
-    const userToUse = currentUser || user;
-    if (!userToUse) return;
-
-    try {
-      // Parallel requests for better performance
-      const [assistantsResult, connectionsResult, conversationsResult] = await Promise.all([
-        supabase
-          .from('assistants')
-          .select('*', { count: 'exact' })
-          .eq('user_id', userToUse.id)
-          .eq('is_active', true),
-        supabase
-          .from('n8n_fluxogpt')
-          .select('*', { count: 'exact' })
-          .eq('emailuser', userToUse.email),
-        supabase
-          .from('conversations')
-          .select('*', { count: 'exact' })
-          .eq('user_id', userToUse.id)
-          .eq('is_active', true)
-      ]);
-
-      // Get messages count only if there are conversations
-      let messagesCount = 0;
-      if (conversationsResult.data && conversationsResult.data.length > 0) {
-        const conversationIds = conversationsResult.data.map(c => c.id);
-        const { count: totalMessages } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact' })
-          .in('conversation_id', conversationIds);
-        messagesCount = totalMessages || 0;
-      }
-
-      const newStats = {
-        assistants: assistantsResult.count || 0,
-        connections: connectionsResult.count || 0,
-        conversations: conversationsResult.count || 0,
-        messages: messagesCount
-      };
-
-      setStats(newStats);
-
-    } catch (error) {
-      console.error('Error loading dashboard stats:', error);
-    }
-  }, [user]);
+  }, [loadDashboardStats]);
 
   // Memoized auto-refresh with cleanup
   useEffect(() => {
