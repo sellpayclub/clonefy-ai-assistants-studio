@@ -124,8 +124,10 @@ async function createWhatsAppInstanceSequential(
         'apikey': EVOLUTION_API_KEY,
       },
       body: JSON.stringify({
-        url: WEBHOOK_URL,
-        events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE"]
+        webhook: {
+          url: WEBHOOK_URL,
+          events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE"]
+        }
       }),
     });
 
@@ -142,8 +144,10 @@ async function createWhatsAppInstanceSequential(
           'apikey': EVOLUTION_API_KEY,
         },
         body: JSON.stringify({
-          url: WEBHOOK_URL,
-          events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE"]
+          webhook: {
+            url: WEBHOOK_URL,
+            events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE"]
+          }
         }),
       });
       
@@ -334,8 +338,13 @@ async function listConnections(supabaseClient: any, userEmail: string) {
           
           // Update connection object with new data
           connection.whatsappuser = connectionInfo.whatsappuser;
-          if (updateData?.message) {
-            connection.message = updateData.message;
+          if (connectionInfo.profileName || connectionInfo.phoneNumber || connectionInfo.profilePicUrl) {
+            connection.message = JSON.stringify({
+              profileName: connectionInfo.profileName,
+              phoneNumber: connectionInfo.phoneNumber,
+              profilePicUrl: connectionInfo.profilePicUrl,
+              lastUpdated: new Date().toISOString()
+            });
           }
         } else {
           const errorText = await statusResponse.text();
