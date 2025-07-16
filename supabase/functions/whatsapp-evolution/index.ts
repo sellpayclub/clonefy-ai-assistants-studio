@@ -204,7 +204,7 @@ async function createWhatsAppInstance(
         success: true,
         instanceName: instanceName,
         qrCode: qrBase64,
-        data: insertData,
+        message: 'Instance created successfully',
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -310,7 +310,7 @@ async function deleteConnection(instanceName: string, supabaseClient: any) {
     const { error } = await supabaseClient
       .from('n8n_fluxogpt')
       .delete()
-      .eq('NomeInstancia', instanceName);
+      .eq('nomeinstancia', instanceName);
 
     if (error) {
       throw new Error(`Failed to delete from database: ${error.message}`);
