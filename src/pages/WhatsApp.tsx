@@ -966,10 +966,19 @@ const WhatsApp = () => {
                             </div>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-800 rounded-lg">
-                            <AlertCircle className="h-4 w-4" />
-                            <span className="font-medium">QR Code expirado</span>
-                          </div>
+                          (() => {
+                            // Verificar se existe alguma conexão conectada antes de mostrar o aviso de expiração
+                            const lastConnection = connections.find(c => !c.whatsappuser);
+                            const isConnectionConnected = lastConnection ? !!lastConnection.whatsappuser : false;
+                            
+                            // Só mostrar aviso de expiração se a conexão NÃO estiver conectada
+                            return !isConnectionConnected ? (
+                              <div className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-800 rounded-lg">
+                                <AlertCircle className="h-4 w-4" />
+                                <span className="font-medium">QR Code expirado</span>
+                              </div>
+                            ) : null;
+                          })()
                         )}
                         
                         <Button 

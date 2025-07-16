@@ -144,9 +144,9 @@ async function createWhatsAppInstanceSequential(
       webhook: {
         url: WEBHOOK_URL,
         enabled: true,
-        events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE"],
+        events: ["MESSAGES_UPSERT"],
         webhook_by_events: false,
-        webhook_base64: false
+        webhook_base64: true
       }
     };
     
@@ -171,9 +171,42 @@ async function createWhatsAppInstanceSequential(
       console.log('Step 2 SUCCESS:', webhookData);
     }
 
-    console.log('=== STEP 3: Connecting and generating QR ===');
+    console.log('=== STEP 3: Setting additional instance settings ===');
     
-    // 3. Conectar e Gerar QR (Terceira chamada - só após webhook configurado)
+    // 3a. Configurar settings da instância
+    const settingsPayload = {
+      settings: {
+        rejectCall: false,
+        msgCall: "",
+        groupsIgnore: false, // Ignore Groups: Enabled = false
+        alwaysOnline: true,  // Always Online: Enabled
+        readMessages: true,  // Read Messages: Enabled
+        readStatus: false,
+        syncFullHistory: true, // Sync Full History: Enabled
+        wavoipToken: ""
+      }
+    };
+    
+    const settingsResponse = await fetch(`${EVOLUTION_API_URL}/settings/set/${instanceName}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': EVOLUTION_API_KEY,
+      },
+      body: JSON.stringify(settingsPayload),
+    });
+
+    if (!settingsResponse.ok) {
+      const errorData = await settingsResponse.text();
+      console.warn('Settings configuration failed, but continuing:', errorData);
+    } else {
+      const settingsData = await settingsResponse.json();
+      console.log('Settings configured successfully:', settingsData);
+    }
+
+    console.log('=== STEP 4: Connecting and generating QR ===');
+    
+    // 4. Conectar e Gerar QR (após configurações)
     const connectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
       method: 'GET',
       headers: {
@@ -183,12 +216,12 @@ async function createWhatsAppInstanceSequential(
 
     if (!connectResponse.ok) {
       const errorData = await connectResponse.text();
-      console.error('Step 3 failed:', errorData);
+      console.error('Step 4 failed:', errorData);
       throw new Error(`Failed to connect instance: ${errorData}`);
     }
 
     const connectData = await connectResponse.json();
-    console.log('Step 3 SUCCESS:', connectData);
+    console.log('Step 4 SUCCESS:', connectData);
 
     const qrCode = connectData.base64;
     
@@ -197,7 +230,7 @@ async function createWhatsAppInstanceSequential(
       throw new Error('QR Code not generated or invalid format');
     }
 
-    console.log('=== STEP 4: Getting OpenAI Assistant ID ===');
+    console.log('=== STEP 5: Getting OpenAI Assistant ID ===');
     
     // 4. Buscar o openai_assistant_id do assistente
     const { data: assistantData, error: assistantError } = await supabaseClient
@@ -211,7 +244,7 @@ async function createWhatsAppInstanceSequential(
       throw new Error(`Assistente não encontrado: ${assistantError?.message}`);
     }
 
-    console.log('=== STEP 5: Saving to Supabase ===');
+    console.log('=== STEP 6: Saving to Supabase ===');
     
     // 5. Salvar no Supabase com o openai_assistant_id correto
     const { data: insertData, error } = await supabaseClient
@@ -227,11 +260,11 @@ async function createWhatsAppInstanceSequential(
       .single();
 
     if (error) {
-      console.error('Step 5 failed:', error);
+      console.error('Step 6 failed:', error);
       throw new Error(`Failed to save to database: ${error.message}`);
     }
 
-    console.log('Step 5 SUCCESS:', insertData);
+    console.log('Step 6 SUCCESS:', insertData);
 
     return new Response(
       JSON.stringify({
