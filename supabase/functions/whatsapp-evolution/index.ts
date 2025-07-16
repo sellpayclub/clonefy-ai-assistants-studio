@@ -116,20 +116,28 @@ async function createWhatsAppInstanceSequential(
 
     console.log('=== STEP 2: Setting webhook ===');
     
+    // Aguardar um pouco antes de configurar webhook
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     // 2. Configurar Webhook (Segunda chamada - só após sucesso da primeira)
+    const webhookPayload = {
+      url: WEBHOOK_URL,
+      enabled: true,
+      events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE"],
+      webhook_by_events: false,
+      webhook_base64: false
+    };
+    
+    console.log('Webhook payload:', JSON.stringify(webhookPayload, null, 2));
+    
     const webhookResponse = await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': EVOLUTION_API_KEY,
+        'Accept': 'application/json'
       },
-      body: JSON.stringify({
-        webhook: {
-          url: WEBHOOK_URL,
-          enabled: true,
-          events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE"]
-        }
-      }),
+      body: JSON.stringify(webhookPayload),
     });
 
     if (!webhookResponse.ok) {
@@ -143,14 +151,9 @@ async function createWhatsAppInstanceSequential(
         headers: {
           'Content-Type': 'application/json',
           'apikey': EVOLUTION_API_KEY,
+          'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          webhook: {
-            url: WEBHOOK_URL,
-            enabled: true,
-            events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE"]
-          }
-        }),
+        body: JSON.stringify(webhookPayload),
       });
       
       if (!retryWebhookResponse.ok) {
