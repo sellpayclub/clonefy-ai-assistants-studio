@@ -51,7 +51,10 @@ export default {
     fastService: {
       title: "Atendimento Rápido",
       description: "Seus clientes e Leads respondidos rapidamente em qualquer horário! Assuma o controle e acompanhe tudo que a IA diz."
-    }
+  },
+  assistants: {
+    used: "agentes utilizados"
+  }
   },
 
   // Pricing Section

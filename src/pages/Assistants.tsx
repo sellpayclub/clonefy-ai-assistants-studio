@@ -18,6 +18,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AgentTutorial from "@/components/AgentTutorial";
 import { AssistantMediaUpload } from "@/components/AssistantMediaUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Assistant {
   id: string;
@@ -42,6 +43,7 @@ const Assistants = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { limits, reloadLimits } = useUserLimits();
+  const { t } = useLanguage();
 
   // Form states
   const [name, setName] = useState("");
@@ -290,15 +292,15 @@ const Assistants = () => {
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
                   <Bot className="h-6 md:h-8 w-6 md:w-8 text-primary" />
-                  Agentes
+                  {t("sidebar.agents.title")}
                 </h1>
                 <p className="text-muted-foreground text-sm md:text-base">
-                  Crie e gerencie seus agentes de IA personalizados
+                  {t("sidebar.agents.description")}
                 </p>
                 {limits && (
                   <div className="text-xs md:text-sm text-muted-foreground mt-1">
                     <span className={limits.can_create_assistant ? "text-green-600" : "text-red-600"}>
-                      {limits.current_assistants}/{limits.max_assistants} agentes utilizados
+                      {limits.current_assistants}/{limits.max_assistants} {t("assistants.used")}
                     </span>
                   </div>
                 )}

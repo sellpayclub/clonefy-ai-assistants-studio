@@ -51,7 +51,10 @@ export default {
     fastService: {
       title: "Schneller Service",
       description: "Ihre Kunden und Leads werden jederzeit schnell beantwortet! Übernehmen Sie die Kontrolle und überwachen Sie alles, was die KI sagt."
-    }
+  },
+  assistants: {
+    used: "Agenten verwendet"
+  }
   },
 
   // Pricing Section

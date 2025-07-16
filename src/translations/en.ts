@@ -51,7 +51,10 @@ export default {
     fastService: {
       title: "Fast Service",
       description: "Your customers and Leads answered quickly at any time! Take control and monitor everything the AI says."
-    }
+  },
+  assistants: {
+    used: "agents used"
+  }
   },
 
   // Pricing Section
