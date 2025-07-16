@@ -3,6 +3,7 @@ import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut } fro
 import { NavLink, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 import {
   Sidebar,
@@ -128,7 +129,12 @@ const AppSidebar = () => {
       </SidebarContent>
 
       {/* Footer */}
-      <SidebarFooter className="p-3 border-t border-border/40">
+      <SidebarFooter className="p-3 border-t border-border/40 space-y-2">
+        {/* Theme Toggle */}
+        <div className="flex justify-center">
+          <ThemeToggle />
+        </div>
+        
         <Button
           variant="ghost"
           size={collapsed ? "icon" : "sm"}
