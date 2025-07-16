@@ -12,7 +12,7 @@ const EVOLUTION_API_KEY = '2eb6dd69c0cc273101c4efc974419be5';
 const WEBHOOK_URL = 'https://webhook.dcsaudeautomacao.com/webhook/fluxogptdaniel';
 
 interface CreateInstanceRequest {
-  action: 'create' | 'list' | 'delete' | 'test_api';
+  action: 'create' | 'list' | 'delete' | 'test_api' | 'get_qr';
   instanceName?: string;
   assistantId?: string;
   userEmail?: string;
@@ -58,6 +58,8 @@ serve(async (req) => {
         return await listConnections(supabaseClient, user.email!);
       case 'delete':
         return await deleteConnection(instanceName!, supabaseClient);
+      case 'get_qr':
+        return await getQrCode(instanceName!, supabaseClient);
       case 'test_api':
         return await testEvolutionAPI();
       default:
@@ -273,6 +275,59 @@ async function deleteConnection(instanceName: string, supabaseClient: any) {
   } catch (error: any) {
     console.error('Error in deleteConnection:', error);
     throw error;
+  }
+}
+
+async function getQrCode(instanceName: string, supabaseClient: any) {
+  try {
+    console.log('=== Getting QR Code for instance:', instanceName, '===');
+    
+    const connectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
+      method: 'GET',
+      headers: {
+        'apikey': EVOLUTION_API_KEY,
+      },
+    });
+
+    if (!connectResponse.ok) {
+      const errorData = await connectResponse.text();
+      console.error('Failed to get QR code:', errorData);
+      throw new Error(`Failed to get QR code: ${errorData}`);
+    }
+
+    const connectData = await connectResponse.json();
+    console.log('QR Code response:', connectData);
+
+    const qrCode = connectData.base64;
+    
+    if (!qrCode || !qrCode.startsWith('data:image/')) {
+      console.error('Invalid QR Code:', qrCode);
+      throw new Error('QR Code not generated or invalid format');
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        base64: qrCode,
+        message: 'QR Code generated successfully'
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+    
+  } catch (error: any) {
+    console.error('Error in getQrCode:', error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 }
 

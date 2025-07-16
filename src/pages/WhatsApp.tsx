@@ -23,22 +23,14 @@ interface Assistant {
 
 interface WhatsAppConnection {
   id: number;
-  instance_id: string;
-  instance_name: string;
-  user_id: string;
-  status: string;
-  phone_number?: string;
-  qr_code?: string;
-  webhook_url?: string;
-  connected_at?: string;
-  created_at: string;
-  updated_at: string;
-  // Campos corretos conforme especificação
-  nomeinstancia?: string;
-  idassistentgpt?: string;
-  emailuser?: string;
+  nomeinstancia: string;
+  idassistentgpt: string;
+  emailuser: string;
   threadid?: string;
   whatsappuser?: string;
+  message?: string;
+  timeout?: string;
+  created_at: string;
 }
 
 const WhatsApp = () => {
@@ -253,7 +245,7 @@ const WhatsApp = () => {
       const response = await supabase.functions.invoke('whatsapp-evolution', {
         body: {
           action: 'delete',
-          instanceName: connection.nomeinstancia || connection.instance_name,
+          instanceName: connection.nomeinstancia,
         },
         headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
@@ -457,7 +449,7 @@ const WhatsApp = () => {
                   ) : (
                     <div className="space-y-6">
                       {connections.map((connection, index) => {
-                        const isConnected = connection.status === 'open' || connection.whatsappuser;
+                        const isConnected = !!connection.whatsappuser;
                         const assistant = assistants.find(a => a.openai_assistant_id === connection.idassistentgpt);
                         
                         return (
@@ -469,17 +461,17 @@ const WhatsApp = () => {
                                 </div>
                                 <div>
                                   <h3 className="text-lg font-semibold text-gray-900">
-                                    {connection.instance_name || connection.nomeinstancia || 'Instância sem nome'}
+                                    {connection.nomeinstancia || 'Instância sem nome'}
                                   </h3>
                                   {isConnected ? (
                                     <Badge className="bg-green-100 text-green-800 border-green-200">
                                       <CheckCircle className="h-3 w-3 mr-1" />
-                                      Conectado
+                                      Conectado ({connection.whatsappuser})
                                     </Badge>
                                   ) : (
                                     <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
                                       <AlertCircle className="h-3 w-3 mr-1" />
-                                      Desconectado
+                                      Aguardando QR Code
                                     </Badge>
                                   )}
                                 </div>
