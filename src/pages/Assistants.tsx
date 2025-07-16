@@ -15,6 +15,8 @@ import { useNavigate } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AgentTutorial from "@/components/AgentTutorial";
+import { AssistantMediaUpload } from "@/components/AssistantMediaUpload";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Assistant {
   id: string;
@@ -383,69 +385,100 @@ const Assistants = () => {
 
           {/* Create/Edit Dialog */}
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {editingAssistant ? "Editar Agente" : "Criar Novo Agente"}
                 </DialogTitle>
                 <DialogDescription>
                   {editingAssistant 
-                    ? "Modifique as configurações do seu agente" 
+                    ? "Modifique as configurações do seu agente e gerencie arquivos" 
                     : "Configure seu agente de IA personalizado"
                   }
                 </DialogDescription>
               </DialogHeader>
               
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome do Agente</Label>
-                  <Input
-                    id="name"
-                    placeholder="Ex: Agente Virtual"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
-                </div>
+              <Tabs defaultValue="config" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="config">Configurações</TabsTrigger>
+                  <TabsTrigger value="files" disabled={!editingAssistant}>
+                    Arquivos
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="config" className="space-y-4">
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Nome do Agente</Label>
+                      <Input
+                        id="name"
+                        placeholder="Ex: Agente Virtual"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="description">Descrição (Opcional)</Label>
-                  <Input
-                    id="description"
-                    placeholder="Breve descrição do agente"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Descrição (Opcional)</Label>
+                      <Input
+                        id="description"
+                        placeholder="Breve descrição do agente"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="instructions">Instruções</Label>
-                  <Textarea
-                    id="instructions"
-                    placeholder="Descreva como o agente deve se comportar, seu tom de voz, conhecimentos específicos..."
-                    rows={6}
-                    value={instructions}
-                    onChange={(e) => setInstructions(e.target.value)}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Seja específico sobre como o agente deve responder e se comportar.
-                  </p>
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="instructions">Instruções</Label>
+                      <Textarea
+                        id="instructions"
+                        placeholder="Descreva como o agente deve se comportar, seu tom de voz, conhecimentos específicos..."
+                        rows={6}
+                        value={instructions}
+                        onChange={(e) => setInstructions(e.target.value)}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Seja específico sobre como o agente deve responder e se comportar.
+                      </p>
+                    </div>
 
-                <div className="flex justify-end gap-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsCreateOpen(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button type="submit" disabled={formLoading}>
-                    {formLoading ? "Salvando..." : editingAssistant ? "Salvar Alterações" : "Criar Agente"}
-                  </Button>
-                </div>
-              </form>
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setIsCreateOpen(false)}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button type="submit" disabled={formLoading}>
+                        {formLoading ? "Salvando..." : editingAssistant ? "Salvar Alterações" : "Criar Agente"}
+                      </Button>
+                    </div>
+                  </form>
+                </TabsContent>
+                
+                <TabsContent value="files" className="space-y-4">
+                  {editingAssistant && (
+                    <div>
+                      <h3 className="text-lg font-medium mb-4">
+                        Arquivos do Agente
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Adicione imagens, vídeos e documentos que a IA poderá enviar automaticamente nas conversas do WhatsApp.
+                      </p>
+                      <AssistantMediaUpload 
+                        assistantId={editingAssistant.id}
+                        onUploadComplete={() => {
+                          // Recarregar assistentes para atualizar instruções
+                          loadAssistants();
+                        }}
+                      />
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             </DialogContent>
           </Dialog>
         </main>
