@@ -125,13 +125,13 @@ const Auth = () => {
             <div className="relative">
               {/* Logo para modo claro */}
               <img 
-                src="/lovable-uploads/8f2944d9-660f-4eb7-bae6-e226176b6a6d.png" 
+                src="/lovable-uploads/fbe6c7af-7d70-474d-af99-5f513f7a14dc.png" 
                 alt="CLONEFY" 
                 className="h-16 w-auto dark:hidden"
               />
               {/* Logo para modo escuro */}
               <img 
-                src="/lovable-uploads/fbe6c7af-7d70-474d-af99-5f513f7a14dc.png" 
+                src="/lovable-uploads/8f2944d9-660f-4eb7-bae6-e226176b6a6d.png" 
                 alt="CLONEFY" 
                 className="h-16 w-auto hidden dark:block"
               />
