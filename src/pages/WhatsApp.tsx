@@ -494,6 +494,58 @@ const WhatsApp = () => {
     }
   };
 
+  const checkIndividualStatus = async (connection: WhatsAppConnection) => {
+    // Get current session
+    let currentSession = session;
+    if (!currentSession) {
+      const { data } = await supabase.auth.getSession();
+      currentSession = data.session;
+    }
+
+    if (!currentSession) {
+      console.error('Sem sessão válida para verificar status');
+      return;
+    }
+
+    try {
+      console.log('Verificando status individual para:', connection.nomeinstancia);
+      
+      const response = await supabase.functions.invoke('whatsapp-evolution', {
+        body: {
+          action: 'check_status',
+          instanceName: connection.nomeinstancia,
+        },
+        headers: { Authorization: `Bearer ${currentSession.access_token}` },
+      });
+
+      console.log('Resposta do check individual:', response);
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro ao verificar status');
+      }
+
+      if (response.data?.success) {
+        toast({
+          title: "Status atualizado!",
+          description: `${connection.nomeinstancia}: ${response.data.isConnected ? `Conectado (${response.data.whatsappUser})` : 'Desconectado'}`,
+        });
+        
+        // Recarregar dados para mostrar mudanças
+        await loadData();
+      } else {
+        throw new Error(response.data?.error || 'Falha na verificação');
+      }
+
+    } catch (error: any) {
+      console.error('Erro ao verificar status individual:', error);
+      toast({
+        title: "Erro ao verificar status",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -613,14 +665,36 @@ const WhatsApp = () => {
                               
                               <div className="flex gap-2">
                                 {!isConnected && (
+                                  <>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      className="h-8 border-green-300 text-green-700 hover:bg-green-50"
+                                      onClick={() => fetchQrCode(connection)}
+                                    >
+                                      <QrCode className="h-4 w-4 mr-1" />
+                                      QR Code
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      className="h-8 border-blue-300 text-blue-700 hover:bg-blue-50"
+                                      onClick={() => checkIndividualStatus(connection)}
+                                    >
+                                      <RefreshCw className="h-4 w-4 mr-1" />
+                                      Verificar Status
+                                    </Button>
+                                  </>
+                                )}
+                                {isConnected && (
                                   <Button 
                                     size="sm" 
                                     variant="outline" 
-                                    className="h-8 border-green-300 text-green-700 hover:bg-green-50"
-                                    onClick={() => fetchQrCode(connection)}
+                                    className="h-8 border-blue-300 text-blue-700 hover:bg-blue-50"
+                                    onClick={() => checkIndividualStatus(connection)}
                                   >
-                                    <QrCode className="h-4 w-4 mr-1" />
-                                    QR Code
+                                    <RefreshCw className="h-4 w-4 mr-1" />
+                                    Verificar Status
                                   </Button>
                                 )}
                                 <AlertDialog>
