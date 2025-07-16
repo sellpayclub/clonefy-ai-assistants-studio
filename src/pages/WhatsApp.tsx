@@ -547,13 +547,26 @@ const WhatsApp = () => {
             <TabsContent value="connections" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Smartphone className="h-5 w-5" />
-                    Suas Conexões WhatsApp
-                  </CardTitle>
-                  <CardDescription>
-                    Gerencie suas instâncias WhatsApp conectadas
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Smartphone className="h-5 w-5" />
+                        Suas Conexões WhatsApp
+                      </CardTitle>
+                      <CardDescription>
+                        Gerencie suas instâncias WhatsApp conectadas
+                      </CardDescription>
+                    </div>
+                    <Button 
+                      onClick={loadData} 
+                      variant="outline" 
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Atualizar Conexões
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {connections.length === 0 ? (
