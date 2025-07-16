@@ -293,9 +293,6 @@ const Assistants = () => {
             </div>
           </div>
 
-          {/* Tutorial Section */}
-          <AgentTutorial />
-
           {/* Assistants Grid */}
           {assistants.length === 0 ? (
             <Card className="p-12 text-center">
@@ -378,6 +375,11 @@ const Assistants = () => {
               ))}
             </div>
           )}
+
+          {/* Tutorial Section */}
+          <div className="mt-8">
+            <AgentTutorial />
+          </div>
 
           {/* Create/Edit Dialog */}
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
