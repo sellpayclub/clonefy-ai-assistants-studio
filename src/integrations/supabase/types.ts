@@ -131,6 +131,30 @@ export type Database = {
         }
         Relationships: []
       }
+      authorized_emails: {
+        Row: {
+          added_at: string | null
+          added_by: string | null
+          email: string
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          added_at?: string | null
+          added_by?: string | null
+          email: string
+          id?: string
+          notes?: string | null
+        }
+        Update: {
+          added_at?: string | null
+          added_by?: string | null
+          email?: string
+          id?: string
+          notes?: string | null
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           assistant_id: string
