@@ -38,7 +38,7 @@ const Dashboard = () => {
         setUser(session?.user ?? null);
         
         if (!session?.user) {
-          window.location.href = '/auth';
+          navigate('/auth');
         }
       }
     );
@@ -49,7 +49,7 @@ const Dashboard = () => {
       setUser(session?.user ?? null);
       
       if (!session?.user) {
-        window.location.href = '/auth';
+        navigate('/auth');
         return;
       }
       
@@ -88,7 +88,7 @@ const Dashboard = () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      window.location.href = '/auth';
+      navigate('/auth');
     } catch (error: any) {
       toast({
         title: "Erro ao sair",

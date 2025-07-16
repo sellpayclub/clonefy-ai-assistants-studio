@@ -7,12 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { User, Session } from '@supabase/supabase-js';
+import { useNavigate } from "react-router-dom";
 
 const Auth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Form states
   const [email, setEmail] = useState("");
@@ -28,7 +30,7 @@ const Auth = () => {
         
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(() => {
-            window.location.href = '/dashboard';
+            navigate('/dashboard');
           }, 100);
         }
       }
@@ -40,7 +42,7 @@ const Auth = () => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        window.location.href = '/dashboard';
+        navigate('/dashboard');
       }
     });
 
@@ -95,7 +97,7 @@ const Auth = () => {
       if (error) throw error;
 
       if (data.user) {
-        window.location.href = '/dashboard';
+        navigate('/dashboard');
       }
     } catch (error: any) {
       toast({

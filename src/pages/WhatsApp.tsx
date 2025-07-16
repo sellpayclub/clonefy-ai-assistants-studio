@@ -13,6 +13,7 @@ import { Smartphone, QrCode, Plus, Trash2, RefreshCw, CheckCircle, AlertCircle, 
 import { useToast } from "@/hooks/use-toast";
 import AppSidebar from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useNavigate } from "react-router-dom";
 
 interface Assistant {
   id: string;
@@ -49,6 +50,7 @@ const WhatsApp = () => {
   const [selectedAssistant, setSelectedAssistant] = useState("");
   
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     let isMounted = true;
@@ -63,7 +65,7 @@ const WhatsApp = () => {
             setUser(session?.user ?? null);
             
             if (!session?.user) {
-              window.location.href = '/auth';
+              navigate('/auth');
               return;
             }
 
@@ -86,7 +88,7 @@ const WhatsApp = () => {
         setUser(session?.user ?? null);
         
         if (!session?.user) {
-          window.location.href = '/auth';
+          navigate('/auth');
           return;
         }
         

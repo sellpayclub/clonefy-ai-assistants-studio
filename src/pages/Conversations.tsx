@@ -11,6 +11,7 @@ import { MessageSquare, Send, Bot, User as UserIcon, Plus, Trash2 } from "lucide
 import { useToast } from "@/hooks/use-toast";
 import AppSidebar from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useNavigate } from "react-router-dom";
 
 interface Assistant {
   id: string;
@@ -49,6 +50,7 @@ const Conversations = () => {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     let isMounted = true;
@@ -64,7 +66,7 @@ const Conversations = () => {
             setUser(session?.user ?? null);
             
             if (!session?.user) {
-              window.location.href = '/auth';
+              navigate('/auth');
               return;
             }
 
@@ -89,7 +91,7 @@ const Conversations = () => {
         setUser(session?.user ?? null);
         
         if (!session?.user) {
-          window.location.href = '/auth';
+          navigate('/auth');
           return;
         }
         
@@ -421,7 +423,7 @@ const Conversations = () => {
                           <Button 
                             size="sm" 
                             variant="link" 
-                            onClick={() => window.location.href = '/assistants'}
+                            onClick={() => navigate('/assistants')}
                             className="text-xs mt-1"
                           >
                             Criar primeiro agente

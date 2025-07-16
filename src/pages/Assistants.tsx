@@ -58,7 +58,7 @@ const Assistants = () => {
             setUser(session?.user ?? null);
             
             if (!session?.user) {
-              window.location.href = '/auth';
+              navigate('/auth');
               return;
             }
 
@@ -82,7 +82,7 @@ const Assistants = () => {
         setUser(session?.user ?? null);
         
         if (!session?.user) {
-          window.location.href = '/auth';
+          navigate('/auth');
           return;
         }
         
