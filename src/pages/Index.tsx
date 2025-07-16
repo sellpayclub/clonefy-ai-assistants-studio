@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import ChatWidget from "@/components/ChatWidget";
 
 const Index = () => {
   const { t } = useLanguage();
@@ -21,77 +22,6 @@ const Index = () => {
     }, 2000);
     return () => clearInterval(interval);
   }, [roles.length]);
-
-  // Chat Widget Script
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.innerHTML = `
-      (function(){
-        var w=window,d=document;
-        var chatWidget = {
-          agentId: '7a218984-6ada-4581-b1b6-2119b4771260',
-          agentName: 'clonefy ia tira duvidas',
-          baseUrl: 'https://clonefy.app',
-          init: function() {
-            var iframe = d.createElement('iframe');
-            iframe.src = this.baseUrl + '/embed/chat/' + this.agentId;
-            iframe.style.cssText = 'position:fixed;bottom:20px;right:20px;width:400px;height:600px;border:none;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999999;display:none;';
-            iframe.id = 'clonefy-chat-widget';
-            
-            // Responsivo para mobile
-            if(window.innerWidth <= 768) {
-              iframe.style.cssText = 'position:fixed;bottom:10px;left:10px;right:10px;top:80px;width:auto;height:auto;border:none;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999999;display:none;';
-            }
-            
-            d.body.appendChild(iframe);
-            
-            var button = d.createElement('div');
-            button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-            button.style.cssText = 'position:fixed;bottom:20px;right:20px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#007bff,#0056b3);color:white;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,123,255,0.3);z-index:999998;transition:all 0.3s ease;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;';
-            button.title = 'Chat com ' + this.agentName;
-            button.id = 'clonefy-chat-button';
-            
-            button.onmouseover = function() { this.style.transform = 'scale(1.1)'; };
-            button.onmouseout = function() { this.style.transform = 'scale(1)'; };
-            
-            var isOpen = false;
-            button.onclick = function() {
-              isOpen = !isOpen;
-              iframe.style.display = isOpen ? 'block' : 'none';
-              button.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
-            };
-            
-            // Responsividade
-            window.addEventListener('resize', function() {
-              if(window.innerWidth <= 768 && isOpen) {
-                iframe.style.cssText = 'position:fixed;bottom:10px;left:10px;right:10px;top:80px;width:auto;height:auto;border:none;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999999;display:block;';
-              } else if(isOpen) {
-                iframe.style.cssText = 'position:fixed;bottom:20px;right:20px;width:400px;height:600px;border:none;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999999;display:block;';
-              }
-            });
-            
-            d.body.appendChild(button);
-          }
-        };
-        
-        if(d.readyState === 'loading') {
-          d.addEventListener('DOMContentLoaded', function() { chatWidget.init(); });
-        } else {
-          chatWidget.init();
-        }
-      })();
-    `;
-    document.head.appendChild(script);
-
-    return () => {
-      // Cleanup: remove widget elements when component unmounts
-      const widget = document.getElementById('clonefy-chat-widget');
-      const button = document.getElementById('clonefy-chat-button');
-      if (widget) widget.remove();
-      if (button) button.remove();
-      document.head.removeChild(script);
-    };
-  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/50">
@@ -610,6 +540,9 @@ const Index = () => {
           </p>
         </div>
       </footer>
+
+      {/* Chat Widget */}
+      <ChatWidget />
     </div>
   );
 };
