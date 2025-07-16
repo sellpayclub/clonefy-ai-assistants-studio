@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from '@supabase/supabase-js';
 import { Button } from "@/components/ui/button";
@@ -150,48 +150,35 @@ const Conversations = () => {
     }
 
     if (!currentSession) {
-      console.log('Conversas: Sem sessão disponível');
       return;
     }
 
     try {
-      console.log('Conversas: Carregando dados com sessão:', !!currentSession);
-      
       // Load assistants
-      console.log('Conversas: Carregando agentes...');
       const assistantsResponse = await supabase.functions.invoke('openai-assistants', {
         body: { action: 'list' },
         headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
 
-      console.log('Conversas: Resposta agentes:', assistantsResponse);
-
       if (!assistantsResponse.error && assistantsResponse.data?.assistants) {
-        console.log('Conversas: Agentes encontrados:', assistantsResponse.data.assistants.length);
         setAssistants(assistantsResponse.data.assistants);
       } else {
-        console.error('Conversas: Erro ao carregar agentes:', assistantsResponse.error);
         setAssistants([]);
       }
 
       // Load conversations
-      console.log('Conversas: Carregando conversas...');
       const conversationsResponse = await supabase.functions.invoke('chat-api', {
         body: { action: 'get_conversations' },
         headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
 
-      console.log('Conversas: Resposta conversas:', conversationsResponse);
-
       if (!conversationsResponse.error && conversationsResponse.data?.conversations) {
         setConversations(conversationsResponse.data.conversations);
-        console.log('Conversas: Conversas carregadas:', conversationsResponse.data.conversations.length);
       } else {
-        console.log('Conversas: Nenhuma conversa encontrada');
         setConversations([]);
       }
     } catch (error: any) {
-      console.error('Conversas: Error loading data:', error);
+      console.error('Error loading data:', error);
     }
   };
 
@@ -605,4 +592,4 @@ const Conversations = () => {
   );
 };
 
-export default Conversations;
+export default memo(Conversations);

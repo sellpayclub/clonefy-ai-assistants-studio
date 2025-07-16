@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from '@supabase/supabase-js';
 import { Button } from "@/components/ui/button";
@@ -104,76 +104,37 @@ const Admin = () => {
 
   const loadUsers = async () => {
     try {
-      // Get all user quotas
-      const { data: quotaData, error: quotaError } = await (supabase as any)
-        .from('user_quotas')
-        .select('*')
-        .order('created_at', { ascending: false });
+      setLoading(true);
+      
+      // Usar a nova função que retorna emails
+      const { data: usersData, error } = await supabase
+        .rpc('get_user_usage_stats');
 
-      if (quotaError) {
-        throw quotaError;
+      if (error) {
+        throw error;
       }
 
-      console.log('Quotas encontradas:', quotaData?.length || 0);
+      // Mapear dados para o formato esperado
+      const formattedUsers = (usersData || []).map((user: any) => ({
+        user_id: user.user_id,
+        email: user.user_email || 'Email não encontrado',
+        max_assistants: user.max_assistants,
+        max_whatsapp_connections: user.max_whatsapp_connections,
+        current_assistants: user.current_assistants,
+        current_whatsapp_connections: user.current_whatsapp_connections,
+        plan_type: user.plan_type,
+        created_at: user.created_at,
+      }));
 
-      if (!quotaData || quotaData.length === 0) {
-        console.log('Nenhuma quota encontrada');
-        setUsers([]);
-        return;
-      }
-
-      // Get additional user data for each quota
-      const usersWithData = await Promise.all(
-        quotaData.map(async (quota) => {
-          try {
-            // Try to get user email from auth metadata (won't work in client, but we'll try)
-            // For now, we'll show a shortened user ID
-            const userDisplayId = quota.user_id.substring(0, 8) + '...';
-            
-            // Get current usage
-            const [assistantsResult, connectionsResult] = await Promise.all([
-              supabase
-                .from('assistants')
-                .select('id')
-                .eq('user_id', quota.user_id),
-              supabase
-                .from('whatsapp_connections')
-                .select('id')
-                .eq('user_id', quota.user_id)
-            ]);
-
-            const currentAssistants = assistantsResult.data?.length || 0;
-            const currentConnections = connectionsResult.data?.length || 0;
-
-            console.log(`User ${userDisplayId}: ${currentAssistants}/${quota.max_assistants} agentes, ${currentConnections}/${quota.max_whatsapp_connections} conexões`);
-
-            return {
-              ...quota,
-              email: userDisplayId,
-              current_assistants: currentAssistants,
-              current_whatsapp_connections: currentConnections,
-            };
-          } catch (error) {
-            console.error('Erro ao buscar dados do usuário:', quota.user_id, error);
-            return {
-              ...quota,
-              email: quota.user_id.substring(0, 8) + '...',
-              current_assistants: 0,
-              current_whatsapp_connections: 0,
-            };
-          }
-        })
-      );
-
-      console.log('Usuários processados:', usersWithData.length);
-      setUsers(usersWithData);
+      setUsers(formattedUsers);
     } catch (error: any) {
-      console.error('Error loading users:', error);
       toast({
         title: "Erro ao carregar usuários",
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -729,4 +690,4 @@ const Admin = () => {
   );
 };
 
-export default Admin;
+export default memo(Admin);

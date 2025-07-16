@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from '@supabase/supabase-js';
 import { Button } from "@/components/ui/button";
@@ -125,12 +125,10 @@ const WhatsApp = () => {
     }
 
     if (!currentSession) {
-      console.log('WhatsApp: Sem sessão disponível');
       return;
     }
 
     try {
-      console.log('WhatsApp: Carregando dados...');
       
       // Load assistants
       const assistantsResponse = await supabase.functions.invoke('openai-assistants', {
@@ -487,8 +485,6 @@ const WhatsApp = () => {
         headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
 
-      console.log('Test API Response:', response);
-      
       if (response.error) {
         throw new Error(response.error.message || 'Erro no teste da API');
       }
@@ -687,12 +683,6 @@ const WhatsApp = () => {
                         const isConnected = !!connection.whatsappuser;
                         // Find assistant using OpenAI assistant ID (correct way)
                         const assistant = assistants.find(a => a.openai_assistant_id === connection.idassistentgpt);
-                        
-                        console.log('Connection lookup:', {
-                          connectionId: connection.idassistentgpt,
-                          assistants: assistants.map(a => ({ id: a.id, openai_id: a.openai_assistant_id, name: a.name })),
-                          foundAssistant: assistant
-                        });
                         
                         // Parse profile data from message field
                         let profileData = null;
