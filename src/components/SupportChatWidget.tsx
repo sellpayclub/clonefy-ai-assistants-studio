@@ -53,7 +53,7 @@ const SupportChatWidget = () => {
             transition-all duration-300 ease-in-out
             ${isMobile 
               ? 'inset-0 w-screen h-screen bg-black' 
-              : 'bottom-40 right-6 w-[450px] h-[600px] rounded-xl bg-black shadow-2xl'
+              : 'bottom-24 right-6 w-[450px] h-[600px] rounded-xl bg-black shadow-2xl'
             }
           `}
         >
