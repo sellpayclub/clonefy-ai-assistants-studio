@@ -38,44 +38,42 @@ const LoadingFallback = () => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="light" storageKey="clonefy-ui-theme">
-      <LanguageProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/assistants" element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <LazyAssistants />
-                </Suspense>
-              } />
-              <Route path="/whatsapp" element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <LazyWhatsApp />
-                </Suspense>
-              } />
-              <Route path="/conversations" element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <LazyConversations />
-                </Suspense>
-              } />
-              <Route path="/admin" element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <LazyAdmin />
-                </Suspense>
-               } />
-               <Route path="/embed/chat/:agentId" element={<EmbedChat />} />
-               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+    <LanguageProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/assistants" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <LazyAssistants />
+              </Suspense>
+            } />
+            <Route path="/whatsapp" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <LazyWhatsApp />
+              </Suspense>
+            } />
+            <Route path="/conversations" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <LazyConversations />
+              </Suspense>
+            } />
+            <Route path="/admin" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <LazyAdmin />
+              </Suspense>
+             } />
+             <Route path="/embed/chat/:agentId" element={<EmbedChat />} />
+             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+             <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </LanguageProvider>
   </QueryClientProvider>
 );
 

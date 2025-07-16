@@ -20,6 +20,8 @@ import { AssistantMediaUpload } from "@/components/AssistantMediaUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SupportChatWidget from "@/components/SupportChatWidget";
+import { OnboardingGuide } from "@/components/OnboardingGuide";
+import { AssistantTemplates } from "@/components/AssistantTemplates";
 
 interface Assistant {
   id: string;
@@ -47,6 +49,7 @@ const Assistants = () => {
   const { t } = useLanguage();
   const [embedDialogOpen, setEmbedDialogOpen] = useState(false);
   const [selectedAgentForEmbed, setSelectedAgentForEmbed] = useState<Assistant | null>(null);
+  const [activeTab, setActiveTab] = useState("assistants");
 
   // Form states
   const [name, setName] = useState("");
@@ -116,6 +119,17 @@ const Assistants = () => {
     };
   }, []); // Array vazio - só executa uma vez
 
+  // Check for onboarding trigger
+  useEffect(() => {
+    const shouldTrigger = localStorage.getItem("trigger-create-agent");
+    if (shouldTrigger && assistants.length === 0) {
+      localStorage.removeItem("trigger-create-agent");
+      setTimeout(() => {
+        openCreateDialog();
+      }, 500);
+    }
+  }, [assistants]);
+
 
   const loadAssistants = async () => {
     // Aguarda a sessão estar disponível
@@ -181,6 +195,14 @@ const Assistants = () => {
     setDescription(assistant.description || "");
     setInstructions(assistant.instructions || "");
     setEditingAssistant(assistant);
+    setIsCreateOpen(true);
+  };
+
+  const handleSelectTemplate = (template: any) => {
+    setName(template.name);
+    setDescription(template.description);
+    setInstructions(template.instructions);
+    setActiveTab("assistants");
     setIsCreateOpen(true);
   };
 
@@ -333,94 +355,113 @@ const Assistants = () => {
             </div>
           </div>
 
-          {/* Assistants Grid */}
-          {assistants.length === 0 ? (
-            <Card className="p-12 text-center">
-              <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
-                <Bot className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Nenhum agente criado</h3>
-              <p className="text-muted-foreground mb-4">
-                Crie seu primeiro agente para começar a automatizar conversas
-              </p>
-              <Button onClick={openCreateDialog}>
-                <Plus className="h-4 w-4 mr-2" />
-                Criar Primeiro Agente
-              </Button>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {assistants.map((assistant) => (
-                <Card key={assistant.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Bot className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg">{assistant.name}</CardTitle>
-                          <Badge variant="secondary" className="text-xs">
-                            GPT-4o
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => openEditDialog(assistant)}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDelete(assistant)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                    {assistant.description && (
-                      <CardDescription>{assistant.description}</CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="text-sm text-muted-foreground">
-                        <strong>Instruções:</strong>
-                      </div>
-                      <p className="text-sm line-clamp-3">
-                        {assistant.instructions || "Nenhuma instrução definida"}
-                      </p>
-                    </div>
-                    <div className="flex gap-2 mt-4">
-                      <Button size="sm" className="flex-1" onClick={() => {
-                        // Salva o assistente no localStorage para seleção automática
-                        localStorage.setItem('selectedAssistantId', assistant.id);
-                        localStorage.setItem('selectedAssistantName', assistant.name);
-                        localStorage.setItem('autoStartConversation', 'true');
-                        navigate('/conversations');
-                      }}>
-                        <MessageSquare className="h-3 w-3 mr-1" />
-                        Testar
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => {
-                        setSelectedAgentForEmbed(assistant);
-                        setEmbedDialogOpen(true);
-                      }}>
-                        <Code className="h-3 w-3" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => openEditDialog(assistant)}>
-                        <Settings className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </CardContent>
+          {/* Main Content Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="assistants">Meus Agentes</TabsTrigger>
+              <TabsTrigger value="templates">Templates</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="assistants" className="space-y-6">
+              {/* Assistants Grid */}
+              {assistants.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
+                    <Bot className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Nenhum agente criado</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Crie seu primeiro agente para começar a automatizar conversas
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                    <Button onClick={openCreateDialog}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar Primeiro Agente
+                    </Button>
+                    <Button variant="outline" onClick={() => setActiveTab("templates")}>
+                      Ver Templates
+                    </Button>
+                  </div>
                 </Card>
-              ))}
-            </div>
-          )}
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  {assistants.map((assistant) => (
+                    <Card key={assistant.id} className="hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <Bot className="h-4 w-4 text-primary" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-lg">{assistant.name}</CardTitle>
+                              <Badge variant="secondary" className="text-xs">
+                                GPT-4o
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => openEditDialog(assistant)}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDelete(assistant)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                        {assistant.description && (
+                          <CardDescription>{assistant.description}</CardDescription>
+                        )}
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="text-sm text-muted-foreground">
+                            <strong>Instruções:</strong>
+                          </div>
+                          <p className="text-sm line-clamp-3">
+                            {assistant.instructions || "Nenhuma instrução definida"}
+                          </p>
+                        </div>
+                        <div className="flex gap-2 mt-4">
+                          <Button size="sm" className="flex-1" onClick={() => {
+                            // Salva o assistente no localStorage para seleção automática
+                            localStorage.setItem('selectedAssistantId', assistant.id);
+                            localStorage.setItem('selectedAssistantName', assistant.name);
+                            localStorage.setItem('autoStartConversation', 'true');
+                            navigate('/conversations');
+                          }}>
+                            <MessageSquare className="h-3 w-3 mr-1" />
+                            Testar
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => {
+                            setSelectedAgentForEmbed(assistant);
+                            setEmbedDialogOpen(true);
+                          }}>
+                            <Code className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => openEditDialog(assistant)}>
+                            <Settings className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="templates" className="space-y-6">
+              <AssistantTemplates onSelectTemplate={handleSelectTemplate} />
+            </TabsContent>
+          </Tabs>
 
           {/* Tutorial Section */}
           <div className="mt-8">
@@ -762,6 +803,7 @@ const Assistants = () => {
         
         {/* Support Chat Widget for internal system */}
         <SupportChatWidget />
+        <OnboardingGuide />
       </div>
     </SidebarProvider>
   );
