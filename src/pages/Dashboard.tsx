@@ -169,7 +169,7 @@ const Dashboard = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Carregando...</p>
+          <p>{t("dashboard.loading")}</p>
         </div>
       </div>
     );
@@ -213,13 +213,13 @@ const Dashboard = () => {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Conexões WhatsApp</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("dashboard.stats.connections")}</CardTitle>
                 <Smartphone className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.connections}</div>
                 <p className="text-xs text-muted-foreground">
-                  Instâncias conectadas
+                  {t("dashboard.stats.connectionsDesc")}
                 </p>
               </CardContent>
             </Card>
@@ -234,16 +234,16 @@ const Dashboard = () => {
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow">
                     <Bot className="h-5 w-5 text-primary-foreground" />
                   </div>
-                  Criar Agente
+                  {t("dashboard.quickActions.createAgent.title")}
                 </CardTitle>
                 <CardDescription>
-                  Configure um novo agente de IA personalizado
+                  {t("dashboard.quickActions.createAgent.description")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <Button className="w-full bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary shadow-lg" onClick={() => navigate('/assistants')}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Novo Agente
+                  {t("dashboard.quickActions.createAgent.button")}
                 </Button>
               </CardContent>
             </Card>
@@ -254,16 +254,16 @@ const Dashboard = () => {
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow">
                     <Smartphone className="h-5 w-5 text-primary-foreground" />
                   </div>
-                  Conectar WhatsApp
+                  {t("dashboard.quickActions.connectWhatsApp.title")}
                 </CardTitle>
                 <CardDescription>
-                  Adicione uma nova conexão WhatsApp via QR Code
+                  {t("dashboard.quickActions.connectWhatsApp.description")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <Button className="w-full bg-gradient-to-r from-secondary/80 to-muted hover:from-primary/20 hover:to-primary/10 border border-primary/20" variant="outline" onClick={() => navigate('/whatsapp')}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Nova Conexão
+                  {t("dashboard.quickActions.connectWhatsApp.button")}
                 </Button>
               </CardContent>
             </Card>
@@ -274,16 +274,16 @@ const Dashboard = () => {
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow">
                     <MessageSquare className="h-5 w-5 text-primary-foreground" />
                   </div>
-                  Iniciar Chat
+                  {t("dashboard.quickActions.startChat.title")}
                 </CardTitle>
                 <CardDescription>
-                  Teste seus assistentes em uma conversa
+                  {t("dashboard.quickActions.startChat.description")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <Button className="w-full bg-gradient-to-r from-accent/80 to-muted hover:from-primary/30 hover:to-primary/20 border border-primary/30" variant="secondary" onClick={() => navigate('/conversations')}>
                   <MessageSquare className="h-4 w-4 mr-2" />
-                  Chat de Teste
+                  {t("dashboard.quickActions.startChat.button")}
                 </Button>
               </CardContent>
             </Card>

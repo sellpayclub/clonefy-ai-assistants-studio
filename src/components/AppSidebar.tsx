@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 import {
   Sidebar,
@@ -23,11 +24,11 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
 const menuItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, description: "Visão geral" },
-  { title: "Agentes", url: "/assistants", icon: Bot, description: "IA Assistentes" },
-  { title: "WhatsApp", url: "/whatsapp", icon: Smartphone, description: "Conexões" },
-  { title: "Conversas", url: "/conversations", icon: MessageSquare, description: "Chats ativos" },
-  { title: "Admin", url: "/admin", icon: Settings, description: "Admin" },
+  { title: "dashboard.title", url: "/dashboard", icon: LayoutDashboard, description: "dashboard.description" },
+  { title: "sidebar.agents.title", url: "/assistants", icon: Bot, description: "sidebar.agents.description" },
+  { title: "sidebar.whatsapp.title", url: "/whatsapp", icon: Smartphone, description: "sidebar.whatsapp.description" },
+  { title: "sidebar.conversations.title", url: "/conversations", icon: MessageSquare, description: "sidebar.conversations.description" },
+  { title: "sidebar.admin.title", url: "/admin", icon: Settings, description: "sidebar.admin.description" },
 ];
 
 const AppSidebar = () => {
@@ -35,6 +36,7 @@ const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
@@ -95,7 +97,7 @@ const AppSidebar = () => {
         <SidebarGroup>
           {!collapsed && (
             <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider mb-3 px-2">
-              Menu Principal
+              {t("sidebar.mainMenu")}
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
@@ -121,12 +123,12 @@ const AppSidebar = () => {
                           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
                         )}
                         
-                        <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
+                          <div className="flex items-center ${collapsed ? '' : 'gap-3'}">
                           <item.icon className={`flex-shrink-0 ${collapsed ? 'w-5 h-5' : 'w-4 h-4'}`} />
                           {!collapsed && (
                             <div className="flex flex-col">
-                              <span className="text-sm font-medium">{item.title}</span>
-                              <span className="text-xs text-muted-foreground/70">{item.description}</span>
+                              <span className="text-sm font-medium">{t(item.title)}</span>
+                              <span className="text-xs text-muted-foreground/70">{t(item.description)}</span>
                             </div>
                           )}
                         </div>
@@ -155,7 +157,7 @@ const AppSidebar = () => {
           className={`w-full text-muted-foreground hover:text-foreground hover:bg-muted/50 ${collapsed ? 'h-10' : 'justify-start'}`}
         >
           <LogOut className={`${collapsed ? 'w-4 h-4' : 'w-4 h-4 mr-2'}`} />
-          {!collapsed && "Sair"}
+          {!collapsed && t("sidebar.signOut")}
         </Button>
       </SidebarFooter>
     </Sidebar>
