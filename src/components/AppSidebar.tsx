@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Bot, MessageSquare, Smartphone, LayoutDashboard } from "lucide-react";
+import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 import {
   Sidebar,
@@ -12,79 +14,131 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
-const items = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Agentes", url: "/assistants", icon: Bot },
-  { title: "WhatsApp", url: "/whatsapp", icon: Smartphone },
-  { title: "Conversas", url: "/conversations", icon: MessageSquare },
+const menuItems = [
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, description: "Visão geral" },
+  { title: "Agentes", url: "/assistants", icon: Bot, description: "IA Assistentes" },
+  { title: "WhatsApp", url: "/whatsapp", icon: Smartphone, description: "Conexões" },
+  { title: "Conversas", url: "/conversations", icon: MessageSquare, description: "Chats ativos" },
 ];
 
 const AppSidebar = () => {
   const { state } = useSidebar();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
   const isActive = (path: string) => currentPath === path;
-  const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive 
-      ? "bg-gradient-to-r from-primary/15 to-primary/5 text-primary font-semibold border-r-3 border-primary shadow-sm" 
-      : "hover:bg-gradient-to-r hover:from-primary/8 hover:to-primary/3 hover:text-primary transition-all duration-300 hover:translate-x-1";
+
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate('/auth');
+    } catch (error: any) {
+      toast({
+        title: "Erro ao sair",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
-    <Sidebar className={collapsed ? "w-16" : "w-72"} collapsible="icon">
-      <SidebarHeader className="border-b-0 p-4 bg-gradient-to-br from-primary/5 via-background to-accent/5 relative min-h-[80px] flex items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-30"></div>
-        {!collapsed && (
-          <div className="flex items-center justify-center relative z-10 w-full">
-            <img 
-              src="/lovable-uploads/4ad83733-0d3f-4ea8-a2b8-74822c594588.png" 
-              alt="CLONEFY Logo" 
-              className="h-14 w-auto transition-all duration-300 hover:scale-105"
-            />
-          </div>
-        )}
-        {collapsed && (
-          <div className="flex items-center justify-center relative z-10 w-full">
-            <img 
-              src="/lovable-uploads/929d6edf-5859-4b0c-8ebc-9ee077349b6a.png" 
-              alt="CLONEFY Icon" 
-              className="w-8 h-8 transition-all duration-300 hover:scale-110"
-            />
-          </div>
-        )}
+    <Sidebar 
+      className={`transition-all duration-300 ${collapsed ? "w-16" : "w-64"} border-r border-border/40 bg-gradient-to-b from-background via-background to-muted/20`} 
+      collapsible="icon"
+    >
+      {/* Header com Logo */}
+      <SidebarHeader className="border-b border-border/40 p-4 bg-gradient-to-r from-primary/5 to-transparent">
+        <div className="flex items-center justify-center h-12">
+          {!collapsed ? (
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-sm">
+                <Bot className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-lg font-bold text-foreground">CLONEFY</span>
+                <span className="text-xs text-muted-foreground">AI Platform</span>
+              </div>
+            </div>
+          ) : (
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-sm">
+              <Bot className="w-4 h-4 text-primary-foreground" />
+            </div>
+          )}
+        </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 pt-4">
+      {/* Conteúdo Principal */}
+      <SidebarContent className="px-3 py-4">
         <SidebarGroup>
-          <SidebarGroupLabel className={`text-muted-foreground/70 text-xs font-semibold uppercase tracking-wider mb-3 transition-all duration-200 ${collapsed ? 'opacity-0' : 'opacity-100 px-3'}`}>
-            {!collapsed && "Menu Principal"}
-          </SidebarGroupLabel>
+          {!collapsed && (
+            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider mb-3 px-2">
+              Menu Principal
+            </SidebarGroupLabel>
+          )}
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-11">
-                    <NavLink to={item.url} end className={getNavCls}>
-                      <div className={`flex items-center ${collapsed ? 'justify-center w-full' : 'w-full'}`}>
-                        <div className={`flex items-center justify-center ${collapsed ? 'w-full' : 'w-6 h-6 mr-3'}`}>
-                          <item.icon className="h-5 w-5" />
-                        </div>
-                        {!collapsed && (
-                          <span className="text-sm font-medium transition-all duration-200">{item.title}</span>
+              {menuItems.map((item) => {
+                const active = isActive(item.url);
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild className="h-10 group">
+                      <NavLink 
+                        to={item.url} 
+                        end 
+                        className={`
+                          flex items-center rounded-lg transition-all duration-200 relative
+                          ${active 
+                            ? 'bg-gradient-to-r from-primary/15 to-primary/5 text-primary font-medium shadow-sm' 
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                          }
+                          ${collapsed ? 'justify-center p-2' : 'px-3 py-2'}
+                        `}
+                      >
+                        {active && !collapsed && (
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
                         )}
-                      </div>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                        
+                        <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
+                          <item.icon className={`flex-shrink-0 ${collapsed ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                          {!collapsed && (
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">{item.title}</span>
+                              <span className="text-xs text-muted-foreground/70">{item.description}</span>
+                            </div>
+                          )}
+                        </div>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* Footer */}
+      <SidebarFooter className="p-3 border-t border-border/40">
+        <Button
+          variant="ghost"
+          size={collapsed ? "icon" : "sm"}
+          onClick={handleSignOut}
+          className={`w-full text-muted-foreground hover:text-foreground hover:bg-muted/50 ${collapsed ? 'h-10' : 'justify-start'}`}
+        >
+          <LogOut className={`${collapsed ? 'w-4 h-4' : 'w-4 h-4 mr-2'}`} />
+          {!collapsed && "Sair"}
+        </Button>
+      </SidebarFooter>
     </Sidebar>
   );
 };
