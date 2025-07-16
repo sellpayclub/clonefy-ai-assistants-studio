@@ -115,7 +115,12 @@ async function createWhatsAppInstanceSequential(
       body: JSON.stringify({
         instanceName: instanceName,
         integration: "WHATSAPP-BAILEYS",
-        token: `${instanceName}_${Date.now()}` // Token único baseado no nome da instância
+        reject_call: false,
+        groupsIgnore: true,
+        alwaysOnline: true,
+        readMessages: true,
+        readStatus: false,
+        syncFullHistory: true
       }),
     });
 
