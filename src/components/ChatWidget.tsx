@@ -53,7 +53,7 @@ const ChatWidget = () => {
             transition-all duration-300 ease-in-out
             ${isMobile 
               ? 'top-0 left-0 right-0 bottom-0 w-screen h-screen' 
-              : 'top-4 right-6 w-[500px] h-[calc(100vh-2rem)] max-h-[700px] rounded-xl shadow-2xl'
+              : 'top-20 right-6 w-[400px] h-[500px] rounded-xl shadow-2xl'
             }
             bg-white border border-gray-200
           `}
