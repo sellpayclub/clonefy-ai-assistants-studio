@@ -22,7 +22,7 @@ interface Assistant {
 }
 
 interface WhatsAppConnection {
-  id: string;
+  id: number;
   instance_id: string;
   instance_name: string;
   user_id: string;

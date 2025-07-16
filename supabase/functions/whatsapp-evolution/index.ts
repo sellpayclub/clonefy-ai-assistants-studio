@@ -176,8 +176,9 @@ async function createWhatsAppInstanceSequential(
 
     const qrCode = connectData.base64;
     
-    if (!qrCode) {
-      throw new Error('QR Code not generated');
+    if (!qrCode || !qrCode.startsWith('data:image/')) {
+      console.error('QR Code inválido:', qrCode);
+      throw new Error('QR Code not generated or invalid format');
     }
 
     console.log('=== STEP 4: Saving to Supabase ===');
@@ -186,10 +187,10 @@ async function createWhatsAppInstanceSequential(
     const { data: insertData, error } = await supabaseClient
       .from('n8n_fluxogpt')
       .insert({
+        id: Date.now(), // bigint precisa de valor explícito
         nomeinstancia: instanceName,
         idassistentgpt: assistantId,
-        emailuser: userEmail,
-        created_at: new Date().toISOString()
+        emailuser: userEmail
       })
       .select()
       .single();
