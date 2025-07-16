@@ -143,7 +143,7 @@ const Auth = () => {
           </div>
           <div>
             <CardDescription className="mt-2">
-              Plataforma de Assistentes IA para WhatsApp
+              {t("auth.subtitle")}
             </CardDescription>
           </div>
         </CardHeader>

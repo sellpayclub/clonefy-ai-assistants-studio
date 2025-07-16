@@ -8,6 +8,7 @@ import { Bot, MessageSquare, Smartphone, Users, Plus, BarChart3 } from "lucide-r
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 interface DashboardStats {
@@ -29,6 +30,7 @@ const Dashboard = () => {
   });
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const loadDashboardStats = useCallback(async (currentUser?: User) => {
     const userToUse = currentUser || user;
@@ -183,14 +185,14 @@ const Dashboard = () => {
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
+                <h1 className="text-2xl md:text-3xl font-bold">{t("dashboard.title")}</h1>
                 <p className="text-muted-foreground text-sm md:text-base">
-                  Bem-vindo de volta, {user?.user_metadata?.full_name || user?.email}!
+                  {t("dashboard.welcome")}, {user?.user_metadata?.full_name || user?.email}!
                 </p>
               </div>
             </div>
             <Button onClick={handleSignOut} variant="outline" className="self-start md:self-auto">
-              Sair
+              {t("dashboard.signOut")}
             </Button>
           </div>
 
@@ -198,13 +200,13 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Agentes</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("dashboard.stats.agents")}</CardTitle>
                 <Bot className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.assistants}</div>
                 <p className="text-xs text-muted-foreground">
-                  Total de agentes criados
+                  {t("dashboard.stats.agentsDesc")}
                 </p>
               </CardContent>
             </Card>
