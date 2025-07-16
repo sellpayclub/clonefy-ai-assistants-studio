@@ -55,7 +55,7 @@ const AppSidebar = () => {
 
   return (
     <Sidebar 
-      className={`transition-all duration-300 ${collapsed ? "w-14 md:w-16" : "w-72 md:w-80"} border-r border-border/40 bg-gradient-to-b from-background via-background to-muted/20 backdrop-blur-sm`} 
+      className={`transition-all duration-300 ${collapsed ? "w-12 md:w-16" : "w-64 md:w-72"} border-r border-border/40 bg-gradient-to-b from-background via-background to-muted/20 backdrop-blur-sm`} 
       collapsible="icon"
     >
       {/* Header com Logo */}
