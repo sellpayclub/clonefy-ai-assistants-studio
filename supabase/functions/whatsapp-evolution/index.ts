@@ -89,6 +89,20 @@ async function createWhatsAppInstanceSequential(
   supabaseClient: any
 ) {
   try {
+    console.log('=== STEP 0: Checking if instance already exists ===');
+    
+    // 0. Verificar se instância já existe no banco de dados
+    const { data: existingInstance } = await supabaseClient
+      .from('n8n_fluxogpt')
+      .select('*')
+      .eq('nomeinstancia', instanceName)
+      .eq('emailuser', userEmail)
+      .single();
+    
+    if (existingInstance) {
+      throw new Error(`Uma instância com o nome "${instanceName}" já existe. Escolha um nome diferente.`);
+    }
+    
     console.log('=== STEP 1: Creating instance ===');
     
     // 1. Criar Instância (Primeira chamada)
@@ -108,7 +122,13 @@ async function createWhatsAppInstanceSequential(
     if (!createResponse.ok) {
       const errorData = await createResponse.text();
       console.error('Step 1 failed:', errorData);
-      throw new Error(`Failed to create instance: ${errorData}`);
+      
+      // Verificar se é erro de nome duplicado
+      if (errorData.includes('already in use') || errorData.includes('já está em uso')) {
+        throw new Error(`O nome "${instanceName}" já está sendo usado. Escolha um nome diferente.`);
+      }
+      
+      throw new Error(`Falha ao criar instância: ${errorData}`);
     }
 
     const createData = await createResponse.json();
@@ -117,15 +137,17 @@ async function createWhatsAppInstanceSequential(
     console.log('=== STEP 2: Setting webhook ===');
     
     // Aguardar um pouco antes de configurar webhook
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     // 2. Configurar Webhook (Segunda chamada - só após sucesso da primeira)
     const webhookPayload = {
-      url: WEBHOOK_URL,
-      enabled: true,
-      events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE"],
-      webhook_by_events: false,
-      webhook_base64: false
+      webhook: {
+        url: WEBHOOK_URL,
+        enabled: true,
+        events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE"],
+        webhook_by_events: false,
+        webhook_base64: false
+      }
     };
     
     console.log('Webhook payload:', JSON.stringify(webhookPayload, null, 2));
@@ -135,7 +157,6 @@ async function createWhatsAppInstanceSequential(
       headers: {
         'Content-Type': 'application/json',
         'apikey': EVOLUTION_API_KEY,
-        'Accept': 'application/json'
       },
       body: JSON.stringify(webhookPayload),
     });
@@ -143,25 +164,8 @@ async function createWhatsAppInstanceSequential(
     if (!webhookResponse.ok) {
       const errorData = await webhookResponse.text();
       console.error('Step 2 failed:', errorData);
-      // Aguardar e tentar novamente
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const retryWebhookResponse = await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': EVOLUTION_API_KEY,
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(webhookPayload),
-      });
-      
-      if (!retryWebhookResponse.ok) {
-        throw new Error(`Failed to set webhook after retry`);
-      }
-      
-      const webhookData = await retryWebhookResponse.json();
-      console.log('Step 2 SUCCESS (retry):', webhookData);
+      console.warn('Webhook configuration failed, but continuing with instance creation...');
+      // Não falhar aqui, pois o webhook pode ser configurado depois
     } else {
       const webhookData = await webhookResponse.json();
       console.log('Step 2 SUCCESS:', webhookData);
@@ -220,7 +224,7 @@ async function createWhatsAppInstanceSequential(
         success: true,
         instanceName: instanceName,
         qrCode: qrCode,
-        message: 'Instance created successfully! QR Code expires in 45 seconds.',
+        message: 'Instância criada com sucesso! QR Code expira em 45 segundos.',
         data: insertData
       }),
       {
