@@ -43,7 +43,7 @@ const Index = () => {
                 {t('header.login')}
               </Button>
             </Link>
-            <Link to="/auth">
+            <a href="https://pay.plataformasellpay.com.br/checkout-white-6917/?add-to-cart=6917" target="_blank" rel="noopener noreferrer">
               <Button 
                 size="sm" 
                 className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 lg:h-10 lg:px-4 text-sm lg:text-base"
@@ -51,7 +51,7 @@ const Index = () => {
                 <span className="hidden sm:inline">{t('header.startFree')}</span>
                 <span className="sm:hidden">Começar</span>
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
         {/* Mobile Language Selector */}
@@ -86,13 +86,13 @@ const Index = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-2">
-            <Link to="/auth" className="w-full sm:w-auto">
+            <a href="https://pay.plataformasellpay.com.br/checkout-white-6917/?add-to-cart=6917" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
               <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg">
                 <span className="sm:hidden">Criar Agente</span>
                 <span className="hidden sm:inline">{t('hero.createAssistant')}</span>
                 <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
-            </Link>
+            </a>
             <Button size="lg" variant="outline" className="w-full sm:w-auto px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg">
               <span className="sm:hidden">Ver Demo</span>
               <span className="hidden sm:inline">{t('hero.watchDemo')}</span>
@@ -336,13 +336,13 @@ const Index = () => {
               Em menos de 10 minutos você pode ter seu próprio agente de IA funcionando. 
               Sem programação, sem complicação.
             </p>
-            <Link to="/auth">
+            <a href="https://pay.plataformasellpay.com.br/checkout-white-6917/?add-to-cart=6917" target="_blank" rel="noopener noreferrer">
               <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg">
                 <span className="sm:hidden">Criar Agente</span>
                 <span className="hidden sm:inline">Criar Meu Primeiro Agente Agora</span>
                 <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </section>
@@ -493,12 +493,12 @@ const Index = () => {
           <p className="text-lg sm:text-xl lg:text-2xl font-bold mb-6 sm:mb-8 px-2">
             {t('pricing.finalMessage')} <span className="text-primary">{t('pricing.finalMessageHighlight')}</span>
           </p>
-          <Link to="/auth">
+          <a href="https://pay.plataformasellpay.com.br/checkout-white-6917/?add-to-cart=6917" target="_blank" rel="noopener noreferrer">
             <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 px-8 sm:px-12 py-4 sm:py-6 text-base sm:text-lg">
               {t('pricing.startNow')}
               <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-          </Link>
+          </a>
         </div>
       </section>
 
