@@ -645,21 +645,31 @@ const WhatsApp = () => {
                           foundAssistant: assistant
                         });
                         
+                        // Parse profile data from message field
+                        let profileData = null;
+                        try {
+                          if (connection.message) {
+                            profileData = JSON.parse(connection.message);
+                          }
+                        } catch (e) {
+                          // Ignore parsing errors
+                        }
+
                         return (
                           <div key={connection.id || index} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                            <div className="flex items-start justify-between mb-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                                  <Smartphone className="w-4 h-4 text-white" />
+                            <div className="flex items-start justify-between mb-6">
+                              <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-sm">
+                                  <Smartphone className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
-                                  <h3 className="text-lg font-semibold text-gray-900">
+                                  <h3 className="text-xl font-bold text-gray-900 mb-1">
                                     {connection.nomeinstancia || 'Instância sem nome'}
                                   </h3>
                                   {isConnected ? (
                                     <Badge className="bg-green-100 text-green-800 border-green-200">
                                       <CheckCircle className="h-3 w-3 mr-1" />
-                                      Conectado ({connection.whatsappuser})
+                                      Conectado
                                     </Badge>
                                   ) : (
                                     <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
@@ -736,6 +746,42 @@ const WhatsApp = () => {
                               </div>
                             </div>
                             
+                            {/* WhatsApp Profile Section */}
+                            {isConnected && profileData && (
+                              <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                                <div className="flex items-center gap-4">
+                                  {profileData.profilePicUrl ? (
+                                    <img 
+                                      src={profileData.profilePicUrl} 
+                                      alt="Profile"
+                                      className="w-16 h-16 rounded-full border-2 border-green-300 shadow-sm"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                                      {profileData.profileName ? profileData.profileName.charAt(0).toUpperCase() : 'U'}
+                                    </div>
+                                  )}
+                                  <div className="flex-1">
+                                    <h4 className="text-lg font-semibold text-green-900 mb-1">
+                                      {profileData.profileName || connection.whatsappuser}
+                                    </h4>
+                                    {profileData.phoneNumber && (
+                                      <p className="text-green-700 font-medium">
+                                        📱 {profileData.phoneNumber}
+                                      </p>
+                                    )}
+                                    <p className="text-green-600 text-sm mt-1">
+                                      ✅ WhatsApp Conectado
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Connection Details */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                               <div>
                                 <span className="font-medium">Assistente:</span> {assistant?.name || 'Não encontrado'}

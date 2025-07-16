@@ -255,91 +255,88 @@ async function listConnections(supabaseClient: any, userEmail: string) {
           const statusData = await statusResponse.json();
           console.log(`Full status data for ${connection.nomeinstancia}:`, JSON.stringify(statusData, null, 2));
           
-          // Check multiple possible response formats
-          let newWhatsAppUser = null;
-          let connectionState = null;
+          // Extract comprehensive connection info
+          let connectionInfo = {
+            whatsappuser: null,
+            profileName: null,
+            phoneNumber: null,
+            profilePicUrl: null,
+            state: null
+          };
           
           console.log(`Raw response structure for ${connection.nomeinstancia}:`, {
             hasInstance: !!statusData.instance,
             hasState: !!statusData.state,
             instanceState: statusData.instance?.state,
-            directState: statusData.state,
             instanceOwner: statusData.instance?.owner,
-            instancePhone: statusData.instance?.phone,
-            instanceNumber: statusData.instance?.number,
-            instanceUser: statusData.instance?.user,
             instanceProfileName: statusData.instance?.profileName,
-            instanceWid: statusData.instance?.wid,
-            directOwner: statusData.owner,
-            directPhone: statusData.phone,
-            directNumber: statusData.number,
-            directUser: statusData.user,
+            instanceProfilePicUrl: statusData.instance?.profilePicUrl,
+            instanceNumber: statusData.instance?.number || statusData.instance?.phone,
             keys: Object.keys(statusData)
           });
           
           // Try different response formats from Evolution API
           if (statusData.instance) {
-            connectionState = statusData.instance.state;
-            // Multiple ways to detect connection and get user info
+            connectionInfo.state = statusData.instance.state;
+            
             if (statusData.instance.state === 'open' || statusData.instance.state === 'connected') {
-              newWhatsAppUser = statusData.instance.owner || 
-                               statusData.instance.phone || 
-                               statusData.instance.number ||
-                               statusData.instance.user ||
-                               statusData.instance.profileName ||
-                               statusData.instance.wid ||
-                               'Conectado';
+              connectionInfo.whatsappuser = statusData.instance.owner || 
+                                           statusData.instance.profileName ||
+                                           statusData.instance.user ||
+                                           'Conectado';
+              connectionInfo.profileName = statusData.instance.profileName || statusData.instance.owner;
+              connectionInfo.phoneNumber = statusData.instance.number || statusData.instance.phone;
+              connectionInfo.profilePicUrl = statusData.instance.profilePicUrl || statusData.instance.picture;
             }
           } else if (statusData.state) {
-            connectionState = statusData.state;
-            if (statusData.state === 'open' || statusData.state === 'connected') {
-              newWhatsAppUser = statusData.owner || 
-                               statusData.phone || 
-                               statusData.number ||
-                               statusData.user ||
-                               statusData.profileName ||
-                               statusData.wid ||
-                               'Conectado';
-            }
-          } else {
-            // Fallback: if no clear state structure, try to detect connection by presence of user data
-            const userIndicators = [
-              statusData.owner, statusData.phone, statusData.number, 
-              statusData.user, statusData.profileName, statusData.wid
-            ].filter(Boolean);
+            connectionInfo.state = statusData.state;
             
-            if (userIndicators.length > 0) {
-              connectionState = 'open';
-              newWhatsAppUser = userIndicators[0];
-            } else {
-              connectionState = 'disconnected';
+            if (statusData.state === 'open' || statusData.state === 'connected') {
+              connectionInfo.whatsappuser = statusData.owner || 
+                                           statusData.profileName ||
+                                           statusData.user ||
+                                           'Conectado';
+              connectionInfo.profileName = statusData.profileName || statusData.owner;
+              connectionInfo.phoneNumber = statusData.number || statusData.phone;
+              connectionInfo.profilePicUrl = statusData.profilePicUrl || statusData.picture;
             }
           }
           
-          console.log(`Connection ${connection.nomeinstancia}:`);
-          console.log(`- State detected: ${connectionState}`);
-          console.log(`- User detected: ${newWhatsAppUser}`);
-          console.log(`- Current DB value: ${connection.whatsappuser}`);
+          console.log(`Connection ${connection.nomeinstancia} - Extracted info:`, connectionInfo);
           
-          // Update database if status changed
-          if (newWhatsAppUser !== connection.whatsappuser) {
-            console.log(`🔄 UPDATING database for ${connection.nomeinstancia}: "${connection.whatsappuser}" -> "${newWhatsAppUser}"`);
+          // Update database with comprehensive info
+          if (connectionInfo.whatsappuser !== connection.whatsappuser) {
+            console.log(`🔄 UPDATING database for ${connection.nomeinstancia} with comprehensive data`);
+            
+            const updateData: any = { whatsappuser: connectionInfo.whatsappuser };
+            
+            // Store additional data in JSON format if available
+            if (connectionInfo.profileName || connectionInfo.phoneNumber || connectionInfo.profilePicUrl) {
+              updateData.message = JSON.stringify({
+                profileName: connectionInfo.profileName,
+                phoneNumber: connectionInfo.phoneNumber,
+                profilePicUrl: connectionInfo.profilePicUrl,
+                lastUpdated: new Date().toISOString()
+              });
+            }
             
             const { error: updateError } = await supabaseClient
               .from('n8n_fluxogpt')
-              .update({ whatsappuser: newWhatsAppUser })
+              .update(updateData)
               .eq('id', connection.id);
               
             if (updateError) {
-              console.error(`❌ Failed to update whatsappuser for ${connection.nomeinstancia}:`, updateError);
+              console.error(`❌ Failed to update ${connection.nomeinstancia}:`, updateError);
             } else {
-              console.log(`✅ Successfully updated whatsappuser for ${connection.nomeinstancia}`);
+              console.log(`✅ Successfully updated ${connection.nomeinstancia} with profile data`);
             }
-          } else {
-            console.log(`✅ No update needed for ${connection.nomeinstancia} - status unchanged`);
           }
           
-          connection.whatsappuser = newWhatsAppUser;
+          // Update connection object with new data
+          connection.whatsappuser = connectionInfo.whatsappuser;
+          if (updateData?.message) {
+            connection.message = updateData.message;
+          }
         } else {
           const errorText = await statusResponse.text();
           console.warn(`❌ Failed to fetch status for ${connection.nomeinstancia}: ${statusResponse.status} - ${errorText}`);
