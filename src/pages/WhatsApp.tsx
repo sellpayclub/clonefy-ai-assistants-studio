@@ -636,8 +636,8 @@ const WhatsApp = () => {
                     <div className="space-y-6">
                       {connections.map((connection, index) => {
                         const isConnected = !!connection.whatsappuser;
-                        // Find assistant using OpenAI assistant ID
-                        const assistant = assistants.find(a => a.openai_assistant_id === connection.idassistentgpt);
+                        // Find assistant using internal ID (not OpenAI ID)
+                        const assistant = assistants.find(a => a.id === connection.idassistentgpt);
                         
                         console.log('Connection lookup:', {
                           connectionId: connection.idassistentgpt,
