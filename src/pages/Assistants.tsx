@@ -533,11 +533,11 @@ const Assistants = () => {
 
           {/* Embed Dialog */}
           <Dialog open={embedDialogOpen} onOpenChange={setEmbedDialogOpen}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
+                <DialogTitle className="flex items-center gap-2 text-lg">
                   <Code className="h-5 w-5" />
-                  Chat Flutuante
+                  CHAT FLUTUANTE
                 </DialogTitle>
                 <DialogDescription>
                   Incorpore este agente em qualquer site como um chat flutuante de suporte
