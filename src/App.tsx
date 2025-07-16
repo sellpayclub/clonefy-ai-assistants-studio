@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Assistants from "./pages/Assistants";
 import WhatsApp from "./pages/WhatsApp";
 import Conversations from "./pages/Conversations";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/assistants" element={<Assistants />} />
             <Route path="/whatsapp" element={<WhatsApp />} />
             <Route path="/conversations" element={<Conversations />} />
+            <Route path="/admin" element={<Admin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import AppSidebar from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
+import { useUserLimits } from "@/hooks/useUserLimits";
 
 interface Assistant {
   id: string;
@@ -53,6 +54,7 @@ const WhatsApp = () => {
   
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { limits, reloadLimits } = useUserLimits();
 
   useEffect(() => {
     let isMounted = true;
@@ -163,6 +165,16 @@ const WhatsApp = () => {
   const createConnection = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check if user can create more WhatsApp connections
+    if (limits && !limits.can_create_whatsapp_connection) {
+      toast({
+        title: "Limite atingido",
+        description: `Você já criou ${limits.max_whatsapp_connections} conexão(s). Para criar mais, solicite um aumento de limite.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Validar nome da instância
     const instanceNameRegex = /^[a-zA-Z0-9_]+$/;
     if (!instanceNameRegex.test(instanceName)) {
@@ -247,6 +259,7 @@ const WhatsApp = () => {
       
       // Reload connections
       await loadData();
+      await reloadLimits(); // Reload limits after creating
       
       // Show QR code if available
       if (data.qrCode) {
@@ -331,6 +344,7 @@ const WhatsApp = () => {
       });
 
       await loadData();
+      await reloadLimits(); // Reload limits after deleting
     } catch (error: any) {
       console.error('Error deleting connection:', error);
       toast({
@@ -574,6 +588,13 @@ const WhatsApp = () => {
                 <p className="text-muted-foreground">
                   Conecte suas instâncias WhatsApp aos agentes de IA
                 </p>
+                {limits && (
+                  <div className="text-sm text-muted-foreground mt-1">
+                    <span className={limits.can_create_whatsapp_connection ? "text-green-600" : "text-red-600"}>
+                      {limits.current_whatsapp_connections}/{limits.max_whatsapp_connections} conexões utilizadas
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex gap-2">
@@ -625,12 +646,36 @@ const WhatsApp = () => {
                     <div className="text-center py-8">
                       <Smartphone className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <p className="text-muted-foreground mb-4">Nenhuma conexão WhatsApp encontrada</p>
+                    <Button 
+                      onClick={() => {
+                        if (limits && !limits.can_create_whatsapp_connection) {
+                          toast({
+                            title: "Limite atingido",
+                            description: `Você já criou ${limits.max_whatsapp_connections} conexão(s). Para criar mais, solicite um aumento de limite.`,
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        setActiveTab("create");
+                      }}
+                      disabled={limits && !limits.can_create_whatsapp_connection}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar primeira conexão
+                    </Button>
+                    {limits && !limits.can_create_whatsapp_connection && (
                       <Button 
-                        onClick={() => setActiveTab("create")}
+                        variant="outline" 
+                        onClick={() => {
+                          toast({
+                            title: "Solicitar mais conexões",
+                            description: "Entre em contato para solicitar mais conexões WhatsApp.",
+                          });
+                        }}
                       >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Criar primeira conexão
+                        Solicitar Mais
                       </Button>
+                    )}
                     </div>
                   ) : (
                     <div className="space-y-6">
@@ -867,7 +912,7 @@ const WhatsApp = () => {
                     <Button 
                       type="submit" 
                       className="w-full" 
-                      disabled={creating || !instanceName || !selectedAssistant}
+                      disabled={creating || !instanceName || !selectedAssistant || (limits && !limits.can_create_whatsapp_connection)}
                     >
                       {creating ? (
                         <>

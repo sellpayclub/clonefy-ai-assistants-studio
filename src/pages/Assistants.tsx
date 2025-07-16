@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Bot, Plus, Edit, Trash2, MessageSquare, Settings, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useUserLimits } from "@/hooks/useUserLimits";
 import AppSidebar from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AgentTutorial from "@/components/AgentTutorial";
@@ -40,6 +41,7 @@ const Assistants = () => {
   const [formLoading, setFormLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { limits, reloadLimits } = useUserLimits();
 
   // Form states
   const [name, setName] = useState("");
@@ -161,6 +163,16 @@ const Assistants = () => {
   };
 
   const openCreateDialog = () => {
+    // Check if user can create more assistants
+    if (limits && !limits.can_create_assistant) {
+      toast({
+        title: "Limite atingido",
+        description: `Você já criou ${limits.max_assistants} agente(s). Para criar mais, solicite um aumento de limite.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     resetForm();
     setIsCreateOpen(true);
   };
@@ -206,6 +218,7 @@ const Assistants = () => {
       setIsCreateOpen(false);
       resetForm();
       await loadAssistants(); // Aguarda o reload
+      await reloadLimits(); // Reload limits after creating
     } catch (error: any) {
       console.error('Error saving assistant:', error);
       toast({
@@ -243,6 +256,7 @@ const Assistants = () => {
       });
 
       await loadAssistants(); // Aguarda o reload
+      await reloadLimits(); // Reload limits after deleting
     } catch (error: any) {
       console.error('Error deleting assistant:', error);
       toast({
@@ -281,6 +295,13 @@ const Assistants = () => {
                 <p className="text-muted-foreground">
                   Crie e gerencie seus agentes de IA personalizados
                 </p>
+                {limits && (
+                  <div className="text-sm text-muted-foreground mt-1">
+                    <span className={limits.can_create_assistant ? "text-green-600" : "text-red-600"}>
+                      {limits.current_assistants}/{limits.max_assistants} agentes utilizados
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex gap-2">
@@ -288,10 +309,26 @@ const Assistants = () => {
                 <RefreshCw className="h-4 w-4 mr-1" />
                 Recarregar
               </Button>
-              <Button onClick={openCreateDialog}>
+              <Button 
+                onClick={openCreateDialog}
+                disabled={limits && !limits.can_create_assistant}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Agente
               </Button>
+              {limits && !limits.can_create_assistant && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    toast({
+                      title: "Solicitar mais agentes",
+                      description: "Entre em contato para solicitar mais agentes.",
+                    });
+                  }}
+                >
+                  Solicitar Mais
+                </Button>
+              )}
             </div>
           </div>
 
