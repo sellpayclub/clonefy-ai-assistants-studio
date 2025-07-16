@@ -347,51 +347,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Seção de Teste de Chat */}
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 max-w-4xl mx-auto mb-12 sm:mb-16 border-2 border-green-200">
-          <div className="text-center mb-6">
-            <div className="bg-green-100 text-green-700 rounded-full px-4 py-2 text-sm font-medium inline-block mb-4">
-              🧪 Teste Agora Mesmo
-            </div>
-            <h3 className="text-xl sm:text-2xl font-bold mb-4 flex items-center justify-center gap-2">
-              <MessageSquare className="h-6 w-6 text-green-600" />
-              Converse com Nossa IA Antes de Conectar
-            </h3>
-            <p className="text-base sm:text-lg text-muted-foreground mb-6">
-              Experimente a qualidade dos nossos agentes! Este é um exemplo real funcionando - 
-              teste as respostas e veja como seria no seu WhatsApp.
-            </p>
-          </div>
-          
-          <div className="bg-white rounded-xl border-2 border-green-200 overflow-hidden max-w-md mx-auto">
-            <iframe 
-              src="/embed-chat/test-agent" 
-              className="w-full h-96 border-0"
-              title="Chat de Teste - Agente Financeiro"
-            />
-          </div>
-          
-          <div className="text-center mt-6">
-            <p className="text-sm text-green-700 font-medium mb-4">
-              💬 Este mesmo agente pode funcionar no seu WhatsApp em minutos!
-            </p>
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span>Respostas Inteligentes</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span>Conversa Natural</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span>24/7 Disponível</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="text-center mt-12 sm:mt-16">
           <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl sm:rounded-3xl p-6 sm:p-8 max-w-3xl mx-auto">
             <h3 className="text-xl sm:text-2xl font-bold mb-4">É Assim de Simples!</h3>
