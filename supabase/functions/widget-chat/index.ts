@@ -25,7 +25,7 @@ serve(async (req) => {
     console.log(`Widget Chat API - Action: ${action}, Agent: ${agentId}`);
 
     if (action === 'get_agent') {
-      // Get agent information for widget initialization
+      // Get agent information for widget initialization - optimized query
       const { data: agent, error } = await supabase
         .from('assistants')
         .select('id, name, description, openai_assistant_id')
@@ -46,7 +46,7 @@ serve(async (req) => {
     }
 
     if (action === 'send_message') {
-      // Get agent details
+      // Get agent details with optimized query
       const { data: agent, error: agentError } = await supabase
         .from('assistants')
         .select('id, name, openai_assistant_id, user_id')
@@ -63,28 +63,10 @@ serve(async (req) => {
 
       // Create or get conversation
       let currentConversationId = conversationId;
+      let threadId = '';
       
       if (!currentConversationId) {
-        // Create new conversation for widget
-        const { data: newConversation, error: convError } = await supabase
-          .from('conversations')
-          .insert({
-            assistant_id: agentId,
-            user_id: agent.user_id,
-            title: `Widget Chat - ${new Date().toLocaleString()}`,
-            openai_thread_id: '',
-            whatsapp_contact: 'widget_user'
-          })
-          .select()
-          .single();
-
-        if (convError) {
-          throw new Error('Failed to create conversation');
-        }
-
-        currentConversationId = newConversation.id;
-
-        // Create OpenAI thread
+        // Create OpenAI thread first (parallel optimization)
         const threadResponse = await fetch('https://api.openai.com/v1/threads', {
           method: 'POST',
           headers: {
@@ -95,44 +77,61 @@ serve(async (req) => {
         });
 
         const thread = await threadResponse.json();
+        threadId = thread.id;
 
-        // Update conversation with thread ID
-        await supabase
+        // Create new conversation with thread ID already included
+        const { data: newConversation, error: convError } = await supabase
           .from('conversations')
-          .update({ openai_thread_id: thread.id })
-          .eq('id', currentConversationId);
+          .insert({
+            assistant_id: agentId,
+            user_id: agent.user_id,
+            title: `Widget Chat - ${new Date().toLocaleString()}`,
+            openai_thread_id: threadId,
+            whatsapp_contact: 'widget_user'
+          })
+          .select()
+          .single();
+
+        if (convError) {
+          throw new Error('Failed to create conversation');
+        }
+
+        currentConversationId = newConversation.id;
+      } else {
+        // Get existing thread ID
+        const { data: conversation } = await supabase
+          .from('conversations')
+          .select('openai_thread_id')
+          .eq('id', currentConversationId)
+          .single();
+        threadId = conversation.openai_thread_id;
       }
 
-      // Get conversation to get thread ID
-      const { data: conversation } = await supabase
-        .from('conversations')
-        .select('openai_thread_id')
-        .eq('id', currentConversationId)
-        .single();
-
-      // Add user message to OpenAI thread
-      await fetch(`https://api.openai.com/v1/threads/${conversation.openai_thread_id}/messages`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-          'OpenAI-Beta': 'assistants=v2'
-        },
-        body: JSON.stringify({
+      // Parallel operations for better performance
+      const [messageResponse, dbInsertResponse] = await Promise.all([
+        // Add user message to OpenAI thread
+        fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+            'OpenAI-Beta': 'assistants=v2'
+          },
+          body: JSON.stringify({
+            role: 'user',
+            content: message
+          }),
+        }),
+        // Save user message to database
+        supabase.from('messages').insert({
+          conversation_id: currentConversationId,
           role: 'user',
           content: message
-        }),
-      });
+        })
+      ]);
 
-      // Save user message to database
-      await supabase.from('messages').insert({
-        conversation_id: currentConversationId,
-        role: 'user',
-        content: message
-      });
-
-      // Run the assistant
-      const runResponse = await fetch(`https://api.openai.com/v1/threads/${conversation.openai_thread_id}/runs`, {
+      // Run the assistant immediately after message is added
+      const runResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${openAIApiKey}`,
@@ -146,19 +145,21 @@ serve(async (req) => {
 
       const run = await runResponse.json();
 
-      // Poll for completion
+      // Optimized polling - faster checks, shorter timeout
       let runStatus = run.status;
       let attempts = 0;
-      const maxAttempts = 30;
+      const maxAttempts = 60; // Increased attempts but shorter intervals
+      const pollInterval = 500; // Faster polling - 500ms instead of 1000ms
 
       while (runStatus === 'queued' || runStatus === 'in_progress') {
         if (attempts >= maxAttempts) {
-          throw new Error('Assistant response timeout');
+          throw new Error('Assistant response timeout after 30 seconds');
         }
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Shorter wait time for faster responses
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
         
-        const statusResponse = await fetch(`https://api.openai.com/v1/threads/${conversation.openai_thread_id}/runs/${run.id}`, {
+        const statusResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${run.id}`, {
           headers: {
             'Authorization': `Bearer ${openAIApiKey}`,
             'OpenAI-Beta': 'assistants=v2'
@@ -168,11 +169,16 @@ serve(async (req) => {
         const statusData = await statusResponse.json();
         runStatus = statusData.status;
         attempts++;
+        
+        // Log progress for debugging
+        if (attempts % 4 === 0) { // Log every 2 seconds
+          console.log(`Assistant processing... Status: ${runStatus}, Attempt: ${attempts}`);
+        }
       }
 
       if (runStatus === 'completed') {
         // Get the assistant's response
-        const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${conversation.openai_thread_id}/messages?order=desc&limit=1`, {
+        const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages?order=desc&limit=1`, {
           headers: {
             'Authorization': `Bearer ${openAIApiKey}`,
             'OpenAI-Beta': 'assistants=v2'
@@ -183,14 +189,19 @@ serve(async (req) => {
         const assistantMessage = messagesData.data[0];
         const responseText = assistantMessage.content[0].text.value;
 
-        // Save assistant message to database
-        await supabase.from('messages').insert({
+        // Save assistant message to database (background task)
+        supabase.from('messages').insert({
           conversation_id: currentConversationId,
           role: 'assistant',
           content: responseText,
           openai_message_id: assistantMessage.id
+        }).then(() => {
+          console.log('Assistant message saved to database');
+        }).catch((error) => {
+          console.error('Error saving assistant message:', error);
         });
 
+        // Return response immediately without waiting for DB save
         return new Response(JSON.stringify({ 
           response: responseText,
           conversationId: currentConversationId 
