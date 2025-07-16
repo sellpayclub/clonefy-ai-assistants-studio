@@ -31,54 +31,146 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+    let isMounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (!isMounted) return;
+            
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            if (!session?.user) {
+              navigate('/auth');
+              return;
+            }
+
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              setTimeout(async () => {
+                if (isMounted) {
+                  await loadDashboardStats(session?.user);
+                  setLoading(false);
+                }
+              }, 100);
+            }
+          }
+        );
+
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (!session?.user) {
           navigate('/auth');
+          return;
         }
-      }
-    );
+        
+        await loadDashboardStats(session?.user);
+        setLoading(false);
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (!session?.user) {
-        navigate('/auth');
-        return;
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Erro na inicialização Dashboard:', error);
+        setLoading(false);
       }
-      
-      loadDashboardStats();
-      setLoading(false);
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const loadDashboardStats = async () => {
+  // Auto-refresh stats every 30 seconds
+  useEffect(() => {
     if (!user) return;
 
-    try {
-      const [assistantsData, connectionsData, conversationsData, messagesData] = await Promise.all([
-        supabase.from('assistants').select('id', { count: 'exact' }).eq('user_id', user.id).eq('is_active', true),
-        supabase.from('whatsapp_connections').select('id', { count: 'exact' }).eq('user_id', user.id),
-        supabase.from('conversations').select('id', { count: 'exact' }).eq('user_id', user.id).eq('is_active', true),
-        supabase.from('messages').select('id', { count: 'exact' }).in('conversation_id', 
-          (await supabase.from('conversations').select('id').eq('user_id', user.id).eq('is_active', true)).data?.map(c => c.id) || []
-        )
-      ]);
+    const interval = setInterval(() => {
+      loadDashboardStats(user);
+    }, 30000); // Refresh every 30 seconds
 
-      setStats({
-        assistants: assistantsData.count || 0,
-        connections: connectionsData.count || 0,
-        conversations: conversationsData.count || 0,
-        messages: messagesData.count || 0
-      });
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const loadDashboardStats = async (currentUser?: User) => {
+    const userToUse = currentUser || user;
+    if (!userToUse) return;
+
+    try {
+      console.log('📊 Loading dashboard stats for user:', userToUse.email);
+
+      // Load assistants count
+      const { count: assistantsCount, error: assistantsError } = await supabase
+        .from('assistants')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userToUse.id)
+        .eq('is_active', true);
+
+      if (assistantsError) {
+        console.error('Error loading assistants:', assistantsError);
+      }
+
+      // Load WhatsApp connections count (using n8n_fluxogpt table)
+      const { count: connectionsCount, error: connectionsError } = await supabase
+        .from('n8n_fluxogpt')
+        .select('*', { count: 'exact' })
+        .eq('emailuser', userToUse.email);
+
+      if (connectionsError) {
+        console.error('Error loading connections:', connectionsError);
+      }
+
+      // Load conversations count
+      const { count: conversationsCount, error: conversationsError } = await supabase
+        .from('conversations')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userToUse.id)
+        .eq('is_active', true);
+
+      if (conversationsError) {
+        console.error('Error loading conversations:', conversationsError);
+      }
+
+      // Load messages count (for this user's conversations)
+      const { data: userConversations } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('user_id', userToUse.id)
+        .eq('is_active', true);
+
+      let messagesCount = 0;
+      if (userConversations && userConversations.length > 0) {
+        const conversationIds = userConversations.map(c => c.id);
+        const { count: totalMessages, error: messagesError } = await supabase
+          .from('messages')
+          .select('*', { count: 'exact' })
+          .in('conversation_id', conversationIds);
+
+        if (messagesError) {
+          console.error('Error loading messages:', messagesError);
+        } else {
+          messagesCount = totalMessages || 0;
+        }
+      }
+
+      const newStats = {
+        assistants: assistantsCount || 0,
+        connections: connectionsCount || 0,
+        conversations: conversationsCount || 0,
+        messages: messagesCount
+      };
+
+      console.log('📊 Dashboard stats loaded:', newStats);
+      setStats(newStats);
+
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
     }
@@ -166,7 +258,7 @@ const Dashboard = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{stats.conversations}</div>
                 <p className="text-xs text-muted-foreground">
-                  Threads ativas
+                  Conversas ativas
                 </p>
               </CardContent>
             </Card>
@@ -248,27 +340,6 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          {/* Recent Activity */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Atividade Recente</CardTitle>
-              <CardDescription>
-                Últimas ações na sua conta
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Conta criada com sucesso</p>
-                    <p className="text-xs text-muted-foreground">Bem-vindo à CLONEFY!</p>
-                  </div>
-                  <Badge variant="secondary">Agora</Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </main>
       </div>
     </SidebarProvider>
