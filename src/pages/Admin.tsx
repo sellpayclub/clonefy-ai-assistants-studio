@@ -88,52 +88,68 @@ const Admin = () => {
 
   const loadUsers = async () => {
     try {
-      // Get all user quotas with email from auth.users
-      const { data, error } = await (supabase as any)
+      // Get all user quotas
+      const { data: quotaData, error: quotaError } = await (supabase as any)
         .from('user_quotas')
-        .select(`
-          user_id,
-          max_assistants,
-          max_whatsapp_connections,
-          plan_type,
-          created_at
-        `);
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      if (error) {
-        throw error;
+      if (quotaError) {
+        throw quotaError;
       }
 
-      // Get additional user data
+      console.log('Quotas encontradas:', quotaData?.length || 0);
+
+      if (!quotaData || quotaData.length === 0) {
+        console.log('Nenhuma quota encontrada');
+        setUsers([]);
+        return;
+      }
+
+      // Get additional user data for each quota
       const usersWithData = await Promise.all(
-        (data || []).map(async (quota) => {
-          // Get user email from profiles or auth metadata
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('user_id', quota.user_id)
-            .single();
+        quotaData.map(async (quota) => {
+          try {
+            // Try to get user email from auth metadata (won't work in client, but we'll try)
+            // For now, we'll show a shortened user ID
+            const userDisplayId = quota.user_id.substring(0, 8) + '...';
+            
+            // Get current usage
+            const [assistantsResult, connectionsResult] = await Promise.all([
+              supabase
+                .from('assistants')
+                .select('id')
+                .eq('user_id', quota.user_id),
+              supabase
+                .from('whatsapp_connections')
+                .select('id')
+                .eq('user_id', quota.user_id)
+            ]);
 
-          // Get current usage
-          const { data: assistants } = await supabase
-            .from('assistants')
-            .select('id')
-            .eq('user_id', quota.user_id);
+            const currentAssistants = assistantsResult.data?.length || 0;
+            const currentConnections = connectionsResult.data?.length || 0;
 
-          const { data: connections } = await supabase
-            .from('whatsapp_connections')
-            .select('id')
-            .eq('user_id', quota.user_id);
+            console.log(`User ${userDisplayId}: ${currentAssistants}/${quota.max_assistants} agentes, ${currentConnections}/${quota.max_whatsapp_connections} conexões`);
 
-          // For demo purposes, we'll show user_id as email (you might want to get actual email)
-          return {
-            ...quota,
-            email: quota.user_id.substring(0, 8) + '...', // Simplified for demo
-            current_assistants: assistants?.length || 0,
-            current_whatsapp_connections: connections?.length || 0,
-          };
+            return {
+              ...quota,
+              email: userDisplayId,
+              current_assistants: currentAssistants,
+              current_whatsapp_connections: currentConnections,
+            };
+          } catch (error) {
+            console.error('Erro ao buscar dados do usuário:', quota.user_id, error);
+            return {
+              ...quota,
+              email: quota.user_id.substring(0, 8) + '...',
+              current_assistants: 0,
+              current_whatsapp_connections: 0,
+            };
+          }
         })
       );
 
+      console.log('Usuários processados:', usersWithData.length);
       setUsers(usersWithData);
     } catch (error: any) {
       console.error('Error loading users:', error);
