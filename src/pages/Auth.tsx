@@ -10,6 +10,8 @@ import { User, Session } from '@supabase/supabase-js';
 import { useNavigate } from "react-router-dom";
 import { Bot } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Auth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -17,6 +19,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // Form states
   const [email, setEmail] = useState("");
@@ -72,8 +75,8 @@ const Auth = () => {
       if (error) throw error;
 
       toast({
-        title: "Conta criada com sucesso!",
-        description: "Verifique seu email para confirmar sua conta.",
+        title: t("auth.accountCreated"),
+        description: t("auth.checkEmail"),
       });
     } catch (error: any) {
       toast({
@@ -114,8 +117,9 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4 relative">
-      {/* Theme Toggle */}
-      <div className="absolute top-4 right-4">
+      {/* Theme Toggle & Language Selector */}
+      <div className="absolute top-4 right-4 flex gap-2">
+        <LanguageSelector />
         <ThemeToggle />
       </div>
       

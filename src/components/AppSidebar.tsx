@@ -4,6 +4,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 import {
   Sidebar,
@@ -141,8 +142,9 @@ const AppSidebar = () => {
 
       {/* Footer */}
       <SidebarFooter className="p-3 border-t border-border/40 space-y-2">
-        {/* Theme Toggle */}
-        <div className="flex justify-center">
+        {/* Language & Theme Toggle */}
+        <div className="flex justify-center gap-2">
+          <LanguageSelector />
           <ThemeToggle />
         </div>
         

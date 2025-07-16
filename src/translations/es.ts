@@ -58,9 +58,10 @@ export default {
   pricing: {
     title: "Plan Único y Accesible",
     subtitle: "Compara costos y ve cómo CLONEFY es más eficiente",
+    currency: "€",
     traditional: {
       title: "Empleado Tradicional",
-      price: "$380+",
+      price: "320+",
       period: "/mes + impuestos, vacaciones, etc.",
       features: [
         "Trabaja solo de 8am a 5pm",
@@ -71,7 +72,7 @@ export default {
     },
     clonefy: {
       title: "CLONEFY",
-      price: "$24",
+      price: "20",
       period: "/mes - SIN límites",
       recommended: "RECOMENDADO",
       features: [
@@ -83,7 +84,7 @@ export default {
     },
     finalMessage: "Contrata IA y no humanos,",
     finalMessageHighlight: "¡el Futuro ya Llegó!",
-    startNow: "Comenzar Ahora por $24/mes"
+    startNow: "Comenzar Ahora por €20/mes"
   },
 
   // Footer
@@ -91,21 +92,82 @@ export default {
     copyright: "© 2024 CLONEFY. Todos los derechos reservados."
   },
 
-  // Dashboard
+  // Páginas internas
+  auth: {
+    title: "CLONEFY",
+    subtitle: "Plataforma de Asistentes IA para WhatsApp",
+    signin: "Iniciar Sesión",
+    signup: "Registrarse",
+    email: "Email",
+    password: "Contraseña",
+    fullName: "Nombre Completo",
+    emailPlaceholder: "tu@email.com",
+    passwordPlaceholder: "••••••••",
+    fullNamePlaceholder: "Tu Nombre",
+    signInButton: "Iniciar Sesión",
+    signUpButton: "Crear Cuenta",
+    signingIn: "Iniciando sesión...",
+    signingUp: "Creando cuenta...",
+    accountCreated: "¡Cuenta creada exitosamente!",
+    checkEmail: "Revisa tu email para confirmar tu cuenta.",
+    signInError: "Error al iniciar sesión",
+    signUpError: "Error al crear cuenta",
+    signOutError: "Error al cerrar sesión"
+  },
+  
   dashboard: {
     title: "Panel de Control",
-    overview: "Resumen",
-    totalAssistants: "Total de Asistentes",
-    activeConversations: "Conversaciones Activas",
-    whatsappConnections: "Conexiones WhatsApp",
-    totalMessages: "Total de Mensajes",
-    quickActions: "Acciones Rápidas",
-    createAssistant: "Crear Asistente",
-    viewConversations: "Ver Conversaciones",
-    manageWhatsApp: "Gestionar WhatsApp",
-    recentActivity: "Actividad Reciente",
-    noRecentActivity: "No se encontró actividad reciente.",
-    loading: "Cargando..."
+    welcome: "Bienvenido de vuelta",
+    loading: "Cargando...",
+    signOut: "Cerrar Sesión",
+    stats: {
+      agents: "Agentes",
+      agentsDesc: "Total de agentes creados",
+      connections: "Conexiones WhatsApp",
+      connectionsDesc: "Instancias conectadas"
+    },
+    quickActions: {
+      createAgent: {
+        title: "Crear Agente",
+        description: "Configura un nuevo agente de IA personalizado",
+        button: "Nuevo Agente"
+      },
+      connectWhatsApp: {
+        title: "Conectar WhatsApp",
+        description: "Añade una nueva conexión de WhatsApp vía código QR",
+        button: "Nueva Conexión"
+      },
+      startChat: {
+        title: "Iniciar Chat",
+        description: "Prueba tus asistentes en una conversación",
+        button: "Chat de Prueba"
+      }
+    }
+  },
+  
+  sidebar: {
+    mainMenu: "Menú Principal",
+    dashboard: {
+      title: "Panel",
+      description: "Vista general"
+    },
+    agents: {
+      title: "Agentes",
+      description: "Asistentes IA"
+    },
+    whatsapp: {
+      title: "WhatsApp",
+      description: "Conexiones"
+    },
+    conversations: {
+      title: "Conversaciones",
+      description: "Chats activos"
+    },
+    admin: {
+      title: "Admin",
+      description: "Admin"
+    },
+    signOut: "Cerrar Sesión"
   },
 
   // Navigation
