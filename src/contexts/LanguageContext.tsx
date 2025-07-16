@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type Language = 'pt' | 'es' | 'en' | 'de';
+type LanguageCode = Language;
 
 interface LanguageContextType {
   language: Language;
-  setLanguage: (lang: Language) => void;
+  setLanguage: (lang: LanguageCode) => void;
   t: (key: string) => string;
 }
 
@@ -24,8 +25,8 @@ interface LanguageProviderProps {
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem('clonefy-language');
-    return (saved as Language) || 'pt';
+    const saved = localStorage.getItem('clonefy-language') as Language;
+    return saved && ['pt', 'es', 'en', 'de'].includes(saved) ? saved : 'pt';
   });
 
   const [translations, setTranslations] = useState<Record<string, any>>({});

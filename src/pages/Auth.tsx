@@ -117,41 +117,59 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4 relative">
+      {loading && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">{t("dashboard.loading")}</p>
+          </div>
+        </div>
+      )}
       {/* Theme Toggle & Language Selector */}
       <div className="absolute top-4 right-4 flex gap-2">
         <LanguageSelector />
         <ThemeToggle />
       </div>
       
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md shadow-card border-border/50">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <div className="relative">
+            <div className="relative group">
               {/* Logo para modo claro */}
               <img 
                 src="/lovable-uploads/fbe6c7af-7d70-474d-af99-5f513f7a14dc.png" 
                 alt="CLONEFY" 
-                className="h-16 w-auto dark:hidden"
+                className="h-16 w-auto dark:hidden transition-transform group-hover:scale-105"
               />
               {/* Logo para modo escuro */}
               <img 
                 src="/lovable-uploads/8f2944d9-660f-4eb7-bae6-e226176b6a6d.png" 
                 alt="CLONEFY" 
-                className="h-16 w-auto hidden dark:block"
+                className="h-16 w-auto hidden dark:block transition-transform group-hover:scale-105"
               />
             </div>
           </div>
           <div>
-            <CardDescription className="mt-2">
+            <CardDescription className="mt-2 text-muted-foreground">
               {t("auth.subtitle")}
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">{t("auth.signin")}</TabsTrigger>
-              <TabsTrigger value="signup">{t("auth.signup")}</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+              <TabsTrigger 
+                value="signin" 
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+              >
+                {t("auth.signin")}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="signup"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+              >
+                {t("auth.signup")}
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="signin" className="space-y-4">
