@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const EVOLUTION_API_URL = 'https://evolutionapi.chatsellpay.com';
 const EVOLUTION_API_KEY = '2eb6dd69c0cc273101c4efc974419be5';
-const WEBHOOK_URL = 'https://webhook.dcsaudeautomacao.com/webhook/fluxogptdaniel';
+const WEBHOOK_URL = 'https://webhook.dcsaudeautomacao.com/webhook/clonefy';
 
 interface CreateInstanceRequest {
   action: 'create' | 'list' | 'delete' | 'test_api' | 'get_qr';
