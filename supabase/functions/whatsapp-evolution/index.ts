@@ -99,7 +99,7 @@ async function createWhatsAppInstanceSequential(
       body: JSON.stringify({
         instanceName: instanceName,
         integration: "WHATSAPP-BAILEYS",
-        token: crypto.randomUUID() // TOKEN_GERADO
+        token: `${instanceName}_${Date.now()}` // Token único baseado no nome da instância
       }),
     });
 
@@ -192,7 +192,8 @@ async function createWhatsAppInstanceSequential(
         id: Date.now(), // bigint precisa de valor explícito
         nomeinstancia: instanceName,
         idassistentgpt: assistantId,
-        emailuser: userEmail
+        emailuser: userEmail,
+        timeout: '45' // QR expira em 45 segundos
       })
       .select()
       .single();

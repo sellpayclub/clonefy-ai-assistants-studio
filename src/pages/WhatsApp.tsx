@@ -149,6 +149,18 @@ const WhatsApp = () => {
 
   const createConnection = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar nome da instância
+    const instanceNameRegex = /^[a-zA-Z0-9_]+$/;
+    if (!instanceNameRegex.test(instanceName)) {
+      toast({
+        title: "Nome inválido",
+        description: "Use apenas letras, números e underscore (_)",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!instanceName || !selectedAssistant || !user?.email) return;
 
     setCreating(true);
@@ -210,9 +222,20 @@ const WhatsApp = () => {
       if (data.qrCode) {
         setQrCode(data.qrCode);
         setActiveTab("qr-code");
+        
+        // QR Code expires in 45 seconds
+        setTimeout(() => {
+          setQrCode(null);
+          toast({
+            title: "QR Code expirado",
+            description: "Gere um novo QR Code para conectar.",
+            variant: "destructive",
+          });
+        }, 45000);
+        
         toast({
           title: "QR Code disponível",
-          description: "Escaneie o código para conectar o WhatsApp.",
+          description: "Escaneie o código para conectar o WhatsApp. Expira em 45 segundos.",
         });
       }
 
@@ -315,9 +338,20 @@ const WhatsApp = () => {
         console.log('fetchQrCode: QR code encontrado');
         setQrCode(data.base64);
         setActiveTab("qr-code");
+        
+        // QR Code expires in 45 seconds
+        setTimeout(() => {
+          setQrCode(null);
+          toast({
+            title: "QR Code expirado",
+            description: "Gere um novo QR Code para conectar.",
+            variant: "destructive",
+          });
+        }, 45000);
+        
         toast({
           title: "QR Code gerado",
-          description: "Escaneie o código para conectar o WhatsApp.",
+          description: "Escaneie o código para conectar o WhatsApp. Expira em 45 segundos.",
         });
       } else {
         throw new Error('QR code não encontrado na resposta');
@@ -450,7 +484,7 @@ const WhatsApp = () => {
                     <div className="space-y-6">
                       {connections.map((connection, index) => {
                         const isConnected = !!connection.whatsappuser;
-                        const assistant = assistants.find(a => a.openai_assistant_id === connection.idassistentgpt);
+                        const assistant = assistants.find(a => a.id === connection.idassistentgpt);
                         
                         return (
                           <div key={connection.id || index} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
@@ -585,7 +619,7 @@ const WhatsApp = () => {
                         </SelectTrigger>
                         <SelectContent>
                           {assistants.map((assistant) => (
-                            <SelectItem key={assistant.id} value={assistant.openai_assistant_id}>
+                            <SelectItem key={assistant.id} value={assistant.id}>
                               {assistant.name}
                               {assistant.description && (
                                 <span className="text-muted-foreground ml-2">
