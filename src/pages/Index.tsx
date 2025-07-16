@@ -2,17 +2,25 @@ import { Button } from "@/components/ui/button";
 import { Bot, MessageSquare, Smartphone, Star, ArrowRight, Clock, Users, TrendingUp, Shield, Zap, HeadphonesIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 const Index = () => {
+  const { t } = useLanguage();
   const [currentRole, setCurrentRole] = useState(0);
-  const roles = ["vendedor", "SDR", "atendente", "funcionário"];
+  const roles = [
+    t('hero.roles.vendedor'),
+    t('hero.roles.sdr'),
+    t('hero.roles.atendente'),
+    t('hero.roles.funcionario')
+  ];
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentRole((prev) => (prev + 1) % roles.length);
     }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [roles.length]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/50">
@@ -26,12 +34,13 @@ const Index = () => {
           />
         </div>
         <div className="flex items-center gap-4">
+          <LanguageSelector />
           <Link to="/auth">
-            <Button variant="outline">Login</Button>
+            <Button variant="outline">{t('header.login')}</Button>
           </Link>
           <Link to="/auth">
             <Button className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
-              Começar Grátis
+              {t('header.startFree')}
             </Button>
           </Link>
         </div>
@@ -42,43 +51,43 @@ const Index = () => {
         <div className="max-w-5xl mx-auto">
           <div className="mb-6">
             <span className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
-              🚀 Conheça a Inteligência artificial que vende pra você todos os dias 24hr
+              {t('hero.badge')}
             </span>
           </div>
           
           <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-            Clone seu melhor{" "}
+            {t('hero.title')}{" "}
             <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent inline-block min-w-[200px] transition-all duration-500">
               {roles[currentRole]}
             </span>
             <br />
-            com IA!
+            {t('hero.titleEnd')}
           </h1>
           
           <p className="text-xl text-muted-foreground mb-8 max-w-4xl mx-auto leading-relaxed">
-            Tenha Agentes IA treinados para sua empresa, atendendo no WhatsApp, 24 horas por dia.
+            {t('hero.subtitle')}
             <br />
-            <strong className="text-foreground">100% automática e humanizada!</strong>
+            <strong className="text-foreground">{t('hero.subtitleBold')}</strong>
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Link to="/auth">
               <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 px-8 py-6 text-lg">
-                Criar Meu Primeiro Assistente
+                {t('hero.createAssistant')}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <Button size="lg" variant="outline" className="w-full sm:w-auto px-8 py-6 text-lg">
-              Ver Demonstração
+              {t('hero.watchDemo')}
             </Button>
           </div>
 
           <div className="bg-card/50 backdrop-blur-sm border rounded-2xl p-8 max-w-3xl mx-auto">
             <p className="text-lg text-muted-foreground mb-4">
-              Ensine seu Clone a Seguir o Seu Script de Vendas ou Seu atendimento e Automatize 100% seu WhatsApp
+              {t('hero.description1')}
             </p>
             <p className="text-2xl font-bold text-primary">
-              Seu Funcionário Disponível 24horas por dia, sem descanso e pagando 10% de um salário.
+              {t('hero.description2')}
             </p>
           </div>
         </div>
@@ -87,9 +96,9 @@ const Index = () => {
       {/* Features Section */}
       <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Funcionalidades Poderosas</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('features.title')}</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            Tudo que você precisa para automatizar e escalar seu atendimento
+            {t('features.subtitle')}
           </p>
         </div>
         
@@ -98,9 +107,9 @@ const Index = () => {
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-6">
               <TrendingUp className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-xl font-bold mb-4">Agente de Vendas</h3>
+            <h3 className="text-xl font-bold mb-4">{t('features.salesAgent.title')}</h3>
             <p className="text-muted-foreground leading-relaxed">
-              SDR, Closer, Vendedor profissional! Ensine seu Clone a vender o seu Produto/Serviço e crie um vendedor profissional que se ajusta e melhora a cada conversa, enviando links personalizados, vídeos e muito mais.
+              {t('features.salesAgent.description')}
             </p>
           </div>
           
@@ -108,9 +117,9 @@ const Index = () => {
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-6">
               <Clock className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-xl font-bold mb-4">Agendamentos</h3>
+            <h3 className="text-xl font-bold mb-4">{t('features.scheduling.title')}</h3>
             <p className="text-muted-foreground leading-relaxed">
-              Crie uma secretár.IA e deixe que ela cuide da sua agenda e gerencie atendimento dos seus clientes de forma inteligente e personalizada.
+              {t('features.scheduling.description')}
             </p>
           </div>
           
@@ -118,9 +127,9 @@ const Index = () => {
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-6">
               <Users className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-xl font-bold mb-4">Multi-Atendimento</h3>
+            <h3 className="text-xl font-bold mb-4">{t('features.multiService.title')}</h3>
             <p className="text-muted-foreground leading-relaxed">
-              Seu Clone terá um histórico de conversa, atendendo de forma personalizada cada cliente, lembrando de todos eles e criando um atendimento 100% personalizado.
+              {t('features.multiService.description')}
             </p>
           </div>
           
@@ -128,9 +137,9 @@ const Index = () => {
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-6">
               <HeadphonesIcon className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-xl font-bold mb-4">Suporte e Atendimento</h3>
+            <h3 className="text-xl font-bold mb-4">{t('features.support.title')}</h3>
             <p className="text-muted-foreground leading-relaxed">
-              Use seu clone para automatizar seu suporte e atendimento ao cliente, inclua todas as informações sobre seu negócio e deixe ele disponível para ajudar seus clientes.
+              {t('features.support.description')}
             </p>
           </div>
           
@@ -138,9 +147,9 @@ const Index = () => {
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-6">
               <MessageSquare className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-xl font-bold mb-4">Conversas Naturais</h3>
+            <h3 className="text-xl font-bold mb-4">{t('features.naturalConversations.title')}</h3>
             <p className="text-muted-foreground leading-relaxed">
-              Sua Inteligência Artificial conversa de forma natural e humanizada sempre com muita simpatia e profissionalismo.
+              {t('features.naturalConversations.description')}
             </p>
           </div>
           
@@ -148,9 +157,9 @@ const Index = () => {
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-6">
               <Zap className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-xl font-bold mb-4">Atendimento Rápido</h3>
+            <h3 className="text-xl font-bold mb-4">{t('features.fastService.title')}</h3>
             <p className="text-muted-foreground leading-relaxed">
-              Seus clientes e Leads respondidos rapidamente em qualquer horário! Assuma o controle e acompanhe tudo que a IA diz.
+              {t('features.fastService.description')}
             </p>
           </div>
         </div>
