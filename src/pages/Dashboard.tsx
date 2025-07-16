@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from '@supabase/supabase-js';
 import { Button } from "@/components/ui/button";
@@ -89,94 +89,66 @@ const Dashboard = () => {
     };
   }, []);
 
-  // Auto-refresh stats every 30 seconds
-  useEffect(() => {
-    if (!user) return;
-
-    const interval = setInterval(() => {
-      loadDashboardStats(user);
-    }, 30000); // Refresh every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [user]);
-
-  const loadDashboardStats = async (currentUser?: User) => {
+  const loadDashboardStats = useCallback(async (currentUser?: User) => {
     const userToUse = currentUser || user;
     if (!userToUse) return;
 
     try {
-      console.log('📊 Loading dashboard stats for user:', userToUse.email);
+      // Parallel requests for better performance
+      const [assistantsResult, connectionsResult, conversationsResult] = await Promise.all([
+        supabase
+          .from('assistants')
+          .select('*', { count: 'exact' })
+          .eq('user_id', userToUse.id)
+          .eq('is_active', true),
+        supabase
+          .from('n8n_fluxogpt')
+          .select('*', { count: 'exact' })
+          .eq('emailuser', userToUse.email),
+        supabase
+          .from('conversations')
+          .select('*', { count: 'exact' })
+          .eq('user_id', userToUse.id)
+          .eq('is_active', true)
+      ]);
 
-      // Load assistants count
-      const { count: assistantsCount, error: assistantsError } = await supabase
-        .from('assistants')
-        .select('*', { count: 'exact' })
-        .eq('user_id', userToUse.id)
-        .eq('is_active', true);
-
-      if (assistantsError) {
-        console.error('Error loading assistants:', assistantsError);
-      }
-
-      // Load WhatsApp connections count (using n8n_fluxogpt table)
-      const { count: connectionsCount, error: connectionsError } = await supabase
-        .from('n8n_fluxogpt')
-        .select('*', { count: 'exact' })
-        .eq('emailuser', userToUse.email);
-
-      if (connectionsError) {
-        console.error('Error loading connections:', connectionsError);
-      }
-
-      // Load conversations count
-      const { count: conversationsCount, error: conversationsError } = await supabase
-        .from('conversations')
-        .select('*', { count: 'exact' })
-        .eq('user_id', userToUse.id)
-        .eq('is_active', true);
-
-      if (conversationsError) {
-        console.error('Error loading conversations:', conversationsError);
-      }
-
-      // Load messages count (for this user's conversations)
-      const { data: userConversations } = await supabase
-        .from('conversations')
-        .select('id')
-        .eq('user_id', userToUse.id)
-        .eq('is_active', true);
-
+      // Get messages count only if there are conversations
       let messagesCount = 0;
-      if (userConversations && userConversations.length > 0) {
-        const conversationIds = userConversations.map(c => c.id);
-        const { count: totalMessages, error: messagesError } = await supabase
+      if (conversationsResult.data && conversationsResult.data.length > 0) {
+        const conversationIds = conversationsResult.data.map(c => c.id);
+        const { count: totalMessages } = await supabase
           .from('messages')
           .select('*', { count: 'exact' })
           .in('conversation_id', conversationIds);
-
-        if (messagesError) {
-          console.error('Error loading messages:', messagesError);
-        } else {
-          messagesCount = totalMessages || 0;
-        }
+        messagesCount = totalMessages || 0;
       }
 
       const newStats = {
-        assistants: assistantsCount || 0,
-        connections: connectionsCount || 0,
-        conversations: conversationsCount || 0,
+        assistants: assistantsResult.count || 0,
+        connections: connectionsResult.count || 0,
+        conversations: conversationsResult.count || 0,
         messages: messagesCount
       };
 
-      console.log('📊 Dashboard stats loaded:', newStats);
       setStats(newStats);
 
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
     }
-  };
+  }, [user]);
 
-  const handleSignOut = async () => {
+  // Memoized auto-refresh with cleanup
+  useEffect(() => {
+    if (!user) return;
+
+    const interval = setInterval(() => {
+      loadDashboardStats(user);
+    }, 60000); // Increased to 60 seconds for better performance
+
+    return () => clearInterval(interval);
+  }, [user, loadDashboardStats]);
+
+  const handleSignOut = useCallback(async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -188,7 +160,7 @@ const Dashboard = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [navigate, toast]);
 
   if (loading) {
     return (

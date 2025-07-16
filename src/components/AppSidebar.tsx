@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,12 +34,13 @@ const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
-  const isActive = (path: string) => currentPath === path;
+  const isActive = useCallback((path: string) => currentPath === path, [currentPath]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -51,7 +52,7 @@ const AppSidebar = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [navigate, toast]);
 
   return (
     <Sidebar 
