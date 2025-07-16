@@ -52,23 +52,24 @@ const ChatWidget = () => {
             fixed z-[9998] overflow-hidden
             transition-all duration-300 ease-in-out
             ${isMobile 
-              ? 'inset-0 w-screen h-screen bg-black' 
-              : 'bottom-24 right-6 w-[500px] h-[700px] rounded-xl bg-black shadow-2xl'
+              ? 'top-0 left-0 right-0 bottom-0 w-screen h-screen' 
+              : 'top-4 right-6 w-[500px] h-[calc(100vh-2rem)] max-h-[700px] rounded-xl shadow-2xl'
             }
+            bg-white border border-gray-200
           `}
         >
           <iframe
-            src="https://clonefy.app/embed/chat/7a218984-6ada-4581-b1b6-2119b4771260?hideHeader=true&fullscreen=true"
+            src="https://clonefy.app/embed/chat/7a218984-6ada-4581-b1b6-2119b4771260"
             className={`w-full h-full border-none ${isMobile ? '' : 'rounded-xl'}`}
             title="Clonefy Chat Support"
             loading="lazy"
             allow="microphone; camera"
-            sandbox="allow-same-origin allow-scripts allow-forms allow-downloads"
             style={{ 
-              colorScheme: 'normal',
-              backgroundColor: 'transparent',
-              minHeight: '100%',
-              minWidth: '100%'
+              display: 'block',
+              width: '100%',
+              height: '100%',
+              border: 'none',
+              outline: 'none'
             }}
           />
         </div>
