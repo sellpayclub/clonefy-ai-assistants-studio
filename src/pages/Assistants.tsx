@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import AgentTutorial from "@/components/AgentTutorial";
 
 interface Assistant {
   id: string;
@@ -291,6 +292,9 @@ const Assistants = () => {
               </Button>
             </div>
           </div>
+
+          {/* Tutorial Section */}
+          <AgentTutorial />
 
           {/* Assistants Grid */}
           {assistants.length === 0 ? (
