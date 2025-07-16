@@ -28,7 +28,7 @@ const Index = () => {
       <header className="container mx-auto px-4 py-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img 
-            src="/lovable-uploads/a49c53ef-ee9d-47be-8b56-db4d0c8768ed.png" 
+            src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png" 
             alt="CLONEFY Logo" 
             className="h-8 w-auto"
           />
@@ -253,7 +253,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-12">
           <div className="flex items-center justify-center">
             <img 
-              src="/lovable-uploads/a49c53ef-ee9d-47be-8b56-db4d0c8768ed.png" 
+              src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png" 
               alt="CLONEFY Logo" 
               className="h-6 w-auto"
             />
