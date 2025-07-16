@@ -40,7 +40,7 @@ const Index = () => {
             <div className="hidden md:block">
               <LanguageSelector />
             </div>
-            <Link to="/auth" className="hidden md:block">
+            <Link to="/auth">
               <Button variant="outline" size="sm" className="text-sm lg:text-base">
                 {t('header.login')}
               </Button>
