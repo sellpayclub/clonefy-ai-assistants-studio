@@ -80,7 +80,7 @@ const Auth = () => {
       });
     } catch (error: any) {
       toast({
-        title: "Erro ao criar conta",
+        title: t("auth.signUpError"),
         description: error.message,
         variant: "destructive",
       });
@@ -106,7 +106,7 @@ const Auth = () => {
       }
     } catch (error: any) {
       toast({
-        title: "Erro ao fazer login",
+        title: t("auth.signInError"),
         description: error.message,
         variant: "destructive",
       });
@@ -150,36 +150,36 @@ const Auth = () => {
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Login</TabsTrigger>
-              <TabsTrigger value="signup">Cadastro</TabsTrigger>
+              <TabsTrigger value="signin">{t("auth.signin")}</TabsTrigger>
+              <TabsTrigger value="signup">{t("auth.signup")}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="signin" className="space-y-4">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t("auth.email")}</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="seu@email.com"
+                    placeholder={t("auth.emailPlaceholder")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
+                  <Label htmlFor="password">{t("auth.password")}</Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder={t("auth.passwordPlaceholder")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Entrando..." : "Entrar"}
+                  {loading ? t("auth.signingIn") : t("auth.signInButton")}
                 </Button>
               </form>
             </TabsContent>
@@ -187,40 +187,40 @@ const Auth = () => {
             <TabsContent value="signup" className="space-y-4">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Nome Completo</Label>
+                  <Label htmlFor="fullName">{t("auth.fullName")}</Label>
                   <Input
                     id="fullName"
                     type="text"
-                    placeholder="Seu Nome"
+                    placeholder={t("auth.fullNamePlaceholder")}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signupEmail">Email</Label>
+                  <Label htmlFor="signupEmail">{t("auth.email")}</Label>
                   <Input
                     id="signupEmail"
                     type="email"
-                    placeholder="seu@email.com"
+                    placeholder={t("auth.emailPlaceholder")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signupPassword">Senha</Label>
+                  <Label htmlFor="signupPassword">{t("auth.password")}</Label>
                   <Input
                     id="signupPassword"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder={t("auth.passwordPlaceholder")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Criando conta..." : "Criar Conta"}
+                  {loading ? t("auth.signingUp") : t("auth.signUpButton")}
                 </Button>
               </form>
             </TabsContent>

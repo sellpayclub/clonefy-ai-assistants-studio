@@ -157,7 +157,7 @@ const Dashboard = () => {
       navigate('/auth');
     } catch (error: any) {
       toast({
-        title: "Erro ao sair",
+        title: t("auth.signOutError"),
         description: error.message,
         variant: "destructive",
       });

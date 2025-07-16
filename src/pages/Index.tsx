@@ -168,9 +168,9 @@ const Index = () => {
       {/* Pricing Section */}
       <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Plano Único e Acessível</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('pricing.title')}</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            Compare os custos e veja como o CLONEFY é mais eficiente
+            {t('pricing.subtitle')}
           </p>
         </div>
 
@@ -178,26 +178,26 @@ const Index = () => {
           {/* Funcionário Tradicional */}
           <div className="p-8 rounded-2xl border bg-card/30">
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-muted-foreground mb-2">Funcionário Tradicional</h3>
-              <div className="text-4xl font-bold text-muted-foreground">R$ 1.518+</div>
-              <p className="text-muted-foreground">/mês + taxas, férias, etc.</p>
+              <h3 className="text-2xl font-bold text-muted-foreground mb-2">{t('pricing.traditional.title')}</h3>
+              <div className="text-4xl font-bold text-muted-foreground">{t('pricing.currency')}{t('pricing.traditional.price')}</div>
+              <p className="text-muted-foreground">{t('pricing.traditional.period')}</p>
             </div>
             <ul className="space-y-3 text-muted-foreground">
               <li className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-muted-foreground/50"></div>
-                Trabalha apenas das 08h às 17h
+                {t('pricing.traditional.features.0')}
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-muted-foreground/50"></div>
-                Férias e feriados
+                {t('pricing.traditional.features.1')}
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-muted-foreground/50"></div>
-                Pode ficar doente
+                {t('pricing.traditional.features.2')}
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-muted-foreground/50"></div>
-                Custos adicionais
+                {t('pricing.traditional.features.3')}
               </li>
             </ul>
           </div>
@@ -206,30 +206,30 @@ const Index = () => {
           <div className="p-8 rounded-2xl border-2 border-primary bg-gradient-to-br from-primary/5 to-primary/10 relative overflow-hidden">
             <div className="absolute top-4 right-4">
               <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
-                RECOMENDADO
+                {t('pricing.clonefy.recommended')}
               </span>
             </div>
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold mb-2">CLONEFY</h3>
-              <div className="text-4xl font-bold text-primary">R$ 97</div>
-              <p className="text-muted-foreground">/mês - SEM limites</p>
+              <h3 className="text-2xl font-bold mb-2">{t('pricing.clonefy.title')}</h3>
+              <div className="text-4xl font-bold text-primary">{t('pricing.currency')}{t('pricing.clonefy.price')}</div>
+              <p className="text-muted-foreground">{t('pricing.clonefy.period')}</p>
             </div>
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-primary">
                 <div className="w-2 h-2 rounded-full bg-primary"></div>
-                Disponível 24 horas por dia
+                {t('pricing.clonefy.features.0')}
               </li>
               <li className="flex items-center gap-2 text-primary">
                 <div className="w-2 h-2 rounded-full bg-primary"></div>
-                Sem férias ou feriados
+                {t('pricing.clonefy.features.1')}
               </li>
               <li className="flex items-center gap-2 text-primary">
                 <div className="w-2 h-2 rounded-full bg-primary"></div>
-                Nunca fica doente
+                {t('pricing.clonefy.features.2')}
               </li>
               <li className="flex items-center gap-2 text-primary">
                 <div className="w-2 h-2 rounded-full bg-primary"></div>
-                Sem conversas/atendimento limitados
+                {t('pricing.clonefy.features.3')}
               </li>
             </ul>
           </div>
@@ -237,11 +237,11 @@ const Index = () => {
 
         <div className="text-center mt-12">
           <p className="text-2xl font-bold mb-8">
-            Contrate IA e não humanos, <span className="text-primary">o Futuro já Chegou!</span>
+            {t('pricing.finalMessage')} <span className="text-primary">{t('pricing.finalMessageHighlight')}</span>
           </p>
           <Link to="/auth">
             <Button size="lg" className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 px-12 py-6 text-lg">
-              Começar Agora por R$ 97/mês
+              {t('pricing.startNow')}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
@@ -259,7 +259,7 @@ const Index = () => {
             />
           </div>
           <p className="text-center text-muted-foreground mt-4">
-            © 2024 CLONEFY. Todos os direitos reservados.
+            {t('footer.copyright')}
           </p>
         </div>
       </footer>
