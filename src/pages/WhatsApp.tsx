@@ -162,6 +162,18 @@ const WhatsApp = () => {
     setCreating(true);
     setQrCode(null);
 
+    // Get current session like in loadData
+    let currentSession = session;
+    if (!currentSession) {
+      const { data } = await supabase.auth.getSession();
+      currentSession = data.session;
+    }
+
+    if (!currentSession) {
+      console.error('Sem sessão válida para criar conexão');
+      return;
+    }
+
     try {
       console.log('Creating connection with params:', { instanceName, selectedAssistant, userEmail: user.email });
       
@@ -172,7 +184,7 @@ const WhatsApp = () => {
           assistantId: selectedAssistant,
           userEmail: user.email,
         },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+        headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
 
       console.log('Response from whatsapp-evolution:', response);
@@ -225,13 +237,25 @@ const WhatsApp = () => {
   };
 
   const deleteConnection = async (connection: WhatsAppConnection) => {
+    // Get current session
+    let currentSession = session;
+    if (!currentSession) {
+      const { data } = await supabase.auth.getSession();
+      currentSession = data.session;
+    }
+
+    if (!currentSession) {
+      console.error('Sem sessão válida para deletar conexão');
+      return;
+    }
+
     try {
       const response = await supabase.functions.invoke('whatsapp-evolution', {
         body: {
           action: 'delete',
           instanceName: connection.NomeInstancia || connection.instance_name,
         },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+        headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
 
       if (response.error) {
@@ -255,6 +279,18 @@ const WhatsApp = () => {
   };
 
   const fetchQrCode = async (connection: WhatsAppConnection) => {
+    // Get current session
+    let currentSession = session;
+    if (!currentSession) {
+      const { data } = await supabase.auth.getSession();
+      currentSession = data.session;
+    }
+
+    if (!currentSession) {
+      console.error('Sem sessão válida para obter QR code');
+      return;
+    }
+
     try {
       console.log('fetchQrCode: Buscando QR code para:', connection.NomeInstancia);
       
@@ -263,7 +299,7 @@ const WhatsApp = () => {
           action: 'get_qr',
           instanceName: connection.NomeInstancia,
         },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+        headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
 
       console.log('fetchQrCode: Resposta:', response);
@@ -306,10 +342,22 @@ const WhatsApp = () => {
   };
 
   const testAPI = async () => {
+    // Get current session
+    let currentSession = session;
+    if (!currentSession) {
+      const { data } = await supabase.auth.getSession();
+      currentSession = data.session;
+    }
+
+    if (!currentSession) {
+      console.error('Sem sessão válida para testar API');
+      return;
+    }
+
     try {
       const response = await supabase.functions.invoke('whatsapp-evolution', {
         body: { action: 'test_api' },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+        headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
 
       console.log('Test API Response:', response);
