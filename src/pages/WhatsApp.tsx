@@ -43,6 +43,8 @@ const WhatsApp = () => {
   const [creating, setCreating] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [qrCodeTimeout, setQrCodeTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [qrTimeLeft, setQrTimeLeft] = useState(0);
+  const [qrCountdown, setQrCountdown] = useState<NodeJS.Timeout | null>(null);
   const [activeTab, setActiveTab] = useState("connections");
   
   // Form states
@@ -108,6 +110,8 @@ const WhatsApp = () => {
 
     return () => {
       isMounted = false;
+      if (qrCodeTimeout) clearTimeout(qrCodeTimeout);
+      if (qrCountdown) clearInterval(qrCountdown);
     };
   }, []);
 
@@ -250,9 +254,13 @@ const WhatsApp = () => {
         setActiveTab("qr-code");
         
         // QR Code expires in 45 seconds
+        setQrTimeLeft(45);
         const timeout = setTimeout(() => {
           setQrCode(null);
           setQrCodeTimeout(null);
+          setQrTimeLeft(0);
+          if (qrCountdown) clearInterval(qrCountdown);
+          setQrCountdown(null);
           toast({
             title: "QR Code expirado",
             description: "Gere um novo QR Code para conectar.",
@@ -260,6 +268,18 @@ const WhatsApp = () => {
           });
         }, 45000);
         setQrCodeTimeout(timeout);
+        
+        // Start countdown
+        const countdown = setInterval(() => {
+          setQrTimeLeft(prev => {
+            if (prev <= 1) {
+              clearInterval(countdown);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        setQrCountdown(countdown);
         
         toast({
           title: "QR Code disponível",
@@ -321,6 +341,22 @@ const WhatsApp = () => {
     }
   };
 
+  const refreshQrCode = async (connection: WhatsAppConnection) => {
+    // Clear existing timers
+    if (qrCodeTimeout) {
+      clearTimeout(qrCodeTimeout);
+      setQrCodeTimeout(null);
+    }
+    if (qrCountdown) {
+      clearInterval(qrCountdown);
+      setQrCountdown(null);
+    }
+    setQrCode(null);
+    setQrTimeLeft(0);
+    
+    await fetchQrCode(connection);
+  };
+
   const fetchQrCode = async (connection: WhatsAppConnection) => {
     // Get current session
     let currentSession = session;
@@ -373,9 +409,13 @@ const WhatsApp = () => {
         }
         
         // QR Code expires in 45 seconds
+        setQrTimeLeft(45);
         const timeout = setTimeout(() => {
           setQrCode(null);
           setQrCodeTimeout(null);
+          setQrTimeLeft(0);
+          if (qrCountdown) clearInterval(qrCountdown);
+          setQrCountdown(null);
           toast({
             title: "QR Code expirado",
             description: "Gere um novo QR Code para conectar.",
@@ -383,6 +423,18 @@ const WhatsApp = () => {
           });
         }, 45000);
         setQrCodeTimeout(timeout);
+        
+        // Start countdown
+        const countdown = setInterval(() => {
+          setQrTimeLeft(prev => {
+            if (prev <= 1) {
+              clearInterval(countdown);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        setQrCountdown(countdown);
         
         toast({
           title: "QR Code gerado",
@@ -716,6 +768,29 @@ const WhatsApp = () => {
                           className="w-64 h-64 object-contain"
                         />
                       </div>
+                      
+                      {/* Timer e botão de atualizar */}
+                      <div className="flex items-center gap-4">
+                        {qrTimeLeft > 0 && (
+                          <div className="flex items-center gap-2 px-3 py-2 bg-orange-100 text-orange-800 rounded-lg">
+                            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                            <span className="font-medium">Expira em {qrTimeLeft}s</span>
+                          </div>
+                        )}
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            const lastConnection = connections.find(c => !c.whatsappuser);
+                            if (lastConnection) refreshQrCode(lastConnection);
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                          Atualizar QR
+                        </Button>
+                      </div>
+                      
                       <div className="text-center space-y-2">
                         <p className="font-medium text-gray-900">
                           Como conectar:

@@ -234,8 +234,37 @@ async function listConnections(supabaseClient: any, userEmail: string) {
     throw new Error(`Failed to fetch connections: ${error.message}`);
   }
 
+  // Check status of each connection in Evolution API
+  const connectionsWithStatus = await Promise.all(
+    (data || []).map(async (connection) => {
+      try {
+        const statusResponse = await fetch(`${EVOLUTION_API_URL}/instance/connectionState/${connection.nomeinstancia}`, {
+          method: 'GET',
+          headers: {
+            'apikey': EVOLUTION_API_KEY,
+          },
+        });
+
+        if (statusResponse.ok) {
+          const statusData = await statusResponse.json();
+          // Update whatsappuser based on connection state
+          if (statusData.instance?.state === 'open' && statusData.instance?.owner) {
+            connection.whatsappuser = statusData.instance.owner;
+          } else {
+            connection.whatsappuser = null;
+          }
+        }
+      } catch (error) {
+        console.warn(`Failed to check status for ${connection.nomeinstancia}:`, error);
+        // Keep original whatsappuser value
+      }
+      
+      return connection;
+    })
+  );
+
   return new Response(
-    JSON.stringify({ connections: data }),
+    JSON.stringify({ connections: connectionsWithStatus }),
     {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     }
