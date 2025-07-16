@@ -96,6 +96,7 @@ async function createWhatsAppInstanceSequential(
       },
       body: JSON.stringify({
         instanceName: instanceName,
+        integration: "WHATSAPP-BAILEYS",
         token: crypto.randomUUID() // TOKEN_GERADO
       }),
     });
