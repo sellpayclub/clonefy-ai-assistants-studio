@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { cleanupAuthState, forceCleanReload } from "@/lib/auth-utils";
 import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -45,17 +46,29 @@ const AppSidebar = () => {
 
   const handleSignOut = useCallback(async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      navigate('/auth');
+      // Clean up auth state first
+      cleanupAuthState();
+      
+      // Attempt global sign out (ignore errors)
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        console.warn('Error during signOut:', err);
+      }
+      
+      // Force clean page reload for a fresh state
+      forceCleanReload('/auth');
     } catch (error: any) {
+      // Even if there are errors, clean up and redirect
+      cleanupAuthState();
       toast({
         title: t("auth.signOutError"),
         description: error.message,
         variant: "destructive",
       });
+      forceCleanReload('/auth');
     }
-  }, [navigate, toast]);
+  }, [toast]);
 
   return (
     <Sidebar 

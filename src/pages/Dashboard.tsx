@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { cleanupAuthState, forceCleanReload } from "@/lib/auth-utils";
 import { User, Session } from '@supabase/supabase-js';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -152,17 +153,29 @@ const Dashboard = () => {
 
   const handleSignOut = useCallback(async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      navigate('/auth');
+      // Clean up auth state first
+      cleanupAuthState();
+      
+      // Attempt global sign out (ignore errors)
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        console.warn('Error during signOut:', err);
+      }
+      
+      // Force clean page reload for a fresh state
+      forceCleanReload('/auth');
     } catch (error: any) {
+      // Even if there are errors, clean up and redirect
+      cleanupAuthState();
       toast({
         title: t("auth.signOutError"),
         description: error.message,
         variant: "destructive",
       });
+      forceCleanReload('/auth');
     }
-  }, [navigate, toast]);
+  }, [toast]);
 
   if (loading) {
     return (

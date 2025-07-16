@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { cleanupAuthState } from "@/lib/auth-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +28,9 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
 
   useEffect(() => {
+    // Clean up any existing auth state when landing on auth page
+    cleanupAuthState();
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -52,7 +56,7 @@ const Auth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,6 +115,17 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Clean up existing state
+      cleanupAuthState();
+      
+      // Attempt global sign out first
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+        console.warn('Warning during initial cleanup:', err);
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -119,7 +134,8 @@ const Auth = () => {
       if (error) throw error;
 
       if (data.user) {
-        navigate('/dashboard');
+        // Force page reload for clean state
+        window.location.href = '/dashboard';
       }
     } catch (error: any) {
       toast({
