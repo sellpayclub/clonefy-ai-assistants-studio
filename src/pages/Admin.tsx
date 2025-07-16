@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Settings, Search, Save, AlertCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Settings, Search, Save, AlertCircle, Mail, Plus, Trash2, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
@@ -24,6 +25,14 @@ interface UserQuota {
   created_at: string;
 }
 
+interface AuthorizedEmail {
+  id: string;
+  email: string;
+  added_by: string | null;
+  added_at: string;
+  notes: string | null;
+}
+
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -36,6 +45,12 @@ const Admin = () => {
   const [password, setPassword] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Estados para emails autorizados
+  const [authorizedEmails, setAuthorizedEmails] = useState<AuthorizedEmail[]>([]);
+  const [newEmail, setNewEmail] = useState("");
+  const [newEmailNotes, setNewEmailNotes] = useState("");
+  const [emailLoading, setEmailLoading] = useState(false);
 
   // Admin credentials
   const ADMIN_PASSWORD = "Danncarlos@123";
@@ -83,6 +98,7 @@ const Admin = () => {
   useEffect(() => {
     if (isAuthenticated) {
       loadUsers();
+      loadAuthorizedEmails();
     }
   }, [isAuthenticated]);
 
@@ -155,6 +171,86 @@ const Admin = () => {
       console.error('Error loading users:', error);
       toast({
         title: "Erro ao carregar usuários",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const loadAuthorizedEmails = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('authorized_emails')
+        .select('*')
+        .order('added_at', { ascending: false });
+
+      if (error) throw error;
+
+      setAuthorizedEmails(data || []);
+    } catch (error: any) {
+      console.error('Error loading authorized emails:', error);
+      toast({
+        title: "Erro ao carregar emails",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const addAuthorizedEmail = async () => {
+    if (!newEmail.trim()) return;
+
+    setEmailLoading(true);
+    try {
+      const { error } = await supabase
+        .from('authorized_emails')
+        .insert({
+          email: newEmail.toLowerCase().trim(),
+          notes: newEmailNotes.trim() || null,
+          added_by: user?.id
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email adicionado!",
+        description: `${newEmail} foi autorizado a criar conta.`,
+      });
+
+      setNewEmail("");
+      setNewEmailNotes("");
+      await loadAuthorizedEmails();
+    } catch (error: any) {
+      console.error('Error adding email:', error);
+      toast({
+        title: "Erro ao adicionar email",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  const removeAuthorizedEmail = async (emailId: string, email: string) => {
+    try {
+      const { error } = await supabase
+        .from('authorized_emails')
+        .delete()
+        .eq('id', emailId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Email removido!",
+        description: `${email} não pode mais criar conta.`,
+      });
+
+      await loadAuthorizedEmails();
+    } catch (error: any) {
+      console.error('Error removing email:', error);
+      toast({
+        title: "Erro ao remover email",
         description: error.message,
         variant: "destructive",
       });
@@ -275,29 +371,43 @@ const Admin = () => {
             </Button>
           </div>
 
-          {/* Search */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Search className="h-5 w-5" />
-                Buscar Usuários
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Input
-                placeholder="Buscar por email ou ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-md"
-              />
-            </CardContent>
-          </Card>
+          <Tabs defaultValue="users" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Usuários ({filteredUsers.length})
+              </TabsTrigger>
+              <TabsTrigger value="emails" className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                Emails Autorizados ({authorizedEmails.length})
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Users Table - Desktop / Cards - Mobile */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Usuários e Limites ({filteredUsers.length})</CardTitle>
-            </CardHeader>
+            {/* Aba de Usuários */}
+            <TabsContent value="users" className="space-y-6">
+              {/* Search */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Search className="h-5 w-5" />
+                    Buscar Usuários
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Input
+                    placeholder="Buscar por email ou ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="max-w-md"
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Users Table - Desktop / Cards - Mobile */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Usuários e Limites ({filteredUsers.length})</CardTitle>
+                </CardHeader>
             <CardContent>
               {/* Desktop Table View */}
               <div className="hidden md:block overflow-x-auto">
@@ -521,9 +631,98 @@ const Admin = () => {
                 <div className="text-center py-8 text-muted-foreground">
                   Nenhum usuário encontrado
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Aba de Emails Autorizados */}
+          <TabsContent value="emails" className="space-y-6">
+            {/* Adicionar novo email */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  Adicionar Email Autorizado
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-2">
+                    <Label htmlFor="newEmail">Email</Label>
+                    <Input
+                      id="newEmail"
+                      type="email"
+                      placeholder="cliente@empresa.com"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="newEmailNotes">Notas (opcional)</Label>
+                    <Input
+                      id="newEmailNotes"
+                      placeholder="Ex: João da Silva"
+                      value={newEmailNotes}
+                      onChange={(e) => setNewEmailNotes(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <Button 
+                  onClick={addAuthorizedEmail}
+                  disabled={!newEmail.trim() || emailLoading}
+                  className="w-full md:w-auto"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {emailLoading ? "Adicionando..." : "Adicionar Email"}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Lista de emails autorizados */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Emails Autorizados ({authorizedEmails.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {authorizedEmails.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>Nenhum email autorizado ainda</p>
+                    <p className="text-sm">Adicione emails para permitir cadastros</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {authorizedEmails.map((emailData) => (
+                      <div 
+                        key={emailData.id} 
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
+                        <div className="flex-1">
+                          <div className="font-medium">{emailData.email}</div>
+                          {emailData.notes && (
+                            <div className="text-sm text-muted-foreground">{emailData.notes}</div>
+                          )}
+                          <div className="text-xs text-muted-foreground">
+                            Adicionado em {new Date(emailData.added_at).toLocaleDateString('pt-BR')}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => removeAuthorizedEmail(emailData.id, emailData.email)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
         </main>
       </div>
     </SidebarProvider>

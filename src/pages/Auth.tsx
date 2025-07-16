@@ -59,6 +59,23 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Verificar se o email está na lista de emails autorizados
+      const { data: authorizedEmail, error: emailCheckError } = await supabase
+        .from('authorized_emails')
+        .select('id')
+        .eq('email', email.toLowerCase().trim())
+        .single();
+
+      if (emailCheckError || !authorizedEmail) {
+        toast({
+          title: "Email não autorizado",
+          description: "Este email não está autorizado a criar conta. Entre em contato com o administrador.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const redirectUrl = `${window.location.origin}/dashboard`;
       
       const { error } = await supabase.auth.signUp({
