@@ -62,17 +62,26 @@ const AppSidebar = () => {
         <div className="flex items-center justify-center h-12">
           {!collapsed ? (
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-sm">
-                <Bot className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-lg font-bold text-foreground">CLONEFY</span>
-                <span className="text-xs text-muted-foreground">AI Platform</span>
-              </div>
+              {/* Logo para modo claro */}
+              <img 
+                src="/lovable-uploads/8f2944d9-660f-4eb7-bae6-e226176b6a6d.png" 
+                alt="CLONEFY" 
+                className="h-8 w-auto dark:hidden"
+              />
+              {/* Logo para modo escuro */}
+              <img 
+                src="/lovable-uploads/fbe6c7af-7d70-474d-af99-5f513f7a14dc.png" 
+                alt="CLONEFY" 
+                className="h-8 w-auto hidden dark:block"
+              />
             </div>
           ) : (
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-sm">
-              <Bot className="w-4 h-4 text-primary-foreground" />
+              <img 
+                src="/lovable-uploads/59070bb1-9779-4bbb-a3d5-a65bacf38b70.png" 
+                alt="CLONEFY" 
+                className="w-5 h-5"
+              />
             </div>
           )}
         </div>
