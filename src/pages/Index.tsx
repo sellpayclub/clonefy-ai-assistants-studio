@@ -121,9 +121,9 @@ const Index = () => {
         </div>
         
         <div className="space-y-20 sm:space-y-24">
-          {/* Paso 1: Criar Agente */}
+          {/* Paso 1: Criar Agente - Texto à Esquerda, Imagem à Direita */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-            <div className="order-2 lg:order-1">
+            <div className="order-1">
               <div className="bg-primary/10 text-primary rounded-full px-4 py-2 text-sm font-medium inline-block mb-6">
                 Passo 1
               </div>
@@ -147,7 +147,7 @@ const Index = () => {
                 </li>
               </ul>
             </div>
-            <div className="order-1 lg:order-2">
+            <div className="order-2">
               <img 
                 src="/lovable-uploads/78405cc7-ac71-4962-a65b-41f013b48492.png"
                 alt="Criar Agente - Interface simples para começar"
@@ -157,7 +157,7 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Paso 2: Configurar */}
+          {/* Paso 2: Configurar - Imagem à Esquerda, Texto à Direita */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             <div className="order-2 lg:order-1">
               <img 
@@ -193,9 +193,9 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Paso 3: Gerenciar */}
+          {/* Paso 3: Gerenciar - Texto à Esquerda, Imagem à Direita */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-            <div className="order-2 lg:order-1">
+            <div className="order-1">
               <div className="bg-primary/10 text-primary rounded-full px-4 py-2 text-sm font-medium inline-block mb-6">
                 Passo 3
               </div>
@@ -219,7 +219,7 @@ const Index = () => {
                 </li>
               </ul>
             </div>
-            <div className="order-1 lg:order-2">
+            <div className="order-2">
               <img 
                 src="/lovable-uploads/18248d32-3b27-4c30-b5b7-0fdcc905ae7b.png"
                 alt="Lista de Agentes - Gerenciamento fácil"
@@ -229,7 +229,7 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Paso 4: Conectar WhatsApp */}
+          {/* Paso 4: Conectar WhatsApp - Imagem à Esquerda, Texto à Direita */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             <div className="order-2 lg:order-1">
               <img 
@@ -265,9 +265,9 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Paso 5: Chat Flutuante + WhatsApp */}
+          {/* Paso 5: Chat Flutuante + WhatsApp - Texto à Esquerda, Imagem à Direita */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-            <div className="order-2 lg:order-1">
+            <div className="order-1">
               <div className="bg-green-100 text-green-700 rounded-full px-4 py-2 text-sm font-medium inline-block mb-6">
                 Passo 5 - EXTRA
               </div>
@@ -303,7 +303,7 @@ const Index = () => {
                 </li>
               </ul>
             </div>
-            <div className="order-1 lg:order-2">
+            <div className="order-2">
               <img 
                 src="/lovable-uploads/1c3acef0-0f93-4eef-b3a5-2cb3614deb57.png"
                 alt="Chat Flutuante - Widget para site"
@@ -313,7 +313,7 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Resultado Final */}
+          {/* Resultado Final - Imagem à Esquerda, Texto à Direita */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             <div className="order-2 lg:order-1">
               <img 
