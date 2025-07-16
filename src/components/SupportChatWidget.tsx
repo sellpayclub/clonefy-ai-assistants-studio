@@ -26,8 +26,8 @@ const SupportChatWidget = () => {
       <button
         onClick={toggleChat}
         className={`
-          fixed bottom-6 left-6 z-[9999] 
-          w-16 h-16 rounded-full 
+          fixed bottom-24 right-20 z-[9999] 
+          w-14 h-14 rounded-full 
           bg-gradient-to-r from-blue-600 to-blue-500
           hover:from-blue-700 hover:to-blue-600
           text-white shadow-lg hover:shadow-xl
@@ -53,7 +53,7 @@ const SupportChatWidget = () => {
             transition-all duration-300 ease-in-out
             ${isMobile 
               ? 'inset-0 w-screen h-screen bg-black' 
-              : 'bottom-24 left-6 w-[500px] h-[700px] rounded-xl bg-black shadow-2xl'
+              : 'bottom-40 right-6 w-[450px] h-[600px] rounded-xl bg-black shadow-2xl'
             }
           `}
         >
