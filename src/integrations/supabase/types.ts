@@ -543,10 +543,13 @@ export type Database = {
         Args: { target_user_id?: string }
         Returns: {
           user_id: string
+          user_email: string
           max_assistants: number
           max_whatsapp_connections: number
           current_assistants: number
           current_whatsapp_connections: number
+          plan_type: string
+          created_at: string
         }[]
       }
     }
