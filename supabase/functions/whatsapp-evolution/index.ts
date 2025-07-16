@@ -126,6 +126,7 @@ async function createWhatsAppInstanceSequential(
       body: JSON.stringify({
         webhook: {
           url: WEBHOOK_URL,
+          enabled: true,
           events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE"]
         }
       }),
@@ -146,6 +147,7 @@ async function createWhatsAppInstanceSequential(
         body: JSON.stringify({
           webhook: {
             url: WEBHOOK_URL,
+            enabled: true,
             events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE"]
           }
         }),
