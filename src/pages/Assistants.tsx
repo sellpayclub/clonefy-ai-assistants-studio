@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { Badge } from "@/components/ui/badge";
-import { Bot, Plus, Edit, Trash2, MessageSquare, Settings, RefreshCw } from "lucide-react";
+import { Bot, Plus, Edit, Trash2, MessageSquare, Settings, RefreshCw, Code, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useUserLimits } from "@/hooks/useUserLimits";
@@ -44,6 +44,8 @@ const Assistants = () => {
   const navigate = useNavigate();
   const { limits, reloadLimits } = useUserLimits();
   const { t } = useLanguage();
+  const [embedDialogOpen, setEmbedDialogOpen] = useState(false);
+  const [selectedAgentForEmbed, setSelectedAgentForEmbed] = useState<Assistant | null>(null);
 
   // Form states
   const [name, setName] = useState("");
@@ -409,6 +411,12 @@ const Assistants = () => {
                         <MessageSquare className="h-3 w-3 mr-1" />
                         Testar
                       </Button>
+                      <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedAgentForEmbed(assistant);
+                        setEmbedDialogOpen(true);
+                      }}>
+                        <Code className="h-3 w-3" />
+                      </Button>
                       <Button size="sm" variant="outline" onClick={() => openEditDialog(assistant)}>
                         <Settings className="h-3 w-3" />
                       </Button>
@@ -520,6 +528,165 @@ const Assistants = () => {
                   )}
                 </TabsContent>
               </Tabs>
+            </DialogContent>
+          </Dialog>
+
+          {/* Embed Dialog */}
+          <Dialog open={embedDialogOpen} onOpenChange={setEmbedDialogOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Code className="h-5 w-5" />
+                  Widget de Chat Embarcável
+                </DialogTitle>
+                <DialogDescription>
+                  Incorpore este agente em qualquer site como um chat de suporte
+                </DialogDescription>
+              </DialogHeader>
+              
+              {selectedAgentForEmbed && (
+                <div className="space-y-6">
+                  {/* Preview */}
+                  <div>
+                    <Label className="text-sm font-medium">Visualização</Label>
+                    <div className="mt-2 p-4 border rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Bot className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{selectedAgentForEmbed.name}</p>
+                          <p className="text-xs text-muted-foreground">Widget de chat embarcável</p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Este widget aparecerá como um botão flutuante no site do usuário
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Código HTML */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm font-medium">Código de Incorporação</Label>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          const code = `<!-- Widget de Chat CLONEFY -->
+<script>
+  (function(){
+    var w=window,d=document;
+    var chatWidget = {
+      agentId: '${selectedAgentForEmbed.id}',
+      agentName: '${selectedAgentForEmbed.name}',
+      init: function() {
+        var iframe = d.createElement('iframe');
+        iframe.src = '${window.location.origin}/embed/chat/' + this.agentId;
+        iframe.style.cssText = 'position:fixed;bottom:20px;right:20px;width:400px;height:600px;border:none;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999999;display:none;';
+        iframe.id = 'clonefy-chat-widget';
+        d.body.appendChild(iframe);
+        
+        var button = d.createElement('div');
+        button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        button.style.cssText = 'position:fixed;bottom:20px;right:20px;width:60px;height:60px;border-radius:50%;background:#007bff;color:white;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999998;transition:all 0.3s ease;';
+        button.title = 'Chat com ' + this.agentName;
+        button.id = 'clonefy-chat-button';
+        
+        button.onmouseover = function() { this.style.transform = 'scale(1.1)'; };
+        button.onmouseout = function() { this.style.transform = 'scale(1)'; };
+        
+        var isOpen = false;
+        button.onclick = function() {
+          isOpen = !isOpen;
+          iframe.style.display = isOpen ? 'block' : 'none';
+          button.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+        };
+        
+        d.body.appendChild(button);
+      }
+    };
+    
+    if(d.readyState === 'loading') {
+      d.addEventListener('DOMContentLoaded', function() { chatWidget.init(); });
+    } else {
+      chatWidget.init();
+    }
+  })();
+</script>
+<!-- Fim Widget CLONEFY -->`;
+                          
+                          navigator.clipboard.writeText(code);
+                          toast({
+                            title: "Código copiado!",
+                            description: "Cole este código antes da tag </body> do seu site.",
+                          });
+                        }}
+                      >
+                        <Copy className="h-4 w-4 mr-1" />
+                        Copiar
+                      </Button>
+                    </div>
+                    <div className="p-4 bg-muted rounded-lg">
+                      <code className="text-xs text-muted-foreground break-all">
+                        {`<!-- Widget de Chat CLONEFY -->
+<script>
+  (function(){
+    var w=window,d=document;
+    var chatWidget = {
+      agentId: '${selectedAgentForEmbed.id}',
+      agentName: '${selectedAgentForEmbed.name}',
+      init: function() {
+        // Código do widget...
+      }
+    };
+    // Inicialização automática...
+  })();
+</script>`}
+                      </code>
+                    </div>
+                  </div>
+
+                  {/* Instruções */}
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg">
+                    <h4 className="font-medium text-sm mb-2">📋 Como usar:</h4>
+                    <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                      <li>Copie o código acima</li>
+                      <li>Cole antes da tag <code>&lt;/body&gt;</code> do seu site</li>
+                      <li>O widget aparecerá como um botão flutuante</li>
+                      <li>Visitantes podem clicar para chat com sua IA</li>
+                    </ol>
+                  </div>
+
+                  {/* Link direto */}
+                  <div>
+                    <Label className="text-sm font-medium">Link Direto do Chat</Label>
+                    <div className="flex gap-2 mt-2">
+                      <Input 
+                        value={`${window.location.origin}/embed/chat/${selectedAgentForEmbed.id}`}
+                        readOnly
+                        className="flex-1"
+                      />
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          navigator.clipboard.writeText(`${window.location.origin}/embed/chat/${selectedAgentForEmbed.id}`);
+                          toast({
+                            title: "Link copiado!",
+                            description: "Compartilhe este link para acesso direto ao chat.",
+                          });
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Link direto para teste ou compartilhamento
+                    </p>
+                  </div>
+                </div>
+              )}
             </DialogContent>
           </Dialog>
         </main>

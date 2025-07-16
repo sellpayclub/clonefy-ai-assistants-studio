@@ -9,6 +9,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import EmbedChat from "./pages/EmbedChat";
 import NotFound from "./pages/NotFound";
 
 // Lazy load heavy components for better performance
@@ -66,9 +67,10 @@ const App = () => (
                 <Suspense fallback={<LoadingFallback />}>
                   <LazyAdmin />
                 </Suspense>
-              } />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
+               } />
+               <Route path="/embed/chat/:agentId" element={<EmbedChat />} />
+               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
