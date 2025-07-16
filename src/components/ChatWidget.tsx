@@ -49,17 +49,17 @@ const ChatWidget = () => {
       {isOpen && (
         <div
           className={`
-            fixed z-[9998] bg-white rounded-lg shadow-2xl
+            fixed z-[9998] bg-white shadow-2xl
             transition-all duration-300 ease-in-out
             ${isMobile 
-              ? 'inset-0 w-full h-full rounded-none' 
-              : 'bottom-24 right-6 w-[450px] h-[650px]'
+              ? 'inset-0 w-screen h-screen' 
+              : 'bottom-24 right-6 w-[450px] h-[650px] rounded-lg'
             }
           `}
         >
           <iframe
             src="https://clonefy.app/embed/chat/7a218984-6ada-4581-b1b6-2119b4771260"
-            className="w-full h-full border-none rounded-lg"
+            className={`w-full h-full border-none ${isMobile ? '' : 'rounded-lg'}`}
             title="Clonefy Chat Support"
             loading="lazy"
           />
