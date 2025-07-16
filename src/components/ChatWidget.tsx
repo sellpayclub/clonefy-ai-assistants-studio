@@ -52,7 +52,7 @@ const ChatWidget = () => {
             fixed z-[9998] bg-white rounded-lg shadow-2xl
             transition-all duration-300 ease-in-out
             ${isMobile 
-              ? 'bottom-20 left-4 right-4 top-4 w-auto h-auto' 
+              ? 'inset-0 w-full h-full rounded-none' 
               : 'bottom-24 right-6 w-[450px] h-[650px]'
             }
           `}
