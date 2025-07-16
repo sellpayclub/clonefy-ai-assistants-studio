@@ -126,10 +126,7 @@ const AppSidebar = () => {
                         <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
                           <item.icon className={`flex-shrink-0 ${collapsed ? 'w-5 h-5' : 'w-4 h-4'}`} />
                           {!collapsed && (
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium">{t(item.title)}</span>
-                              <span className="text-xs text-muted-foreground/70">{t(item.description)}</span>
-                            </div>
+                            <span className="text-sm font-medium">{t(item.title)}</span>
                           )}
                         </div>
                       </NavLink>
