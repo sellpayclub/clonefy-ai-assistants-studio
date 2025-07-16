@@ -135,7 +135,7 @@ const Dashboard = () => {
     return () => {
       isMounted = false;
     };
-  }, [loadDashboardStats]);
+  }, []);
 
   // Memoized auto-refresh with cleanup
   useEffect(() => {
