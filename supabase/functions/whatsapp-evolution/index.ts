@@ -259,29 +259,66 @@ async function listConnections(supabaseClient: any, userEmail: string) {
           let newWhatsAppUser = null;
           let connectionState = null;
           
+          console.log(`Raw response structure for ${connection.nomeinstancia}:`, {
+            hasInstance: !!statusData.instance,
+            hasState: !!statusData.state,
+            instanceState: statusData.instance?.state,
+            directState: statusData.state,
+            instanceOwner: statusData.instance?.owner,
+            instancePhone: statusData.instance?.phone,
+            instanceNumber: statusData.instance?.number,
+            instanceUser: statusData.instance?.user,
+            instanceProfileName: statusData.instance?.profileName,
+            instanceWid: statusData.instance?.wid,
+            directOwner: statusData.owner,
+            directPhone: statusData.phone,
+            directNumber: statusData.number,
+            directUser: statusData.user,
+            keys: Object.keys(statusData)
+          });
+          
           // Try different response formats from Evolution API
           if (statusData.instance) {
             connectionState = statusData.instance.state;
-            if (statusData.instance.state === 'open') {
-              // Try different fields for user info
+            // Multiple ways to detect connection and get user info
+            if (statusData.instance.state === 'open' || statusData.instance.state === 'connected') {
               newWhatsAppUser = statusData.instance.owner || 
                                statusData.instance.phone || 
                                statusData.instance.number ||
-                               statusData.instance.user;
+                               statusData.instance.user ||
+                               statusData.instance.profileName ||
+                               statusData.instance.wid ||
+                               'Conectado';
             }
           } else if (statusData.state) {
             connectionState = statusData.state;
-            if (statusData.state === 'open') {
+            if (statusData.state === 'open' || statusData.state === 'connected') {
               newWhatsAppUser = statusData.owner || 
                                statusData.phone || 
                                statusData.number ||
-                               statusData.user;
+                               statusData.user ||
+                               statusData.profileName ||
+                               statusData.wid ||
+                               'Conectado';
+            }
+          } else {
+            // Fallback: if no clear state structure, try to detect connection by presence of user data
+            const userIndicators = [
+              statusData.owner, statusData.phone, statusData.number, 
+              statusData.user, statusData.profileName, statusData.wid
+            ].filter(Boolean);
+            
+            if (userIndicators.length > 0) {
+              connectionState = 'open';
+              newWhatsAppUser = userIndicators[0];
+            } else {
+              connectionState = 'disconnected';
             }
           }
           
           console.log(`Connection ${connection.nomeinstancia}:`);
-          console.log(`- State: ${connectionState}`);
-          console.log(`- User: ${newWhatsAppUser}`);
+          console.log(`- State detected: ${connectionState}`);
+          console.log(`- User detected: ${newWhatsAppUser}`);
           console.log(`- Current DB value: ${connection.whatsappuser}`);
           
           // Update database if status changed
@@ -439,22 +476,49 @@ async function checkConnectionStatus(instanceName: string, supabaseClient: any) 
     let whatsappUser = null;
     let connectionState = 'disconnected';
     
+    console.log(`Raw response structure:`, {
+      hasInstance: !!statusData.instance,
+      hasState: !!statusData.state,
+      instanceState: statusData.instance?.state,
+      directState: statusData.state,
+      keys: Object.keys(statusData),
+      fullData: statusData
+    });
+    
     // Try different response formats from Evolution API
     if (statusData.instance) {
       connectionState = statusData.instance.state || 'disconnected';
-      if (statusData.instance.state === 'open') {
+      // Multiple ways to detect connection and get user info
+      if (statusData.instance.state === 'open' || statusData.instance.state === 'connected') {
         whatsappUser = statusData.instance.owner || 
                       statusData.instance.phone || 
                       statusData.instance.number ||
-                      statusData.instance.user;
+                      statusData.instance.user ||
+                      statusData.instance.profileName ||
+                      statusData.instance.wid ||
+                      'Conectado';
       }
     } else if (statusData.state) {
       connectionState = statusData.state || 'disconnected';
-      if (statusData.state === 'open') {
+      if (statusData.state === 'open' || statusData.state === 'connected') {
         whatsappUser = statusData.owner || 
                       statusData.phone || 
                       statusData.number ||
-                      statusData.user;
+                      statusData.user ||
+                      statusData.profileName ||
+                      statusData.wid ||
+                      'Conectado';
+      }
+    } else {
+      // Fallback: try to detect connection by presence of user data
+      const userIndicators = [
+        statusData.owner, statusData.phone, statusData.number, 
+        statusData.user, statusData.profileName, statusData.wid
+      ].filter(Boolean);
+      
+      if (userIndicators.length > 0) {
+        connectionState = 'open';
+        whatsappUser = userIndicators[0];
       }
     }
     
