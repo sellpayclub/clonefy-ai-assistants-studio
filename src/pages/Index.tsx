@@ -18,6 +18,13 @@ const Index = () => {
     t('hero.roles.funcionario')
   ];
 
+  const scrollToPricing = () => {
+    const pricingSection = document.getElementById('pricing-section');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   useEffect(() => {
     // Força modo claro na página de vendas
     setTheme("light");
@@ -109,14 +116,21 @@ const Index = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10 sm:mb-12 max-w-md sm:max-w-none mx-auto">
-            <a href="https://pay.plataformasellpay.com.br/checkout-white-6917/?add-to-cart=6917" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 px-8 py-4 text-lg font-semibold">
-                <span className="sm:hidden">Criar Agente</span>
-                <span className="hidden sm:inline">{t('hero.createAssistant')}</span>
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </a>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto px-8 py-4 text-lg font-semibold">
+            <Button 
+              size="lg" 
+              onClick={scrollToPricing}
+              className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 px-8 py-4 text-lg font-semibold"
+            >
+              <span className="sm:hidden">Ver Preços</span>
+              <span className="hidden sm:inline">Ver Preços</span>
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              onClick={scrollToPricing}
+              className="w-full sm:w-auto px-8 py-4 text-lg font-semibold"
+            >
               <span className="sm:hidden">Ver Demo</span>
               <span className="hidden sm:inline">{t('hero.watchDemo')}</span>
             </Button>
@@ -379,13 +393,15 @@ const Index = () => {
               Em menos de 10 minutos você pode ter seu próprio agente de IA funcionando. 
               Sem programação, sem complicação.
             </p>
-            <a href="https://pay.plataformasellpay.com.br/checkout-white-6917/?add-to-cart=6917" target="_blank" rel="noopener noreferrer">
-              <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 px-8 sm:px-12 py-4 sm:py-6 text-lg sm:text-xl font-semibold">
-                <span className="sm:hidden">Criar Agente</span>
-                <span className="hidden sm:inline">Criar Meu Primeiro Agente Agora</span>
-                <ArrowRight className="ml-2 h-5 w-5 sm:h-6 sm:w-6" />
-              </Button>
-            </a>
+            <Button 
+              size="lg" 
+              onClick={scrollToPricing}
+              className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 px-8 sm:px-12 py-4 sm:py-6 text-lg sm:text-xl font-semibold"
+            >
+              <span className="sm:hidden">Ver Preços</span>
+              <span className="hidden sm:inline">Ver Preços Agora</span>
+              <ArrowRight className="ml-2 h-5 w-5 sm:h-6 sm:w-6" />
+            </Button>
           </div>
         </div>
       </section>
@@ -463,7 +479,7 @@ const Index = () => {
       </section>
 
       {/* Pricing Section */}
-      <section className="container mx-auto px-4 py-12 sm:py-16 lg:py-20">
+      <section id="pricing-section" className="container mx-auto px-4 py-12 sm:py-16 lg:py-20">
         <div className="text-center mb-12 sm:mb-16">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 px-2">{t('pricing.title')}</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg px-2">
