@@ -33,62 +33,70 @@ const Dashboard = () => {
   // Estado para forçar atualizações
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Optimized stats loading usando consulta direta com estado forçado
-  const { data: stats, isLoading, refetch } = useOptimizedQuery({
-    queryKey: ['dashboard-stats', user?.id, refreshKey.toString()],
-    queryFn: async () => {
-      if (!user) {
-        console.log('Usuário não definido');
-        return { assistants: 0, connections: 0, conversations: 0, messages: 0 };
+  // Estado para armazenar dados diretamente sem cache
+  const [stats, setStats] = useState<DashboardStats>({ assistants: 0, connections: 0, conversations: 0, messages: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Função para carregar dados sempre frescos
+  const loadDashboardData = useCallback(async () => {
+    if (!user) {
+      console.log('Usuário não definido');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      console.log('=== CARREGANDO DASHBOARD ===');
+      console.log('User ID:', user.id);
+      
+      // Consulta direta e simples para agentes ativos
+      const { data: assistantsData, error: assistantsError } = await supabase
+        .from('assistants')
+        .select('is_active')
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+      
+      if (assistantsError) {
+        console.error('Erro ao buscar agentes:', assistantsError);
+      }
+      
+      // Consulta direta para conexões WhatsApp
+      const { data: connectionsData, error: connectionsError } = await supabase
+        .from('whatsapp_connections')
+        .select('id')
+        .eq('user_id', user.id);
+      
+      if (connectionsError) {
+        console.error('Erro ao buscar conexões:', connectionsError);
       }
 
-      try {
-        console.log('=== CARREGANDO DASHBOARD ===');
-        console.log('User ID:', user.id);
-        
-        // Consulta direta e simples para agentes ativos
-        const { data: assistantsData, error: assistantsError } = await supabase
-          .from('assistants')
-          .select('is_active')
-          .eq('user_id', user.id)
-          .eq('is_active', true);
-        
-        if (assistantsError) {
-          console.error('Erro ao buscar agentes:', assistantsError);
-        }
-        
-        // Consulta direta para conexões WhatsApp
-        const { data: connectionsData, error: connectionsError } = await supabase
-          .from('whatsapp_connections')
-          .select('id')
-          .eq('user_id', user.id);
-        
-        if (connectionsError) {
-          console.error('Erro ao buscar conexões:', connectionsError);
-        }
+      const result = {
+        assistants: assistantsData?.length || 0,
+        connections: connectionsData?.length || 0,
+        conversations: 0,
+        messages: 0
+      };
 
-        const result = {
-          assistants: assistantsData?.length || 0,
-          connections: connectionsData?.length || 0,
-          conversations: 0,
-          messages: 0
-        };
+      console.log('=== RESULTADO DASHBOARD ===');
+      console.log('Agentes ativos:', result.assistants);
+      console.log('Conexões WhatsApp:', result.connections);
+      console.log('============================');
+      
+      setStats(result);
+    } catch (error) {
+      console.error('Erro crítico no dashboard:', error);
+      setStats({ assistants: 0, connections: 0, conversations: 0, messages: 0 });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
 
-        console.log('=== RESULTADO DASHBOARD ===');
-        console.log('Agentes ativos:', result.assistants);
-        console.log('Conexões WhatsApp:', result.connections);
-        console.log('============================');
-        
-        return result;
-      } catch (error) {
-        console.error('Erro crítico no dashboard:', error);
-        return { assistants: 0, connections: 0, conversations: 0, messages: 0 };
-      }
-    },
-    enabled: !!user && !limitsLoading,
-    staleTime: 0, // Sempre buscar dados frescos
-    refetchOnWindowFocus: true,
-  });
+  // Carregar dados quando user ou refreshKey mudarem
+  useEffect(() => {
+    if (user && !limitsLoading) {
+      loadDashboardData();
+    }
+  }, [user, limitsLoading, refreshKey, loadDashboardData]);
 
   // Optimized auth state management
   useEffect(() => {
