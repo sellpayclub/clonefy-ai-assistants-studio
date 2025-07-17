@@ -12,6 +12,7 @@ import AppSidebar from "@/components/AppSidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import SupportChatWidget from "@/components/SupportChatWidget";
+import { useOptimizedQuery } from "@/hooks/useOptimizedQuery";
 
 interface DashboardStats {
   assistants: number;
@@ -23,65 +24,63 @@ interface DashboardStats {
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<DashboardStats>({
-    assistants: 0,
-    connections: 0,
-    conversations: 0,
-    messages: 0
-  });
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  const loadDashboardStats = useCallback(async (currentUser?: User) => {
-    const userToUse = currentUser || user;
-    if (!userToUse) return;
+  // Optimized stats loading using React Query
+  const { data: stats = { assistants: 0, connections: 0, conversations: 0, messages: 0 }, isLoading } = useOptimizedQuery({
+    queryKey: ['dashboard-stats', user?.id],
+    queryFn: async () => {
+      if (!user) return { assistants: 0, connections: 0, conversations: 0, messages: 0 };
 
-    try {
-      // Parallel requests for better performance
-      const [assistantsResult, connectionsResult, conversationsResult] = await Promise.all([
-        supabase
-          .from('assistants')
-          .select('*', { count: 'exact' })
-          .eq('user_id', userToUse.id)
-          .eq('is_active', true),
-        supabase
-          .from('n8n_fluxogpt')
-          .select('*', { count: 'exact' })
-          .eq('emailuser', userToUse.email),
-        supabase
-          .from('conversations')
-          .select('*', { count: 'exact' })
-          .eq('user_id', userToUse.id)
-          .eq('is_active', true)
-      ]);
+      try {
+        // Parallel requests for better performance
+        const [assistantsResult, connectionsResult, conversationsResult] = await Promise.all([
+          supabase
+            .from('assistants')
+            .select('*', { count: 'exact' })
+            .eq('user_id', user.id)
+            .eq('is_active', true),
+          supabase
+            .from('n8n_fluxogpt')
+            .select('*', { count: 'exact' })
+            .eq('emailuser', user.email),
+          supabase
+            .from('conversations')
+            .select('*', { count: 'exact' })
+            .eq('user_id', user.id)
+            .eq('is_active', true)
+        ]);
 
-      // Get messages count only if there are conversations
-      let messagesCount = 0;
-      if (conversationsResult.data && conversationsResult.data.length > 0) {
-        const conversationIds = conversationsResult.data.map(c => c.id);
-        const { count: totalMessages } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact' })
-          .in('conversation_id', conversationIds);
-        messagesCount = totalMessages || 0;
+        // Get messages count only if there are conversations
+        let messagesCount = 0;
+        if (conversationsResult.data && conversationsResult.data.length > 0) {
+          const conversationIds = conversationsResult.data.map(c => c.id);
+          const { count: totalMessages } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact' })
+            .in('conversation_id', conversationIds);
+          messagesCount = totalMessages || 0;
+        }
+
+        return {
+          assistants: assistantsResult.count || 0,
+          connections: connectionsResult.count || 0,
+          conversations: conversationsResult.count || 0,
+          messages: messagesCount
+        };
+      } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+        return { assistants: 0, connections: 0, conversations: 0, messages: 0 };
       }
+    },
+    enabled: !!user,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchOnWindowFocus: true,
+  });
 
-      const newStats = {
-        assistants: assistantsResult.count || 0,
-        connections: connectionsResult.count || 0,
-        conversations: conversationsResult.count || 0,
-        messages: messagesCount
-      };
-
-      setStats(newStats);
-
-    } catch (error) {
-      console.error('Error loading dashboard stats:', error);
-    }
-  }, [user]);
-
+  // Optimized auth state management
   useEffect(() => {
     let isMounted = true;
 
@@ -98,15 +97,6 @@ const Dashboard = () => {
               navigate('/auth');
               return;
             }
-
-            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-              setTimeout(async () => {
-                if (isMounted) {
-                  await loadDashboardStats(session?.user);
-                  setLoading(false);
-                }
-              }, 100);
-            }
           }
         );
 
@@ -121,16 +111,12 @@ const Dashboard = () => {
           navigate('/auth');
           return;
         }
-        
-        await loadDashboardStats(session?.user);
-        setLoading(false);
 
         return () => {
           subscription.unsubscribe();
         };
       } catch (error) {
         console.error('Erro na inicialização Dashboard:', error);
-        setLoading(false);
       }
     };
 
@@ -139,35 +125,21 @@ const Dashboard = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [navigate]);
 
-  // Memoized auto-refresh with cleanup
-  useEffect(() => {
-    if (!user) return;
-
-    const interval = setInterval(() => {
-      loadDashboardStats(user);
-    }, 60000); // Increased to 60 seconds for better performance
-
-    return () => clearInterval(interval);
-  }, [user, loadDashboardStats]);
-
+  // Memoized sign out handler
   const handleSignOut = useCallback(async () => {
     try {
-      // Clean up auth state first
       cleanupAuthState();
       
-      // Attempt global sign out (ignore errors)
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
         console.warn('Error during signOut:', err);
       }
       
-      // Force clean page reload for a fresh state
       forceCleanReload('/auth');
     } catch (error: any) {
-      // Even if there are errors, clean up and redirect
       cleanupAuthState();
       toast({
         title: t("auth.signOutError"),
@@ -176,9 +148,16 @@ const Dashboard = () => {
       });
       forceCleanReload('/auth');
     }
-  }, [toast]);
+  }, [toast, t]);
 
-  if (loading) {
+  // Memoized navigation handlers to prevent unnecessary re-renders
+  const navigationHandlers = useMemo(() => ({
+    toAssistants: () => navigate('/assistants'),
+    toWhatsApp: () => navigate('/whatsapp'),
+    toConversations: () => navigate('/conversations'),
+  }), [navigate]);
+
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -242,7 +221,7 @@ const Dashboard = () => {
 
           {/* Quick Actions - Melhor responsividade */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            <Card className="group cursor-pointer hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-card to-muted/20 border-border/50" onClick={() => navigate('/assistants')}>
+            <Card className="group cursor-pointer hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-card to-muted/20 border-border/50" onClick={navigationHandlers.toAssistants}>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow group-hover:scale-110 transition-transform">
@@ -255,14 +234,14 @@ const Dashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <Button className="w-full bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary shadow-lg hover:shadow-xl transition-all group-hover:scale-105" onClick={() => navigate('/assistants')}>
+                <Button className="w-full bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary shadow-lg hover:shadow-xl transition-all group-hover:scale-105" onClick={navigationHandlers.toAssistants}>
                   <Plus className="h-4 w-4 mr-2" />
                   {t("dashboard.quickActions.createAgent.button")}
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="group cursor-pointer hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-card to-muted/20 border-border/50" onClick={() => navigate('/whatsapp')}>
+            <Card className="group cursor-pointer hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-card to-muted/20 border-border/50" onClick={navigationHandlers.toWhatsApp}>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary to-secondary/80 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
@@ -275,14 +254,14 @@ const Dashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <Button className="w-full bg-gradient-to-r from-secondary/80 to-muted hover:from-primary/20 hover:to-primary/10 border border-primary/20 transition-all group-hover:scale-105" variant="outline" onClick={() => navigate('/whatsapp')}>
+                <Button className="w-full bg-gradient-to-r from-secondary/80 to-muted hover:from-primary/20 hover:to-primary/10 border border-primary/20 transition-all group-hover:scale-105" variant="outline" onClick={navigationHandlers.toWhatsApp}>
                   <Plus className="h-4 w-4 mr-2" />
                   {t("dashboard.quickActions.connectWhatsApp.button")}
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="group cursor-pointer hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-card to-muted/20 border-border/50" onClick={() => navigate('/conversations')}>
+            <Card className="group cursor-pointer hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-card to-muted/20 border-border/50" onClick={navigationHandlers.toConversations}>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
@@ -295,7 +274,7 @@ const Dashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <Button className="w-full bg-gradient-to-r from-accent/80 to-muted hover:from-primary/30 hover:to-primary/20 border border-primary/30 transition-all group-hover:scale-105" variant="secondary" onClick={() => navigate('/conversations')}>
+                <Button className="w-full bg-gradient-to-r from-accent/80 to-muted hover:from-primary/30 hover:to-primary/20 border border-primary/30 transition-all group-hover:scale-105" variant="secondary" onClick={navigationHandlers.toConversations}>
                   <MessageSquare className="h-4 w-4 mr-2" />
                   {t("dashboard.quickActions.startChat.button")}
                 </Button>

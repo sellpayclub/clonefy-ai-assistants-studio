@@ -1,4 +1,4 @@
-import { useState, useEffect, memo } from "react";
+import { useState, useEffect, memo, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from '@supabase/supabase-js';
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import SupportChatWidget from "@/components/SupportChatWidget";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { AssistantTemplates } from "@/components/AssistantTemplates";
+import { OptimizedAssistantCard } from "@/components/OptimizedAssistantCard";
+import { useOptimizedQuery } from "@/hooks/useOptimizedQuery";
 
 interface Assistant {
   id: string;

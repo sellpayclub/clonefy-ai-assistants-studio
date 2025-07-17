@@ -1,75 +1,81 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useOptimizedQuery } from './useOptimizedQuery';
 
-export interface UserLimits {
+interface UserLimits {
   max_assistants: number;
   max_whatsapp_connections: number;
   current_assistants: number;
   current_whatsapp_connections: number;
   can_create_assistant: boolean;
   can_create_whatsapp_connection: boolean;
+  plan_type: string;
 }
 
 export const useUserLimits = () => {
-  const [limits, setLimits] = useState<UserLimits | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
 
-  const loadLimits = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      // Get current user
+  // Get current user optimized
+  useEffect(() => {
+    const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Parallel requests for better performance
-      const [quotaResult, assistantsResult, connectionsResult] = await Promise.all([
-        (supabase as any)
-          .from('user_quotas')
-          .select('max_assistants, max_whatsapp_connections')
-          .eq('user_id', user.id)
-          .single(),
-        supabase
-          .from('assistants')
-          .select('id')
-          .eq('user_id', user.id),
-        supabase
-          .from('whatsapp_connections')
-          .select('id')
-          .eq('user_id', user.id)
-      ]);
-
-      const maxAssistants = quotaResult.data?.max_assistants || 1;
-      const maxConnections = quotaResult.data?.max_whatsapp_connections || 1;
-      const currentAssistants = assistantsResult.data?.length || 0;
-      const currentConnections = connectionsResult.data?.length || 0;
-
-      setLimits({
-        max_assistants: maxAssistants,
-        max_whatsapp_connections: maxConnections,
-        current_assistants: currentAssistants,
-        current_whatsapp_connections: currentConnections,
-        can_create_assistant: currentAssistants < maxAssistants,
-        can_create_whatsapp_connection: currentConnections < maxConnections,
-      });
-    } catch (error) {
-      console.error('Error loading user limits:', error);
-    } finally {
-      setLoading(false);
-    }
+      setUser(user);
+    };
+    getCurrentUser();
   }, []);
 
-  useEffect(() => {
-    loadLimits();
-  }, [loadLimits]);
+  // Optimized query for user limits using React Query
+  const { data: limits, isLoading, refetch } = useOptimizedQuery({
+    queryKey: ['user-limits', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
 
+      const { data, error } = await supabase.rpc('get_user_usage_stats', {
+        target_user_id: user.id
+      });
+
+      if (error) {
+        console.error('Error fetching user limits:', error);
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        return {
+          max_assistants: 1,
+          max_whatsapp_connections: 1,
+          current_assistants: 0,
+          current_whatsapp_connections: 0,
+          can_create_assistant: true,
+          can_create_whatsapp_connection: true,
+          plan_type: 'free'
+        };
+      }
+
+      const userData = data[0];
+      return {
+        max_assistants: userData.max_assistants,
+        max_whatsapp_connections: userData.max_whatsapp_connections,
+        current_assistants: userData.current_assistants,
+        current_whatsapp_connections: userData.current_whatsapp_connections,
+        can_create_assistant: userData.current_assistants < userData.max_assistants,
+        can_create_whatsapp_connection: userData.current_whatsapp_connections < userData.max_whatsapp_connections,
+        plan_type: userData.plan_type
+      };
+    },
+    enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000, // 2 minutes - fresher data for limits
+    cacheTime: 5 * 60 * 1000, // 5 minutes cache
+  });
+
+  // Memoized reload function
   const reloadLimits = useCallback(() => {
-    return loadLimits();
-  }, [loadLimits]);
+    return refetch();
+  }, [refetch]);
 
+  // Return memoized result to prevent unnecessary re-renders
   return useMemo(() => ({ 
     limits, 
-    loading, 
+    loading: isLoading, 
     reloadLimits 
-  }), [limits, loading, reloadLimits]);
+  }), [limits, isLoading, reloadLimits]);
 };
