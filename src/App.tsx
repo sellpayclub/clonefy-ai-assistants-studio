@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import EmbedChat from "./pages/EmbedChat";
 import NotFound from "./pages/NotFound";
+import ThankYou from "./pages/ThankYou";
 
 // Lazy load heavy components for better performance
 const LazyAssistants = lazy(() => import("./pages/Assistants"));
@@ -68,6 +69,7 @@ const App = () => (
               </Suspense>
              } />
              <Route path="/embed/chat/:agentId" element={<EmbedChat />} />
+             <Route path="/thank-you" element={<ThankYou />} />
              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
              <Route path="*" element={<NotFound />} />
           </Routes>
