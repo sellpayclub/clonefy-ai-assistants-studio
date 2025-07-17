@@ -56,7 +56,6 @@ const Index = () => {
               alt="CLONEFY Logo" 
               className="h-16 w-auto sm:h-16 lg:h-20 xl:h-24"
               loading="eager"
-              fetchPriority="high"
             />
           </div>
           <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
