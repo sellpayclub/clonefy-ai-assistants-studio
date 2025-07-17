@@ -53,7 +53,11 @@ export default {
       description: "¡Tus clientes y Leads respondidos rápidamente en cualquier momento! Toma el control y supervisa todo lo que dice la IA."
   },
   assistants: {
-    used: "agentes utilizados"
+    used: "agentes utilizados",
+    files: {
+      title: "Archivos del Agente",
+      description: "Añade imágenes, videos y documentos que la IA podrá enviar automáticamente en las conversaciones de WhatsApp."
+    }
   }
   },
 
@@ -194,6 +198,7 @@ export default {
     next: "Siguiente",
     previous: "Anterior",
     loading: "Cargando...",
+    reload: "Recargar",
     error: "Error",
     success: "Éxito"
   }

@@ -330,7 +330,7 @@ const Assistants = () => {
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Button onClick={loadAssistants} variant="outline" size="sm" className="w-full sm:w-auto text-sm">
                 <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                Recarregar
+                {t("common.reload")}
               </Button>
               <Button 
                 onClick={openCreateDialog}
@@ -338,7 +338,7 @@ const Assistants = () => {
                 className="w-full sm:w-auto text-sm"
               >
                 <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                Novo Agente
+                {t("dashboard.quickActions.createAgent.button")}
               </Button>
               {limits && !limits.can_create_assistant && (
                 <Button 
@@ -500,10 +500,10 @@ const Assistants = () => {
                   {editingAssistant && (
                     <div>
                       <h3 className="text-lg font-medium mb-4">
-                        Arquivos do Agente
+                        {t("assistants.files.title")}
                       </h3>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Adicione imagens, vídeos e documentos que a IA poderá enviar automaticamente nas conversas do WhatsApp.
+                        {t("assistants.files.description")}
                       </p>
                       <AssistantMediaUpload 
                         assistantId={editingAssistant.id}
