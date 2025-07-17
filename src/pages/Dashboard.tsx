@@ -13,7 +13,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import SupportChatWidget from "@/components/SupportChatWidget";
 import { useUserLimits } from "@/hooks/useUserLimits";
-import { useOptimizedQuery } from "@/hooks/useOptimizedQuery";
 
 interface DashboardStats {
   assistants: number;
@@ -30,10 +29,7 @@ const Dashboard = () => {
   const { t } = useLanguage();
   const { limits, loading: limitsLoading } = useUserLimits();
   
-  // Estado para forçar atualizações
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  // Estado para armazenar dados diretamente sem cache
+  // Estado para dados sempre frescos
   const [stats, setStats] = useState<DashboardStats>({ assistants: 0, connections: 0, conversations: 0, messages: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -44,12 +40,11 @@ const Dashboard = () => {
       return;
     }
 
-    setIsLoading(true);
     try {
       console.log('=== CARREGANDO DASHBOARD ===');
       console.log('User ID:', user.id);
       
-      // Consulta direta e simples para agentes ativos
+      // Consulta direta para agentes ativos
       const { data: assistantsData, error: assistantsError } = await supabase
         .from('assistants')
         .select('is_active')
@@ -80,6 +75,7 @@ const Dashboard = () => {
       console.log('=== RESULTADO DASHBOARD ===');
       console.log('Agentes ativos:', result.assistants);
       console.log('Conexões WhatsApp:', result.connections);
+      console.log('Limites carregados:', limits);
       console.log('============================');
       
       setStats(result);
@@ -89,14 +85,62 @@ const Dashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, limits]);
 
-  // Carregar dados quando user ou refreshKey mudarem
+  // Carregar dados quando user estiver disponível
   useEffect(() => {
     if (user && !limitsLoading) {
       loadDashboardData();
     }
-  }, [user, limitsLoading, refreshKey, loadDashboardData]);
+  }, [user, limitsLoading, loadDashboardData]);
+
+  // Setup realtime subscriptions para atualizações automáticas
+  useEffect(() => {
+    if (!user) return;
+
+    console.log('=== CONFIGURANDO REALTIME ===');
+    
+    // Subscription para assistants
+    const assistantsChannel = supabase
+      .channel('assistants-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'assistants',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Mudança detectada em assistants:', payload);
+          loadDashboardData();
+        }
+      )
+      .subscribe();
+
+    // Subscription para whatsapp_connections
+    const connectionsChannel = supabase
+      .channel('connections-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'whatsapp_connections',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Mudança detectada em conexões:', payload);
+          loadDashboardData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(assistantsChannel);
+      supabase.removeChannel(connectionsChannel);
+    };
+  }, [user, loadDashboardData]);
 
   // Optimized auth state management
   useEffect(() => {
