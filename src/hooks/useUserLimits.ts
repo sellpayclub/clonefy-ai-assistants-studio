@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface UserLimits {
@@ -12,31 +12,23 @@ interface UserLimits {
 }
 
 export const useUserLimits = () => {
-  const [user, setUser] = useState<any>(null);
   const [limits, setLimits] = useState<UserLimits | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Get current user
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    getCurrentUser();
-  }, []);
-
   // Load limits directly
   const loadLimits = useCallback(async () => {
-    if (!user?.id) {
-      setLoading(false);
-      return;
-    }
-
-    console.log('=== CARREGANDO LIMITES ===');
-    console.log('User ID:', user.id);
-
     try {
       setLoading(true);
+
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
+      console.log('=== CARREGANDO LIMITES ===');
+      console.log('User ID:', user.id);
 
       // Buscar quotas do usuário
       const { data: quotaData, error: quotaError } = await supabase
@@ -56,6 +48,7 @@ export const useUserLimits = () => {
           can_create_whatsapp_connection: true,
           plan_type: 'free'
         });
+        setLoading(false);
         return;
       }
 
@@ -116,23 +109,17 @@ export const useUserLimits = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, []);
 
-  // Carregar quando user mudar
+  // Carregar na inicialização
   useEffect(() => {
-    if (user) {
-      loadLimits();
-    }
-  }, [user, loadLimits]);
+    loadLimits();
+  }, [loadLimits]);
 
   // Função para recarregar limites
   const reloadLimits = useCallback(() => {
     return loadLimits();
   }, [loadLimits]);
 
-  return useMemo(() => ({ 
-    limits, 
-    loading, 
-    reloadLimits 
-  }), [limits, loading, reloadLimits]);
+  return { limits, loading, reloadLimits };
 };
