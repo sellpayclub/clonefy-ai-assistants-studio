@@ -44,7 +44,7 @@ const Dashboard = () => {
 
         if (error) throw error;
 
-        // Get additional stats in parallel
+        // Get additional stats in parallel  
         const [conversationsResult] = await Promise.all([
           supabase
             .from('conversations')
