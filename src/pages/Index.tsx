@@ -139,6 +139,17 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Video de Depoimentos */}
+      <section className="container mx-auto px-4 py-8 sm:py-12 lg:py-16">
+        <div className="text-center mb-8">
+          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">Veja Como Funciona na Prática</h3>
+        </div>
+        
+        <div className="max-w-4xl mx-auto">
+          <YouTubePlayer />
+        </div>
+      </section>
+
       {/* Demo Section */}
       <section className="container mx-auto px-4 py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-primary/5 to-transparent">
         <div className="text-center mb-16 sm:mb-20">
@@ -146,17 +157,6 @@ const Index = () => {
           <p className="text-muted-foreground max-w-3xl mx-auto text-lg sm:text-xl">
             Veja na prática como criar e configurar seus agentes de IA em poucos cliques
           </p>
-        </div>
-
-        {/* Video de Depoimentos */}
-        <div className="mb-20 sm:mb-24">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">Veja Como Funciona na Prática</h3>
-          </div>
-          
-          <div className="max-w-4xl mx-auto">
-            <YouTubePlayer />
-          </div>
         </div>
         
         <div className="space-y-20 sm:space-y-24">
