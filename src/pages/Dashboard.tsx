@@ -37,7 +37,16 @@ const Dashboard = () => {
       if (!user) return { assistants: 0, connections: 0, conversations: 0, messages: 0 };
 
       try {
+        console.log('=== DASHBOARD DEBUG START ===');
         console.log('Loading dashboard stats for user:', user.id);
+        
+        // Verificar primeiro se o usuário tem permissões
+        const { data: testQuery, error: testError } = await supabase
+          .from('assistants')
+          .select('id, name, is_active')
+          .eq('user_id', user.id);
+        
+        console.log('Direct assistants query:', { testQuery, testError });
         
         // Use the same RPC function to get actual data
         const { data: userStats, error } = await supabase.rpc('get_user_usage_stats', {
@@ -61,7 +70,8 @@ const Dashboard = () => {
         ]);
 
         const currentStats = userStats?.[0];
-        console.log('Current stats:', currentStats);
+        console.log('Current stats from RPC:', currentStats);
+        console.log('Conversations count:', conversationsResult.count);
 
         const result = {
           assistants: Number(currentStats?.current_assistants) || 0,
@@ -71,6 +81,7 @@ const Dashboard = () => {
         };
 
         console.log('Final dashboard stats:', result);
+        console.log('=== DASHBOARD DEBUG END ===');
         return result;
       } catch (error) {
         console.error('Error loading dashboard stats:', error);
@@ -78,7 +89,7 @@ const Dashboard = () => {
       }
     },
     enabled: !!user,
-    staleTime: 30 * 1000, // 30 seconds - mais fresco
+    staleTime: 1000, // 1 segundo para forçar atualizações mais frequentes
     refetchOnWindowFocus: true,
   });
 
