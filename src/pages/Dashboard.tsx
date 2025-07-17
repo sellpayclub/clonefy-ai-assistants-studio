@@ -202,8 +202,8 @@ const Dashboard = () => {
                 <div className="text-xl sm:text-2xl font-bold">{stats.assistants}</div>
                 <p className="text-xs text-muted-foreground">
                   {limits ? (
-                    <span className={limits.can_create_assistant ? "text-green-600" : "text-red-600"}>
-                      {stats.assistants}/{limits.max_assistants} ativos (limite: {limits.max_assistants})
+                    <span className="text-green-600">
+                      {stats.assistants}/{limits.max_assistants} agentes utilizados
                     </span>
                   ) : (
                     t("dashboard.stats.agentsDesc")
@@ -221,8 +221,8 @@ const Dashboard = () => {
                 <div className="text-xl sm:text-2xl font-bold">{stats.connections}</div>
                 <p className="text-xs text-muted-foreground">
                   {limits ? (
-                    <span className={limits.can_create_whatsapp_connection ? "text-green-600" : "text-red-600"}>
-                      {stats.connections}/{limits.max_whatsapp_connections} conexões (limite: {limits.max_whatsapp_connections})
+                    <span className="text-green-600">
+                      {stats.connections}/{limits.max_whatsapp_connections} conexões utilizadas
                     </span>
                   ) : (
                     t("dashboard.stats.connectionsDesc")
