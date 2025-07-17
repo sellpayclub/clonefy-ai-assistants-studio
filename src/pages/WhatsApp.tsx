@@ -467,43 +467,6 @@ const WhatsApp = () => {
     }
   };
 
-  const testAPI = async () => {
-    // Get current session
-    let currentSession = session;
-    if (!currentSession) {
-      const { data } = await supabase.auth.getSession();
-      currentSession = data.session;
-    }
-
-    if (!currentSession) {
-      console.error('Sem sessão válida para testar API');
-      return;
-    }
-
-    try {
-      const response = await supabase.functions.invoke('whatsapp-evolution', {
-        body: { action: 'test_api' },
-        headers: { Authorization: `Bearer ${currentSession.access_token}` },
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message || 'Erro no teste da API');
-      }
-
-      toast({
-        title: "Teste da API Evolution",
-        description: `Status: ${response.data.status} - ${response.data.success ? 'Sucesso' : 'Falhou'}`,
-        variant: response.data.success ? "default" : "destructive",
-      });
-    } catch (error: any) {
-      console.error('Error testing API:', error);
-      toast({
-        title: "Erro no teste da API",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
 
   const checkIndividualStatus = async (connection: WhatsAppConnection) => {
     // Get current session
@@ -595,10 +558,6 @@ const WhatsApp = () => {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
-              <Button onClick={testAPI} variant="outline" size="sm" className="w-full sm:w-auto">
-                <CheckCircle className="h-4 w-4 mr-1" />
-                Testar API
-              </Button>
               <Button onClick={loadData} variant="outline" size="sm" className="w-full sm:w-auto">
                 <RefreshCw className="h-4 w-4 mr-1" />
                 Atualizar

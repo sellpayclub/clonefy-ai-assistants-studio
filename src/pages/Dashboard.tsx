@@ -29,60 +29,64 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { limits, loading: limitsLoading } = useUserLimits();
+  
+  // Estado para forçar atualizações
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Optimized stats loading using React Query
-  const { data: stats = { assistants: 0, connections: 0, conversations: 0, messages: 0 }, isLoading } = useOptimizedQuery({
-    queryKey: ['dashboard-stats', user?.id],
+  // Optimized stats loading usando consulta direta com estado forçado
+  const { data: stats, isLoading, refetch } = useOptimizedQuery({
+    queryKey: ['dashboard-stats', user?.id, refreshKey.toString()],
     queryFn: async () => {
-      if (!user) return { assistants: 0, connections: 0, conversations: 0, messages: 0 };
+      if (!user) {
+        console.log('Usuário não definido');
+        return { assistants: 0, connections: 0, conversations: 0, messages: 0 };
+      }
 
       try {
-        console.log('=== DASHBOARD DEBUG START ===');
-        console.log('Loading dashboard stats for user:', user.id);
+        console.log('=== CARREGANDO DASHBOARD ===');
+        console.log('User ID:', user.id);
         
-        // Usar consulta direta primeiro para garantir que temos dados
+        // Consulta direta e simples para agentes ativos
         const { data: assistantsData, error: assistantsError } = await supabase
           .from('assistants')
-          .select('id, is_active')
-          .eq('user_id', user.id);
+          .select('is_active')
+          .eq('user_id', user.id)
+          .eq('is_active', true);
         
-        console.log('Direct assistants query:', { assistantsData, assistantsError });
+        if (assistantsError) {
+          console.error('Erro ao buscar agentes:', assistantsError);
+        }
         
+        // Consulta direta para conexões WhatsApp
         const { data: connectionsData, error: connectionsError } = await supabase
           .from('whatsapp_connections')
           .select('id')
           .eq('user_id', user.id);
         
-        console.log('Direct connections query:', { connectionsData, connectionsError });
-
-        // Contar agentes ativos
-        const activeAssistants = assistantsData?.filter(a => a.is_active === true)?.length || 0;
-        const totalConnections = connectionsData?.length || 0;
-
-        // Get conversation count
-        const { count: conversationsCount } = await supabase
-          .from('conversations')
-          .select('*', { count: 'exact' })
-          .eq('user_id', user.id)
-          .eq('is_active', true);
+        if (connectionsError) {
+          console.error('Erro ao buscar conexões:', connectionsError);
+        }
 
         const result = {
-          assistants: activeAssistants,
-          connections: totalConnections,
-          conversations: conversationsCount || 0,
+          assistants: assistantsData?.length || 0,
+          connections: connectionsData?.length || 0,
+          conversations: 0,
           messages: 0
         };
 
-        console.log('Final dashboard stats:', result);
-        console.log('=== DASHBOARD DEBUG END ===');
+        console.log('=== RESULTADO DASHBOARD ===');
+        console.log('Agentes ativos:', result.assistants);
+        console.log('Conexões WhatsApp:', result.connections);
+        console.log('============================');
+        
         return result;
       } catch (error) {
-        console.error('Error loading dashboard stats:', error);
+        console.error('Erro crítico no dashboard:', error);
         return { assistants: 0, connections: 0, conversations: 0, messages: 0 };
       }
     },
-    enabled: !!user,
-    staleTime: 1000, // 1 segundo para forçar atualizações mais frequentes
+    enabled: !!user && !limitsLoading,
+    staleTime: 0, // Sempre buscar dados frescos
     refetchOnWindowFocus: true,
   });
 
@@ -163,6 +167,9 @@ const Dashboard = () => {
     toConversations: () => navigate('/conversations'),
   }), [navigate]);
 
+  // Fallback para garantir que stats sempre existe
+  const safeStats = stats || { assistants: 0, connections: 0, conversations: 0, messages: 0 };
+
   if (isLoading || limitsLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -203,11 +210,11 @@ const Dashboard = () => {
                 <Bot className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-xl sm:text-2xl font-bold">{stats.assistants}</div>
+                <div className="text-xl sm:text-2xl font-bold">{safeStats.assistants}</div>
                 <p className="text-xs text-muted-foreground">
                   {limits ? (
                     <span className="text-green-600">
-                      {stats.assistants}/{limits.max_assistants} agentes utilizados
+                      {safeStats.assistants}/{limits.max_assistants} agentes utilizados
                     </span>
                   ) : (
                     t("dashboard.stats.agentsDesc")
@@ -222,11 +229,11 @@ const Dashboard = () => {
                 <Smartphone className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-xl sm:text-2xl font-bold">{stats.connections}</div>
+                <div className="text-xl sm:text-2xl font-bold">{safeStats.connections}</div>
                 <p className="text-xs text-muted-foreground">
                   {limits ? (
                     <span className="text-green-600">
-                      {stats.connections}/{limits.max_whatsapp_connections} conexões utilizadas
+                      {safeStats.connections}/{limits.max_whatsapp_connections} conexões utilizadas
                     </span>
                   ) : (
                     t("dashboard.stats.connectionsDesc")
