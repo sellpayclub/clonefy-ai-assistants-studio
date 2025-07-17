@@ -159,6 +159,20 @@ const Dashboard = () => {
     toConversations: () => navigate('/conversations'),
   }), [navigate]);
 
+  // Debug temporário
+  console.log('Dashboard debug:', { 
+    isLoading, 
+    limitsLoading, 
+    user: !!user, 
+    limits,
+    limitsData: limits ? {
+      current_assistants: limits.current_assistants,
+      max_assistants: limits.max_assistants,
+      current_whatsapp: limits.current_whatsapp_connections,
+      max_whatsapp: limits.max_whatsapp_connections
+    } : null
+  });
+
   if (isLoading || limitsLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
