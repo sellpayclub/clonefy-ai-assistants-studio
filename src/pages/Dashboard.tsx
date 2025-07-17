@@ -37,17 +37,15 @@ const Dashboard = () => {
       if (!user) return { assistants: 0, connections: 0, conversations: 0, messages: 0 };
 
       try {
-        // Parallel requests for better performance
-        const [assistantsResult, connectionsResult, conversationsResult] = await Promise.all([
-          supabase
-            .from('assistants')
-            .select('*', { count: 'exact' })
-            .eq('user_id', user.id)
-            .eq('is_active', true),
-          supabase
-            .from('n8n_fluxogpt')
-            .select('*', { count: 'exact' })
-            .eq('emailuser', user.email),
+        // Use the same RPC function to get actual data
+        const { data: userStats, error } = await supabase.rpc('get_user_usage_stats', {
+          target_user_id: user.id
+        });
+
+        if (error) throw error;
+
+        // Get additional stats in parallel
+        const [conversationsResult] = await Promise.all([
           supabase
             .from('conversations')
             .select('*', { count: 'exact' })
@@ -55,22 +53,13 @@ const Dashboard = () => {
             .eq('is_active', true)
         ]);
 
-        // Get messages count only if there are conversations
-        let messagesCount = 0;
-        if (conversationsResult.data && conversationsResult.data.length > 0) {
-          const conversationIds = conversationsResult.data.map(c => c.id);
-          const { count: totalMessages } = await supabase
-            .from('messages')
-            .select('*', { count: 'exact' })
-            .in('conversation_id', conversationIds);
-          messagesCount = totalMessages || 0;
-        }
+        const currentStats = userStats?.[0];
 
         return {
-          assistants: assistantsResult.count || 0,
-          connections: connectionsResult.count || 0,
+          assistants: currentStats?.current_assistants || 0,
+          connections: currentStats?.current_whatsapp_connections || 0,
           conversations: conversationsResult.count || 0,
-          messages: messagesCount
+          messages: 0 // Simplificado por enquanto
         };
       } catch (error) {
         console.error('Error loading dashboard stats:', error);
@@ -78,7 +67,7 @@ const Dashboard = () => {
       }
     },
     enabled: !!user,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 30 * 1000, // 30 seconds - mais fresco
     refetchOnWindowFocus: true,
   });
 
@@ -158,20 +147,6 @@ const Dashboard = () => {
     toWhatsApp: () => navigate('/whatsapp'),
     toConversations: () => navigate('/conversations'),
   }), [navigate]);
-
-  // Debug temporário
-  console.log('Dashboard debug:', { 
-    isLoading, 
-    limitsLoading, 
-    user: !!user, 
-    limits,
-    limitsData: limits ? {
-      current_assistants: limits.current_assistants,
-      max_assistants: limits.max_assistants,
-      current_whatsapp: limits.current_whatsapp_connections,
-      max_whatsapp: limits.max_whatsapp_connections
-    } : null
-  });
 
   if (isLoading || limitsLoading || !user) {
     return (
