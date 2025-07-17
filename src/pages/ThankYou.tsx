@@ -105,6 +105,96 @@ const ThankYou = () => {
           </div>
         </div>
 
+        {/* Upsell Section */}
+        <Card className="max-w-4xl mx-auto mb-8 sm:mb-12 lg:mb-16 border-2 border-primary/20 shadow-xl">
+          <CardHeader className="text-center bg-gradient-to-r from-primary/10 to-secondary/10 p-4 sm:p-6">
+            <div className="flex justify-center mb-3 sm:mb-4">
+              <div className="bg-primary/20 rounded-full p-2 sm:p-3">
+                <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              </div>
+            </div>
+            <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold text-primary">
+              🚀 OFERTA ESPECIAL - APENAS HOJE!
+            </CardTitle>
+            <CardDescription className="text-base sm:text-lg">
+              Não quer perder tempo criando e treinando sua IA?
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="p-4 sm:p-6 lg:p-8">
+            <div className="grid gap-6 lg:grid-cols-2 lg:gap-8 lg:items-center">
+              <div className="space-y-4 sm:space-y-6 order-2 lg:order-1">
+                <h3 className="text-xl sm:text-2xl font-bold text-foreground">
+                  Nossa equipe cria e treina sua IA para você!
+                </h3>
+                
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mt-1 flex-shrink-0" />
+                    <span className="text-sm sm:text-base">IA personalizada criada pela nossa equipe especializada</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mt-1 flex-shrink-0" />
+                    <span className="text-sm sm:text-base">Treinamento completo com seus dados e necessidades</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mt-1 flex-shrink-0" />
+                    <span className="text-sm sm:text-base">IA entregue pronta para conectar ao WhatsApp</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-1 flex-shrink-0" />
+                    <span className="text-sm sm:text-base">Entrega em até <strong>48 horas</strong></span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 mt-1 flex-shrink-0" />
+                    <span className="text-sm sm:text-base"><strong>Uso ILIMITADO</strong> - sua IA nunca vence!</span>
+                  </div>
+                </div>
+                
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
+                  <p className="text-yellow-800 font-medium text-sm sm:text-base">
+                    🤝 Incluímos reunião online para entender suas necessidades e configurar tudo perfeitamente!
+                  </p>
+                </div>
+              </div>
+              
+              <div className="text-center space-y-4 sm:space-y-6 order-1 lg:order-2">
+                <div className="bg-gradient-to-r from-red-100 to-orange-100 rounded-lg p-4 sm:p-6 border border-red-200">
+                  <div className="line-through text-xl sm:text-2xl text-muted-foreground mb-2">
+                    De R$ 997
+                  </div>
+                  <div className="text-3xl sm:text-4xl font-bold text-primary mb-2">
+                    R$ 297
+                  </div>
+                  <div className="text-red-600 font-medium text-sm sm:text-base">
+                    ⚡ Apenas nesta oferta especial!
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <Button 
+                    onClick={handleUpsellClick}
+                    size="lg" 
+                    className="w-full text-base sm:text-lg py-4 sm:py-6 bg-gradient-to-r from-primary to-primary-variant hover:scale-105 transition-transform animate-pulse"
+                  >
+                    🚀 SIM! QUERO MINHA IA PRONTA
+                  </Button>
+                  
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    ✅ Pagamento 100% seguro • ⚡ Processo automático
+                  </p>
+                </div>
+                
+                <div className="text-center p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-700 font-medium text-xs sm:text-sm">
+                    ⏰ Esta oferta expira em 24 horas!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Create Account Section */}
         <Card className="max-w-2xl mx-auto mb-8 sm:mb-12 lg:mb-16 border-2 border-green-200 shadow-lg">
           <CardHeader className="text-center bg-gradient-to-r from-green-50 to-emerald-50 p-4 sm:p-6">
@@ -206,96 +296,6 @@ const ThankYou = () => {
             💬 Precisa de ajuda? Fale conosco no WhatsApp
           </Button>
         </div>
-
-        {/* Upsell Section */}
-        <Card className="max-w-4xl mx-auto border-2 border-primary/20 shadow-xl">
-          <CardHeader className="text-center bg-gradient-to-r from-primary/10 to-secondary/10 p-4 sm:p-6">
-            <div className="flex justify-center mb-3 sm:mb-4">
-              <div className="bg-primary/20 rounded-full p-2 sm:p-3">
-                <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-              </div>
-            </div>
-            <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold text-primary">
-              🚀 OFERTA ESPECIAL - APENAS HOJE!
-            </CardTitle>
-            <CardDescription className="text-base sm:text-lg">
-              Não quer perder tempo criando e treinando sua IA?
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="p-4 sm:p-6 lg:p-8">
-            <div className="grid gap-6 lg:grid-cols-2 lg:gap-8 lg:items-center">
-              <div className="space-y-4 sm:space-y-6 order-2 lg:order-1">
-                <h3 className="text-xl sm:text-2xl font-bold text-foreground">
-                  Nossa equipe cria e treina sua IA para você!
-                </h3>
-                
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mt-1 flex-shrink-0" />
-                    <span className="text-sm sm:text-base">IA personalizada criada pela nossa equipe especializada</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mt-1 flex-shrink-0" />
-                    <span className="text-sm sm:text-base">Treinamento completo com seus dados e necessidades</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mt-1 flex-shrink-0" />
-                    <span className="text-sm sm:text-base">IA entregue pronta para conectar ao WhatsApp</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-1 flex-shrink-0" />
-                    <span className="text-sm sm:text-base">Entrega em até <strong>48 horas</strong></span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 mt-1 flex-shrink-0" />
-                    <span className="text-sm sm:text-base"><strong>Uso ILIMITADO</strong> - sua IA nunca vence!</span>
-                  </div>
-                </div>
-                
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
-                  <p className="text-yellow-800 font-medium text-sm sm:text-base">
-                    🤝 Incluímos reunião online para entender suas necessidades e configurar tudo perfeitamente!
-                  </p>
-                </div>
-              </div>
-              
-              <div className="text-center space-y-4 sm:space-y-6 order-1 lg:order-2">
-                <div className="bg-gradient-to-r from-red-100 to-orange-100 rounded-lg p-4 sm:p-6 border border-red-200">
-                  <div className="line-through text-xl sm:text-2xl text-muted-foreground mb-2">
-                    De R$ 997
-                  </div>
-                  <div className="text-3xl sm:text-4xl font-bold text-primary mb-2">
-                    R$ 297
-                  </div>
-                  <div className="text-red-600 font-medium text-sm sm:text-base">
-                    ⚡ Apenas nesta oferta especial!
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <Button 
-                    onClick={handleUpsellClick}
-                    size="lg" 
-                    className="w-full text-base sm:text-lg py-4 sm:py-6 bg-gradient-to-r from-primary to-primary-variant hover:scale-105 transition-transform animate-pulse"
-                  >
-                    🚀 SIM! QUERO MINHA IA PRONTA
-                  </Button>
-                  
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    ✅ Pagamento 100% seguro • ⚡ Processo automático
-                  </p>
-                </div>
-                
-                <div className="text-center p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-700 font-medium text-xs sm:text-sm">
-                    ⏰ Esta oferta expira em 24 horas!
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Footer */}
         <div className="text-center mt-8 sm:mt-12 px-4">
