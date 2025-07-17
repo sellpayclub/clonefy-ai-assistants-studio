@@ -5,9 +5,11 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import ChatWidget from "@/components/ChatWidget";
+import { useTheme } from "@/components/ThemeProvider";
 
 const Index = () => {
   const { t } = useLanguage();
+  const { setTheme } = useTheme();
   const [currentRole, setCurrentRole] = useState(0);
   const roles = [
     t('hero.roles.vendedor'),
@@ -17,6 +19,9 @@ const Index = () => {
   ];
 
   useEffect(() => {
+    // Força modo claro na página de vendas
+    setTheme("light");
+    
     // Facebook Pixel
     const script = document.createElement('script');
     script.innerHTML = `
@@ -38,7 +43,7 @@ const Index = () => {
       setCurrentRole((prev) => (prev + 1) % roles.length);
     }, 2000);
     return () => clearInterval(interval);
-  }, [roles.length]);
+  }, [roles.length, setTheme]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/50">
