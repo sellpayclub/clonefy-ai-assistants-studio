@@ -192,7 +192,7 @@ const Dashboard = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{t("dashboard.stats.agents")}</CardTitle>
@@ -201,10 +201,12 @@ const Dashboard = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{stats.assistants}</div>
                 <p className="text-xs text-muted-foreground">
-                  {limits && (
+                  {limits ? (
                     <span className={limits.can_create_assistant ? "text-green-600" : "text-red-600"}>
-                      {limits.current_assistants}/{limits.max_assistants} disponíveis
+                      {limits.current_assistants}/{limits.max_assistants} {t("dashboard.stats.agentsDesc")}
                     </span>
+                  ) : (
+                    t("dashboard.stats.agentsDesc")
                   )}
                 </p>
               </CardContent>
@@ -218,40 +220,14 @@ const Dashboard = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{stats.connections}</div>
                 <p className="text-xs text-muted-foreground">
-                  {limits && (
+                  {limits ? (
                     <span className={limits.can_create_whatsapp_connection ? "text-green-600" : "text-red-600"}>
-                      {limits.current_whatsapp_connections}/{limits.max_whatsapp_connections} disponíveis
+                      {limits.current_whatsapp_connections}/{limits.max_whatsapp_connections} {t("dashboard.stats.connectionsDesc")}
                     </span>
+                  ) : (
+                    t("dashboard.stats.connectionsDesc")
                   )}
                 </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{t("dashboard.stats.conversations")}</CardTitle>
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.conversations}</div>
-                <p className="text-xs text-muted-foreground">
-                  Conversas ativas
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Plano</CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold capitalize">
-                  {limits?.plan_type || 'Free'}
-                </div>
-                <Badge variant={limits?.plan_type === 'free' ? 'secondary' : 'default'} className="text-xs">
-                  {limits?.plan_type === 'free' ? 'Gratuito' : 'Premium'}
-                </Badge>
               </CardContent>
             </Card>
           </div>
