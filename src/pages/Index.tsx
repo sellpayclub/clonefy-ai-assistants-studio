@@ -125,15 +125,6 @@ const Index = () => {
               <span className="hidden sm:inline">Ver Preços</span>
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              onClick={scrollToPricing}
-              className="w-full sm:w-auto px-8 py-4 text-lg font-semibold"
-            >
-              <span className="sm:hidden">Ver Demo</span>
-              <span className="hidden sm:inline">{t('hero.watchDemo')}</span>
-            </Button>
           </div>
 
           <div className="bg-card/60 backdrop-blur-sm border rounded-2xl p-6 sm:p-8 lg:p-10 max-w-4xl mx-auto">
