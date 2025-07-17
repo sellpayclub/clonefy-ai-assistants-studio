@@ -386,75 +386,25 @@ const Assistants = () => {
                   </div>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
                   {assistants.map((assistant) => (
-                    <Card key={assistant.id} className="hover:shadow-lg transition-shadow">
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                              <Bot className="h-4 w-4 text-primary" />
-                            </div>
-                            <div>
-                              <CardTitle className="text-lg">{assistant.name}</CardTitle>
-                              <Badge variant="secondary" className="text-xs">
-                                GPT-4o
-                              </Badge>
-                            </div>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => openEditDialog(assistant)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDelete(assistant)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                        {assistant.description && (
-                          <CardDescription>{assistant.description}</CardDescription>
-                        )}
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="text-sm text-muted-foreground">
-                            <strong>Instruções:</strong>
-                          </div>
-                          <p className="text-sm line-clamp-3">
-                            {assistant.instructions || "Nenhuma instrução definida"}
-                          </p>
-                        </div>
-                        <div className="flex gap-2 mt-4">
-                          <Button size="sm" className="flex-1" onClick={() => {
-                            // Salva o assistente no localStorage para seleção automática
-                            localStorage.setItem('selectedAssistantId', assistant.id);
-                            localStorage.setItem('selectedAssistantName', assistant.name);
-                            localStorage.setItem('autoStartConversation', 'true');
-                            navigate('/conversations');
-                          }}>
-                            <MessageSquare className="h-3 w-3 mr-1" />
-                            Testar
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => {
-                            setSelectedAgentForEmbed(assistant);
-                            setEmbedDialogOpen(true);
-                          }}>
-                            <Code className="h-3 w-3" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => openEditDialog(assistant)}>
-                            <Settings className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <OptimizedAssistantCard
+                      key={assistant.id}
+                      assistant={assistant}
+                      onEdit={openEditDialog}
+                      onDelete={handleDelete}
+                      onTest={(assistant) => {
+                        // Salva o assistente no localStorage para seleção automática
+                        localStorage.setItem('selectedAssistantId', assistant.id);
+                        localStorage.setItem('selectedAssistantName', assistant.name);
+                        localStorage.setItem('autoStartConversation', 'true');
+                        navigate('/conversations');
+                      }}
+                      onEmbed={(assistant) => {
+                        setSelectedAgentForEmbed(assistant);
+                        setEmbedDialogOpen(true);
+                      }}
+                    />
                   ))}
                 </div>
               )}

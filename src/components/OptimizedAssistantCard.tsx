@@ -38,76 +38,77 @@ export const OptimizedAssistantCard = memo(({
   }, [assistant.instructions]);
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Bot className="h-4 w-4 text-primary" />
+    <Card className="group hover:shadow-card transition-all duration-300 hover:scale-[1.02] h-full flex flex-col border-border/50 hover:border-primary/20">
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-sm flex-shrink-0">
+              <Bot className="h-5 w-5 text-primary-foreground" />
             </div>
-            <div>
-              <CardTitle className="text-lg">{assistant.name}</CardTitle>
-              <Badge variant="secondary" className="text-xs">
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-base font-semibold leading-tight truncate group-hover:text-primary transition-colors">
+                {assistant.name}
+              </CardTitle>
+              <Badge variant="secondary" className="text-xs font-medium mt-1.5 bg-muted/60">
                 GPT-4o
               </Badge>
             </div>
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
             <Button
               size="sm"
               variant="ghost"
+              className="h-8 w-8 p-0 hover:bg-muted/60"
               onClick={() => onEdit(assistant)}
               aria-label="Editar assistente"
             >
-              <Edit className="h-3 w-3" />
+              <Edit className="h-3.5 w-3.5" />
             </Button>
             <Button
               size="sm"
               variant="ghost"
+              className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
               onClick={() => onDelete(assistant)}
               aria-label="Excluir assistente"
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
         {assistant.description && (
-          <CardDescription>{assistant.description}</CardDescription>
+          <CardDescription className="text-sm leading-relaxed mt-3 text-muted-foreground/80">
+            {assistant.description}
+          </CardDescription>
         )}
       </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          <div className="text-sm text-muted-foreground">
-            <strong>Instruções:</strong>
+      
+      <CardContent className="pt-0 flex-1 flex flex-col">
+        <div className="space-y-3 flex-1">
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Instruções
           </div>
-          <p className="text-sm line-clamp-3">
+          <p className="text-sm leading-relaxed text-foreground/90 line-clamp-3">
             {truncatedInstructions}
           </p>
         </div>
-        <div className="flex gap-2 mt-4">
+        
+        <div className="grid grid-cols-3 gap-2 mt-6 pt-4 border-t border-border/40">
           <Button 
             size="sm" 
-            className="flex-1" 
+            className="col-span-2 h-9 text-sm font-medium shadow-sm" 
             onClick={() => onTest(assistant)}
           >
-            <MessageSquare className="h-3 w-3 mr-1" />
+            <MessageSquare className="h-4 w-4 mr-2" />
             Testar
           </Button>
           <Button 
             size="sm" 
             variant="outline" 
+            className="h-9 hover:bg-muted/60"
             onClick={() => onEmbed(assistant)}
             aria-label="Gerar código embed"
           >
-            <Code className="h-3 w-3" />
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => onEdit(assistant)}
-            aria-label="Configurações"
-          >
-            <Settings className="h-3 w-3" />
+            <Code className="h-4 w-4" />
           </Button>
         </div>
       </CardContent>
