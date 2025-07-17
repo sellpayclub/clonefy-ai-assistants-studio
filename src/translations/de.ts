@@ -53,7 +53,7 @@ export default {
       description: "Ihre Kunden und Leads werden jederzeit schnell beantwortet! Übernehmen Sie die Kontrolle und überwachen Sie alles, was die KI sagt."
   },
   assistants: {
-    used: "Agenten verwendet",
+    used: "Agenten erstellt",
     files: {
       title: "Agent-Dateien",
       description: "Fügen Sie Bilder, Videos und Dokumente hinzu, die die KI automatisch in WhatsApp-Gesprächen senden kann."

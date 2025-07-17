@@ -53,7 +53,7 @@ export default {
       description: "Your customers and Leads answered quickly at any time! Take control and monitor everything the AI says."
   },
   assistants: {
-    used: "agents used",
+    used: "agents created",
     files: {
       title: "Agent Files",
       description: "Add images, videos and documents that AI can automatically send in WhatsApp conversations."
