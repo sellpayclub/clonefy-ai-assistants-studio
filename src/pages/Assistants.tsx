@@ -306,20 +306,20 @@ const Assistants = () => {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         
-        <main className="flex-1 p-4 md:p-6">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
-            <div className="flex items-center gap-4">
+        <main className="flex-1 p-3 sm:p-4 md:p-6">
+          <div className="flex flex-col space-y-4 lg:space-y-0 lg:flex-row lg:items-center justify-between mb-4 sm:mb-6">
+            <div className="flex items-center gap-3 sm:gap-4">
               <SidebarTrigger />
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-                  <Bot className="h-6 md:h-8 w-6 md:w-8 text-primary" />
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold flex items-center gap-2">
+                  <Bot className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-primary" />
                   {t("sidebar.agents.title")}
                 </h1>
-                <p className="text-muted-foreground text-sm md:text-base">
+                <p className="text-muted-foreground text-xs sm:text-sm md:text-base">
                   {t("sidebar.agents.description")}
                 </p>
                 {limits && (
-                  <div className="text-xs md:text-sm text-muted-foreground mt-1">
+                  <div className="text-xs sm:text-sm text-muted-foreground mt-1">
                     <span className={limits.can_create_assistant ? "text-green-600" : "text-red-600"}>
                       {limits.current_assistants}/{limits.max_assistants} {t("assistants.used")}
                     </span>
@@ -327,17 +327,17 @@ const Assistants = () => {
                 )}
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button onClick={loadAssistants} variant="outline" size="sm" className="w-full sm:w-auto">
-                <RefreshCw className="h-4 w-4 mr-1" />
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Button onClick={loadAssistants} variant="outline" size="sm" className="w-full sm:w-auto text-sm">
+                <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                 Recarregar
               </Button>
               <Button 
                 onClick={openCreateDialog}
                 disabled={limits && !limits.can_create_assistant}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto text-sm"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                 Novo Agente
               </Button>
               {limits && !limits.can_create_assistant && (

@@ -186,7 +186,13 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4 relative">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4 sm:p-6 relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+      
       {loading && (
         <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="text-center">
@@ -195,86 +201,95 @@ const Auth = () => {
           </div>
         </div>
       )}
+      
       {/* Theme Toggle & Language Selector */}
-      <div className="absolute top-4 right-4 flex gap-2">
+      <div className="absolute top-4 right-4 flex gap-2 z-10">
         <LanguageSelector />
         <ThemeToggle />
       </div>
       
-      <Card className="w-full max-w-md shadow-card border-border/50">
-        <CardHeader className="text-center space-y-4">
+      <Card className="w-full max-w-md shadow-elegant border-border/50 backdrop-blur-sm bg-card/95 relative z-10">
+        <CardHeader className="text-center space-y-6 pb-6">
           <div className="flex justify-center">
             <div className="relative group">
+              {/* Glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary-glow rounded-full blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
               {/* Logo para modo claro */}
               <img 
                 src="/lovable-uploads/fbe6c7af-7d70-474d-af99-5f513f7a14dc.png" 
                 alt="CLONEFY" 
-                className="h-16 w-auto dark:hidden transition-transform group-hover:scale-105"
+                className="h-16 sm:h-20 w-auto dark:hidden transition-all duration-300 group-hover:scale-105 relative z-10"
               />
               {/* Logo para modo escuro */}
               <img 
                 src="/lovable-uploads/8f2944d9-660f-4eb7-bae6-e226176b6a6d.png" 
                 alt="CLONEFY" 
-                className="h-16 w-auto hidden dark:block transition-transform group-hover:scale-105"
+                className="h-16 sm:h-20 w-auto hidden dark:block transition-all duration-300 group-hover:scale-105 relative z-10"
               />
             </div>
           </div>
           <div>
-            <CardDescription className="mt-2 text-muted-foreground">
+            <CardDescription className="text-muted-foreground text-sm sm:text-base">
               {t("auth.subtitle")}
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+            <TabsList className="grid w-full grid-cols-2 bg-muted/30 backdrop-blur-sm h-12">
               <TabsTrigger 
                 value="signin" 
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all duration-300 text-sm sm:text-base"
               >
                 {t("auth.signin")}
               </TabsTrigger>
               <TabsTrigger 
                 value="signup"
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all duration-300 text-sm sm:text-base"
               >
                 {t("auth.signup")}
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="signin" className="space-y-4">
+            <TabsContent value="signin" className="space-y-6 mt-6">
               {!showForgotPassword ? (
-                <form onSubmit={handleSignIn} className="space-y-4">
+                <form onSubmit={handleSignIn} className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="email">{t("auth.email")}</Label>
+                    <Label htmlFor="email" className="text-sm font-medium">{t("auth.email")}</Label>
                     <Input
                       id="email"
                       type="email"
                       placeholder={t("auth.emailPlaceholder")}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      className="h-12 border-border/50 bg-background/50 backdrop-blur-sm focus:bg-background transition-all duration-300"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">{t("auth.password")}</Label>
+                    <Label htmlFor="password" className="text-sm font-medium">{t("auth.password")}</Label>
                     <Input
                       id="password"
                       type="password"
                       placeholder={t("auth.passwordPlaceholder")}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      className="h-12 border-border/50 bg-background/50 backdrop-blur-sm focus:bg-background transition-all duration-300"
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button 
+                    type="submit" 
+                    className="w-full h-12 bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 text-base font-medium" 
+                    disabled={loading}
+                  >
                     {loading ? t("auth.signingIn") : t("auth.signInButton")}
                   </Button>
                   <div className="text-center">
                     <Button
                       type="button"
                       variant="link"
-                      className="text-sm text-muted-foreground hover:text-primary"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
                       onClick={() => setShowForgotPassword(true)}
                     >
                       Esqueci minha senha
@@ -282,26 +297,31 @@ const Auth = () => {
                   </div>
                 </form>
               ) : (
-                <form onSubmit={handleForgotPassword} className="space-y-4">
+                <form onSubmit={handleForgotPassword} className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="resetEmail">Email para redefinir senha</Label>
+                    <Label htmlFor="resetEmail" className="text-sm font-medium">Email para redefinir senha</Label>
                     <Input
                       id="resetEmail"
                       type="email"
                       placeholder="Digite seu email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      className="h-12 border-border/50 bg-background/50 backdrop-blur-sm focus:bg-background transition-all duration-300"
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button 
+                    type="submit" 
+                    className="w-full h-12 bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 text-base font-medium" 
+                    disabled={loading}
+                  >
                     {loading ? "Enviando..." : "Enviar email de redefinição"}
                   </Button>
                   <div className="text-center">
                     <Button
                       type="button"
                       variant="link"
-                      className="text-sm text-muted-foreground hover:text-primary"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
                       onClick={() => setShowForgotPassword(false)}
                     >
                       Voltar ao login
@@ -311,42 +331,49 @@ const Auth = () => {
               )}
             </TabsContent>
             
-            <TabsContent value="signup" className="space-y-4">
-              <form onSubmit={handleSignUp} className="space-y-4">
+            <TabsContent value="signup" className="space-y-6 mt-6">
+              <form onSubmit={handleSignUp} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">{t("auth.fullName")}</Label>
+                  <Label htmlFor="fullName" className="text-sm font-medium">{t("auth.fullName")}</Label>
                   <Input
                     id="fullName"
                     type="text"
                     placeholder={t("auth.fullNamePlaceholder")}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
+                    className="h-12 border-border/50 bg-background/50 backdrop-blur-sm focus:bg-background transition-all duration-300"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signupEmail">{t("auth.email")}</Label>
+                  <Label htmlFor="signupEmail" className="text-sm font-medium">{t("auth.email")}</Label>
                   <Input
                     id="signupEmail"
                     type="email"
                     placeholder={t("auth.emailPlaceholder")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className="h-12 border-border/50 bg-background/50 backdrop-blur-sm focus:bg-background transition-all duration-300"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signupPassword">{t("auth.password")}</Label>
+                  <Label htmlFor="signupPassword" className="text-sm font-medium">{t("auth.password")}</Label>
                   <Input
                     id="signupPassword"
                     type="password"
                     placeholder={t("auth.passwordPlaceholder")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="h-12 border-border/50 bg-background/50 backdrop-blur-sm focus:bg-background transition-all duration-300"
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 text-base font-medium" 
+                  disabled={loading}
+                >
                   {loading ? t("auth.signingUp") : t("auth.signUpButton")}
                 </Button>
               </form>
