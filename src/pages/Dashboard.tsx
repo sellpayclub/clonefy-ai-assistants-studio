@@ -37,12 +37,19 @@ const Dashboard = () => {
       if (!user) return { assistants: 0, connections: 0, conversations: 0, messages: 0 };
 
       try {
+        console.log('Loading dashboard stats for user:', user.id);
+        
         // Use the same RPC function to get actual data
         const { data: userStats, error } = await supabase.rpc('get_user_usage_stats', {
           target_user_id: user.id
         });
 
-        if (error) throw error;
+        console.log('RPC result:', { userStats, error });
+
+        if (error) {
+          console.error('RPC Error:', error);
+          throw error;
+        }
 
         // Get additional stats in parallel  
         const [conversationsResult] = await Promise.all([
@@ -54,13 +61,17 @@ const Dashboard = () => {
         ]);
 
         const currentStats = userStats?.[0];
+        console.log('Current stats:', currentStats);
 
-        return {
-          assistants: currentStats?.current_assistants || 0,
-          connections: currentStats?.current_whatsapp_connections || 0,
+        const result = {
+          assistants: Number(currentStats?.current_assistants) || 0,
+          connections: Number(currentStats?.current_whatsapp_connections) || 0,
           conversations: conversationsResult.count || 0,
           messages: 0 // Simplificado por enquanto
         };
+
+        console.log('Final dashboard stats:', result);
+        return result;
       } catch (error) {
         console.error('Error loading dashboard stats:', error);
         return { assistants: 0, connections: 0, conversations: 0, messages: 0 };
@@ -192,7 +203,7 @@ const Dashboard = () => {
                 <p className="text-xs text-muted-foreground">
                   {limits ? (
                     <span className={limits.can_create_assistant ? "text-green-600" : "text-red-600"}>
-                      {limits.current_assistants}/{limits.max_assistants} {t("dashboard.stats.agentsDesc")}
+                      {stats.assistants}/{limits.max_assistants} ativos (limite: {limits.max_assistants})
                     </span>
                   ) : (
                     t("dashboard.stats.agentsDesc")
@@ -211,7 +222,7 @@ const Dashboard = () => {
                 <p className="text-xs text-muted-foreground">
                   {limits ? (
                     <span className={limits.can_create_whatsapp_connection ? "text-green-600" : "text-red-600"}>
-                      {limits.current_whatsapp_connections}/{limits.max_whatsapp_connections} {t("dashboard.stats.connectionsDesc")}
+                      {stats.connections}/{limits.max_whatsapp_connections} conexões (limite: {limits.max_whatsapp_connections})
                     </span>
                   ) : (
                     t("dashboard.stats.connectionsDesc")
