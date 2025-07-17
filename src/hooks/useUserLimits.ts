@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useOptimizedQuery } from './useOptimizedQuery';
 
 interface UserLimits {
   max_assistants: number;
@@ -14,8 +13,10 @@ interface UserLimits {
 
 export const useUserLimits = () => {
   const [user, setUser] = useState<any>(null);
+  const [limits, setLimits] = useState<UserLimits | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Get current user optimized
+  // Get current user
   useEffect(() => {
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -24,23 +25,29 @@ export const useUserLimits = () => {
     getCurrentUser();
   }, []);
 
-  // Optimized query for user limits using React Query
-  const { data: limits, isLoading, refetch } = useOptimizedQuery({
-    queryKey: ['user-limits', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
+  // Load limits directly
+  const loadLimits = useCallback(async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
 
-      const { data, error } = await supabase.rpc('get_user_usage_stats', {
-        target_user_id: user.id
-      });
+    console.log('=== CARREGANDO LIMITES ===');
+    console.log('User ID:', user.id);
 
-      if (error) {
-        console.error('Error fetching user limits:', error);
-        throw error;
-      }
+    try {
+      setLoading(true);
 
-      if (!data || data.length === 0) {
-        return {
+      // Buscar quotas do usuário
+      const { data: quotaData, error: quotaError } = await supabase
+        .from('user_quotas')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (quotaError) {
+        console.error('Erro ao buscar quotas:', quotaError);
+        setLimits({
           max_assistants: 1,
           max_whatsapp_connections: 1,
           current_assistants: 0,
@@ -48,34 +55,84 @@ export const useUserLimits = () => {
           can_create_assistant: true,
           can_create_whatsapp_connection: true,
           plan_type: 'free'
-        };
+        });
+        return;
       }
 
-      const userData = data[0];
-      return {
-        max_assistants: userData.max_assistants,
-        max_whatsapp_connections: userData.max_whatsapp_connections,
-        current_assistants: userData.current_assistants,
-        current_whatsapp_connections: userData.current_whatsapp_connections,
-        can_create_assistant: userData.current_assistants < userData.max_assistants,
-        can_create_whatsapp_connection: userData.current_whatsapp_connections < userData.max_whatsapp_connections,
-        plan_type: userData.plan_type
+      // Contar assistentes ativos
+      const { data: assistantsData, error: assistantsError } = await supabase
+        .from('assistants')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+
+      if (assistantsError) {
+        console.error('Erro ao contar assistentes:', assistantsError);
+      }
+
+      // Contar conexões WhatsApp
+      const { data: connectionsData, error: connectionsError } = await supabase
+        .from('whatsapp_connections')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (connectionsError) {
+        console.error('Erro ao contar conexões:', connectionsError);
+      }
+
+      const currentAssistants = assistantsData?.length || 0;
+      const currentConnections = connectionsData?.length || 0;
+
+      const userLimits = {
+        max_assistants: quotaData.max_assistants,
+        max_whatsapp_connections: quotaData.max_whatsapp_connections,
+        current_assistants: currentAssistants,
+        current_whatsapp_connections: currentConnections,
+        can_create_assistant: currentAssistants < quotaData.max_assistants,
+        can_create_whatsapp_connection: currentConnections < quotaData.max_whatsapp_connections,
+        plan_type: quotaData.plan_type
       };
-    },
-    enabled: !!user?.id,
-    staleTime: 2 * 60 * 1000, // 2 minutes - fresher data for limits
-    cacheTime: 5 * 60 * 1000, // 5 minutes cache
-  });
 
-  // Memoized reload function
+      console.log('=== LIMITES CARREGADOS ===');
+      console.log('Max assistentes:', userLimits.max_assistants);
+      console.log('Max conexões:', userLimits.max_whatsapp_connections);
+      console.log('Assistentes atuais:', userLimits.current_assistants);
+      console.log('Conexões atuais:', userLimits.current_whatsapp_connections);
+      console.log('Plano:', userLimits.plan_type);
+      console.log('===========================');
+
+      setLimits(userLimits);
+    } catch (error) {
+      console.error('Erro crítico ao carregar limites:', error);
+      setLimits({
+        max_assistants: 1,
+        max_whatsapp_connections: 1,
+        current_assistants: 0,
+        current_whatsapp_connections: 0,
+        can_create_assistant: true,
+        can_create_whatsapp_connection: true,
+        plan_type: 'free'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  // Carregar quando user mudar
+  useEffect(() => {
+    if (user) {
+      loadLimits();
+    }
+  }, [user, loadLimits]);
+
+  // Função para recarregar limites
   const reloadLimits = useCallback(() => {
-    return refetch();
-  }, [refetch]);
+    return loadLimits();
+  }, [loadLimits]);
 
-  // Return memoized result to prevent unnecessary re-renders
   return useMemo(() => ({ 
     limits, 
-    loading: isLoading, 
+    loading, 
     reloadLimits 
-  }), [limits, isLoading, reloadLimits]);
+  }), [limits, loading, reloadLimits]);
 };
