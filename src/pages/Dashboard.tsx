@@ -40,44 +40,37 @@ const Dashboard = () => {
         console.log('=== DASHBOARD DEBUG START ===');
         console.log('Loading dashboard stats for user:', user.id);
         
-        // Verificar primeiro se o usuário tem permissões
-        const { data: testQuery, error: testError } = await supabase
+        // Usar consulta direta primeiro para garantir que temos dados
+        const { data: assistantsData, error: assistantsError } = await supabase
           .from('assistants')
-          .select('id, name, is_active')
+          .select('id, is_active')
           .eq('user_id', user.id);
         
-        console.log('Direct assistants query:', { testQuery, testError });
+        console.log('Direct assistants query:', { assistantsData, assistantsError });
         
-        // Use the same RPC function to get actual data
-        const { data: userStats, error } = await supabase.rpc('get_user_usage_stats', {
-          target_user_id: user.id
-        });
+        const { data: connectionsData, error: connectionsError } = await supabase
+          .from('whatsapp_connections')
+          .select('id')
+          .eq('user_id', user.id);
+        
+        console.log('Direct connections query:', { connectionsData, connectionsError });
 
-        console.log('RPC result:', { userStats, error });
+        // Contar agentes ativos
+        const activeAssistants = assistantsData?.filter(a => a.is_active === true)?.length || 0;
+        const totalConnections = connectionsData?.length || 0;
 
-        if (error) {
-          console.error('RPC Error:', error);
-          throw error;
-        }
-
-        // Get additional stats in parallel  
-        const [conversationsResult] = await Promise.all([
-          supabase
-            .from('conversations')
-            .select('*', { count: 'exact' })
-            .eq('user_id', user.id)
-            .eq('is_active', true)
-        ]);
-
-        const currentStats = userStats?.[0];
-        console.log('Current stats from RPC:', currentStats);
-        console.log('Conversations count:', conversationsResult.count);
+        // Get conversation count
+        const { count: conversationsCount } = await supabase
+          .from('conversations')
+          .select('*', { count: 'exact' })
+          .eq('user_id', user.id)
+          .eq('is_active', true);
 
         const result = {
-          assistants: Number(currentStats?.current_assistants) || 0,
-          connections: Number(currentStats?.current_whatsapp_connections) || 0,
-          conversations: conversationsResult.count || 0,
-          messages: 0 // Simplificado por enquanto
+          assistants: activeAssistants,
+          connections: totalConnections,
+          conversations: conversationsCount || 0,
+          messages: 0
         };
 
         console.log('Final dashboard stats:', result);
