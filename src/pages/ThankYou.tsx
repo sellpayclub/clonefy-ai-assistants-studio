@@ -9,28 +9,28 @@ const ThankYou = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-8 sm:py-12 lg:py-16">
         {/* Success Section */}
-        <div className="text-center mb-16">
-          <div className="flex justify-center mb-6">
-            <div className="rounded-full bg-green-100 p-6">
-              <CheckCircle className="h-16 w-16 text-green-600" />
+        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+          <div className="flex justify-center mb-4 sm:mb-6">
+            <div className="rounded-full bg-green-100 p-4 sm:p-6">
+              <CheckCircle className="h-12 w-12 sm:h-16 sm:w-16 text-green-600" />
             </div>
           </div>
           
-          <h1 className="text-4xl font-bold text-foreground mb-4">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 px-4">
             Parabéns! Sua compra foi aprovada! 🎉
           </h1>
           
-          <div className="max-w-2xl mx-auto space-y-4">
-            <div className="flex items-center justify-center gap-2 text-muted-foreground">
-              <Mail className="h-5 w-5" />
+          <div className="max-w-2xl mx-auto space-y-4 px-4">
+            <div className="flex items-center justify-center gap-2 text-sm sm:text-base text-muted-foreground">
+              <Mail className="h-4 w-4 sm:h-5 sm:w-5" />
               <span>Um email com as instruções foi enviado para você</span>
             </div>
             
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-left">
-              <h3 className="font-semibold text-blue-900 mb-3">Próximos passos:</h3>
-              <ol className="list-decimal list-inside space-y-2 text-blue-800">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6 text-left">
+              <h3 className="font-semibold text-blue-900 mb-3 text-sm sm:text-base">Próximos passos:</h3>
+              <ol className="list-decimal list-inside space-y-2 text-blue-800 text-sm sm:text-base">
                 <li>Verifique seu email (inclusive spam/lixo eletrônico)</li>
                 <li>Crie sua conta usando o <strong>mesmo email</strong> que você usou na compra</li>
                 <li>Confirme seu email clicando no link enviado</li>
@@ -42,66 +42,66 @@ const ThankYou = () => {
 
         {/* Upsell Section */}
         <Card className="max-w-4xl mx-auto border-2 border-primary/20 shadow-xl">
-          <CardHeader className="text-center bg-gradient-to-r from-primary/10 to-secondary/10">
-            <div className="flex justify-center mb-4">
-              <div className="bg-primary/20 rounded-full p-3">
-                <Sparkles className="h-8 w-8 text-primary" />
+          <CardHeader className="text-center bg-gradient-to-r from-primary/10 to-secondary/10 p-4 sm:p-6">
+            <div className="flex justify-center mb-3 sm:mb-4">
+              <div className="bg-primary/20 rounded-full p-2 sm:p-3">
+                <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-bold text-primary">
+            <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold text-primary">
               🚀 OFERTA ESPECIAL - APENAS HOJE!
             </CardTitle>
-            <CardDescription className="text-lg">
+            <CardDescription className="text-base sm:text-lg">
               Não quer perder tempo criando e treinando sua IA?
             </CardDescription>
           </CardHeader>
           
-          <CardContent className="p-8">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="space-y-6">
-                <h3 className="text-2xl font-bold text-foreground">
+          <CardContent className="p-4 sm:p-6 lg:p-8">
+            <div className="grid gap-6 lg:grid-cols-2 lg:gap-8 lg:items-center">
+              <div className="space-y-4 sm:space-y-6 order-2 lg:order-1">
+                <h3 className="text-xl sm:text-2xl font-bold text-foreground">
                   Nossa equipe cria e treina sua IA para você!
                 </h3>
                 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
-                    <span>IA personalizada criada pela nossa equipe especializada</span>
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mt-1 flex-shrink-0" />
+                    <span className="text-sm sm:text-base">IA personalizada criada pela nossa equipe especializada</span>
                   </div>
                   <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
-                    <span>Treinamento completo com seus dados e necessidades</span>
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mt-1 flex-shrink-0" />
+                    <span className="text-sm sm:text-base">Treinamento completo com seus dados e necessidades</span>
                   </div>
                   <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
-                    <span>IA entregue pronta para conectar ao WhatsApp</span>
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mt-1 flex-shrink-0" />
+                    <span className="text-sm sm:text-base">IA entregue pronta para conectar ao WhatsApp</span>
                   </div>
                   <div className="flex items-start gap-3">
-                    <Clock className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
-                    <span>Entrega em até <strong>48 horas</strong></span>
+                    <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-1 flex-shrink-0" />
+                    <span className="text-sm sm:text-base">Entrega em até <strong>48 horas</strong></span>
                   </div>
                   <div className="flex items-start gap-3">
-                    <Zap className="h-5 w-5 text-purple-600 mt-1 flex-shrink-0" />
-                    <span><strong>Uso ILIMITADO</strong> - sua IA nunca vence!</span>
+                    <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 mt-1 flex-shrink-0" />
+                    <span className="text-sm sm:text-base"><strong>Uso ILIMITADO</strong> - sua IA nunca vence!</span>
                   </div>
                 </div>
                 
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-yellow-800 font-medium">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
+                  <p className="text-yellow-800 font-medium text-sm sm:text-base">
                     🤝 Incluímos reunião online para entender suas necessidades e configurar tudo perfeitamente!
                   </p>
                 </div>
               </div>
               
-              <div className="text-center space-y-6">
-                <div className="bg-gradient-to-r from-red-100 to-orange-100 rounded-lg p-6 border border-red-200">
-                  <div className="line-through text-2xl text-muted-foreground mb-2">
+              <div className="text-center space-y-4 sm:space-y-6 order-1 lg:order-2">
+                <div className="bg-gradient-to-r from-red-100 to-orange-100 rounded-lg p-4 sm:p-6 border border-red-200">
+                  <div className="line-through text-xl sm:text-2xl text-muted-foreground mb-2">
                     De R$ 997
                   </div>
-                  <div className="text-4xl font-bold text-primary mb-2">
+                  <div className="text-3xl sm:text-4xl font-bold text-primary mb-2">
                     R$ 297
                   </div>
-                  <div className="text-red-600 font-medium">
+                  <div className="text-red-600 font-medium text-sm sm:text-base">
                     ⚡ Apenas nesta oferta especial!
                   </div>
                 </div>
@@ -110,18 +110,18 @@ const ThankYou = () => {
                   <Button 
                     onClick={handleUpsellClick}
                     size="lg" 
-                    className="w-full text-lg py-6 bg-gradient-to-r from-primary to-primary-variant hover:scale-105 transition-transform"
+                    className="w-full text-base sm:text-lg py-4 sm:py-6 bg-gradient-to-r from-primary to-primary-variant hover:scale-105 transition-transform animate-pulse"
                   >
                     🚀 SIM! QUERO MINHA IA PRONTA
                   </Button>
                   
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     ✅ Pagamento 100% seguro • ⚡ Processo automático
                   </p>
                 </div>
                 
-                <div className="text-center p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-700 font-medium text-sm">
+                <div className="text-center p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-700 font-medium text-xs sm:text-sm">
                     ⏰ Esta oferta expira em 24 horas!
                   </p>
                 </div>
@@ -131,8 +131,8 @@ const ThankYou = () => {
         </Card>
 
         {/* Footer */}
-        <div className="text-center mt-12">
-          <p className="text-muted-foreground">
+        <div className="text-center mt-8 sm:mt-12 px-4">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Dúvidas? Entre em contato conosco pelo suporte
           </p>
         </div>
