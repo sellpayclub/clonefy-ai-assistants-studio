@@ -1,10 +1,75 @@
-import { CheckCircle, Mail, Clock, Sparkles, Zap } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle, Mail, Clock, Sparkles, Zap, MessageCircle, User, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const ThankYou = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [isSigningUp, setIsSigningUp] = useState(false);
+  const { toast } = useToast();
+  
   const handleUpsellClick = () => {
     window.open("https://pay.plataformasellpay.com.br/checkout-white-6925/?add-to-cart=6925", "_blank");
+  };
+
+  const handleWhatsAppClick = () => {
+    window.open("https://wa.me/5515998355640?text=Olá! Preciso de ajuda com minha conta.", "_blank");
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSigningUp(true);
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          data: {
+            full_name: fullName,
+          }
+        }
+      });
+
+      if (error) {
+        if (error.message.includes("already registered")) {
+          toast({
+            title: "Email já cadastrado",
+            description: "Este email já possui uma conta. Tente fazer login.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erro ao criar conta",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Verifique seu email para confirmar a conta e depois faça login.",
+        });
+        setEmail("");
+        setPassword("");
+        setFullName("");
+      }
+    } catch (error) {
+      toast({
+        title: "Erro inesperado",
+        description: "Tente novamente em alguns minutos.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSigningUp(false);
+    }
   };
 
   return (
@@ -38,6 +103,108 @@ const ThankYou = () => {
               </ol>
             </div>
           </div>
+        </div>
+
+        {/* Create Account Section */}
+        <Card className="max-w-2xl mx-auto mb-8 sm:mb-12 lg:mb-16 border-2 border-green-200 shadow-lg">
+          <CardHeader className="text-center bg-gradient-to-r from-green-50 to-emerald-50 p-4 sm:p-6">
+            <div className="flex justify-center mb-3 sm:mb-4">
+              <div className="bg-green-100 rounded-full p-2 sm:p-3">
+                <User className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+              </div>
+            </div>
+            <CardTitle className="text-xl sm:text-2xl font-bold text-green-700">
+              🚀 Crie sua conta agora!
+            </CardTitle>
+            <CardDescription className="text-base sm:text-lg text-green-600">
+              Use o mesmo email da compra para acessar sua conta premium
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="p-4 sm:p-6">
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName" className="text-sm font-medium">
+                  Nome completo
+                </Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="Seu nome completo"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  className="w-full"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email (mesmo da compra)
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Criar senha
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Mínimo 6 caracteres"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full"
+                />
+              </div>
+              
+              <Button
+                type="submit"
+                disabled={isSigningUp}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-base font-medium"
+              >
+                {isSigningUp ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Criando conta...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-4 w-4 mr-2" />
+                    Criar minha conta premium
+                  </>
+                )}
+              </Button>
+              
+              <p className="text-xs sm:text-sm text-muted-foreground text-center">
+                Ao criar sua conta, você concorda com nossos termos de uso
+              </p>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* WhatsApp Help Button */}
+        <div className="text-center mb-8 sm:mb-12">
+          <Button
+            onClick={handleWhatsAppClick}
+            variant="outline"
+            size="lg"
+            className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600 px-6 py-3"
+          >
+            <MessageCircle className="h-5 w-5 mr-2" />
+            💬 Precisa de ajuda? Fale conosco no WhatsApp
+          </Button>
         </div>
 
         {/* Upsell Section */}
