@@ -12,6 +12,7 @@ import AppSidebar from "@/components/AppSidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import SupportChatWidget from "@/components/SupportChatWidget";
+import { useUserLimits } from "@/hooks/useUserLimits";
 import { useOptimizedQuery } from "@/hooks/useOptimizedQuery";
 
 interface DashboardStats {
@@ -27,6 +28,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { limits, loading: limitsLoading } = useUserLimits();
 
   // Optimized stats loading using React Query
   const { data: stats = { assistants: 0, connections: 0, conversations: 0, messages: 0 }, isLoading } = useOptimizedQuery({
@@ -157,7 +159,7 @@ const Dashboard = () => {
     toConversations: () => navigate('/conversations'),
   }), [navigate]);
 
-  if (isLoading || !user) {
+  if (isLoading || limitsLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -190,7 +192,7 @@ const Dashboard = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{t("dashboard.stats.agents")}</CardTitle>
@@ -199,7 +201,11 @@ const Dashboard = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{stats.assistants}</div>
                 <p className="text-xs text-muted-foreground">
-                  {t("dashboard.stats.agentsDesc")}
+                  {limits && (
+                    <span className={limits.can_create_assistant ? "text-green-600" : "text-red-600"}>
+                      {limits.current_assistants}/{limits.max_assistants} disponíveis
+                    </span>
+                  )}
                 </p>
               </CardContent>
             </Card>
@@ -212,11 +218,42 @@ const Dashboard = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{stats.connections}</div>
                 <p className="text-xs text-muted-foreground">
-                  {t("dashboard.stats.connectionsDesc")}
+                  {limits && (
+                    <span className={limits.can_create_whatsapp_connection ? "text-green-600" : "text-red-600"}>
+                      {limits.current_whatsapp_connections}/{limits.max_whatsapp_connections} disponíveis
+                    </span>
+                  )}
                 </p>
               </CardContent>
             </Card>
 
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{t("dashboard.stats.conversations")}</CardTitle>
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.conversations}</div>
+                <p className="text-xs text-muted-foreground">
+                  Conversas ativas
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Plano</CardTitle>
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold capitalize">
+                  {limits?.plan_type || 'Free'}
+                </div>
+                <Badge variant={limits?.plan_type === 'free' ? 'secondary' : 'default'} className="text-xs">
+                  {limits?.plan_type === 'free' ? 'Gratuito' : 'Premium'}
+                </Badge>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Quick Actions - Melhor responsividade */}
