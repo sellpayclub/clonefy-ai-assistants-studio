@@ -33,6 +33,11 @@ interface AuthorizedEmail {
   notes: string | null;
 }
 
+interface GlobalStats {
+  total_assistants: number;
+  total_connections: number;
+}
+
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -51,6 +56,9 @@ const Admin = () => {
   const [newEmail, setNewEmail] = useState("");
   const [newEmailNotes, setNewEmailNotes] = useState("");
   const [emailLoading, setEmailLoading] = useState(false);
+
+  // Estados para estatísticas globais
+  const [globalStats, setGlobalStats] = useState<GlobalStats>({ total_assistants: 0, total_connections: 0 });
 
   // Admin credentials
   const ADMIN_PASSWORD = "Danncarlos@123";
@@ -99,6 +107,7 @@ const Admin = () => {
     if (isAuthenticated) {
       loadUsers();
       loadAuthorizedEmails();
+      loadGlobalStats();
     }
   }, [isAuthenticated]);
 
@@ -190,6 +199,38 @@ const Admin = () => {
       });
     } finally {
       setEmailLoading(false);
+    }
+  };
+
+  const loadGlobalStats = async () => {
+    try {
+      // Buscar total de agentes ativos
+      const { count: totalAssistants, error: assistantsError } = await supabase
+        .from('assistants')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true);
+
+      if (assistantsError) throw assistantsError;
+
+      // Buscar total de conexões conectadas
+      const { count: totalConnections, error: connectionsError } = await supabase
+        .from('whatsapp_connections')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'connected');
+
+      if (connectionsError) throw connectionsError;
+
+      setGlobalStats({
+        total_assistants: totalAssistants || 0,
+        total_connections: totalConnections || 0
+      });
+    } catch (error: any) {
+      console.error('Error loading global stats:', error);
+      toast({
+        title: "Erro ao carregar estatísticas",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -327,9 +368,27 @@ const Admin = () => {
                 </p>
               </div>
             </div>
-            <Button onClick={loadUsers} variant="outline" className="self-start md:self-auto">
-              Recarregar
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Estatísticas Globais */}
+              <div className="grid grid-cols-2 gap-2">
+                <Card className="p-3">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary">{globalStats.total_assistants}</div>
+                    <div className="text-sm text-muted-foreground">Total Agentes</div>
+                  </div>
+                </Card>
+                <Card className="p-3">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">{globalStats.total_connections}</div>
+                    <div className="text-sm text-muted-foreground">Conexões Ativas</div>
+                  </div>
+                </Card>
+              </div>
+              
+              <Button onClick={() => { loadUsers(); loadGlobalStats(); }} variant="outline" className="self-start md:self-auto">
+                Recarregar
+              </Button>
+            </div>
           </div>
 
           <Tabs defaultValue="users" className="w-full">
