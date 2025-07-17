@@ -339,6 +339,51 @@ export type Database = {
         }
         Relationships: []
       }
+      paid_subscribers: {
+        Row: {
+          amount: number | null
+          created_at: string
+          currency: string | null
+          email: string
+          id: string
+          payment_id: string | null
+          payment_processor: string | null
+          payment_status: string
+          subscription_end: string | null
+          subscription_start: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          email: string
+          id?: string
+          payment_id?: string | null
+          payment_processor?: string | null
+          payment_status?: string
+          subscription_end?: string | null
+          subscription_start?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          email?: string
+          id?: string
+          payment_id?: string | null
+          payment_processor?: string | null
+          payment_status?: string
+          subscription_end?: string | null
+          subscription_start?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -555,6 +600,10 @@ export type Database = {
           plan_type: string
           created_at: string
         }[]
+      }
+      upgrade_user_to_paid: {
+        Args: { target_email: string }
+        Returns: undefined
       }
     }
     Enums: {
