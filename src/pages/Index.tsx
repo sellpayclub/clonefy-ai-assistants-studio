@@ -152,9 +152,6 @@ const Index = () => {
         <div className="mb-20 sm:mb-24">
           <div className="text-center mb-8">
             <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">Veja Como Funciona na Prática</h3>
-            <p className="text-muted-foreground text-lg sm:text-xl">
-              Demonstração completa + depoimentos de quem já usa
-            </p>
           </div>
           
           <div className="max-w-4xl mx-auto">
