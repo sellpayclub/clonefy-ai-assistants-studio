@@ -141,10 +141,6 @@ const Index = () => {
 
       {/* Video de Depoimentos */}
       <section className="container mx-auto px-4 py-8 sm:py-12 lg:py-16">
-        <div className="text-center mb-8">
-          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">Veja Como Funciona na Prática</h3>
-        </div>
-        
         <div className="max-w-4xl mx-auto">
           <YouTubePlayer />
         </div>
