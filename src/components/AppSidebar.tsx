@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { User } from "@supabase/supabase-js";
 
 import {
   Sidebar,
@@ -38,9 +39,38 @@ const AppSidebar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const [user, setUser] = useState<User | null>(null);
   
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
+
+  useEffect(() => {
+    // Get current user
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+
+    getCurrentUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Filter menu items based on user email
+  const filteredMenuItems = useMemo(() => {
+    return menuItems.filter(item => {
+      // Only show admin for personaldann@gmail.com
+      if (item.url === '/admin') {
+        return user?.email === 'personaldann@gmail.com';
+      }
+      return true;
+    });
+  }, [user?.email]);
 
   const isActive = useCallback((path: string) => currentPath === path, [currentPath]);
 
@@ -115,7 +145,7 @@ const AppSidebar = () => {
           )}
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              {menuItems.map((item) => {
+              {filteredMenuItems.map((item) => {
                 const active = isActive(item.url);
                 return (
                   <SidebarMenuItem key={item.title}>
