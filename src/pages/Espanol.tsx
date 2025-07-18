@@ -61,29 +61,33 @@ const Espanol = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/50">
       {/* Header */}
-      <header className="container mx-auto px-4 py-4 lg:py-6">
+      <header className="container mx-auto px-4 py-3 sm:py-4 lg:py-6 sticky top-0 bg-background/80 backdrop-blur-md border-b z-50">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center">
             <img 
               src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png" 
               alt="CLONEFY Logo" 
-              className="h-16 w-auto sm:h-16 lg:h-20 xl:h-24"
+              className="h-12 w-auto sm:h-14 lg:h-16"
               loading="eager"
             />
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
-            <div className="hidden md:block">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="hidden md:flex">
               <LanguageSelector />
             </div>
             <Link to="/auth">
-              <Button variant="outline" size="sm" className="text-sm lg:text-base">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs sm:text-sm px-3 sm:px-4 h-8 sm:h-9 font-medium border-muted-foreground/20 hover:border-primary hover:text-primary"
+              >
                 Iniciar Sesión
               </Button>
             </Link>
             <a href="https://sellpay.thrivecart.com/clonefy-app/" target="_blank" rel="noopener noreferrer">
               <Button 
                 size="sm" 
-                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-sm lg:text-base px-3 sm:px-4 lg:px-6"
+                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-xs sm:text-sm px-3 sm:px-5 h-8 sm:h-9 font-semibold shadow-lg"
               >
                 <span className="hidden sm:inline">Comenzar Gratis</span>
                 <span className="sm:hidden">Comenzar</span>
@@ -92,7 +96,7 @@ const Espanol = () => {
           </div>
         </div>
         {/* Mobile Language Selector */}
-        <div className="md:hidden mt-4 flex justify-center">
+        <div className="md:hidden mt-3 flex justify-center">
           <LanguageSelector />
         </div>
       </header>
