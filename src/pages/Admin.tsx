@@ -107,9 +107,15 @@ const Admin = () => {
     if (isAuthenticated) {
       loadUsers();
       loadAuthorizedEmails();
-      loadGlobalStats();
     }
   }, [isAuthenticated]);
+
+  // Carregar stats após usuários serem carregados
+  useEffect(() => {
+    if (users.length > 0) {
+      loadGlobalStats();
+    }
+  }, [users]);
 
   const loadUsers = async () => {
     try {
@@ -204,25 +210,13 @@ const Admin = () => {
 
   const loadGlobalStats = async () => {
     try {
-      // Buscar total de agentes ativos
-      const { count: totalAssistants, error: assistantsError } = await supabase
-        .from('assistants')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
-
-      if (assistantsError) throw assistantsError;
-
-      // Buscar total de conexões conectadas
-      const { count: totalConnections, error: connectionsError } = await supabase
-        .from('whatsapp_connections')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'connected');
-
-      if (connectionsError) throw connectionsError;
+      // Calcular totais somando dados de todos os usuários
+      const totalAssistants = users.reduce((sum, user) => sum + user.current_assistants, 0);
+      const totalConnections = users.reduce((sum, user) => sum + user.current_whatsapp_connections, 0);
 
       setGlobalStats({
-        total_assistants: totalAssistants || 0,
-        total_connections: totalConnections || 0
+        total_assistants: totalAssistants,
+        total_connections: totalConnections
       });
     } catch (error: any) {
       console.error('Error loading global stats:', error);
