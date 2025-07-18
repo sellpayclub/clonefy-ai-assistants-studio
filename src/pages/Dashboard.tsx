@@ -223,6 +223,12 @@ const Dashboard = () => {
   const safeStats = stats || { assistants: 0, connections: 0, conversations: 0, messages: 0 };
 
   if (isLoading || limitsLoading || !user) {
+    console.log('=== DASHBOARD LOADING STATE ===');
+    console.log('isLoading:', isLoading);
+    console.log('limitsLoading:', limitsLoading);
+    console.log('user:', user ? 'existe' : 'null');
+    console.log('==============================');
+    
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -233,10 +239,18 @@ const Dashboard = () => {
     );
   }
 
-  return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
+  console.log('=== DASHBOARD RENDERIZANDO ===');
+  console.log('Stats:', safeStats);
+  console.log('Limits:', limits);
+  console.log('User:', user?.email);
+  console.log('===============================');
+
+  
+  try {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <AppSidebar />
         
         <main className="flex-1 p-3 sm:p-4 md:p-6">
           <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center justify-between mb-4 sm:mb-6">
@@ -365,6 +379,23 @@ const Dashboard = () => {
       </div>
     </SidebarProvider>
   );
+  } catch (error) {
+    console.error('ERRO NO DASHBOARD RENDER:', error);
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-xl font-bold text-red-600">Erro no Dashboard</h1>
+          <p className="text-muted-foreground">{error?.message || 'Erro desconhecido'}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-primary text-white rounded"
+          >
+            Recarregar Página
+          </button>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default Dashboard;

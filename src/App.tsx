@@ -37,46 +37,52 @@ const LoadingFallback = () => (
   </div>
 );
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/assistants" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <LazyAssistants />
-              </Suspense>
-            } />
-            <Route path="/whatsapp" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <LazyWhatsApp />
-              </Suspense>
-            } />
-            <Route path="/conversations" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <LazyConversations />
-              </Suspense>
-            } />
-            <Route path="/admin" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <LazyAdmin />
-              </Suspense>
-             } />
-             <Route path="/embed/chat/:agentId" element={<EmbedChat />} />
-             <Route path="/thank-you" element={<ThankYou />} />
-             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </LanguageProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log('=== APP.TSX INICIALIZANDO ===');
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
+        <ThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/assistants" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyAssistants />
+                  </Suspense>
+                } />
+                <Route path="/whatsapp" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyWhatsApp />
+                  </Suspense>
+                } />
+                <Route path="/conversations" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyConversations />
+                  </Suspense>
+                } />
+                <Route path="/admin" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyAdmin />
+                  </Suspense>
+                 } />
+                 <Route path="/embed/chat/:agentId" element={<EmbedChat />} />
+                 <Route path="/thank-you" element={<ThankYou />} />
+                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                 <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </ThemeProvider>
+      </LanguageProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
