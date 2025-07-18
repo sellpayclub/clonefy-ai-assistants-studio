@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import AppSidebar from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import SupportChatWidget from "@/components/SupportChatWidget";
 
 interface Assistant {
@@ -51,6 +52,7 @@ const Conversations = () => {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -407,7 +409,7 @@ const Conversations = () => {
                     {assistants.length === 0 ? (
                       <div className="p-3 text-center text-muted-foreground">
                         <p className="text-sm">
-                          {loading ? "Carregando agentes..." : "Nenhum agente encontrado"}
+                          {loading ? t('conversations.loadingAgents') : t('conversations.noAgents')}
                         </p>
                         {!loading && (
                           <Button 
@@ -580,7 +582,7 @@ const Conversations = () => {
                   <div>
                     <h3 className="text-base md:text-lg font-semibold mb-2">Selecione uma conversa</h3>
                     <p className="text-muted-foreground text-sm md:text-base">
-                      Escolha uma conversa existente ou inicie uma nova com seus agentes
+                      {t('conversations.selectConversation')}
                     </p>
                   </div>
                 </div>

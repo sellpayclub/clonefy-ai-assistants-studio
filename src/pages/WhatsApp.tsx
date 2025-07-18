@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { useUserLimits } from "@/hooks/useUserLimits";
 import SupportChatWidget from "@/components/SupportChatWidget";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Assistant {
   id: string;
@@ -55,6 +56,7 @@ const WhatsApp = () => {
   const [selectedAssistant, setSelectedAssistant] = useState("");
   
   const { toast } = useToast();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { limits, reloadLimits } = useUserLimits();
 
@@ -526,7 +528,7 @@ const WhatsApp = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Carregando...</p>
+          <p>{t('common.loading')}</p>
         </div>
       </div>
     );

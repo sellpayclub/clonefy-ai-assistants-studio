@@ -210,7 +210,7 @@ const EmbedChat = () => {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );

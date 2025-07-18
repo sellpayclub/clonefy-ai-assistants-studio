@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface UserQuota {
   user_id: string;
@@ -49,6 +50,7 @@ const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const { toast } = useToast();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   // Estados para emails autorizados
@@ -303,7 +305,7 @@ const Admin = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Carregando...</p>
+          <p>{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -368,7 +370,7 @@ const Admin = () => {
                 <Card className="p-3">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary">{globalStats.total_assistants}</div>
-                    <div className="text-sm text-muted-foreground">Total Agentes</div>
+                    <div className="text-sm text-muted-foreground">{t('admin.totalAgents')}</div>
                   </div>
                 </Card>
                 <Card className="p-3">
@@ -431,7 +433,7 @@ const Admin = () => {
                       <TableRow>
                         <TableHead className="min-w-[200px]">Usuário</TableHead>
                         <TableHead className="min-w-[80px]">Plano</TableHead>
-                        <TableHead className="min-w-[120px]">Agentes</TableHead>
+                        <TableHead className="min-w-[120px]">{t('admin.agents')}</TableHead>
                         <TableHead className="min-w-[140px]">Conexões WhatsApp</TableHead>
                         <TableHead className="min-w-[120px]">Ações</TableHead>
                       </TableRow>
@@ -521,7 +523,7 @@ const Admin = () => {
                                 onClick={() => startEditing(user)}
                               >
                                 <Settings className="h-3 w-3 mr-1" />
-                                Editar
+                                {t('admin.edit')}
                               </Button>
                             )}
                           </TableCell>
@@ -552,7 +554,7 @@ const Admin = () => {
                         {/* Limits */}
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
-                            <Label className="text-xs text-muted-foreground">Agentes</Label>
+                            <Label className="text-xs text-muted-foreground">{t('admin.agents')}</Label>
                             {editingUserId === user.user_id ? (
                               <Input
                                 type="number"
@@ -631,7 +633,7 @@ const Admin = () => {
                               className="w-full"
                             >
                               <Settings className="h-3 w-3 mr-1" />
-                              Editar Limites
+                              {t('admin.editLimits')}
                             </Button>
                           )}
                         </div>

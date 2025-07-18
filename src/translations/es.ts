@@ -51,14 +51,69 @@ export default {
     fastService: {
       title: "Atención Rápida",
       description: "¡Tus clientes y Leads respondidos rápidamente en cualquier momento! Toma el control y supervisa todo lo que dice la IA."
+    }
   },
+
+  // Assistants Section
   assistants: {
     used: "agentes creados",
+    createNew: "Crear Nuevo Agente",
+    editAgent: "Editar Agente",
+    editInstructions: "Editar Instrucciones",
+    createDialog: {
+      createTitle: "Crear Nuevo Agente",
+      editTitle: "Editar Agente",
+      createDescription: "Configura tu agente de IA personalizado",
+      editDescription: "Modifica las configuraciones de tu agente y gestiona archivos"
+    },
+    instructionsDialog: {
+      title: "Editar Instrucciones",
+      description: "Usa este espacio más grande para escribir instrucciones detalladas para tu agente",
+      label: "Instrucciones Completas",
+      placeholder: "Describe en detalle cómo debe comportarse el agente, su tono de voz, conocimientos específicos, ejemplos de respuesta...",
+      expandButton: "Expandir",
+      saveButton: "Guardar Instrucciones"
+    },
+    form: {
+      name: "Nombre del Agente",
+      namePlaceholder: "Ej: Vendedor Virtual",
+      description: "Descripción",
+      descriptionPlaceholder: "Descripción breve del agente",
+      instructions: "Instrucciones",
+      instructionsPlaceholder: "Instrucciones detalladas para el agente..."
+    },
+    tabs: {
+      myAgents: "Mis Agentes",
+      templates: "Plantillas"
+    },
+    actions: {
+      test: "Probar",
+      edit: "Editar",
+      delete: "Eliminar",
+      create: "Crear Agente"
+    },
     files: {
       title: "Archivos del Agente",
       description: "Añade imágenes, videos y documentos que la IA podrá enviar automáticamente en las conversaciones de WhatsApp."
+    },
+    errors: {
+      loadTitle: "Error al cargar agentes",
+      loadGeneric: "Ocurrió un error inesperado al cargar los agentes. Intenta recargar la página.",
+      apiTitle: "Error en la API de OpenAI",
+      apiMessage: "Hubo un problema al conectar con OpenAI. Intenta nuevamente en algunos instantes.",
+      duplicateName: "Ya existe un agente con este nombre. Por favor, elija un nombre diferente.",
+      networkTitle: "Error de conexión",
+      networkMessage: "Problema de conectividad. Verifica tu conexión a internet.",
+      authTitle: "Error de autenticación",
+      authMessage: "Tu sesión expiró. Por favor, inicia sesión nuevamente.",
+      quotaTitle: "Límite alcanzado",
+      quotaMessage: "Has alcanzado el límite de agentes. Contacta al soporte para más información."
+    },
+    success: {
+      created: "Agente creado exitosamente",
+      updated: "Agente actualizado exitosamente",
+      deleted: "Agente eliminado exitosamente"
     }
-  }
   },
 
   // Pricing Section
@@ -99,7 +154,7 @@ export default {
     copyright: "© 2024 CLONEFY. Todos los derechos reservados."
   },
 
-  // Páginas internas
+  // Auth Pages
   auth: {
     title: "CLONEFY",
     subtitle: "Plataforma de Clones de IA para WhatsApp",
@@ -122,6 +177,7 @@ export default {
     signOutError: "Error al cerrar sesión"
   },
   
+  // Dashboard
   dashboard: {
     title: "Panel de Control",
     welcome: "Bienvenido de vuelta",
@@ -152,6 +208,7 @@ export default {
     }
   },
   
+  // Sidebar
   sidebar: {
     mainMenu: "Menú Principal",
     dashboard: {
@@ -200,6 +257,44 @@ export default {
     loading: "Cargando...",
     reload: "Recargar",
     error: "Error",
-    success: "Éxito"
+    success: "Éxito",
+    confirm: "Confirmar",
+    close: "Cerrar"
+  },
+
+  // Admin Panel
+  admin: {
+    title: "Panel de Administración",
+    totalAgents: "Total Agentes",
+    editLimits: "Editar Límites",
+    edit: "Editar",
+    agents: "Agentes",
+    whatsappConnections: "Conexiones WhatsApp"
+  },
+
+  // WhatsApp
+  whatsapp: {
+    connect: "Conectar WhatsApp",
+    scanCode: "Escanea este código QR con tu WhatsApp para conectar",
+    howToConnect: "Cómo conectar:",
+    steps: {
+      step1: "1. Abre WhatsApp en tu teléfono",
+      step2: "2. Toca los tres puntos (⋮) y selecciona \"Dispositivos vinculados\"", 
+      step3: "3. Toca en \"Vincular un dispositivo\"",
+      step4: "4. Apunta la cámara hacia este código QR"
+    },
+    qrExpired: "Código QR expirado",
+    qrExpiredDesc: "Genera un nuevo código QR para conectar.",
+    qrGenerated: "Código QR generado",
+    qrGeneratedDesc: "Escanea el código para conectar WhatsApp. Expira en 45 segundos.",
+    qrAvailable: "Código QR disponible"
+  },
+
+  // Conversations
+  conversations: {
+    title: "Conversaciones",
+    loadingAgents: "Cargando agentes...",
+    noAgents: "Ningún agente encontrado",
+    selectConversation: "Elige una conversación existente o inicia una nueva con tus agentes"
   }
 };

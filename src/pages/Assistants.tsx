@@ -348,7 +348,7 @@ const Assistants = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Carregando...</p>
+          <p>{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -424,8 +424,8 @@ const Assistants = () => {
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="assistants">Meus Agentes</TabsTrigger>
-              <TabsTrigger value="templates">Templates</TabsTrigger>
+              <TabsTrigger value="assistants">{t('assistants.tabs.myAgents')}</TabsTrigger>
+              <TabsTrigger value="templates">{t('assistants.tabs.templates')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="assistants" className="space-y-6">
@@ -489,12 +489,12 @@ const Assistants = () => {
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
-                  {editingAssistant ? "Editar Agente" : "Criar Novo Agente"}
+                  {editingAssistant ? t('assistants.createDialog.editTitle') : t('assistants.createDialog.createTitle')}
                 </DialogTitle>
                 <DialogDescription>
                   {editingAssistant 
-                    ? "Modifique as configurações do seu agente e gerencie arquivos" 
-                    : "Configure seu agente de IA personalizado"
+                    ? t('assistants.createDialog.editDescription')
+                    : t('assistants.createDialog.createDescription')
                   }
                 </DialogDescription>
               </DialogHeader>
@@ -832,18 +832,18 @@ const Assistants = () => {
           <Dialog open={instructionsExpanded} onOpenChange={setInstructionsExpanded}>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Editar Instruções</DialogTitle>
+                <DialogTitle>{t('assistants.instructionsDialog.title')}</DialogTitle>
                 <DialogDescription>
-                  Use este espaço maior para escrever instruções detalhadas para seu agente
+                  {t('assistants.instructionsDialog.description')}
                 </DialogDescription>
               </DialogHeader>
               
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="expanded-instructions">Instruções Completas</Label>
+                  <Label htmlFor="expanded-instructions">{t('assistants.instructionsDialog.label')}</Label>
                   <Textarea
                     id="expanded-instructions"
-                    placeholder="Descreva em detalhes como o agente deve se comportar, seu tom de voz, conhecimentos específicos, exemplos de resposta..."
+                    placeholder={t('assistants.instructionsDialog.placeholder')}
                     rows={20}
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
