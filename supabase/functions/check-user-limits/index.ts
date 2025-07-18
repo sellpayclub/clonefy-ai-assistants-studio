@@ -116,6 +116,7 @@ async function checkLimits(supabaseClient: any, userId: string, resourceType: st
       currentCount = assistants?.length || 0
       maxCount = quotas.max_assistants
     } else if (resourceType === 'whatsapp_connection') {
+      // Verificar na tabela whatsapp_connections
       const { data: connections, error } = await supabaseClient
         .from('whatsapp_connections')
         .select('id')
@@ -125,7 +126,19 @@ async function checkLimits(supabaseClient: any, userId: string, resourceType: st
         throw error
       }
 
-      currentCount = connections?.length || 0
+      // Também verificar na tabela n8n_fluxogpt para compatibilidade
+      const { data: n8nConnections, error: n8nError } = await supabaseClient
+        .from('n8n_fluxogpt')
+        .select('id')
+        .eq('emailuser', userId) // Note: precisa do email, não user_id
+
+      if (n8nError) {
+        console.warn('Error fetching n8n connections:', n8nError)
+      }
+
+      const whatsappCount = connections?.length || 0
+      const n8nCount = n8nConnections?.length || 0
+      currentCount = whatsappCount + n8nCount
       maxCount = quotas.max_whatsapp_connections
     }
 

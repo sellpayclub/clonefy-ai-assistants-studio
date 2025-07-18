@@ -16,6 +16,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
 import { useUserLimits } from "@/hooks/useUserLimits";
 import SupportChatWidget from "@/components/SupportChatWidget";
+import { UpgradeBanner } from "@/components/UpgradeBanner";
 
 interface Assistant {
   id: string;
@@ -168,7 +169,7 @@ const WhatsApp = () => {
     if (limits && !limits.can_create_whatsapp_connection) {
       toast({
         title: "Limite atingido",
-        description: `Você já criou ${limits.max_whatsapp_connections} conexão(s). Para criar mais, solicite um aumento de limite.`,
+        description: `Você já criou ${limits.current_whatsapp_connections}/${limits.max_whatsapp_connections} conexão(s). Faça upgrade para criar mais!`,
         variant: "destructive",
       });
       return;
@@ -564,6 +565,17 @@ const WhatsApp = () => {
               </Button>
             </div>
           </div>
+
+          {/* Banner de upgrade se limite atingido */}
+          {limits && !limits.can_create_whatsapp_connection && (
+            <div className="mb-6">
+              <UpgradeBanner 
+                type="connections" 
+                currentCount={limits.current_whatsapp_connections}
+                maxCount={limits.max_whatsapp_connections}
+              />
+            </div>
+          )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 h-auto md:h-10">

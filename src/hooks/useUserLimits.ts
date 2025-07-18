@@ -73,16 +73,28 @@ export const useUserLimits = () => {
         console.error('Erro ao contar conexões:', connectionsError);
       }
 
+      // Também contar da tabela n8n_fluxogpt para compatibilidade
+      const { data: n8nConnectionsData, error: n8nConnectionsError } = await supabase
+        .from('n8n_fluxogpt')
+        .select('id')
+        .eq('emailuser', user.email);
+
+      if (n8nConnectionsError) {
+        console.error('Erro ao contar conexões n8n:', n8nConnectionsError);
+      }
+
       const currentAssistants = assistantsData?.length || 0;
-      const currentConnections = connectionsData?.length || 0;
+      const currentWhatsAppConnections = (connectionsData?.length || 0);
+      const currentN8nConnections = (n8nConnectionsData?.length || 0);
+      const totalConnections = currentWhatsAppConnections + currentN8nConnections;
 
       const userLimits = {
         max_assistants: quotaData.max_assistants,
         max_whatsapp_connections: quotaData.max_whatsapp_connections,
         current_assistants: currentAssistants,
-        current_whatsapp_connections: currentConnections,
+        current_whatsapp_connections: totalConnections,
         can_create_assistant: currentAssistants < quotaData.max_assistants,
-        can_create_whatsapp_connection: currentConnections < quotaData.max_whatsapp_connections,
+        can_create_whatsapp_connection: totalConnections < quotaData.max_whatsapp_connections,
         plan_type: quotaData.plan_type
       };
 
@@ -90,7 +102,9 @@ export const useUserLimits = () => {
       console.log('Max assistentes:', userLimits.max_assistants);
       console.log('Max conexões:', userLimits.max_whatsapp_connections);
       console.log('Assistentes atuais:', userLimits.current_assistants);
-      console.log('Conexões atuais:', userLimits.current_whatsapp_connections);
+      console.log('Conexões WhatsApp:', currentWhatsAppConnections);
+      console.log('Conexões N8N:', currentN8nConnections);
+      console.log('Total conexões:', userLimits.current_whatsapp_connections);
       console.log('Plano:', userLimits.plan_type);
       console.log('===========================');
 
