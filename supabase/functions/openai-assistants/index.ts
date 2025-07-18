@@ -84,6 +84,19 @@ async function createAssistant(userId: string, data: any) {
 
   console.log('Creating assistant with model:', model);
   
+  // Check if assistant with this name already exists for this user
+  const { data: existingAssistant, error: checkError } = await supabase
+    .from('assistants')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('name', name)
+    .eq('is_active', true)
+    .single();
+    
+  if (existingAssistant) {
+    throw new Error('Já existe um agente com esse nome. Por favor, escolha um nome diferente.');
+  }
+  
   // Create assistant in OpenAI
   const openAIResponse = await fetch('https://api.openai.com/v1/assistants', {
     method: 'POST',
@@ -150,7 +163,18 @@ async function createAssistant(userId: string, data: any) {
     } catch (deleteError) {
       console.error('Failed to cleanup OpenAI assistant:', deleteError);
     }
-    throw new Error(`Database error: ${error.message}`);
+    
+    // Check for specific error types to provide better messages
+    let errorMessage = error.message;
+    if (error.code === '23505' || error.message.includes('duplicate') || error.message.includes('unique')) {
+      errorMessage = 'Já existe um agente com esse nome. Por favor, escolha um nome diferente.';
+    } else if (error.code === '23514' || error.message.includes('check constraint')) {
+      errorMessage = 'Os dados fornecidos não atendem aos requisitos. Verifique os campos obrigatórios.';
+    } else if (error.code === '23503' || error.message.includes('foreign key')) {
+      errorMessage = 'Erro de referência no banco de dados. Tente novamente.';
+    }
+    
+    throw new Error(errorMessage);
   }
 
   return new Response(JSON.stringify({ assistant }), {

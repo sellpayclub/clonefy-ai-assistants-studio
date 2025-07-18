@@ -164,9 +164,24 @@ const Assistants = () => {
       setAssistants(assistantsList);
     } catch (error: any) {
       console.error('Error loading assistants:', error);
+      
+      // Mensagens de erro mais específicas para carregamento
+      let errorMessage = error.message;
+      let errorTitle = "Erro ao carregar agentes";
+      
+      if (error.message?.includes('Invalid token') || error.message?.includes('authorization')) {
+        errorTitle = "Erro de autenticação";
+        errorMessage = "Sua sessão expirou. Por favor, faça login novamente.";
+      } else if (error.message?.includes('Network') || error.message?.includes('fetch')) {
+        errorTitle = "Erro de conexão";
+        errorMessage = "Verifique sua conexão com a internet e tente novamente.";
+      } else if (!error.message || error.message === 'undefined') {
+        errorMessage = "Ocorreu um erro inesperado ao carregar os agentes. Tente recarregar a página.";
+      }
+      
       toast({
-        title: "Erro ao carregar agentes",
-        description: error.message,
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -246,9 +261,30 @@ const Assistants = () => {
       await reloadLimits(); // Reload limits after creating
     } catch (error: any) {
       console.error('Error saving assistant:', error);
+      
+      // Mensagens de erro mais específicas
+      let errorMessage = error.message;
+      let errorTitle = "Erro ao salvar agente";
+      
+      if (error.message?.includes('duplicate') || error.message?.includes('unique') || error.message?.includes('already exists')) {
+        errorTitle = "Nome já utilizado";
+        errorMessage = "Já existe um agente com esse nome. Por favor, escolha um nome diferente.";
+      } else if (error.message?.includes('OpenAI API')) {
+        errorTitle = "Erro na API do OpenAI";
+        errorMessage = "Houve um problema ao conectar com o OpenAI. Tente novamente em alguns instantes.";
+      } else if (error.message?.includes('Database error')) {
+        errorTitle = "Erro no banco de dados";
+        errorMessage = "Houve um problema ao salvar no banco de dados. Tente novamente.";
+      } else if (error.message?.includes('Invalid token') || error.message?.includes('authorization')) {
+        errorTitle = "Erro de autenticação";
+        errorMessage = "Sua sessão expirou. Por favor, faça login novamente.";
+      } else if (!error.message || error.message === 'undefined') {
+        errorMessage = "Ocorreu um erro inesperado. Tente novamente.";
+      }
+      
       toast({
-        title: "Erro ao salvar agente",
-        description: error.message,
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -284,9 +320,24 @@ const Assistants = () => {
       await reloadLimits(); // Reload limits after deleting
     } catch (error: any) {
       console.error('Error deleting assistant:', error);
+      
+      // Mensagens de erro mais específicas para exclusão
+      let errorMessage = error.message;
+      let errorTitle = "Erro ao excluir agente";
+      
+      if (error.message?.includes('not found') || error.message?.includes('não encontrado')) {
+        errorTitle = "Agente não encontrado";
+        errorMessage = "O agente não foi encontrado. Talvez já tenha sido excluído.";
+      } else if (error.message?.includes('Invalid token') || error.message?.includes('authorization')) {
+        errorTitle = "Erro de autenticação";
+        errorMessage = "Sua sessão expirou. Por favor, faça login novamente.";
+      } else if (!error.message || error.message === 'undefined') {
+        errorMessage = "Ocorreu um erro inesperado ao excluir o agente. Tente novamente.";
+      }
+      
       toast({
-        title: "Erro ao excluir agente",
-        description: error.message,
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive",
       });
     }
