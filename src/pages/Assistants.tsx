@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { Badge } from "@/components/ui/badge";
-import { Bot, Plus, Edit, Trash2, MessageSquare, Settings, RefreshCw, Code, Copy } from "lucide-react";
+import { Bot, Plus, Edit, Trash2, MessageSquare, Settings, RefreshCw, Code, Copy, Expand } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useUserLimits } from "@/hooks/useUserLimits";
@@ -59,6 +59,7 @@ const Assistants = () => {
   const [description, setDescription] = useState("");
   const [instructions, setInstructions] = useState("");
   const [model] = useState("gpt-4o"); // Always use GPT-4o for now
+  const [instructionsExpanded, setInstructionsExpanded] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -479,7 +480,19 @@ const Assistants = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="instructions">Instruções</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="instructions">Instruções</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setInstructionsExpanded(true)}
+                          className="text-xs"
+                        >
+                          <Expand className="h-3 w-3 mr-1" />
+                          Expandir
+                        </Button>
+                      </div>
                       <Textarea
                         id="instructions"
                         placeholder="Descreva como o agente deve se comportar, seu tom de voz, conhecimentos específicos..."
@@ -761,6 +774,58 @@ const Assistants = () => {
                   </div>
                 </div>
               )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Expanded Instructions Dialog */}
+          <Dialog open={instructionsExpanded} onOpenChange={setInstructionsExpanded}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Editar Instruções</DialogTitle>
+                <DialogDescription>
+                  Use este espaço maior para escrever instruções detalhadas para seu agente
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="expanded-instructions">Instruções Completas</Label>
+                  <Textarea
+                    id="expanded-instructions"
+                    placeholder="Descreva em detalhes como o agente deve se comportar, seu tom de voz, conhecimentos específicos, exemplos de resposta..."
+                    rows={20}
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                    className="min-h-[500px] resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Seja específico sobre como o agente deve responder e se comportar. 
+                    Incluir exemplos e cenários específicos melhorará a qualidade das respostas.
+                  </p>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setInstructionsExpanded(false)}
+                  >
+                    Fechar
+                  </Button>
+                  <Button 
+                    type="button" 
+                    onClick={() => {
+                      setInstructionsExpanded(false);
+                      toast({
+                        title: "Instruções salvas!",
+                        description: "As alterações foram aplicadas ao formulário.",
+                      });
+                    }}
+                  >
+                    Salvar e Fechar
+                  </Button>
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
         </main>
