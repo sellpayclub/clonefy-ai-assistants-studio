@@ -101,43 +101,43 @@ const Espanol = () => {
       <section className="container mx-auto px-4 py-6 sm:py-8 lg:py-12 text-center">
         <div className="max-w-6xl mx-auto">
           <div className="mb-6 sm:mb-8">
-            <span className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium">
+            <span className="inline-block px-3 sm:px-4 py-2 bg-primary/10 text-primary rounded-full text-xs sm:text-sm font-medium">
               ¡Revoluciona tu atención al cliente!
             </span>
           </div>
           
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 sm:mb-8 leading-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 lg:mb-8 leading-tight px-2">
             Clona tu mejor{" "}
-            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent inline-block min-w-[140px] sm:min-w-[200px] lg:min-w-[300px] transition-all duration-500">
+            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent inline-block min-w-[100px] sm:min-w-[140px] lg:min-w-[200px] xl:min-w-[300px] transition-all duration-500">
               {roles[currentRole]}
             </span>
             <br />
             con Inteligencia Artificial
           </h1>
           
-          <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground mb-8 sm:mb-10 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg lg:text-xl xl:text-2xl text-muted-foreground mb-6 sm:mb-8 lg:mb-10 max-w-4xl mx-auto leading-relaxed px-2">
             Crea agentes de IA para WhatsApp que trabajan 24/7 atendiendo a tus clientes.
             <br />
             <strong className="text-foreground">Sin programación, sin complicaciones.</strong>
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10 sm:mb-12 max-w-md sm:max-w-none mx-auto">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-10 lg:mb-12 max-w-md sm:max-w-none mx-auto px-4">
             <Button 
               size="lg" 
               onClick={scrollToPricing}
-              className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 px-8 py-4 text-lg font-semibold"
+              className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold"
             >
               <span className="sm:hidden">Ver Precios</span>
               <span className="hidden sm:inline">Ver Precios</span>
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </div>
 
-          <div className="bg-card/60 backdrop-blur-sm border rounded-2xl p-6 sm:p-8 lg:p-10 max-w-4xl mx-auto">
-            <p className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-4">
+          <div className="bg-card/60 backdrop-blur-sm border rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 xl:p-10 max-w-4xl mx-auto">
+            <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-muted-foreground mb-3 sm:mb-4">
               Conecta CLONEFY con tu WhatsApp y comienza a automatizar tu atención al cliente HOY MISMO.
             </p>
-            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-primary">
+            <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-primary">
               ¡Todo funciona en piloto automático!
             </p>
           </div>
@@ -145,38 +145,38 @@ const Espanol = () => {
       </section>
 
       {/* Demo Section */}
-      <section className="container mx-auto px-4 py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-primary/5 to-transparent">
-        <div className="text-center mb-16 sm:mb-20">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">Qué Tan Fácil es Usar CLONEFY</h2>
-          <p className="text-muted-foreground max-w-3xl mx-auto text-lg sm:text-xl">
+      <section className="container mx-auto px-4 py-12 sm:py-16 lg:py-20 xl:py-24 bg-gradient-to-br from-primary/5 to-transparent">
+        <div className="text-center mb-12 sm:mb-16 lg:mb-20">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6 px-2">Qué Tan Fácil es Usar CLONEFY</h2>
+          <p className="text-muted-foreground max-w-3xl mx-auto text-base sm:text-lg lg:text-xl px-2">
             Mira en la práctica cómo crear y configurar tus agentes de IA en pocos clics
           </p>
         </div>
         
-        <div className="space-y-20 sm:space-y-24">
+        <div className="space-y-16 sm:space-y-20 lg:space-y-24">
           {/* Paso 1: Crear Agente - Texto à Esquerda, Imagem à Direita */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-16 items-center">
             <div className="order-1">
-              <div className="bg-primary/10 text-primary rounded-full px-4 py-2 text-sm font-medium inline-block mb-6">
+              <div className="bg-primary/10 text-primary rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium inline-block mb-4 sm:mb-6">
                 Paso 1
               </div>
-              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6">Crear Tu Agente</h3>
-              <p className="text-muted-foreground text-lg sm:text-xl mb-8 leading-relaxed">
+              <h3 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-4 sm:mb-6 px-2">Crear Tu Agente</h3>
+              <p className="text-muted-foreground text-base sm:text-lg lg:text-xl mb-6 sm:mb-8 leading-relaxed px-2">
                 Haz clic en "Nuevo Agente" y ¡listo! Una interfaz simple e intuitiva 
                 para comenzar a configurar tu asistente virtual.
               </p>
-              <ul className="space-y-4">
-                <li className="flex items-center gap-4">
-                  <div className="w-3 h-3 rounded-full bg-primary flex-shrink-0"></div>
-                  <span className="text-base sm:text-lg">Interfaz limpia y fácil de usar</span>
+              <ul className="space-y-3 sm:space-y-4 px-2">
+                <li className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-primary flex-shrink-0"></div>
+                  <span className="text-sm sm:text-base lg:text-lg">Interfaz limpia y fácil de usar</span>
                 </li>
-                <li className="flex items-center gap-4">
-                  <div className="w-3 h-3 rounded-full bg-primary flex-shrink-0"></div>
-                  <span className="text-base sm:text-lg">Proceso guiado paso a paso</span>
+                <li className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-primary flex-shrink-0"></div>
+                  <span className="text-sm sm:text-base lg:text-lg">Proceso guiado paso a paso</span>
                 </li>
-                <li className="flex items-center gap-4">
-                  <div className="w-3 h-3 rounded-full bg-primary flex-shrink-0"></div>
-                  <span className="text-base sm:text-lg">Configuración en minutos</span>
+                <li className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-primary flex-shrink-0"></div>
+                  <span className="text-sm sm:text-base lg:text-lg">Configuración en minutos</span>
                 </li>
               </ul>
             </div>
@@ -184,7 +184,7 @@ const Espanol = () => {
               <img 
                 src="/lovable-uploads/9f3a5eff-0cc3-4b52-b5c5-a5f1a7f4876b.png"
                 alt="Crear Agente - Interfaz simple para comenzar"
-                className="rounded-2xl shadow-2xl border w-full max-w-lg mx-auto"
+                className="rounded-xl sm:rounded-2xl shadow-2xl border w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto"
                 loading="lazy"
               />
             </div>
