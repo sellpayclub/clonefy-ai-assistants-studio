@@ -3,11 +3,14 @@ import { Bot, MessageSquare, Smartphone, Star, ArrowRight, Clock, Users, Trendin
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { CurrencySelector } from "@/components/CurrencySelector";
 import ChatWidget from "@/components/ChatWidget";
 import { useTheme } from "@/components/ThemeProvider";
 
 const Espanol = () => {
   const { setTheme } = useTheme();
+  const [selectedCurrency, setSelectedCurrency] = useState<{symbol: string, code: string}>({symbol: "$", code: "USD"});
+  const [convertedPrice, setConvertedPrice] = useState<number>(19);
   const [currentRole, setCurrentRole] = useState(0);
   const roles = [
     'Vendedor',
@@ -49,6 +52,11 @@ const Espanol = () => {
     }, 2000);
     return () => clearInterval(interval);
   }, [roles.length, setTheme]);
+
+  const handleCurrencyChange = (currency: any, price: number) => {
+    setSelectedCurrency({ symbol: currency.symbol, code: currency.code });
+    setConvertedPrice(price);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/50">
@@ -476,6 +484,16 @@ const Espanol = () => {
           </p>
         </div>
 
+        {/* Currency Selector */}
+        <div className="flex justify-center mb-8 sm:mb-12">
+          <div className="bg-card/60 backdrop-blur-sm border rounded-2xl p-4 sm:p-6">
+            <div className="text-center mb-4">
+              <p className="text-sm sm:text-base text-muted-foreground mb-2">Selecciona tu moneda:</p>
+            </div>
+            <CurrencySelector basePrice={19} onCurrencyChange={handleCurrencyChange} />
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
           {/* Funcionário Tradicional */}
           <div className="p-6 sm:p-8 rounded-xl sm:rounded-2xl border bg-card/30">
@@ -513,7 +531,12 @@ const Espanol = () => {
             </div>
             <div className="text-center mb-6">
               <h3 className="text-xl sm:text-2xl font-bold mb-2">CLONEFY</h3>
-              <div className="text-3xl sm:text-4xl font-bold text-primary">$97</div>
+              <div className="text-3xl sm:text-4xl font-bold text-primary">
+                {selectedCurrency.symbol}{new Intl.NumberFormat('es-ES', {
+                  minimumFractionDigits: selectedCurrency.code === 'USD' || selectedCurrency.code === 'EUR' ? 2 : 0,
+                  maximumFractionDigits: selectedCurrency.code === 'USD' || selectedCurrency.code === 'EUR' ? 2 : 0,
+                }).format(convertedPrice)}
+              </div>
               <p className="text-muted-foreground text-sm sm:text-base">por mes</p>
             </div>
             <ul className="space-y-3">
@@ -539,7 +562,7 @@ const Espanol = () => {
 
         <div className="text-center mt-8 sm:mt-12">
           <p className="text-lg sm:text-xl lg:text-2xl font-bold mb-6 sm:mb-8 px-2">
-            ¡Ahorras más de <span className="text-primary">$2.400 por mes!</span>
+            ¡Un precio increíblemente accesible para <span className="text-primary">automatizar tu negocio!</span>
           </p>
           <a href="https://sellpay.thrivecart.com/clonefy-app/" target="_blank" rel="noopener noreferrer">
             <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 px-8 sm:px-12 py-4 sm:py-6 text-base sm:text-lg">
