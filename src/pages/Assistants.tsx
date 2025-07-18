@@ -19,6 +19,7 @@ import AgentTutorial from "@/components/AgentTutorial";
 import { AssistantMediaUpload } from "@/components/AssistantMediaUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { UpgradeBanner } from "@/components/UpgradeBanner";
 import SupportChatWidget from "@/components/SupportChatWidget";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { AssistantTemplates } from "@/components/AssistantTemplates";
@@ -182,7 +183,7 @@ const Assistants = () => {
     if (limits && !limits.can_create_assistant) {
       toast({
         title: "Limite atingido",
-        description: `Você já criou ${limits.max_assistants} agente(s). Para criar mais, solicite um aumento de limite.`,
+        description: `Você já criou ${limits.current_assistants}/${limits.max_assistants} agente(s). Faça upgrade para criar mais!`,
         variant: "destructive",
       });
       return;
@@ -356,6 +357,17 @@ const Assistants = () => {
               )}
             </div>
           </div>
+
+          {/* Banner de upgrade se limite atingido */}
+          {limits && !limits.can_create_assistant && (
+            <div className="mb-6">
+              <UpgradeBanner 
+                type="assistants" 
+                currentCount={limits.current_assistants}
+                maxCount={limits.max_assistants}
+              />
+            </div>
+          )}
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
