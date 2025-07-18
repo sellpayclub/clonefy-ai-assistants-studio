@@ -18,6 +18,7 @@ const LazyAssistants = lazy(() => import("./pages/Assistants"));
 const LazyWhatsApp = lazy(() => import("./pages/WhatsApp"));
 const LazyConversations = lazy(() => import("./pages/Conversations"));
 const LazyAdmin = lazy(() => import("./pages/Admin"));
+const LazyEspanol = lazy(() => import("./pages/Espanol"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,15 +68,20 @@ const App = () => {
                     <LazyConversations />
                   </Suspense>
                 } />
-                <Route path="/admin" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <LazyAdmin />
-                  </Suspense>
-                 } />
-                 <Route path="/embed/chat/:agentId" element={<EmbedChat />} />
-                 <Route path="/thank-you" element={<ThankYou />} />
-                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                 <Route path="*" element={<NotFound />} />
+                 <Route path="/admin" element={
+                   <Suspense fallback={<LoadingFallback />}>
+                     <LazyAdmin />
+                   </Suspense>
+                  } />
+                  <Route path="/espanol" element={
+                    <Suspense fallback={<LoadingFallback />}>
+                      <LazyEspanol />
+                    </Suspense>
+                  } />
+                  <Route path="/embed/chat/:agentId" element={<EmbedChat />} />
+                  <Route path="/thank-you" element={<ThankYou />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
