@@ -127,10 +127,14 @@ async function checkLimits(supabaseClient: any, userId: string, resourceType: st
       }
 
       // Também verificar na tabela n8n_fluxogpt para compatibilidade
+      // Precisa buscar pelo email do usuário, não pelo ID
+      const { data: userEmailResult } = await supabaseClient.auth.getUser()
+      const userEmail = userEmailResult?.user?.email || userEmailResult?.user?.user_metadata?.email
+
       const { data: n8nConnections, error: n8nError } = await supabaseClient
         .from('n8n_fluxogpt')
         .select('id')
-        .eq('emailuser', userId) // Note: precisa do email, não user_id
+        .eq('emailuser', userEmail)
 
       if (n8nError) {
         console.warn('Error fetching n8n connections:', n8nError)
