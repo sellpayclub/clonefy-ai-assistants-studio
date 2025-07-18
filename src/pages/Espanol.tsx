@@ -182,7 +182,7 @@ const Espanol = () => {
             </div>
             <div className="order-2">
               <img 
-                src="/lovable-uploads/78405cc7-ac71-4962-a65b-41f013b48492.png"
+                src="/lovable-uploads/9f3a5eff-0cc3-4b52-b5c5-a5f1a7f4876b.png"
                 alt="Crear Agente - Interfaz simple para comenzar"
                 className="rounded-2xl shadow-2xl border w-full max-w-lg mx-auto"
                 loading="lazy"
@@ -194,7 +194,7 @@ const Espanol = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             <div className="order-2 lg:order-1">
               <img 
-                src="/lovable-uploads/840c4611-5645-4a58-98c5-fea65bbb08fc.png"
+                src="/lovable-uploads/24c3b09f-b50b-48fb-b379-bf20d9d4951b.png"
                 alt="Configurar Agente - Personalización completa"
                 className="rounded-2xl shadow-2xl border w-full max-w-lg mx-auto"
                 loading="lazy"
@@ -254,7 +254,7 @@ const Espanol = () => {
             </div>
             <div className="order-2">
               <img 
-                src="/lovable-uploads/18248d32-3b27-4c30-b5b7-0fdcc905ae7b.png"
+                src="/lovable-uploads/ceb68c74-7b74-491f-99f3-8609907cf788.png"
                 alt="Lista de Agentes - Gestión fácil"
                 className="rounded-2xl shadow-2xl border w-full max-w-lg mx-auto"
                 loading="lazy"
@@ -266,7 +266,7 @@ const Espanol = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             <div className="order-2 lg:order-1">
               <img 
-                src="/lovable-uploads/6997528e-0637-4e0e-b1c5-189e6c76f917.png"
+                src="/lovable-uploads/cfa51ea7-f427-42e8-9b0f-5e5856eaa637.png"
                 alt="Conectar WhatsApp - Integración simple"
                 className="rounded-2xl shadow-2xl border w-full max-w-lg mx-auto"
                 loading="lazy"
@@ -338,7 +338,7 @@ const Espanol = () => {
             </div>
             <div className="order-2">
               <img 
-                src="/lovable-uploads/1c3acef0-0f93-4eef-b3a5-2cb3614deb57.png"
+                src="/lovable-uploads/c4e4da5d-0c40-4061-a840-89e948142031.png"
                 alt="Chat Flotante - Widget para sitio web"
                 className="rounded-2xl shadow-2xl border w-full max-w-lg mx-auto"
                 loading="lazy"
@@ -350,7 +350,7 @@ const Espanol = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             <div className="order-2 lg:order-1">
               <img 
-                src="/lovable-uploads/a9dc3a05-1c17-4478-9cc9-51f472d73ed6.png"
+                src="/lovable-uploads/db84b39c-9b17-476c-b9ff-6ec60291c6ce.png"
                 alt="Conversación Real - Agente funcionando"
                 className="rounded-2xl shadow-2xl border w-full max-w-lg mx-auto"
                 loading="lazy"
