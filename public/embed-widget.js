@@ -102,6 +102,10 @@
       this.iframe.className = 'clonefy-widget-iframe';
       this.iframe.src = window.location.protocol + '//' + window.location.host + '/embed/chat/' + this.agentId;
       this.iframe.frameBorder = '0';
+      // Pré-carrega o iframe mas mantém escondido
+      this.iframe.style.display = 'none';
+      this.iframe.style.opacity = '0';
+      this.iframe.style.transition = 'opacity 0.2s ease-out';
       document.body.appendChild(this.iframe);
     },
     
@@ -146,16 +150,22 @@
       this.iframe.style.display = 'block';
       this.button.classList.add('open');
       
-      // Focus on iframe for accessibility
+      // Abertura instantânea com animação suave
       setTimeout(() => {
+        this.iframe.style.opacity = '1';
         this.iframe.focus();
-      }, 100);
+      }, 10);
     },
     
     close: function() {
       this.isOpen = false;
-      this.iframe.style.display = 'none';
+      this.iframe.style.opacity = '0';
       this.button.classList.remove('open');
+      
+      // Esconde o iframe após a transição
+      setTimeout(() => {
+        this.iframe.style.display = 'none';
+      }, 200);
     }
   };
   

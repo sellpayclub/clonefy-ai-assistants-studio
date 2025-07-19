@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -14,6 +16,15 @@ const ChatWidget = () => {
     window.addEventListener('resize', checkMobile);
     
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Pré-carrega o iframe para abertura instantânea
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 1000); // Carrega após 1 segundo para não impactar o carregamento inicial
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const toggleChat = () => {
@@ -45,24 +56,29 @@ const ChatWidget = () => {
         )}
       </button>
 
-      {/* Chat Iframe */}
-      {isOpen && (
-        <div
-          className={`
-            fixed z-[9998] overflow-hidden
-            transition-all duration-300 ease-in-out
-            ${isMobile 
-              ? 'top-0 left-0 right-0 bottom-0 w-screen h-screen' 
-              : 'bottom-24 right-6 w-[400px] h-[500px] rounded-xl shadow-2xl'
-            }
-            bg-white border border-gray-200
-          `}
-        >
+      {/* Chat Iframe - Pré-carregado para abertura instantânea */}
+      <div
+        className={`
+          fixed z-[9998] overflow-hidden
+          transition-all duration-200 ease-out
+          ${isOpen
+            ? isMobile 
+              ? 'top-0 left-0 right-0 bottom-0 w-screen h-screen opacity-100 scale-100' 
+              : 'bottom-24 right-6 w-[400px] h-[500px] opacity-100 scale-100'
+            : isMobile
+              ? 'top-0 left-0 right-0 bottom-0 w-screen h-screen opacity-0 scale-95 pointer-events-none'
+              : 'bottom-24 right-6 w-[400px] h-[500px] opacity-0 scale-95 pointer-events-none'
+          }
+          ${isMobile ? '' : 'rounded-xl shadow-2xl'}
+          bg-white border border-gray-200
+        `}
+      >
+        {isLoaded && (
           <iframe
+            ref={iframeRef}
             src="https://clonefy.app/embed/chat/7a218984-6ada-4581-b1b6-2119b4771260"
             className={`w-full h-full border-none ${isMobile ? '' : 'rounded-xl'}`}
             title="Clonefy Chat Support"
-            loading="lazy"
             allow="microphone; camera"
             style={{ 
               display: 'block',
@@ -72,8 +88,8 @@ const ChatWidget = () => {
               outline: 'none'
             }}
           />
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 };
