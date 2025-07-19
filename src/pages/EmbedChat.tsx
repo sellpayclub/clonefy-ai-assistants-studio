@@ -92,10 +92,8 @@ const EmbedChat = () => {
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      scrollToBottom();
-    }, 100);
-    return () => clearTimeout(timer);
+    // Scroll imediato para melhor UX
+    scrollToBottom();
   }, [messages]);
 
   useEffect(() => {
@@ -103,6 +101,7 @@ const EmbedChat = () => {
       if (!agentId) return;
 
       try {
+        // Carregamento rápido sem delays desnecessários
         const { data, error } = await supabase.functions.invoke('widget-chat', {
           body: {
             action: 'get_agent',
@@ -114,13 +113,14 @@ const EmbedChat = () => {
 
         if (data.agent) {
           setAgent(data.agent);
-          // Add welcome message
-          setMessages([{
+          // Add welcome message instantaneamente
+          const welcomeMessage = {
             id: '1',
-            role: 'assistant',
+            role: 'assistant' as const,
             content: `Olá! Eu sou ${data.agent.name}. ${data.agent.description || 'Como posso te ajudar hoje?'}`,
             timestamp: new Date()
-          }]);
+          };
+          setMessages([welcomeMessage]);
         } else {
           setError('Agente não encontrado');
         }
@@ -130,6 +130,7 @@ const EmbedChat = () => {
       }
     };
 
+    // Executa imediatamente sem timeout
     initializeChat();
   }, [agentId]);
 
@@ -209,8 +210,8 @@ const EmbedChat = () => {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">Loading...</p>
+          <Bot className="h-8 w-8 text-primary mx-auto mb-2 animate-pulse" />
+          <p className="text-sm text-muted-foreground">Carregando...</p>
         </div>
       </div>
     );
