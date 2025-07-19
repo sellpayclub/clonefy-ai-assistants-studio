@@ -23,8 +23,14 @@ const LazyEspanol = lazy(() => import("./pages/Espanol"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: 10 * 60 * 1000, // 10 minutes - aumentado
+      gcTime: 30 * 60 * 1000, // 30 minutes - aumentado
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1, // Menos tentativas para velocidade
+    },
+    mutations: {
+      retry: 1,
     },
   },
 });

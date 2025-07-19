@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 
@@ -19,7 +19,8 @@ export const useAssistants = (session: Session | null) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const callFunction = async (body: any) => {
+  // Memoize a função de chamada para evitar re-criações
+  const callFunction = useCallback(async (body: any) => {
     if (!session) {
       throw new Error('No session available');
     }
@@ -36,9 +37,10 @@ export const useAssistants = (session: Session | null) => {
     }
 
     return response.data;
-  };
+  }, [session]);
 
-  const loadAssistants = async () => {
+  // Otimiza o carregamento de assistentes
+  const loadAssistants = useCallback(async () => {
     if (!session) return;
     
     setLoading(true);
@@ -53,7 +55,7 @@ export const useAssistants = (session: Session | null) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session, callFunction]);
 
   const createAssistant = async (assistantData: {
     name: string;
@@ -100,13 +102,15 @@ export const useAssistants = (session: Session | null) => {
     return data.assistant;
   };
 
+  // Otimiza a execução do effect
   useEffect(() => {
     if (session) {
       loadAssistants();
     }
-  }, [session]);
+  }, [session, loadAssistants]);
 
-  return {
+  // Memoize o retorno para evitar re-renders desnecessários
+  return useMemo(() => ({
     assistants,
     loading,
     error,
@@ -115,5 +119,5 @@ export const useAssistants = (session: Session | null) => {
     updateAssistant,
     deleteAssistant,
     getAssistant,
-  };
+  }), [assistants, loading, error, loadAssistants]);
 };

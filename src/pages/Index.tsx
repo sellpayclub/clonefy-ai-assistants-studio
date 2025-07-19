@@ -7,6 +7,7 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import ChatWidget from "@/components/ChatWidget";
 import { useTheme } from "@/components/ThemeProvider";
 import YouTubePlayer from "@/components/YouTubePlayer";
+import LazyImage from "@/components/LazyImage";
 
 const Index = () => {
   const { t } = useLanguage();
@@ -59,7 +60,7 @@ const Index = () => {
       <header className="container mx-auto px-4 py-4 lg:py-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img 
+            <LazyImage 
               src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png" 
               alt="CLONEFY Logo" 
               className="h-16 w-auto sm:h-16 lg:h-20 xl:h-24"
@@ -183,11 +184,10 @@ const Index = () => {
               </ul>
             </div>
             <div className="order-2">
-              <img 
+              <LazyImage 
                 src="/lovable-uploads/78405cc7-ac71-4962-a65b-41f013b48492.png"
                 alt="Criar Agente - Interface simples para começar"
                 className="rounded-2xl shadow-2xl border w-full max-w-lg mx-auto"
-                loading="lazy"
               />
             </div>
           </div>

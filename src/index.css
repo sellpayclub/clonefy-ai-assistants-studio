@@ -3,6 +3,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Otimizações de performance críticas */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
 /* Design system CLONEFY - Todas as cores DEVEM ser HSL */
 
 @layer base {

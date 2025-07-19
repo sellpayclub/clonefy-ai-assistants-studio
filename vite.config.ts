@@ -19,4 +19,26 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Otimizações de build para máxima performance
+  build: {
+    target: 'esnext',
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+          supabase: ['@supabase/supabase-js'],
+          query: ['@tanstack/react-query'],
+        },
+      },
+    },
+    sourcemap: false,
+    reportCompressedSize: false,
+  },
+  // Otimizações de dependências
+  optimizeDeps: {
+    include: ['react', 'react-dom', '@supabase/supabase-js', '@tanstack/react-query'],
+    exclude: ['@vite/client', '@vite/env'],
+  },
 }));
