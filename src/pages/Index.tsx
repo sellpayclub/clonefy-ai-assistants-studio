@@ -477,6 +477,30 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Video Demonstration Section */}
+      <section className="container mx-auto px-4 py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-background to-muted/30">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 px-2">
+            Veja Como Funciona Por Dentro
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg px-2">
+            Demonstração completa da plataforma e como criar seu assistente inteligente
+          </p>
+        </div>
+        
+        <div className="max-w-4xl mx-auto">
+          <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl">
+            <iframe
+              src="https://www.youtube.com/embed/thHRCIvozPo?controls=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3"
+              className="w-full h-full border-0"
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+              title="CLONEFY - Demonstração da Plataforma"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section id="pricing-section" className="container mx-auto px-4 py-12 sm:py-16 lg:py-20">
         <div className="text-center mb-12 sm:mb-16">
