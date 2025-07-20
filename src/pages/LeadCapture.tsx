@@ -168,7 +168,7 @@ const LeadCapture = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-center">
           <Link to="/">
             <LazyImage 
               src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png" 
@@ -177,11 +177,6 @@ const LeadCapture = () => {
               loading="eager"
             />
           </Link>
-          <div className="flex items-center gap-4">
-            <Link to="/auth">
-              <Button variant="outline">Login</Button>
-            </Link>
-          </div>
         </div>
       </header>
 
@@ -225,6 +220,185 @@ const LeadCapture = () => {
               </div>
               <h3 className="font-semibold text-lg mb-2">Mais Vendas</h3>
               <p className="text-muted-foreground">Converte leads mesmo quando você dorme</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Como Funciona - Passo a Passo */}
+      <section className="container mx-auto px-4 py-16 bg-gradient-to-r from-blue-50/50 to-transparent">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-6">
+              Como Criamos Sua IA Personalizada
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Nosso processo é simples e eficiente. Em poucos dias, você terá um assistente virtual 
+              que conhece seu negócio melhor que qualquer funcionário.
+            </p>
+          </div>
+
+          <div className="space-y-16">
+            {/* Passo 1 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="bg-blue-100 text-blue-700 rounded-full px-4 py-2 text-sm font-medium inline-block mb-6">
+                  Passo 1 - Análise
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-bold mb-6">Conhecemos Seu Negócio</h3>
+                <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
+                  Nossa equipe estuda profundamente sua empresa: produtos, serviços, processos, 
+                  público-alvo e linguagem específica. Coletamos todos os dados necessários.
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                    <span>Análise completa dos seus produtos/serviços</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                    <span>Estudo do seu público-alvo e linguagem</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                    <span>Mapeamento dos seus processos de venda</span>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gradient-to-br from-blue-100 to-blue-50 p-8 rounded-2xl">
+                <div className="text-center">
+                  <Bot className="h-20 w-20 text-blue-600 mx-auto mb-4" />
+                  <h4 className="font-semibold text-lg mb-2">Coleta de Dados</h4>
+                  <p className="text-muted-foreground">Reunimos informações sobre produtos, preços, promoções e scripts de atendimento</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Passo 2 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="bg-gradient-to-br from-green-100 to-green-50 p-8 rounded-2xl order-2 lg:order-1">
+                <div className="text-center">
+                  <MessageSquare className="h-20 w-20 text-green-600 mx-auto mb-4" />
+                  <h4 className="font-semibold text-lg mb-2">Treinamento Personalizado</h4>
+                  <p className="text-muted-foreground">Criamos uma IA que fala exatamente como sua equipe falaria</p>
+                </div>
+              </div>
+              <div className="order-1 lg:order-2">
+                <div className="bg-green-100 text-green-700 rounded-full px-4 py-2 text-sm font-medium inline-block mb-6">
+                  Passo 2 - Criação
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-bold mb-6">Treinamos a IA</h3>
+                <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
+                  Utilizamos todos os dados coletados para treinar uma IA específica para sua empresa. 
+                  Ela aprende seu tom de voz, produtos e como abordar diferentes situações.
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span>Tom de voz personalizado da sua empresa</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span>Conhecimento completo dos produtos</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span>Scripts de objeções e fechamento</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Passo 3 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="bg-purple-100 text-purple-700 rounded-full px-4 py-2 text-sm font-medium inline-block mb-6">
+                  Passo 3 - Integração
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-bold mb-6">Conectamos Tudo</h3>
+                <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
+                  Integramos a IA com WhatsApp, seu site, CRM e outros sistemas. 
+                  Configuramos para que funcione perfeitamente com sua operação atual.
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                    <span>Integração com WhatsApp Business</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                    <span>Widget no seu site/landing page</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                    <span>Conexão com CRM e sistemas existentes</span>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gradient-to-br from-purple-100 to-purple-50 p-8 rounded-2xl">
+                <div className="text-center">
+                  <Smartphone className="h-20 w-20 text-purple-600 mx-auto mb-4" />
+                  <h4 className="font-semibold text-lg mb-2">Múltiplos Canais</h4>
+                  <p className="text-muted-foreground">Sua IA atende em WhatsApp, site, redes sociais e onde mais você precisar</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Passo 4 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="bg-gradient-to-br from-orange-100 to-orange-50 p-8 rounded-2xl order-2 lg:order-1">
+                <div className="text-center">
+                  <TrendingUp className="h-20 w-20 text-orange-600 mx-auto mb-4" />
+                  <h4 className="font-semibold text-lg mb-2">Resultados Reais</h4>
+                  <p className="text-muted-foreground">Aumento imediato nas conversões e atendimento 24/7 sem parar</p>
+                </div>
+              </div>
+              <div className="order-1 lg:order-2">
+                <div className="bg-orange-100 text-orange-700 rounded-full px-4 py-2 text-sm font-medium inline-block mb-6">
+                  Passo 4 - Resultado
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-bold mb-6">IA Funcionando 24/7</h3>
+                <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
+                  Sua IA está pronta! Ela atende clientes, qualifica leads, agenda horários, 
+                  responde dúvidas e até fecha vendas automaticamente.
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                    <span>Atendimento 24 horas por dia, 7 dias por semana</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                    <span>Resposta instantânea para qualquer cliente</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                    <span>Aumento comprovado nas vendas</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA Central */}
+          <div className="text-center mt-16 p-8 bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl">
+            <h3 className="text-2xl font-bold mb-4">Processo Completo em 5-7 Dias</h3>
+            <p className="text-lg text-muted-foreground mb-6">
+              Da análise inicial até sua IA funcionando perfeitamente no WhatsApp
+            </p>
+            <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span>Setup em 1 semana</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                <span>Suporte dedicado</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>Treinamento da equipe</span>
+              </div>
             </div>
           </div>
         </div>
