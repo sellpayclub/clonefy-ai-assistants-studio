@@ -196,9 +196,72 @@ async function sendMessage(userId: string, data: any) {
 
   const run = await runResponse.json();
 
-  // Wait for completion (simplified - in production you'd use streaming)
+  // Wait for completion and handle tool calls
   let runStatus = run;
-  while (runStatus.status === 'queued' || runStatus.status === 'in_progress') {
+  while (runStatus.status === 'queued' || runStatus.status === 'in_progress' || runStatus.status === 'requires_action') {
+    if (runStatus.status === 'requires_action') {
+      // Handle tool calls through our proxy
+      const requiredAction = runStatus.required_action;
+      if (requiredAction && requiredAction.type === 'submit_tool_outputs') {
+        console.log('Processing tool calls...');
+        
+        const toolOutputs = [];
+        for (const toolCall of requiredAction.submit_tool_outputs.tool_calls) {
+          if (toolCall.type === 'function') {
+            // Check if it's a calendar function
+            const functionName = toolCall.function.name;
+            if (['check_availability', 'create_appointment', 'list_appointments', 'cancel_appointment', 'reschedule_appointment', 'update_appointment'].includes(functionName)) {
+              console.log(`Calling calendar function: ${functionName}`);
+              
+              // Call our calendar proxy to handle the function call
+              const proxyResponse = await supabase.functions.invoke('chat-proxy', {
+                body: {
+                  action: 'tool_call',
+                  run_id: run.id,
+                  thread_id: conversation.openai_thread_id,
+                  tool_call_id: toolCall.id,
+                  function_name: functionName,
+                  arguments: toolCall.function.arguments
+                }
+              });
+              
+              let result;
+              if (proxyResponse.error) {
+                result = `Erro ao executar ${functionName}: ${proxyResponse.error.message}`;
+              } else {
+                // The proxy already submits the tool outputs, so we just continue
+                break;
+              }
+            } else {
+              // For non-calendar functions, return a default message
+              toolOutputs.push({
+                tool_call_id: toolCall.id,
+                output: `Função ${functionName} não está disponível no momento.`
+              });
+            }
+          }
+        }
+        
+        // If we have non-calendar tool outputs to submit
+        if (toolOutputs.length > 0) {
+          const submitResponse = await fetch(`https://api.openai.com/v1/threads/${conversation.openai_thread_id}/runs/${run.id}/submit_tool_outputs`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openAIApiKey}`,
+              'Content-Type': 'application/json',
+              'OpenAI-Beta': 'assistants=v2',
+            },
+            body: JSON.stringify({ tool_outputs: toolOutputs }),
+          });
+          
+          if (!submitResponse.ok) {
+            const error = await submitResponse.json();
+            console.error('Error submitting tool outputs:', error);
+          }
+        }
+      }
+    }
+    
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     const statusResponse = await fetch(`https://api.openai.com/v1/threads/${conversation.openai_thread_id}/runs/${run.id}`, {

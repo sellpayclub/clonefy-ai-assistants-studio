@@ -145,15 +145,62 @@ serve(async (req) => {
 
       const run = await runResponse.json();
 
-      // Optimized polling - faster checks, shorter timeout
+      // Optimized polling with tool call handling
       let runStatus = run.status;
       let attempts = 0;
       const maxAttempts = 60; // Increased attempts but shorter intervals
       const pollInterval = 500; // Faster polling - 500ms instead of 1000ms
 
-      while (runStatus === 'queued' || runStatus === 'in_progress') {
+      while (runStatus === 'queued' || runStatus === 'in_progress' || runStatus === 'requires_action') {
         if (attempts >= maxAttempts) {
           throw new Error('Assistant response timeout after 30 seconds');
+        }
+
+        if (runStatus === 'requires_action') {
+          // Get the full run data to access required_action
+          const fullRunResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${run.id}`, {
+            headers: {
+              'Authorization': `Bearer ${openAIApiKey}`,
+              'OpenAI-Beta': 'assistants=v2'
+            },
+          });
+          
+          const fullRunData = await fullRunResponse.json();
+          const requiredAction = fullRunData.required_action;
+          
+          if (requiredAction && requiredAction.type === 'submit_tool_outputs') {
+            console.log('Processing tool calls for widget...');
+            
+            for (const toolCall of requiredAction.submit_tool_outputs.tool_calls) {
+              if (toolCall.type === 'function') {
+                const functionName = toolCall.function.name;
+                if (['check_availability', 'create_appointment', 'list_appointments', 'cancel_appointment', 'reschedule_appointment', 'update_appointment'].includes(functionName)) {
+                  console.log(`Widget calling calendar function: ${functionName}`);
+                  
+                  // Call our calendar proxy to handle the function call
+                  const proxyResponse = await supabase.functions.invoke('chat-proxy', {
+                    body: {
+                      action: 'tool_call',
+                      run_id: run.id,
+                      thread_id: threadId,
+                      tool_call_id: toolCall.id,
+                      function_name: functionName,
+                      arguments: toolCall.function.arguments
+                    }
+                  });
+                  
+                  if (proxyResponse.error) {
+                    console.error(`Error calling calendar function: ${proxyResponse.error.message}`);
+                  } else {
+                    console.log('Calendar function called successfully');
+                  }
+                  
+                  // The proxy handles the tool output submission, so we continue
+                  break;
+                }
+              }
+            }
+          }
         }
 
         // Shorter wait time for faster responses
