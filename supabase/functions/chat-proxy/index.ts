@@ -1,0 +1,119 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { action, run_id, thread_id, tool_call_id, function_name, arguments: functionArgs, ...data } = await req.json();
+    
+    console.log(`Chat API - Action: ${action}, Function: ${function_name}`);
+
+    // Se for uma chamada de função de calendário, interceptar e adicionar assistant_id
+    if (function_name && ['check_availability', 'create_appointment', 'list_appointments', 'cancel_appointment', 'reschedule_appointment', 'update_appointment'].includes(function_name)) {
+      
+      // Buscar o assistant_id através do thread_id
+      const { data: conversation, error: conversationError } = await supabase
+        .from('conversations')
+        .select('assistant_id')
+        .eq('openai_thread_id', thread_id)
+        .single();
+
+      if (conversationError || !conversation) {
+        console.error('Assistant not found for thread:', thread_id);
+        return new Response(JSON.stringify({
+          error: 'Assistant não encontrado para este thread'
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const assistant_id = conversation.assistant_id;
+      console.log(`Adding assistant_id ${assistant_id} to function call ${function_name}`);
+
+      // Parsear os argumentos da função
+      let parsedArgs;
+      try {
+        parsedArgs = typeof functionArgs === 'string' ? JSON.parse(functionArgs) : functionArgs;
+      } catch (e) {
+        parsedArgs = {};
+      }
+
+      // Adicionar assistant_id aos argumentos
+      parsedArgs.assistant_id = assistant_id;
+
+      // Chamar a edge function de gerenciamento de calendário
+      const calendarResponse = await supabase.functions.invoke('calendar-management', {
+        body: {
+          action: function_name,
+          ...parsedArgs
+        }
+      });
+
+      let result;
+      if (calendarResponse.error) {
+        result = `Erro ao executar ${function_name}: ${calendarResponse.error.message}`;
+      } else {
+        result = JSON.stringify(calendarResponse.data);
+      }
+
+      // Submeter o resultado para o OpenAI
+      const submitResponse = await fetch(`https://api.openai.com/v1/threads/${thread_id}/runs/${run_id}/submit_tool_outputs`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+          'OpenAI-Beta': 'assistants=v2',
+        },
+        body: JSON.stringify({
+          tool_outputs: [{
+            tool_call_id: tool_call_id,
+            output: result
+          }]
+        }),
+      });
+
+      if (!submitResponse.ok) {
+        const error = await submitResponse.json();
+        throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
+      }
+
+      const submitResult = await submitResponse.json();
+      
+      return new Response(JSON.stringify(submitResult), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Se não for uma função de calendário, passar para o endpoint original
+    return new Response(JSON.stringify({ 
+      error: 'Função não suportada por este proxy' 
+    }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    console.error('Error in chat-proxy function:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
