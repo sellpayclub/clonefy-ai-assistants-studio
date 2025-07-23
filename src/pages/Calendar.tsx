@@ -523,42 +523,47 @@ const CalendarPage = () => {
 
           {selectedAssistant && (
             <div className="space-y-6">
-              {/* Calendar and Appointments - Mobile First Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                {/* Calendar - Full width on mobile, 1/4 on desktop */}
-                <Card className="lg:col-span-1">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">Calendário</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-3">
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={(date) => date && setSelectedDate(date)}
-                      locale={ptBR}
-                      className="w-full"
-                    />
-                  </CardContent>
-                </Card>
+              {/* Mobile: Stack vertically, Desktop: Side by side */}
+              <div className="flex flex-col lg:flex-row gap-6">
+                {/* Calendar - Fixed width to prevent cutting */}
+                <div className="lg:w-80 flex-shrink-0">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg">Calendário</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex justify-center p-4">
+                      <div className="w-full max-w-[280px]">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={(date) => date && setSelectedDate(date)}
+                          locale={ptBR}
+                          className="w-full"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
 
-                {/* Appointments List - Full width on mobile, 3/4 on desktop */}
-                <Card className="lg:col-span-3">
-                  <CardHeader className="pb-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <CardTitle className="text-lg">
-                        Agendamentos - {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
-                      </CardTitle>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setShowCreateDialog(true)}
-                        className="w-full sm:w-auto"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Bloquear Horário
-                      </Button>
-                    </div>
-                  </CardHeader>
+                {/* Appointments - Takes remaining space */}
+                <div className="flex-1">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <CardTitle className="text-lg">
+                          Agendamentos - {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
+                        </CardTitle>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setShowCreateDialog(true)}
+                          className="w-full sm:w-auto"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Bloquear Horário
+                        </Button>
+                      </div>
+                    </CardHeader>
                   <CardContent>
                     {calendarLoading ? (
                       <div className="text-center py-8">
