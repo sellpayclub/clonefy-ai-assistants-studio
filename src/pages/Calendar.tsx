@@ -440,97 +440,100 @@ const CalendarPage = () => {
           </Card>
 
           {selectedAssistant && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Calendar */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Calendário</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => date && setSelectedDate(date)}
-                    locale={ptBR}
-                    className="rounded-md border"
-                  />
-                </CardContent>
-              </Card>
+            <div className="space-y-6">
+              {/* Calendar and Appointments - Responsive Layout */}
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                {/* Calendar */}
+                <Card className="xl:col-span-1">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Calendário</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex justify-center">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => date && setSelectedDate(date)}
+                      locale={ptBR}
+                      className="rounded-md border-0"
+                    />
+                  </CardContent>
+                </Card>
 
-              {/* Appointments List */}
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle>
-                    Agendamentos - {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {calendarLoading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
-                      <p className="text-sm text-muted-foreground">Carregando agendamentos...</p>
-                    </div>
-                  ) : appointments.length === 0 ? (
-                    <div className="text-center py-8">
-                      <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">Nenhum agendamento para esta data</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {appointments.map((appointment) => (
-                        <div
-                          key={appointment.id}
-                          className="flex items-center justify-between p-4 border rounded-lg"
-                        >
-                          <div className="space-y-1">
+                {/* Appointments List */}
+                <Card className="xl:col-span-2">
+                  <CardHeader>
+                    <CardTitle className="text-lg">
+                      Agendamentos - {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {calendarLoading ? (
+                      <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
+                        <p className="text-sm text-muted-foreground">Carregando agendamentos...</p>
+                      </div>
+                    ) : appointments.length === 0 ? (
+                      <div className="text-center py-8">
+                        <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground">Nenhum agendamento para esta data</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {appointments.map((appointment) => (
+                          <div
+                            key={appointment.id}
+                            className="flex items-center justify-between p-4 border rounded-lg"
+                          >
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium">{appointment.client_name}</span>
+                                {getStatusBadge(appointment.status)}
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {appointment.appointment_time} ({appointment.duration}min)
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Phone className="h-3 w-3" />
+                                  {appointment.client_phone}
+                                </div>
+                              </div>
+                              {appointment.description && (
+                                <p className="text-sm text-muted-foreground">
+                                  {appointment.description}
+                                </p>
+                              )}
+                            </div>
+                            
                             <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">{appointment.client_name}</span>
-                              {getStatusBadge(appointment.status)}
+                              {appointment.status === 'scheduled' && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleUpdateAppointment(appointment.id, 'completed')}
+                                  >
+                                    <CheckCircle className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleCancelAppointment(appointment.id)}
+                                  >
+                                    <XCircle className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
                             </div>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {appointment.appointment_time} ({appointment.duration}min)
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Phone className="h-3 w-3" />
-                                {appointment.client_phone}
-                              </div>
-                            </div>
-                            {appointment.description && (
-                              <p className="text-sm text-muted-foreground">
-                                {appointment.description}
-                              </p>
-                            )}
                           </div>
-                          
-                          <div className="flex items-center gap-2">
-                            {appointment.status === 'scheduled' && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleUpdateAppointment(appointment.id, 'completed')}
-                                >
-                                  <CheckCircle className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleCancelAppointment(appointment.id)}
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           )}
         </main>

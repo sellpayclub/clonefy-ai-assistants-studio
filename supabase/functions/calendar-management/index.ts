@@ -317,7 +317,7 @@ async function updateCalendarSettings(userId: string, data: any) {
       timezone,
       updated_at: new Date().toISOString()
     }, {
-      onConflict: 'user_id,assistant_id'
+      onConflict: 'assistant_id'
     })
     .select()
     .single();
