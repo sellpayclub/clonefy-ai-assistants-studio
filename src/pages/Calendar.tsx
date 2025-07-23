@@ -32,6 +32,7 @@ const CalendarPage = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const [appointmentType, setAppointmentType] = useState<'client' | 'block'>('client');
   
   // Form states
   const [clientName, setClientName] = useState("");
@@ -39,6 +40,7 @@ const CalendarPage = () => {
   const [appointmentTime, setAppointmentTime] = useState("");
   const [duration, setDuration] = useState(30);
   const [description, setDescription] = useState("");
+  const [blockReason, setBlockReason] = useState("");
   
   // Settings states
   const [workingHoursStart, setWorkingHoursStart] = useState("09:00");
@@ -110,10 +112,29 @@ const CalendarPage = () => {
   };
 
   const handleCreateAppointment = async () => {
-    if (!selectedAssistant || !clientName || !clientPhone || !appointmentTime) {
+    if (!selectedAssistant || !appointmentTime) {
       toast({
         title: "Campos obrigatórios",
-        description: "Preencha todos os campos obrigatórios",
+        description: "Preencha o horário",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate fields based on appointment type
+    if (appointmentType === 'client' && (!clientName || !clientPhone)) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha nome e telefone do cliente",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (appointmentType === 'block' && !blockReason) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Informe o motivo do bloqueio",
         variant: "destructive",
       });
       return;
@@ -122,12 +143,12 @@ const CalendarPage = () => {
     try {
       await createAppointment({
         assistant_id: selectedAssistant,
-        client_name: clientName,
-        client_phone: clientPhone,
+        client_name: appointmentType === 'client' ? clientName : `BLOQUEADO - ${blockReason}`,
+        client_phone: appointmentType === 'client' ? clientPhone : 'SISTEMA',
         date: format(selectedDate, 'yyyy-MM-dd'),
         time: appointmentTime,
         duration,
-        description
+        description: appointmentType === 'client' ? description : `Horário bloqueado: ${blockReason}`
       });
 
       setShowCreateDialog(false);
@@ -193,6 +214,8 @@ const CalendarPage = () => {
     setAppointmentTime("");
     setDuration(30);
     setDescription("");
+    setBlockReason("");
+    setAppointmentType('client');
     setEditingAppointment(null);
   };
 
@@ -344,60 +367,119 @@ const CalendarPage = () => {
                     Novo Agendamento
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Criar Agendamento</DialogTitle>
+                    <DialogTitle>Gerenciar Horários</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Nome do cliente</Label>
-                      <Input
-                        value={clientName}
-                        onChange={(e) => setClientName(e.target.value)}
-                        placeholder="Nome completo"
-                      />
-                    </div>
-                    <div>
-                      <Label>Telefone</Label>
-                      <Input
-                        value={clientPhone}
-                        onChange={(e) => setClientPhone(e.target.value)}
-                        placeholder="(11) 99999-9999"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                  
+                  <Tabs value={appointmentType} onValueChange={(value) => setAppointmentType(value as 'client' | 'block')}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="client">Cliente</TabsTrigger>
+                      <TabsTrigger value="block">Bloquear</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="client" className="space-y-4 mt-4">
                       <div>
-                        <Label>Horário</Label>
+                        <Label>Nome do cliente</Label>
                         <Input
-                          type="time"
-                          value={appointmentTime}
-                          onChange={(e) => setAppointmentTime(e.target.value)}
+                          value={clientName}
+                          onChange={(e) => setClientName(e.target.value)}
+                          placeholder="Nome completo"
                         />
                       </div>
                       <div>
-                        <Label>Duração (min)</Label>
+                        <Label>Telefone</Label>
                         <Input
-                          type="number"
-                          value={duration}
-                          onChange={(e) => setDuration(Number(e.target.value))}
-                          min="15"
-                          max="240"
-                          step="15"
+                          value={clientPhone}
+                          onChange={(e) => setClientPhone(e.target.value)}
+                          placeholder="(11) 99999-9999"
                         />
                       </div>
-                    </div>
-                    <div>
-                      <Label>Descrição (opcional)</Label>
-                      <Textarea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Detalhes do agendamento"
-                      />
-                    </div>
-                    <Button onClick={handleCreateAppointment} className="w-full">
-                      Criar Agendamento
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>Horário</Label>
+                          <Input
+                            type="time"
+                            value={appointmentTime}
+                            onChange={(e) => setAppointmentTime(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label>Duração (min)</Label>
+                          <Input
+                            type="number"
+                            value={duration}
+                            onChange={(e) => setDuration(Number(e.target.value))}
+                            min="15"
+                            max="240"
+                            step="15"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Descrição (opcional)</Label>
+                        <Textarea
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          placeholder="Detalhes do agendamento"
+                        />
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="block" className="space-y-4 mt-4">
+                      <div>
+                        <Label>Motivo do bloqueio</Label>
+                        <Select value={blockReason} onValueChange={setBlockReason}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o motivo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Almoço">Horário de Almoço</SelectItem>
+                            <SelectItem value="Reunião">Reunião</SelectItem>
+                            <SelectItem value="Compromisso Pessoal">Compromisso Pessoal</SelectItem>
+                            <SelectItem value="Indisponível">Indisponível</SelectItem>
+                            <SelectItem value="Feriado">Feriado</SelectItem>
+                            <SelectItem value="Outro">Outro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>Horário</Label>
+                          <Input
+                            type="time"
+                            value={appointmentTime}
+                            onChange={(e) => setAppointmentTime(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label>Duração (min)</Label>
+                          <Input
+                            type="number"
+                            value={duration}
+                            onChange={(e) => setDuration(Number(e.target.value))}
+                            min="15"
+                            max="240"
+                            step="15"
+                          />
+                        </div>
+                      </div>
+                      {blockReason === 'Outro' && (
+                        <div>
+                          <Label>Descrição personalizada</Label>
+                          <Input
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="Descreva o motivo do bloqueio"
+                          />
+                        </div>
+                      )}
+                    </TabsContent>
+                    
+                    <Button onClick={handleCreateAppointment} className="w-full mt-4">
+                      {appointmentType === 'client' ? 'Criar Agendamento' : 'Bloquear Horário'}
                     </Button>
-                  </div>
+                  </Tabs>
                 </DialogContent>
               </Dialog>
             </div>
@@ -441,30 +523,41 @@ const CalendarPage = () => {
 
           {selectedAssistant && (
             <div className="space-y-6">
-              {/* Calendar and Appointments - Responsive Layout */}
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                {/* Calendar */}
-                <Card className="xl:col-span-1">
-                  <CardHeader>
+              {/* Calendar and Appointments - Mobile First Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Calendar - Full width on mobile, 1/4 on desktop */}
+                <Card className="lg:col-span-1">
+                  <CardHeader className="pb-3">
                     <CardTitle className="text-lg">Calendário</CardTitle>
                   </CardHeader>
-                  <CardContent className="flex justify-center">
+                  <CardContent className="p-3">
                     <Calendar
                       mode="single"
                       selected={selectedDate}
                       onSelect={(date) => date && setSelectedDate(date)}
                       locale={ptBR}
-                      className="rounded-md border-0"
+                      className="w-full"
                     />
                   </CardContent>
                 </Card>
 
-                {/* Appointments List */}
-                <Card className="xl:col-span-2">
-                  <CardHeader>
-                    <CardTitle className="text-lg">
-                      Agendamentos - {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                    </CardTitle>
+                {/* Appointments List - Full width on mobile, 3/4 on desktop */}
+                <Card className="lg:col-span-3">
+                  <CardHeader className="pb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <CardTitle className="text-lg">
+                        Agendamentos - {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
+                      </CardTitle>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowCreateDialog(true)}
+                        className="w-full sm:w-auto"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Bloquear Horário
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     {calendarLoading ? (
@@ -478,57 +571,87 @@ const CalendarPage = () => {
                         <p className="text-muted-foreground">Nenhum agendamento para esta data</p>
                       </div>
                     ) : (
-                      <div className="space-y-4">
-                        {appointments.map((appointment) => (
-                          <div
-                            key={appointment.id}
-                            className="flex items-center justify-between p-4 border rounded-lg"
-                          >
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <User className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-medium">{appointment.client_name}</span>
-                                {getStatusBadge(appointment.status)}
-                              </div>
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {appointment.appointment_time} ({appointment.duration}min)
+                      <div className="space-y-3">
+                        {appointments.map((appointment) => {
+                          const isBlocked = appointment.client_phone === 'SISTEMA' || appointment.client_name.startsWith('BLOQUEADO');
+                          return (
+                            <div
+                              key={appointment.id}
+                              className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg gap-3 ${
+                                isBlocked ? 'bg-red-50 border-red-200 dark:bg-red-950/10 dark:border-red-900/30' : 'bg-background'
+                              }`}
+                            >
+                              <div className="space-y-2 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {isBlocked ? (
+                                    <XCircle className="h-4 w-4 text-red-500" />
+                                  ) : (
+                                    <User className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                  <span className={`font-medium ${isBlocked ? 'text-red-700 dark:text-red-400' : ''}`}>
+                                    {isBlocked ? appointment.client_name.replace('BLOQUEADO - ', '') : appointment.client_name}
+                                  </span>
+                                  {getStatusBadge(appointment.status)}
+                                  {isBlocked && (
+                                    <Badge variant="destructive" className="text-xs">
+                                      Bloqueado
+                                    </Badge>
+                                  )}
                                 </div>
-                                <div className="flex items-center gap-1">
-                                  <Phone className="h-3 w-3" />
-                                  {appointment.client_phone}
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    {appointment.appointment_time} ({appointment.duration}min)
+                                  </div>
+                                  {!isBlocked && (
+                                    <div className="flex items-center gap-1">
+                                      <Phone className="h-3 w-3" />
+                                      {appointment.client_phone}
+                                    </div>
+                                  )}
                                 </div>
+                                {appointment.description && (
+                                  <p className="text-sm text-muted-foreground">
+                                    {appointment.description}
+                                  </p>
+                                )}
                               </div>
-                              {appointment.description && (
-                                <p className="text-sm text-muted-foreground">
-                                  {appointment.description}
-                                </p>
-                              )}
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                              {appointment.status === 'scheduled' && (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleUpdateAppointment(appointment.id, 'completed')}
-                                  >
-                                    <CheckCircle className="h-4 w-4" />
-                                  </Button>
+                              
+                              <div className="flex items-center gap-2 self-end sm:self-center">
+                                {appointment.status === 'scheduled' && !isBlocked && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleUpdateAppointment(appointment.id, 'completed')}
+                                      className="h-8"
+                                    >
+                                      <CheckCircle className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleCancelAppointment(appointment.id)}
+                                      className="h-8"
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
+                                {isBlocked && (
                                   <Button
                                     size="sm"
                                     variant="outline"
                                     onClick={() => handleCancelAppointment(appointment.id)}
+                                    className="h-8 text-red-600 hover:text-red-700"
                                   >
-                                    <XCircle className="h-4 w-4" />
+                                    Remover
                                   </Button>
-                                </>
-                              )}
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </CardContent>
