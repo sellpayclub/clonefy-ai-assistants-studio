@@ -134,12 +134,39 @@ const CalendarPage = () => {
   };
 
   const handleGoogleCalendarConnect = async () => {
-    // In a real implementation, this would redirect to Google OAuth
-    toast({
-      title: "Google Calendar",
-      description: "Funcionalidade em desenvolvimento. Em breve você poderá conectar sua conta Google!",
-      variant: "default",
-    });
+    if (!selectedAssistant) return;
+
+    try {
+      const response = await supabase.functions.invoke('google-calendar-auth', {
+        body: {
+          action: 'get_auth_url',
+          assistant_id: selectedAssistant
+        }
+      });
+
+      if (response.error) {
+        toast({
+          title: "Erro",
+          description: response.error.message || "Erro ao conectar Google Calendar",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Redirect to Google OAuth
+      window.open(response.data.auth_url, '_blank');
+      
+      toast({
+        title: "Google Calendar",
+        description: "Complete a autorização na nova janela para conectar sua conta",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao conectar Google Calendar",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCreateAppointment = async () => {
@@ -308,12 +335,12 @@ const CalendarPage = () => {
                 <DialogTrigger asChild>
                   <Button variant={googleCalendarConnected ? "default" : "outline"} disabled={!selectedAssistant}>
                     <Link className="h-4 w-4 mr-2" />
-                    {googleCalendarConnected ? 'Google Calendar ✓' : 'Conectar Google'}
+                    {googleCalendarConnected ? 'Google ✓' : 'Google'}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Google Calendar Integration</DialogTitle>
+                    <DialogTitle>Integração Google Calendar</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     {!googleCalendarConnected ? (
@@ -351,6 +378,11 @@ const CalendarPage = () => {
                   </div>
                 </DialogContent>
               </Dialog>
+
+              <Button variant="outline" disabled={!selectedAssistant}>
+                <Link className="h-4 w-4 mr-2" />
+                Apple
+              </Button>
 
               <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
                 <DialogTrigger asChild>
