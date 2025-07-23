@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar as CalendarIcon, Clock, User, Phone, CheckCircle, XCircle, Edit3, Plus } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, User, Phone, CheckCircle, XCircle, Edit3, Plus, Settings, Link } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,8 +31,10 @@ const CalendarPage = () => {
   const [selectedAssistant, setSelectedAssistant] = useState<string>("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [showGoogleIntegrationDialog, setShowGoogleIntegrationDialog] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [appointmentType, setAppointmentType] = useState<'client' | 'block'>('client');
+  const [googleCalendarConnected, setGoogleCalendarConnected] = useState(false);
   
   // Form states
   const [clientName, setClientName] = useState("");
@@ -87,6 +89,7 @@ const CalendarPage = () => {
   useEffect(() => {
     if (selectedAssistant) {
       loadCalendarSettings();
+      checkGoogleCalendarConnection();
     }
   }, [selectedAssistant]);
 
@@ -109,6 +112,34 @@ const CalendarPage = () => {
       setBufferTime(settings.buffer_time);
       setTimezone(settings.timezone);
     }
+  };
+
+  const checkGoogleCalendarConnection = async () => {
+    if (!session || !selectedAssistant) return;
+    
+    try {
+      const { data } = await supabase
+        .from('calendar_integrations')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('assistant_id', selectedAssistant)
+        .eq('provider', 'google')
+        .eq('is_active', true)
+        .single();
+      
+      setGoogleCalendarConnected(!!data);
+    } catch (error) {
+      setGoogleCalendarConnected(false);
+    }
+  };
+
+  const handleGoogleCalendarConnect = async () => {
+    // In a real implementation, this would redirect to Google OAuth
+    toast({
+      title: "Google Calendar",
+      description: "Funcionalidade em desenvolvimento. Em breve você poderá conectar sua conta Google!",
+      variant: "default",
+    });
   };
 
   const handleCreateAppointment = async () => {
@@ -273,10 +304,58 @@ const CalendarPage = () => {
             </div>
             
             <div className="flex gap-2">
+              <Dialog open={showGoogleIntegrationDialog} onOpenChange={setShowGoogleIntegrationDialog}>
+                <DialogTrigger asChild>
+                  <Button variant={googleCalendarConnected ? "default" : "outline"} disabled={!selectedAssistant}>
+                    <Link className="h-4 w-4 mr-2" />
+                    {googleCalendarConnected ? 'Google Calendar ✓' : 'Conectar Google'}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Google Calendar Integration</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    {!googleCalendarConnected ? (
+                      <>
+                        <p className="text-sm text-muted-foreground">
+                          Conecte sua conta Google para sincronizar automaticamente seus agendamentos com o Google Calendar.
+                        </p>
+                        <div className="bg-blue-50 dark:bg-blue-950/10 p-4 rounded-lg">
+                          <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Benefícios:</h4>
+                          <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                            <li>• Agendamentos aparecem no seu Google Calendar</li>
+                            <li>• Lembretes automáticos no seu celular</li>
+                            <li>• Sincronização em tempo real</li>
+                            <li>• Backup seguro na nuvem</li>
+                          </ul>
+                        </div>
+                        <Button onClick={handleGoogleCalendarConnect} className="w-full">
+                          Conectar Google Calendar
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 text-green-600">
+                          <CheckCircle className="h-5 w-5" />
+                          <span>Google Calendar conectado com sucesso!</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Seus agendamentos estão sendo sincronizados automaticamente.
+                        </p>
+                        <Button variant="destructive" className="w-full">
+                          Desconectar
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+
               <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
                 <DialogTrigger asChild>
                   <Button variant="outline" disabled={!selectedAssistant}>
-                    <Edit3 className="h-4 w-4 mr-2" />
+                    <Settings className="h-4 w-4 mr-2" />
                     Configurações
                   </Button>
                 </DialogTrigger>
@@ -553,114 +632,123 @@ const CalendarPage = () => {
                         <CardTitle className="text-lg">
                           Agendamentos - {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
                         </CardTitle>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setShowCreateDialog(true)}
-                          className="w-full sm:w-auto"
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Bloquear Horário
-                        </Button>
+                        <div className="flex gap-2">
+                          {googleCalendarConnected && (
+                            <Badge variant="secondary" className="text-xs">
+                              <Link className="h-3 w-3 mr-1" />
+                              Sincronizado
+                            </Badge>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowCreateDialog(true)}
+                            className="w-full sm:w-auto"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Bloquear Horário
+                          </Button>
+                        </div>
                       </div>
                     </CardHeader>
-                  <CardContent>
-                    {calendarLoading ? (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
-                        <p className="text-sm text-muted-foreground">Carregando agendamentos...</p>
-                      </div>
-                    ) : appointments.length === 0 ? (
-                      <div className="text-center py-8">
-                        <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <p className="text-muted-foreground">Nenhum agendamento para esta data</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {appointments.map((appointment) => {
-                          const isBlocked = appointment.client_phone === 'SISTEMA' || appointment.client_name.startsWith('BLOQUEADO');
-                          return (
-                            <div
-                              key={appointment.id}
-                              className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg gap-3 ${
-                                isBlocked ? 'bg-red-50 border-red-200 dark:bg-red-950/10 dark:border-red-900/30' : 'bg-background'
-                              }`}
-                            >
-                              <div className="space-y-2 flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  {isBlocked ? (
-                                    <XCircle className="h-4 w-4 text-red-500" />
-                                  ) : (
-                                    <User className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                  <span className={`font-medium ${isBlocked ? 'text-red-700 dark:text-red-400' : ''}`}>
-                                    {isBlocked ? appointment.client_name.replace('BLOQUEADO - ', '') : appointment.client_name}
-                                  </span>
-                                  {getStatusBadge(appointment.status)}
-                                  {isBlocked && (
-                                    <Badge variant="destructive" className="text-xs">
-                                      Bloqueado
-                                    </Badge>
-                                  )}
-                                </div>
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {appointment.appointment_time} ({appointment.duration}min)
+                    <CardContent>
+                      {calendarLoading ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
+                          <p className="text-sm text-muted-foreground">Carregando agendamentos...</p>
+                        </div>
+                      ) : appointments.length === 0 ? (
+                        <div className="text-center py-8">
+                          <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                          <p className="text-muted-foreground">Nenhum agendamento para esta data</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {appointments.map((appointment) => {
+                            const isBlocked = appointment.client_phone === 'SISTEMA' || appointment.client_name.startsWith('BLOQUEADO');
+                            return (
+                              <div
+                                key={appointment.id}
+                                className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg gap-3 ${
+                                  isBlocked ? 'bg-red-50 border-red-200 dark:bg-red-950/10 dark:border-red-900/30' : 'bg-background'
+                                }`}
+                              >
+                                <div className="space-y-2 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    {isBlocked ? (
+                                      <XCircle className="h-4 w-4 text-red-500" />
+                                    ) : (
+                                      <User className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                    <span className={`font-medium ${isBlocked ? 'text-red-700 dark:text-red-400' : ''}`}>
+                                      {isBlocked ? appointment.client_name.replace('BLOQUEADO - ', '') : appointment.client_name}
+                                    </span>
+                                    {getStatusBadge(appointment.status)}
+                                    {isBlocked && (
+                                      <Badge variant="destructive" className="text-xs">
+                                        Bloqueado
+                                      </Badge>
+                                    )}
                                   </div>
-                                  {!isBlocked && (
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
                                     <div className="flex items-center gap-1">
-                                      <Phone className="h-3 w-3" />
-                                      {appointment.client_phone}
+                                      <Clock className="h-3 w-3" />
+                                      {appointment.appointment_time} ({appointment.duration}min)
                                     </div>
+                                    {!isBlocked && (
+                                      <div className="flex items-center gap-1">
+                                        <Phone className="h-3 w-3" />
+                                        {appointment.client_phone}
+                                      </div>
+                                    )}
+                                  </div>
+                                  {appointment.description && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {appointment.description}
+                                    </p>
                                   )}
                                 </div>
-                                {appointment.description && (
-                                  <p className="text-sm text-muted-foreground">
-                                    {appointment.description}
-                                  </p>
-                                )}
-                              </div>
-                              
-                              <div className="flex items-center gap-2 self-end sm:self-center">
-                                {appointment.status === 'scheduled' && !isBlocked && (
-                                  <>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleUpdateAppointment(appointment.id, 'completed')}
-                                      className="h-8"
-                                    >
-                                      <CheckCircle className="h-4 w-4" />
-                                    </Button>
+                                
+                                <div className="flex items-center gap-2 self-end sm:self-center">
+                                  {appointment.status === 'scheduled' && !isBlocked && (
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleUpdateAppointment(appointment.id, 'completed')}
+                                        className="h-8"
+                                      >
+                                        <CheckCircle className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleCancelAppointment(appointment.id)}
+                                        className="h-8"
+                                      >
+                                        <XCircle className="h-4 w-4" />
+                                      </Button>
+                                    </>
+                                  )}
+                                  {isBlocked && (
                                     <Button
                                       size="sm"
                                       variant="outline"
                                       onClick={() => handleCancelAppointment(appointment.id)}
-                                      className="h-8"
+                                      className="h-8 text-red-600 hover:text-red-700"
                                     >
-                                      <XCircle className="h-4 w-4" />
+                                      Remover
                                     </Button>
-                                  </>
-                                )}
-                                {isBlocked && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleCancelAppointment(appointment.id)}
-                                    className="h-8 text-red-600 hover:text-red-700"
-                                  >
-                                    Remover
-                                  </Button>
-                                )}
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </div>
           )}

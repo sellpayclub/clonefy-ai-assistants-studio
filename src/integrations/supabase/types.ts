@@ -242,6 +242,54 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_integrations: {
+        Row: {
+          access_token: string | null
+          assistant_id: string
+          calendar_id: string | null
+          calendar_name: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          provider: string
+          refresh_token: string | null
+          sync_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          assistant_id: string
+          calendar_id?: string | null
+          calendar_name?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          provider: string
+          refresh_token?: string | null
+          sync_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          assistant_id?: string
+          calendar_id?: string | null
+          calendar_name?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          provider?: string
+          refresh_token?: string | null
+          sync_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       calendar_settings: {
         Row: {
           assistant_id: string
@@ -283,6 +331,57 @@ export type Database = {
           working_hours_start?: string
         }
         Relationships: []
+      }
+      calendar_sync_logs: {
+        Row: {
+          action: string
+          appointment_id: string | null
+          created_at: string
+          error_message: string | null
+          external_event_id: string | null
+          id: string
+          integration_id: string
+          status: string
+          sync_direction: string
+        }
+        Insert: {
+          action: string
+          appointment_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          external_event_id?: string | null
+          id?: string
+          integration_id: string
+          status: string
+          sync_direction: string
+        }
+        Update: {
+          action?: string
+          appointment_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          external_event_id?: string | null
+          id?: string
+          integration_id?: string
+          status?: string
+          sync_direction?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_sync_logs_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_sync_logs_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversations: {
         Row: {
