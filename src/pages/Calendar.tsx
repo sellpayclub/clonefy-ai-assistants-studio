@@ -25,6 +25,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 const CalendarPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [session, setSession] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedAssistant, setSelectedAssistant] = useState<string>("");
@@ -58,14 +59,16 @@ const CalendarPage = () => {
     getCalendarSettings,
   } = useCalendar();
 
-  const { assistants, loading: assistantsLoading } = useAssistants(null);
+  const { assistants, loading: assistantsLoading } = useAssistants(session);
 
-  // Check authentication
+  // Check authentication and set session
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate('/auth');
+      } else {
+        setSession(session);
       }
     };
     checkAuth();
