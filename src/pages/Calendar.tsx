@@ -406,6 +406,7 @@ const CalendarPage = () => {
               <CardTitle>Selecionar Agente</CardTitle>
               <CardDescription>
                 Escolha o agente para visualizar e gerenciar agendamentos
+                {assistants.length > 0 && ` (${assistants.length} agentes encontrados)`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -413,14 +414,14 @@ const CalendarPage = () => {
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione um agente" />
                 </SelectTrigger>
-                <SelectContent>
-                  {assistants
-                    .filter((assistant) => {
-                      console.log('Assistant:', assistant.name, 'Tools:', (assistant as any).tools);
-                      // Show all assistants for now, we'll filter by calendar settings in the backend
-                      return true;
-                    })
-                    .map((assistant) => {
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  {assistants.length === 0 ? (
+                    <SelectItem value="no-assistants" disabled>
+                      Nenhum agente encontrado
+                    </SelectItem>
+                  ) : (
+                    assistants.map((assistant) => {
+                      console.log('Assistant disponível:', assistant.name, 'ID:', assistant.id, 'Tools:', (assistant as any).tools);
                       const tools = (assistant as any).tools;
                       const hasCalendarTools = tools && Array.isArray(tools) && tools.length > 0;
                       return (
@@ -428,7 +429,8 @@ const CalendarPage = () => {
                           {assistant.name} {hasCalendarTools ? '📅' : '⚙️'}
                         </SelectItem>
                       );
-                    })}
+                    })
+                  )}
                 </SelectContent>
               </Select>
             </CardContent>
