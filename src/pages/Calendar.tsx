@@ -417,20 +417,18 @@ const CalendarPage = () => {
                   {assistants
                     .filter((assistant) => {
                       console.log('Assistant:', assistant.name, 'Tools:', (assistant as any).tools);
-                      // Check if tools exist and include calendar functionality
-                      const tools = (assistant as any).tools;
-                      const hasCalendar = tools && Array.isArray(tools) && 
-                        tools.some((tool: any) => 
-                          tool.type === 'function' && 
-                          (tool.function?.name?.includes('calendar') || tool.function?.name?.includes('appointment'))
-                        );
-                      return hasCalendar;
+                      // Show all assistants for now, we'll filter by calendar settings in the backend
+                      return true;
                     })
-                    .map((assistant) => (
-                      <SelectItem key={assistant.id} value={assistant.id}>
-                        {assistant.name} 📅
-                      </SelectItem>
-                    ))}
+                    .map((assistant) => {
+                      const tools = (assistant as any).tools;
+                      const hasCalendarTools = tools && Array.isArray(tools) && tools.length > 0;
+                      return (
+                        <SelectItem key={assistant.id} value={assistant.id}>
+                          {assistant.name} {hasCalendarTools ? '📅' : '⚙️'}
+                        </SelectItem>
+                      );
+                    })}
                 </SelectContent>
               </Select>
             </CardContent>
