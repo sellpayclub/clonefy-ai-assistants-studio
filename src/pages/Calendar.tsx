@@ -414,15 +414,23 @@ const CalendarPage = () => {
                   <SelectValue placeholder="Selecione um agente" />
                 </SelectTrigger>
                 <SelectContent>
-                  {assistants.map((assistant) => {
-                    console.log('Assistant:', assistant.name, 'Tools:', (assistant as any).tools);
-                    const hasCalendar = (assistant as any).tools && Array.isArray((assistant as any).tools) && (assistant as any).tools.length > 0;
-                    return (
+                  {assistants
+                    .filter((assistant) => {
+                      console.log('Assistant:', assistant.name, 'Tools:', (assistant as any).tools);
+                      // Check if tools exist and include calendar functionality
+                      const tools = (assistant as any).tools;
+                      const hasCalendar = tools && Array.isArray(tools) && 
+                        tools.some((tool: any) => 
+                          tool.type === 'function' && 
+                          (tool.function?.name?.includes('calendar') || tool.function?.name?.includes('appointment'))
+                        );
+                      return hasCalendar;
+                    })
+                    .map((assistant) => (
                       <SelectItem key={assistant.id} value={assistant.id}>
-                        {assistant.name} {hasCalendar ? '📅' : '❌'}
+                        {assistant.name} 📅
                       </SelectItem>
-                    );
-                  })}
+                    ))}
                 </SelectContent>
               </Select>
             </CardContent>

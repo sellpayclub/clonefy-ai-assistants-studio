@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          assistant_id: string
+          client_name: string
+          client_phone: string
+          created_at: string
+          description: string | null
+          duration: number
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          assistant_id: string
+          client_name: string
+          client_phone: string
+          created_at?: string
+          description?: string | null
+          duration?: number
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          assistant_id?: string
+          client_name?: string
+          client_phone?: string
+          created_at?: string
+          description?: string | null
+          duration?: number
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       assistant_files: {
         Row: {
           assistant_id: string
@@ -194,6 +239,48 @@ export type Database = {
           email?: string
           id?: string
           notes?: string | null
+        }
+        Relationships: []
+      }
+      calendar_settings: {
+        Row: {
+          assistant_id: string
+          buffer_time: number
+          created_at: string
+          id: string
+          slot_duration: number
+          timezone: string
+          updated_at: string
+          user_id: string
+          working_days: number[]
+          working_hours_end: string
+          working_hours_start: string
+        }
+        Insert: {
+          assistant_id: string
+          buffer_time?: number
+          created_at?: string
+          id?: string
+          slot_duration?: number
+          timezone?: string
+          updated_at?: string
+          user_id: string
+          working_days?: number[]
+          working_hours_end?: string
+          working_hours_start?: string
+        }
+        Update: {
+          assistant_id?: string
+          buffer_time?: number
+          created_at?: string
+          id?: string
+          slot_duration?: number
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+          working_days?: number[]
+          working_hours_end?: string
+          working_hours_start?: string
         }
         Relationships: []
       }
