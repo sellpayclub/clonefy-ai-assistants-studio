@@ -17,6 +17,7 @@ import AppSidebar from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AgentTutorial from "@/components/AgentTutorial";
 import { AssistantMediaUpload } from "@/components/AssistantMediaUpload";
+import { AssistantKnowledgeUpload } from "@/components/AssistantKnowledgeUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
@@ -574,21 +575,46 @@ const Assistants = () => {
                 
                 <TabsContent value="files" className="space-y-4">
                   {editingAssistant && (
-                    <div>
-                      <h3 className="text-lg font-medium mb-4">
-                        {t("assistants.files.title")}
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {t("assistants.files.description")}
-                      </p>
-                      <AssistantMediaUpload 
-                        assistantId={editingAssistant.id}
-                        onUploadComplete={() => {
-                          // Recarregar assistentes para atualizar instruções
-                          loadAssistants();
-                        }}
-                      />
-                    </div>
+                    <Tabs defaultValue="media" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="media">Arquivos de Mídia</TabsTrigger>
+                        <TabsTrigger value="knowledge">Base de Conhecimento</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="media" className="space-y-4">
+                        <div>
+                          <h3 className="text-lg font-medium mb-2">Arquivos de Mídia</h3>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Arquivos que o assistente pode <strong>ENVIAR</strong> nas conversas do WhatsApp 
+                            (imagens, vídeos, documentos).
+                          </p>
+                          <AssistantMediaUpload 
+                            assistantId={editingAssistant.id}
+                            onUploadComplete={() => {
+                              // Recarregar assistentes para atualizar instruções
+                              loadAssistants();
+                            }}
+                          />
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="knowledge" className="space-y-4">
+                        <div>
+                          <h3 className="text-lg font-medium mb-2">Base de Conhecimento</h3>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Documentos que o assistente pode <strong>CONSULTAR</strong> para gerar respostas 
+                            (PDFs, catálogos, manuais, etc.).
+                          </p>
+                          <AssistantKnowledgeUpload 
+                            assistantId={editingAssistant.id}
+                            onUploadComplete={() => {
+                              // Recarregar assistentes se necessário
+                              loadAssistants();
+                            }}
+                          />
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                   )}
                 </TabsContent>
               </Tabs>

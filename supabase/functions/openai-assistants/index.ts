@@ -64,6 +64,10 @@ serve(async (req) => {
         return await updateAssistant(user.id, data.assistantId, data);
       case 'delete':
         return await deleteAssistant(user.id, data.assistantId);
+      case 'upload-knowledge-file':
+        return await uploadKnowledgeFile(data);
+      case 'delete-knowledge-file':
+        return await deleteKnowledgeFile(data.openai_file_id);
       default:
         throw new Error('Invalid action');
     }
@@ -320,4 +324,72 @@ async function deleteAssistant(userId: string, assistantId: string) {
   return new Response(JSON.stringify({ success: true }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
+}
+
+async function uploadKnowledgeFile(data: any) {
+  const { file, fileName, mimeType } = data;
+  
+  try {
+    // Convert base64 to binary data
+    const binaryData = Uint8Array.from(atob(file), c => c.charCodeAt(0));
+    
+    // Create FormData for OpenAI
+    const formData = new FormData();
+    const blob = new Blob([binaryData], { type: mimeType });
+    formData.append('file', blob, fileName);
+    formData.append('purpose', 'assistants');
+
+    // Upload file to OpenAI
+    const response = await fetch('https://api.openai.com/v1/files', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`OpenAI API error: ${error.error?.message || 'Failed to upload file'}`);
+    }
+
+    const fileData = await response.json();
+    
+    return new Response(JSON.stringify({ 
+      success: true, 
+      openai_file_id: fileData.id 
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+    
+  } catch (error) {
+    console.error('Error uploading knowledge file:', error);
+    throw new Error(`Failed to upload knowledge file: ${error.message}`);
+  }
+}
+
+async function deleteKnowledgeFile(openaiFileId: string) {
+  try {
+    // Delete file from OpenAI
+    const response = await fetch(`https://api.openai.com/v1/files/${openaiFileId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+      }
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('Failed to delete OpenAI file:', error);
+      // Continue even if OpenAI deletion fails
+    }
+
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+    
+  } catch (error) {
+    console.error('Error deleting knowledge file:', error);
+    throw new Error(`Failed to delete knowledge file: ${error.message}`);
+  }
 }

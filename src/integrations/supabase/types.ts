@@ -50,6 +50,48 @@ export type Database = {
           },
         ]
       }
+      assistant_knowledge_files: {
+        Row: {
+          assistant_id: string
+          created_at: string
+          description: string | null
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          mime_type: string | null
+          openai_file_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assistant_id: string
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          mime_type?: string | null
+          openai_file_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assistant_id?: string
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          mime_type?: string | null
+          openai_file_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       assistant_media: {
         Row: {
           assistant_id: string
