@@ -26,7 +26,7 @@ import SupportChatWidget from "@/components/SupportChatWidget";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { AssistantTemplates } from "@/components/AssistantTemplates";
 import { OptimizedAssistantCard } from "@/components/OptimizedAssistantCard";
-import { useOptimizedQuery } from "@/hooks/useOptimizedQuery";
+import { useOptimizedAssistants } from "@/hooks/useOptimizedAssistants";
 
 interface Assistant {
   id: string;
@@ -45,13 +45,13 @@ const Assistants = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [assistants, setAssistants] = useState<Assistant[]>([]);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingAssistant, setEditingAssistant] = useState<Assistant | null>(null);
   const [formLoading, setFormLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { limits, reloadLimits } = useUserLimits();
+  const { assistants, loading: assistantsLoading, reloadAssistants } = useOptimizedAssistants(session);
   const { t } = useLanguage();
   const [embedDialogOpen, setEmbedDialogOpen] = useState(false);
   const [selectedAgentForEmbed, setSelectedAgentForEmbed] = useState<Assistant | null>(null);
@@ -82,15 +82,6 @@ const Assistants = () => {
               navigate('/auth');
               return;
             }
-
-            // Carregar dados sempre que a sessão mudar
-            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-              setTimeout(async () => {
-                if (isMounted) {
-                  await loadAssistants();
-                }
-              }, 100);
-            }
           }
         );
 
@@ -107,8 +98,6 @@ const Assistants = () => {
           return;
         }
         
-        // Carregar dados iniciais
-        await loadAssistants();
         setLoading(false);
 
         return () => {
@@ -125,7 +114,7 @@ const Assistants = () => {
     return () => {
       isMounted = false;
     };
-  }, []); // Array vazio - só executa uma vez
+  }, [navigate]);
 
   // Check for onboarding trigger
   useEffect(() => {
@@ -139,57 +128,6 @@ const Assistants = () => {
   }, [assistants]);
 
 
-  const loadAssistants = async () => {
-    // Aguarda a sessão estar disponível
-    let currentSession = session;
-    if (!currentSession) {
-      const { data } = await supabase.auth.getSession();
-      currentSession = data.session;
-    }
-
-    if (!currentSession) {
-      return;
-    }
-
-    try {
-      const response = await supabase.functions.invoke('openai-assistants', {
-        body: { action: 'list' },
-        headers: {
-          Authorization: `Bearer ${currentSession.access_token}`,
-        },
-      });
-
-      if (response.error) {
-        throw response.error;
-      }
-
-      const assistantsList = response.data?.assistants || [];
-      
-      setAssistants(assistantsList);
-    } catch (error: any) {
-      console.error('Error loading assistants:', error);
-      
-      // Mensagens de erro mais específicas para carregamento
-      let errorMessage = error.message;
-      let errorTitle = "Erro ao carregar agentes";
-      
-      if (error.message?.includes('Invalid token') || error.message?.includes('authorization')) {
-        errorTitle = "Erro de autenticação";
-        errorMessage = "Sua sessão expirou. Por favor, faça login novamente.";
-      } else if (error.message?.includes('Network') || error.message?.includes('fetch')) {
-        errorTitle = "Erro de conexão";
-        errorMessage = "Verifique sua conexão com a internet e tente novamente.";
-      } else if (!error.message || error.message === 'undefined') {
-        errorMessage = "Ocorreu um erro inesperado ao carregar os agentes. Tente recarregar a página.";
-      }
-      
-      toast({
-        title: errorTitle,
-        description: errorMessage,
-        variant: "destructive",
-      });
-    }
-  };
 
   const resetForm = () => {
     setName("");
@@ -265,7 +203,7 @@ const Assistants = () => {
 
       setIsCreateOpen(false);
       resetForm();
-      await loadAssistants(); // Aguarda o reload
+      await reloadAssistants(); // Aguarda o reload
       await reloadLimits(); // Reload limits after creating
     } catch (error: any) {
       console.error('Error saving assistant:', error);
@@ -324,7 +262,7 @@ const Assistants = () => {
         description: "O agente foi removido com sucesso.",
       });
 
-      await loadAssistants(); // Aguarda o reload
+      await reloadAssistants(); // Aguarda o reload
       await reloadLimits(); // Reload limits after deleting
     } catch (error: any) {
       console.error('Error deleting assistant:', error);
@@ -351,7 +289,7 @@ const Assistants = () => {
     }
   };
 
-  if (loading) {
+  if (loading || assistantsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -389,7 +327,7 @@ const Assistants = () => {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <Button onClick={loadAssistants} variant="outline" size="sm" className="w-full sm:w-auto text-sm">
+              <Button onClick={reloadAssistants} variant="outline" size="sm" className="w-full sm:w-auto text-sm">
                 <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                 {t("common.reload")}
               </Button>
@@ -626,7 +564,7 @@ const Assistants = () => {
                             assistantId={editingAssistant.id}
                             onUploadComplete={() => {
                               // Recarregar assistentes para atualizar instruções
-                              loadAssistants();
+                              reloadAssistants();
                             }}
                           />
                         </div>
@@ -643,7 +581,7 @@ const Assistants = () => {
                             assistantId={editingAssistant.id}
                             onUploadComplete={() => {
                               // Recarregar assistentes se necessário
-                              loadAssistants();
+                              reloadAssistants();
                             }}
                           />
                         </div>

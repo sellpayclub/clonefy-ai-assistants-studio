@@ -13,13 +13,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import SupportChatWidget from "@/components/SupportChatWidget";
 import { useUserLimits } from "@/hooks/useUserLimits";
-
-interface DashboardStats {
-  assistants: number;
-  connections: number;
-  conversations: number;
-  messages: number;
-}
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -28,135 +22,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { limits, loading: limitsLoading } = useUserLimits();
-  
-  // Estado para dados sempre frescos
-  const [stats, setStats] = useState<DashboardStats>({ assistants: 0, connections: 0, conversations: 0, messages: 0 });
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Função para carregar dados sempre frescos
-  const loadDashboardData = useCallback(async () => {
-    if (!user) {
-      console.log('Usuário não definido');
-      return;
-    }
-
-    try {
-      console.log('=== CARREGANDO DASHBOARD ===');
-      console.log('User ID:', user.id);
-      
-      // Consulta direta para agentes ativos
-      const { data: assistantsData, error: assistantsError } = await supabase
-        .from('assistants')
-        .select('is_active')
-        .eq('user_id', user.id)
-        .eq('is_active', true);
-      
-      if (assistantsError) {
-        console.error('Erro ao buscar agentes:', assistantsError);
-      }
-      
-      // Consulta direta para conexões WhatsApp
-      const { data: connectionsData, error: connectionsError } = await supabase
-        .from('whatsapp_connections')
-        .select('id')
-        .eq('user_id', user.id);
-      
-      if (connectionsError) {
-        console.error('Erro ao buscar conexões:', connectionsError);
-      }
-
-      // Também contar da tabela n8n_fluxogpt para compatibilidade
-      const { data: n8nConnectionsData, error: n8nConnectionsError } = await supabase
-        .from('n8n_fluxogpt')
-        .select('id')
-        .eq('emailuser', user.email);
-
-      if (n8nConnectionsError) {
-        console.error('Erro ao buscar conexões n8n:', n8nConnectionsError);
-      }
-
-      const currentWhatsAppConnections = connectionsData?.length || 0;
-      const currentN8nConnections = n8nConnectionsData?.length || 0;
-      const totalConnections = currentWhatsAppConnections + currentN8nConnections;
-
-      const result = {
-        assistants: assistantsData?.length || 0,
-        connections: totalConnections,
-        conversations: 0,
-        messages: 0
-      };
-
-      console.log('=== RESULTADO DASHBOARD ===');
-      console.log('Agentes ativos:', result.assistants);
-      console.log('Conexões WhatsApp:', currentWhatsAppConnections);
-      console.log('Conexões N8N:', currentN8nConnections);
-      console.log('Total conexões:', result.connections);
-      console.log('Limites carregados:', limits);
-      console.log('============================');
-      
-      setStats(result);
-    } catch (error) {
-      console.error('Erro crítico no dashboard:', error);
-      setStats({ assistants: 0, connections: 0, conversations: 0, messages: 0 });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user, limits]);
-
-  // Carregar dados quando user estiver disponível
-  useEffect(() => {
-    if (user && !limitsLoading) {
-      loadDashboardData();
-    }
-  }, [user, limitsLoading, loadDashboardData]);
-
-  // Setup realtime subscriptions para atualizações automáticas
-  useEffect(() => {
-    if (!user) return;
-
-    console.log('=== CONFIGURANDO REALTIME ===');
-    
-    // Subscription para assistants
-    const assistantsChannel = supabase
-      .channel('assistants-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'assistants',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('Mudança detectada em assistants:', payload);
-          loadDashboardData();
-        }
-      )
-      .subscribe();
-
-    // Subscription para whatsapp_connections
-    const connectionsChannel = supabase
-      .channel('connections-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'whatsapp_connections',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('Mudança detectada em conexões:', payload);
-          loadDashboardData();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(assistantsChannel);
-      supabase.removeChannel(connectionsChannel);
-    };
-  }, [user, loadDashboardData]);
+  const { stats, loading: statsLoading } = useDashboardStats(user);
 
   // Optimized auth state management
   useEffect(() => {
@@ -238,13 +104,7 @@ const Dashboard = () => {
   // Fallback para garantir que stats sempre existe
   const safeStats = stats || { assistants: 0, connections: 0, conversations: 0, messages: 0 };
 
-  if (isLoading || limitsLoading || !user) {
-    console.log('=== DASHBOARD LOADING STATE ===');
-    console.log('isLoading:', isLoading);
-    console.log('limitsLoading:', limitsLoading);
-    console.log('user:', user ? 'existe' : 'null');
-    console.log('==============================');
-    
+  if (statsLoading || limitsLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -254,12 +114,6 @@ const Dashboard = () => {
       </div>
     );
   }
-
-  console.log('=== DASHBOARD RENDERIZANDO ===');
-  console.log('Stats:', safeStats);
-  console.log('Limits:', limits);
-  console.log('User:', user?.email);
-  console.log('===============================');
 
   
   try {
