@@ -414,11 +414,15 @@ const CalendarPage = () => {
                   <SelectValue placeholder="Selecione um agente" />
                 </SelectTrigger>
                 <SelectContent>
-                  {assistants.map((assistant) => (
-                    <SelectItem key={assistant.id} value={assistant.id}>
-                      {assistant.name}
-                    </SelectItem>
-                  ))}
+                  {assistants.map((assistant) => {
+                    console.log('Assistant:', assistant.name, 'Tools:', (assistant as any).tools);
+                    const hasCalendar = (assistant as any).tools && Array.isArray((assistant as any).tools) && (assistant as any).tools.length > 0;
+                    return (
+                      <SelectItem key={assistant.id} value={assistant.id}>
+                        {assistant.name} {hasCalendar ? '📅' : '❌'}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </CardContent>
