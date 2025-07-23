@@ -84,7 +84,7 @@ async function createAssistant(userId: string, data: any) {
   console.log('createAssistant called with data:', data);
   console.log('OpenAI API Key available:', !!openAIApiKey);
   
-  const { name, description, instructions, model = 'gpt-4o' } = data;
+  const { name, description, instructions, model = 'gpt-4o', calendar_enabled = false } = data;
 
   console.log('Creating assistant with model:', model);
   
@@ -101,6 +101,143 @@ async function createAssistant(userId: string, data: any) {
     throw new Error('Já existe um agente com esse nome. Por favor, escolha um nome diferente.');
   }
   
+  // Prepare tools array for calendar function calling
+  const tools = [];
+  if (calendar_enabled) {
+    tools.push({
+      type: "function",
+      function: {
+        name: "check_availability",
+        description: "Check available time slots for appointments",
+        parameters: {
+          type: "object",
+          properties: {
+            date: {
+              type: "string",
+              description: "Date to check availability (YYYY-MM-DD format)"
+            },
+            duration: {
+              type: "integer", 
+              description: "Duration of appointment in minutes (default: 30)"
+            }
+          },
+          required: ["date"]
+        }
+      }
+    });
+    
+    tools.push({
+      type: "function",
+      function: {
+        name: "create_appointment",
+        description: "Create a new appointment",
+        parameters: {
+          type: "object",
+          properties: {
+            client_name: {
+              type: "string",
+              description: "Name of the client"
+            },
+            client_phone: {
+              type: "string", 
+              description: "Phone number of the client"
+            },
+            date: {
+              type: "string",
+              description: "Date of appointment (YYYY-MM-DD format)"
+            },
+            time: {
+              type: "string",
+              description: "Time of appointment (HH:MM format)"
+            },
+            duration: {
+              type: "integer",
+              description: "Duration in minutes (default: 30)"
+            },
+            description: {
+              type: "string",
+              description: "Optional description or notes about the appointment"
+            }
+          },
+          required: ["client_name", "client_phone", "date", "time"]
+        }
+      }
+    });
+
+    tools.push({
+      type: "function", 
+      function: {
+        name: "list_appointments",
+        description: "List appointments for a specific date or all upcoming appointments",
+        parameters: {
+          type: "object",
+          properties: {
+            date: {
+              type: "string",
+              description: "Specific date to list appointments (YYYY-MM-DD format). If not provided, lists all upcoming appointments"
+            },
+            status: {
+              type: "string",
+              description: "Filter by status: scheduled, completed, cancelled, rescheduled"
+            }
+          }
+        }
+      }
+    });
+
+    tools.push({
+      type: "function",
+      function: {
+        name: "cancel_appointment", 
+        description: "Cancel an existing appointment",
+        parameters: {
+          type: "object",
+          properties: {
+            client_phone: {
+              type: "string",
+              description: "Phone number of the client"
+            },
+            date: {
+              type: "string", 
+              description: "Date of the appointment to cancel (YYYY-MM-DD format)"
+            }
+          },
+          required: ["client_phone", "date"]
+        }
+      }
+    });
+
+    tools.push({
+      type: "function",
+      function: {
+        name: "reschedule_appointment",
+        description: "Reschedule an existing appointment to a new date and time",
+        parameters: {
+          type: "object", 
+          properties: {
+            client_phone: {
+              type: "string",
+              description: "Phone number of the client"
+            },
+            old_date: {
+              type: "string",
+              description: "Current date of the appointment (YYYY-MM-DD format)"
+            },
+            new_date: {
+              type: "string",
+              description: "New date for the appointment (YYYY-MM-DD format)"
+            },
+            new_time: {
+              type: "string",
+              description: "New time for the appointment (HH:MM format)"
+            }
+          },
+          required: ["client_phone", "old_date", "new_date", "new_time"]
+        }
+      }
+    });
+  }
+
   // Create assistant in OpenAI
   const openAIResponse = await fetch('https://api.openai.com/v1/assistants', {
     method: 'POST',
@@ -114,7 +251,7 @@ async function createAssistant(userId: string, data: any) {
       description: description || null,
       instructions: instructions || null,
       model,
-      tools: [] // Default empty array as per documentation
+      tools
     }),
   });
 
@@ -148,7 +285,7 @@ async function createAssistant(userId: string, data: any) {
       description: description || null,
       instructions: instructions || null,
       model,
-      tools: [],
+      tools,
       metadata: openAIAssistant
     })
     .select()
@@ -221,7 +358,7 @@ async function getAssistant(userId: string, assistantId: string) {
 }
 
 async function updateAssistant(userId: string, assistantId: string, data: any) {
-  const { name, description, instructions, model } = data;
+  const { name, description, instructions, model, calendar_enabled = false } = data;
 
   // Get current assistant from database
   const { data: currentAssistant, error: fetchError } = await supabase
@@ -233,6 +370,96 @@ async function updateAssistant(userId: string, assistantId: string, data: any) {
 
   if (fetchError) {
     throw new Error(`Assistant not found: ${fetchError.message}`);
+  }
+
+  // Prepare tools array for calendar function calling
+  const tools = [];
+  if (calendar_enabled) {
+    // Add the same calendar functions as in create
+    tools.push({
+      type: "function",
+      function: {
+        name: "check_availability",
+        description: "Check available time slots for appointments",
+        parameters: {
+          type: "object",
+          properties: {
+            date: { type: "string", description: "Date to check availability (YYYY-MM-DD format)" },
+            duration: { type: "integer", description: "Duration of appointment in minutes (default: 30)" }
+          },
+          required: ["date"]
+        }
+      }
+    });
+    
+    tools.push({
+      type: "function",
+      function: {
+        name: "create_appointment",
+        description: "Create a new appointment",
+        parameters: {
+          type: "object",
+          properties: {
+            client_name: { type: "string", description: "Name of the client" },
+            client_phone: { type: "string", description: "Phone number of the client" },
+            date: { type: "string", description: "Date of appointment (YYYY-MM-DD format)" },
+            time: { type: "string", description: "Time of appointment (HH:MM format)" },
+            duration: { type: "integer", description: "Duration in minutes (default: 30)" },
+            description: { type: "string", description: "Optional description or notes about the appointment" }
+          },
+          required: ["client_name", "client_phone", "date", "time"]
+        }
+      }
+    });
+
+    tools.push({
+      type: "function", 
+      function: {
+        name: "list_appointments",
+        description: "List appointments for a specific date or all upcoming appointments",
+        parameters: {
+          type: "object",
+          properties: {
+            date: { type: "string", description: "Specific date to list appointments (YYYY-MM-DD format). If not provided, lists all upcoming appointments" },
+            status: { type: "string", description: "Filter by status: scheduled, completed, cancelled, rescheduled" }
+          }
+        }
+      }
+    });
+
+    tools.push({
+      type: "function",
+      function: {
+        name: "cancel_appointment", 
+        description: "Cancel an existing appointment",
+        parameters: {
+          type: "object",
+          properties: {
+            client_phone: { type: "string", description: "Phone number of the client" },
+            date: { type: "string", description: "Date of the appointment to cancel (YYYY-MM-DD format)" }
+          },
+          required: ["client_phone", "date"]
+        }
+      }
+    });
+
+    tools.push({
+      type: "function",
+      function: {
+        name: "reschedule_appointment",
+        description: "Reschedule an existing appointment to a new date and time",
+        parameters: {
+          type: "object", 
+          properties: {
+            client_phone: { type: "string", description: "Phone number of the client" },
+            old_date: { type: "string", description: "Current date of the appointment (YYYY-MM-DD format)" },
+            new_date: { type: "string", description: "New date for the appointment (YYYY-MM-DD format)" },
+            new_time: { type: "string", description: "New time for the appointment (HH:MM format)" }
+          },
+          required: ["client_phone", "old_date", "new_date", "new_time"]
+        }
+      }
+    });
   }
 
   // Update assistant in OpenAI
@@ -247,7 +474,8 @@ async function updateAssistant(userId: string, assistantId: string, data: any) {
       name,
       description,
       instructions,
-      model
+      model,
+      tools
     }),
   });
 
@@ -266,6 +494,7 @@ async function updateAssistant(userId: string, assistantId: string, data: any) {
       description,
       instructions,
       model,
+      tools,
       metadata: openAIAssistant
     })
     .eq('user_id', userId)

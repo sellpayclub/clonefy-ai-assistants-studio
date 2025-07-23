@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut } from "lucide-react";
+import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut, Calendar } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { cleanupAuthState, forceCleanReload } from "@/lib/auth-utils";
@@ -30,6 +30,7 @@ const menuItems = [
   { title: "sidebar.agents.title", url: "/assistants", icon: Bot, description: "sidebar.agents.description" },
   { title: "sidebar.whatsapp.title", url: "/whatsapp", icon: Smartphone, description: "sidebar.whatsapp.description" },
   { title: "sidebar.conversations.title", url: "/conversations", icon: MessageSquare, description: "sidebar.conversations.description" },
+  { title: "Calendário", url: "/calendar", icon: Calendar, description: "Gerencie agendamentos dos seus agentes" },
   { title: "sidebar.admin.title", url: "/admin", icon: Settings, description: "sidebar.admin.description" },
 ];
 

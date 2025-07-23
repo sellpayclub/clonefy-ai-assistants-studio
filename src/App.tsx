@@ -20,6 +20,7 @@ const LazyWhatsApp = lazy(() => import("./pages/WhatsApp"));
 const LazyConversations = lazy(() => import("./pages/Conversations"));
 const LazyAdmin = lazy(() => import("./pages/Admin"));
 const LazyEspanol = lazy(() => import("./pages/Espanol"));
+const LazyCalendar = lazy(() => import("./pages/Calendar"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,9 +71,14 @@ const App = () => {
                     <LazyWhatsApp />
                   </Suspense>
                 } />
-                <Route path="/conversations" element={
+                 <Route path="/conversations" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <LazyConversations />
+                  </Suspense>
+                } />
+                <Route path="/calendar" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyCalendar />
                   </Suspense>
                 } />
                  <Route path="/admin" element={

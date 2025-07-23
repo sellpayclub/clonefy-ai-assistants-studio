@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { Badge } from "@/components/ui/badge";
-import { Bot, Plus, Edit, Trash2, MessageSquare, Settings, RefreshCw, Code, Copy, Expand } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Bot, Plus, Edit, Trash2, MessageSquare, Settings, RefreshCw, Code, Copy, Expand, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useUserLimits } from "@/hooks/useUserLimits";
@@ -37,6 +38,7 @@ interface Assistant {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  tools?: any[];
 }
 
 const Assistants = () => {
@@ -61,6 +63,7 @@ const Assistants = () => {
   const [instructions, setInstructions] = useState("");
   const [model] = useState("gpt-4o"); // Always use GPT-4o for now
   const [instructionsExpanded, setInstructionsExpanded] = useState(false);
+  const [calendarEnabled, setCalendarEnabled] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -192,6 +195,7 @@ const Assistants = () => {
     setName("");
     setDescription("");
     setInstructions("");
+    setCalendarEnabled(false);
     setEditingAssistant(null);
   };
 
@@ -214,6 +218,8 @@ const Assistants = () => {
     setName(assistant.name);
     setDescription(assistant.description || "");
     setInstructions(assistant.instructions || "");
+    // Check if assistant has calendar tools configured
+    setCalendarEnabled(assistant.tools && Array.isArray(assistant.tools) && assistant.tools.length > 0);
     setEditingAssistant(assistant);
     setIsCreateOpen(true);
   };
@@ -222,6 +228,7 @@ const Assistants = () => {
     setName(template.name);
     setDescription(template.description);
     setInstructions(template.instructions);
+    setCalendarEnabled(false); // Reset calendar when using template
     setActiveTab("assistants");
     setIsCreateOpen(true);
   };
@@ -235,8 +242,8 @@ const Assistants = () => {
     try {
       const action = editingAssistant ? 'update' : 'create';
       const body = editingAssistant 
-        ? { action, assistantId: editingAssistant.id, name, description, instructions, model: "gpt-4o" }
-        : { action, name, description, instructions, model: "gpt-4o" };
+        ? { action, assistantId: editingAssistant.id, name, description, instructions, model: "gpt-4o", calendar_enabled: calendarEnabled }
+        : { action, name, description, instructions, model: "gpt-4o", calendar_enabled: calendarEnabled };
 
       const response = await supabase.functions.invoke('openai-assistants', {
         body,
@@ -556,6 +563,33 @@ const Assistants = () => {
                       <p className="text-xs text-muted-foreground">
                         Seja específico sobre como o agente deve responder e se comportar.
                       </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <Label htmlFor="calendar-enabled">Calendário de Agendamentos</Label>
+                          <p className="text-xs text-muted-foreground">
+                            Permite que o agente gerencie agendamentos automaticamente
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            id="calendar-enabled"
+                            checked={calendarEnabled}
+                            onCheckedChange={setCalendarEnabled}
+                          />
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </div>
+                      {calendarEnabled && (
+                        <div className="p-3 bg-blue-50 dark:bg-blue-950/50 rounded-lg">
+                          <p className="text-xs text-blue-600 dark:text-blue-400">
+                            ✓ Este agente poderá verificar disponibilidade, criar, cancelar e reagendar 
+                            compromissos automaticamente nas conversas.
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex justify-end gap-2">
