@@ -65,16 +65,32 @@ const Dashboard = () => {
         console.error('Erro ao buscar conexões:', connectionsError);
       }
 
+      // Também contar da tabela n8n_fluxogpt para compatibilidade
+      const { data: n8nConnectionsData, error: n8nConnectionsError } = await supabase
+        .from('n8n_fluxogpt')
+        .select('id')
+        .eq('emailuser', user.email);
+
+      if (n8nConnectionsError) {
+        console.error('Erro ao buscar conexões n8n:', n8nConnectionsError);
+      }
+
+      const currentWhatsAppConnections = connectionsData?.length || 0;
+      const currentN8nConnections = n8nConnectionsData?.length || 0;
+      const totalConnections = currentWhatsAppConnections + currentN8nConnections;
+
       const result = {
         assistants: assistantsData?.length || 0,
-        connections: connectionsData?.length || 0,
+        connections: totalConnections,
         conversations: 0,
         messages: 0
       };
 
       console.log('=== RESULTADO DASHBOARD ===');
       console.log('Agentes ativos:', result.assistants);
-      console.log('Conexões WhatsApp:', result.connections);
+      console.log('Conexões WhatsApp:', currentWhatsAppConnections);
+      console.log('Conexões N8N:', currentN8nConnections);
+      console.log('Total conexões:', result.connections);
       console.log('Limites carregados:', limits);
       console.log('============================');
       
