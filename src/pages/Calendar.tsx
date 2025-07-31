@@ -316,6 +316,23 @@ const CalendarPage = () => {
         <AppSidebar />
         
         <main className="flex-1 p-6">
+          {/* Aviso de Construção */}
+          <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="h-6 w-6 bg-yellow-400 dark:bg-yellow-500 rounded-full flex items-center justify-center">
+                <span className="text-yellow-800 dark:text-yellow-900 text-sm font-bold">⚠</span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
+                  🚧 Área em Construção
+                </h3>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                  O sistema de calendário ainda está em desenvolvimento. Por favor, não utilize esta funcionalidade até a conclusão dos ajustes finais.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
