@@ -81,7 +81,7 @@ const Auth = () => {
         return;
       }
 
-      const redirectUrl = `${window.location.origin}/dashboard`;
+      const redirectUrl = `${window.location.origin}/auth/callback`;
       
       const { error } = await supabase.auth.signUp({
         email,
@@ -164,7 +164,7 @@ const Auth = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       });
 
       if (error) throw error;
