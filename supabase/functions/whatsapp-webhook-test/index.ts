@@ -1,51 +1,34 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface WebhookMessage {
-  key: {
-    remoteJid: string;
-    fromMe: boolean;
-    id: string;
-  };
-  messageTimestamp: number;
-  pushName?: string;
-  message?: {
-    conversation?: string;
-    audioMessage?: {
-      url: string;
-      mimetype: string;
-    };
-    imageMessage?: {
-      url: string;
-      caption?: string;
-    };
-    documentMessage?: {
-      url: string;
-      fileName?: string;
-    };
-  };
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+);
+
+interface EvolutionWebhookData {
   instance: string;
+  data: {
+    key: {
+      remoteJid: string;
+      fromMe: boolean;
+    };
+    message?: {
+      conversation?: string;
+      audioMessage?: any;
+      imageMessage?: any;
+      documentMessage?: any;
+    };
+    messageTimestamp?: number;
+    pushName?: string;
+  };
 }
-
-interface QueueMessage {
-  messageId: string;
-  content: string;
-  type: string;
-  mediaUrl?: string;
-  timestamp: number;
-}
-
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const openaiApiKey = Deno.env.get('OPENAI_API_KEY')!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -53,302 +36,178 @@ serve(async (req) => {
   }
 
   try {
-    console.log('=== WhatsApp Webhook Test - Início ===');
+    console.log('🚀 WhatsApp Webhook Test - Processando webhook...');
     
-    const body = await req.json();
-    console.log('Webhook body:', JSON.stringify(body, null, 2));
+    const webhookData: EvolutionWebhookData = await req.json();
+    console.log('📥 Dados recebidos:', JSON.stringify(webhookData, null, 2));
 
-    // Extrair dados da mensagem
-    const message: WebhookMessage = body;
-    const instanceName = message.instance;
-    const contactNumber = message.key.remoteJid.replace('@s.whatsapp.net', '');
-    const isFromOwner = message.key.fromMe;
-    const messageId = message.key.id;
-    const contactName = message.pushName || contactNumber;
+    const instanceName = webhookData.instance;
+    const messageData = webhookData.data;
+    const contactNumber = messageData.key.remoteJid.replace('@s.whatsapp.net', '');
+    const isFromOwner = messageData.key.fromMe;
+    const contactName = messageData.pushName || 'Usuário';
 
-    console.log(`Instância: ${instanceName}, Contato: ${contactNumber}, Do proprietário: ${isFromOwner}`);
+    console.log(`📱 Instância: ${instanceName}, Contato: ${contactNumber}, Proprietário: ${isFromOwner}`);
 
-    // Buscar configurações da instância
-    const { data: controlData, error: controlError } = await supabase
+    // 1. Buscar configuração da instância
+    const { data: instanceConfig, error: configError } = await supabase
       .from('whatsapp_test_controls')
       .select('*')
       .eq('instance_name', instanceName)
       .eq('is_active', true)
       .single();
 
-    if (controlError || !controlData) {
-      console.log('Instância não configurada para teste:', instanceName);
-      return new Response('OK', { headers: corsHeaders });
+    if (configError || !instanceConfig) {
+      console.log('❌ Instância não encontrada ou inativa:', instanceName);
+      return new Response('Instance not configured', { status: 400, headers: corsHeaders });
     }
 
-    console.log('Configurações encontradas:', controlData);
+    console.log('✅ Configuração da instância encontrada:', instanceConfig);
 
-    // Se for mensagem do proprietário, pausar a conversa
+    // 2. Se for mensagem do proprietário, pausar conversa
     if (isFromOwner) {
-      console.log('Mensagem do proprietário - pausando conversa');
-      await handleOwnerMessage(instanceName, contactNumber, controlData.pause_minutes);
-      return new Response('OK', { headers: corsHeaders });
-    }
-
-    // Verificar se a conversa está pausada
-    const isPaused = await checkIfConversationPaused(instanceName, contactNumber);
-    if (isPaused) {
-      console.log('Conversa pausada - ignorando mensagem');
-      return new Response('OK', { headers: corsHeaders });
-    }
-
-    // Extrair conteúdo da mensagem
-    const messageContent = await extractMessageContent(message);
-    console.log('Conteúdo extraído:', messageContent);
-
-    // Salvar mensagem na fila para processamento com delay
-    await addToQueue(instanceName, contactNumber, {
-      messageId,
-      content: messageContent.text,
-      type: messageContent.type,
-      mediaUrl: messageContent.mediaUrl,
-      timestamp: message.messageTimestamp
-    }, controlData.delay_seconds);
-
-    return new Response('OK', { headers: corsHeaders });
-
-  } catch (error) {
-    console.error('Erro no webhook:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
-  }
-});
-
-async function handleOwnerMessage(instanceName: string, contactNumber: string, pauseMinutes: number) {
-  const pauseUntil = new Date(Date.now() + pauseMinutes * 60 * 1000);
-  
-  await supabase
-    .from('whatsapp_test_conversations')
-    .upsert({
-      instance_name: instanceName,
-      contact_number: contactNumber,
-      is_paused: true,
-      paused_until: pauseUntil.toISOString(),
-      last_owner_message_at: new Date().toISOString()
-    }, {
-      onConflict: 'instance_name,contact_number'
-    });
-
-  console.log(`Conversa pausada até: ${pauseUntil.toISOString()}`);
-}
-
-async function checkIfConversationPaused(instanceName: string, contactNumber: string): Promise<boolean> {
-  const { data } = await supabase
-    .from('whatsapp_test_conversations')
-    .select('is_paused, paused_until')
-    .eq('instance_name', instanceName)
-    .eq('contact_number', contactNumber)
-    .single();
-
-  if (!data || !data.is_paused) return false;
-
-  const now = new Date();
-  const pausedUntil = new Date(data.paused_until);
-
-  if (now > pausedUntil) {
-    // Pausa expirou, reativar conversa
-    await supabase
-      .from('whatsapp_test_conversations')
-      .update({ is_paused: false, paused_until: null })
-      .eq('instance_name', instanceName)
-      .eq('contact_number', contactNumber);
-    
-    return false;
-  }
-
-  return true;
-}
-
-async function extractMessageContent(message: WebhookMessage) {
-  const msg = message.message;
-  
-  if (!msg) {
-    return { text: '', type: 'unknown' };
-  }
-
-  // Texto simples
-  if (msg.conversation) {
-    return { text: msg.conversation, type: 'text' };
-  }
-
-  // Áudio
-  if (msg.audioMessage) {
-    console.log('Processando áudio...');
-    const transcription = await transcribeAudio(msg.audioMessage.url);
-    return { 
-      text: transcription, 
-      type: 'audio',
-      mediaUrl: msg.audioMessage.url 
-    };
-  }
-
-  // Imagem
-  if (msg.imageMessage) {
-    console.log('Processando imagem...');
-    const description = await analyzeImage(msg.imageMessage.url, msg.imageMessage.caption);
-    return { 
-      text: description, 
-      type: 'image',
-      mediaUrl: msg.imageMessage.url 
-    };
-  }
-
-  // Documento
-  if (msg.documentMessage) {
-    return { 
-      text: `Documento enviado: ${msg.documentMessage.fileName || 'Arquivo'}`, 
-      type: 'document',
-      mediaUrl: msg.documentMessage.url 
-    };
-  }
-
-  return { text: 'Tipo de mensagem não suportado', type: 'unknown' };
-}
-
-async function transcribeAudio(audioUrl: string): Promise<string> {
-  try {
-    const audioResponse = await fetch(audioUrl);
-    const audioBuffer = await audioResponse.arrayBuffer();
-    
-    const formData = new FormData();
-    const blob = new Blob([audioBuffer], { type: 'audio/ogg' });
-    formData.append('file', blob, 'audio.ogg');
-    formData.append('model', 'whisper-1');
-
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-      },
-      body: formData,
-    });
-
-    const result = await response.json();
-    return result.text || 'Não foi possível transcrever o áudio';
-  } catch (error) {
-    console.error('Erro na transcrição:', error);
-    return 'Erro ao transcrever áudio';
-  }
-}
-
-async function analyzeImage(imageUrl: string, caption?: string): Promise<string> {
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: caption ? 
-                  `Analise esta imagem e seu contexto. Legenda: "${caption}"` :
-                  'Descreva esta imagem em detalhes'
-              },
-              {
-                type: 'image_url',
-                image_url: { url: imageUrl }
-              }
-            ]
-          }
-        ],
-        max_tokens: 300
-      }),
-    });
-
-    const result = await response.json();
-    return result.choices[0]?.message?.content || 'Não foi possível analisar a imagem';
-  } catch (error) {
-    console.error('Erro na análise da imagem:', error);
-    return caption || 'Imagem enviada';
-  }
-}
-
-async function addToQueue(
-  instanceName: string, 
-  contactNumber: string, 
-  message: QueueMessage, 
-  delaySeconds: number
-) {
-  const processAt = new Date(Date.now() + delaySeconds * 1000);
-  
-  // Verificar se já existe item na fila para este contato
-  const { data: existingQueue } = await supabase
-    .from('whatsapp_test_queue')
-    .select('*')
-    .eq('instance_name', instanceName)
-    .eq('contact_number', contactNumber)
-    .eq('status', 'pending')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
-
-  if (existingQueue) {
-    // Adicionar mensagem ao grupo existente
-    const updatedMessages = [...(existingQueue.messages || []), message];
-    
-    await supabase
-      .from('whatsapp_test_queue')
-      .update({ 
-        messages: updatedMessages,
-        process_at: processAt.toISOString() // Resetar o timer
-      })
-      .eq('id', existingQueue.id);
+      console.log('👤 Mensagem do proprietário - pausando conversa...');
       
-    console.log('Mensagem adicionada ao grupo existente');
-  } else {
-    // Criar novo item na fila
-    await supabase
+      const pauseUntil = new Date();
+      pauseUntil.setMinutes(pauseUntil.getMinutes() + instanceConfig.pause_minutes);
+
+      await supabase
+        .from('whatsapp_test_conversations')
+        .upsert({
+          instance_name: instanceName,
+          contact_number: contactNumber,
+          contact_name: contactName,
+          assistant_id: instanceConfig.assistant_id,
+          user_id: instanceConfig.user_id,
+          is_paused: true,
+          paused_until: pauseUntil.toISOString(),
+          last_owner_message_at: new Date().toISOString()
+        }, {
+          onConflict: 'instance_name,contact_number',
+          ignoreDuplicates: false
+        });
+
+      console.log(`⏸️ Conversa pausada até: ${pauseUntil.toISOString()}`);
+      return new Response('Owner message - conversation paused', { status: 200, headers: corsHeaders });
+    }
+
+    // 3. Verificar se conversa está pausada
+    const { data: conversation } = await supabase
+      .from('whatsapp_test_conversations')
+      .select('*')
+      .eq('instance_name', instanceName)
+      .eq('contact_number', contactNumber)
+      .single();
+
+    if (conversation?.is_paused && conversation.paused_until) {
+      const pausedUntil = new Date(conversation.paused_until);
+      if (pausedUntil > new Date()) {
+        console.log('⏸️ Conversa ainda pausada até:', pausedUntil.toISOString());
+        return new Response('Conversation is paused', { status: 200, headers: corsHeaders });
+      } else {
+        // Despausar conversa
+        await supabase
+          .from('whatsapp_test_conversations')
+          .update({ is_paused: false, paused_until: null })
+          .eq('instance_name', instanceName)
+          .eq('contact_number', contactNumber);
+        console.log('▶️ Conversa despausada automaticamente');
+      }
+    }
+
+    // 4. Extrair conteúdo da mensagem
+    let messageContent = '';
+    let messageType = 'text';
+    let mediaUrl = '';
+
+    if (messageData.message?.conversation) {
+      messageContent = messageData.message.conversation;
+      messageType = 'text';
+    } else if (messageData.message?.audioMessage) {
+      messageType = 'audio';
+      // TODO: Implementar transcrição de áudio via OpenAI Whisper
+      messageContent = '[Áudio recebido - transcrição em desenvolvimento]';
+    } else if (messageData.message?.imageMessage) {
+      messageType = 'image';
+      // TODO: Implementar análise de imagem via GPT-4 Vision
+      messageContent = '[Imagem recebida - análise em desenvolvimento]';
+    } else if (messageData.message?.documentMessage) {
+      messageType = 'document';
+      messageContent = '[Documento recebido]';
+    }
+
+    if (!messageContent) {
+      console.log('❌ Conteúdo da mensagem não identificado');
+      return new Response('No message content', { status: 400, headers: corsHeaders });
+    }
+
+    console.log(`💬 Mensagem extraída - Tipo: ${messageType}, Conteúdo: ${messageContent}`);
+
+    // 5. Salvar mensagem na fila de processamento
+    const processAt = new Date();
+    processAt.setSeconds(processAt.getSeconds() + instanceConfig.delay_seconds);
+
+    const { data: queueItem, error: queueError } = await supabase
       .from('whatsapp_test_queue')
       .insert({
         instance_name: instanceName,
         contact_number: contactNumber,
-        messages: [message],
+        messages: [JSON.stringify({
+          type: messageType,
+          content: messageContent,
+          mediaUrl: mediaUrl,
+          timestamp: Date.now()
+        })],
         process_at: processAt.toISOString(),
         status: 'pending'
-      });
-      
-    console.log('Novo grupo criado na fila');
-  }
-
-  // Agendar processamento
-  setTimeout(() => processQueue(instanceName, contactNumber), delaySeconds * 1000);
-}
-
-async function processQueue(instanceName: string, contactNumber: string) {
-  console.log(`=== Processando fila para ${instanceName}/${contactNumber} ===`);
-  
-  try {
-    // Buscar item da fila para processar
-    const { data: queueItem } = await supabase
-      .from('whatsapp_test_queue')
-      .select('*')
-      .eq('instance_name', instanceName)
-      .eq('contact_number', contactNumber)
-      .eq('status', 'pending')
-      .lte('process_at', new Date().toISOString())
-      .order('created_at', { ascending: true })
-      .limit(1)
+      })
+      .select()
       .single();
 
-    if (!queueItem) {
-      console.log('Nenhum item na fila para processar');
+    if (queueError) {
+      console.error('❌ Erro ao salvar na fila:', queueError);
+      throw queueError;
+    }
+
+    console.log(`⏰ Mensagem adicionada à fila, processamento em: ${processAt.toISOString()}`);
+
+    // 6. Processar fila após delay (usando setTimeout)
+    setTimeout(async () => {
+      await processMessageQueue(queueItem.id, instanceConfig);
+    }, instanceConfig.delay_seconds * 1000);
+
+    return new Response(JSON.stringify({ 
+      status: 'received',
+      queueId: queueItem.id,
+      processAt: processAt.toISOString()
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('❌ Erro no webhook:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+});
+
+async function processMessageQueue(queueId: string, instanceConfig: any) {
+  try {
+    console.log(`🔄 Processando fila: ${queueId}`);
+
+    // Buscar item da fila
+    const { data: queueItem, error: queueError } = await supabase
+      .from('whatsapp_test_queue')
+      .select('*')
+      .eq('id', queueId)
+      .eq('status', 'pending')
+      .single();
+
+    if (queueError || !queueItem) {
+      console.log('❌ Item da fila não encontrado ou já processado');
       return;
     }
 
@@ -356,175 +215,95 @@ async function processQueue(instanceName: string, contactNumber: string) {
     await supabase
       .from('whatsapp_test_queue')
       .update({ status: 'processing' })
-      .eq('id', queueItem.id);
-
-    // Buscar configurações
-    const { data: controlData } = await supabase
-      .from('whatsapp_test_controls')
-      .select('*')
-      .eq('instance_name', instanceName)
-      .single();
-
-    if (!controlData) {
-      throw new Error('Configurações não encontradas');
-    }
+      .eq('id', queueId);
 
     // Buscar ou criar conversa
-    const conversation = await getOrCreateConversation(
-      instanceName, 
-      contactNumber, 
-      controlData.assistant_id,
-      controlData.user_id
-    );
-
-    // Agrupar mensagens em texto único
-    const messages = queueItem.messages as QueueMessage[];
-    const fullMessage = messages.map(m => m.content).join('\n');
-    
-    console.log('Mensagem completa:', fullMessage);
-
-    // Salvar mensagens no histórico
-    for (const msg of messages) {
-      await supabase
-        .from('whatsapp_test_messages')
-        .insert({
-          conversation_id: conversation.id,
-          instance_name: instanceName,
-          contact_number: contactNumber,
-          message_id: msg.messageId,
-          message_type: msg.type,
-          message_content: msg.content,
-          message_media_url: msg.mediaUrl,
-          is_from_owner: false,
-          processed: false
-        });
-    }
-
-    // Enviar para OpenAI Assistant
-    const aiResponse = await sendToAssistant(controlData.assistant_id, fullMessage, conversation.openai_thread_id);
-    
-    console.log('Resposta da IA:', aiResponse);
-
-    // Quebrar resposta em partes humanizadas
-    const messageParts = breakMessageIntoHumanParts(aiResponse, controlData.message_break_enabled);
-    
-    // Enviar respostas via Evolution API
-    for (let i = 0; i < messageParts.length; i++) {
-      await sendWhatsAppMessage(
-        controlData.evolution_api_url,
-        controlData.evolution_api_key,
-        instanceName,
-        contactNumber,
-        messageParts[i]
-      );
-      
-      // Delay entre mensagens para parecer humano
-      if (i < messageParts.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
-      }
-    }
-
-    // Salvar resposta da IA
-    await supabase
-      .from('whatsapp_test_messages')
-      .insert({
-        conversation_id: conversation.id,
-        instance_name: instanceName,
-        contact_number: contactNumber,
-        message_type: 'text',
-        message_content: aiResponse,
-        is_from_owner: false,
-        processed: true,
-        ai_response: aiResponse
-      });
-
-    // Marcar como concluído
-    await supabase
-      .from('whatsapp_test_queue')
-      .update({ 
-        status: 'completed',
-        processed_at: new Date().toISOString()
-      })
-      .eq('id', queueItem.id);
-
-    console.log('Processamento concluído com sucesso');
-
-  } catch (error) {
-    console.error('Erro no processamento:', error);
-    
-    // Marcar como falha
-    await supabase
-      .from('whatsapp_test_queue')
-      .update({ 
-        status: 'failed',
-        processed_at: new Date().toISOString()
-      })
-      .eq('instance_name', instanceName)
-      .eq('contact_number', contactNumber)
-      .eq('status', 'processing');
-  }
-}
-
-async function getOrCreateConversation(
-  instanceName: string, 
-  contactNumber: string, 
-  assistantId: string,
-  userId: string
-) {
-  // Buscar conversa existente
-  let { data: conversation } = await supabase
-    .from('whatsapp_test_conversations')
-    .select('*')
-    .eq('instance_name', instanceName)
-    .eq('contact_number', contactNumber)
-    .single();
-
-  if (!conversation) {
-    // Criar nova conversa com thread do OpenAI
-    const threadResponse = await fetch('https://api.openai.com/v1/threads', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2'
-      },
-      body: JSON.stringify({})
-    });
-
-    const thread = await threadResponse.json();
-
-    const { data: newConversation } = await supabase
+    let { data: conversation } = await supabase
       .from('whatsapp_test_conversations')
-      .insert({
-        instance_name: instanceName,
-        contact_number: contactNumber,
-        assistant_id: assistantId,
-        user_id: userId,
-        openai_thread_id: thread.id,
-        is_paused: false
-      })
-      .select()
+      .select('*')
+      .eq('instance_name', queueItem.instance_name)
+      .eq('contact_number', queueItem.contact_number)
       .single();
 
-    conversation = newConversation;
-  }
+    if (!conversation) {
+      // Criar nova conversa
+      const { data: newConversation, error: createError } = await supabase
+        .from('whatsapp_test_conversations')
+        .insert({
+          instance_name: queueItem.instance_name,
+          contact_number: queueItem.contact_number,
+          contact_name: 'Usuário',
+          assistant_id: instanceConfig.assistant_id,
+          user_id: instanceConfig.user_id
+        })
+        .select()
+        .single();
 
-  return conversation;
-}
+      if (createError) {
+        throw createError;
+      }
+      conversation = newConversation;
+    }
 
-async function sendToAssistant(assistantId: string, message: string, threadId: string): Promise<string> {
-  try {
+    // Juntar todas as mensagens da fila
+    const allMessages = queueItem.messages.map((msg: string) => JSON.parse(msg));
+    const combinedMessage = allMessages.map((msg: any) => msg.content).join('\n');
+
+    console.log(`📝 Mensagem combinada: ${combinedMessage}`);
+
+    // Buscar assistente
+    const { data: assistant } = await supabase
+      .from('assistants')
+      .select('*')
+      .eq('id', instanceConfig.assistant_id)
+      .single();
+
+    if (!assistant) {
+      throw new Error('Assistente não encontrado');
+    }
+
+    // Criar ou buscar thread do OpenAI
+    let threadId = conversation.openai_thread_id;
+    
+    if (!threadId) {
+      // Criar nova thread
+      const threadResponse = await fetch('https://api.openai.com/v1/threads', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+          'Content-Type': 'application/json',
+          'OpenAI-Beta': 'assistants=v2'
+        },
+        body: JSON.stringify({})
+      });
+
+      if (!threadResponse.ok) {
+        throw new Error('Erro ao criar thread OpenAI');
+      }
+
+      const threadData = await threadResponse.json();
+      threadId = threadData.id;
+
+      // Salvar thread ID
+      await supabase
+        .from('whatsapp_test_conversations')
+        .update({ openai_thread_id: threadId })
+        .eq('id', conversation.id);
+
+      console.log(`🆕 Nova thread criada: ${threadId}`);
+    }
+
     // Adicionar mensagem à thread
     await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
         'Content-Type': 'application/json',
         'OpenAI-Beta': 'assistants=v2'
       },
       body: JSON.stringify({
         role: 'user',
-        content: message
+        content: combinedMessage
       })
     });
 
@@ -532,115 +311,185 @@ async function sendToAssistant(assistantId: string, message: string, threadId: s
     const runResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
         'Content-Type': 'application/json',
         'OpenAI-Beta': 'assistants=v2'
       },
       body: JSON.stringify({
-        assistant_id: assistantId
+        assistant_id: assistant.openai_assistant_id
       })
     });
 
-    const run = await runResponse.json();
+    if (!runResponse.ok) {
+      throw new Error('Erro ao executar assistente');
+    }
 
-    // Aguardar conclusão
-    let runStatus = run;
-    while (runStatus.status === 'queued' || runStatus.status === 'in_progress') {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    const runData = await runResponse.json();
+    const runId = runData.id;
+
+    console.log(`🤖 Assistente executando - Run ID: ${runId}`);
+
+    // Aguardar conclusão do run (polling)
+    let runStatus = 'queued';
+    let attempts = 0;
+    const maxAttempts = 30; // 30 segundos timeout
+
+    while (runStatus !== 'completed' && attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Aguardar 1 segundo
       
-      const statusResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${run.id}`, {
+      const statusResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${runId}`, {
         headers: {
-          'Authorization': `Bearer ${openaiApiKey}`,
+          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
           'OpenAI-Beta': 'assistants=v2'
         }
       });
-      
-      runStatus = await statusResponse.json();
+
+      const statusData = await statusResponse.json();
+      runStatus = statusData.status;
+      attempts++;
+
+      console.log(`⏳ Status do run: ${runStatus} (tentativa ${attempts})`);
+
+      if (runStatus === 'failed' || runStatus === 'cancelled' || runStatus === 'expired') {
+        throw new Error(`Assistente falhou: ${runStatus}`);
+      }
     }
 
-    if (runStatus.status !== 'completed') {
-      throw new Error(`Run falhou: ${runStatus.status}`);
+    if (runStatus !== 'completed') {
+      throw new Error('Timeout na execução do assistente');
     }
 
-    // Buscar mensagens da thread
-    const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
+    // Buscar resposta do assistente
+    const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages?order=desc&limit=1`, {
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
         'OpenAI-Beta': 'assistants=v2'
       }
     });
 
-    const messages = await messagesResponse.json();
-    const latestMessage = messages.data[0];
-
-    return latestMessage.content[0].text.value || 'Desculpe, não consegui processar sua mensagem.';
-
-  } catch (error) {
-    console.error('Erro ao comunicar com assistente:', error);
-    return 'Desculpe, ocorreu um erro ao processar sua mensagem.';
-  }
-}
-
-function breakMessageIntoHumanParts(message: string, enabled: boolean): string[] {
-  if (!enabled) {
-    return [message];
-  }
-
-  // Quebrar mensagem em partes menores e mais humanas
-  const sentences = message.split(/[.!?]+/).filter(s => s.trim().length > 0);
-  const parts: string[] = [];
-  let currentPart = '';
-
-  for (const sentence of sentences) {
-    const trimmedSentence = sentence.trim();
-    if (!trimmedSentence) continue;
-
-    if (currentPart.length + trimmedSentence.length < 200) {
-      currentPart += (currentPart ? '. ' : '') + trimmedSentence;
-    } else {
-      if (currentPart) {
-        parts.push(currentPart + '.');
-      }
-      currentPart = trimmedSentence;
-    }
-  }
-
-  if (currentPart) {
-    parts.push(currentPart + (currentPart.endsWith('.') ? '' : '.'));
-  }
-
-  return parts.length > 0 ? parts : [message];
-}
-
-async function sendWhatsAppMessage(
-  apiUrl: string,
-  apiKey: string,
-  instanceName: string,
-  contactNumber: string,
-  message: string
-) {
-  try {
-    const response = await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': apiKey
-      },
-      body: JSON.stringify({
-        number: `${contactNumber}@s.whatsapp.net`,
-        text: message
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erro ao enviar mensagem: ${response.status}`);
-    }
-
-    console.log('Mensagem enviada com sucesso:', message.substring(0, 50) + '...');
+    const messagesData = await messagesResponse.json();
+    const assistantMessage = messagesData.data[0];
     
-    return await response.json();
+    if (!assistantMessage || assistantMessage.role !== 'assistant') {
+      throw new Error('Resposta do assistente não encontrada');
+    }
+
+    const assistantResponse = assistantMessage.content[0].text.value;
+    console.log(`🤖 Resposta do assistente: ${assistantResponse}`);
+
+    // Quebrar resposta em mensagens humanizadas
+    const messageChunks = breakMessageIntoChunks(assistantResponse);
+    
+    // Enviar mensagens via Evolution API
+    for (let i = 0; i < messageChunks.length; i++) {
+      const chunk = messageChunks[i];
+      
+      const evolutionResponse = await fetch(`${instanceConfig.evolution_api_url}/message/sendText/${queueItem.instance_name}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': instanceConfig.evolution_api_key
+        },
+        body: JSON.stringify({
+          number: queueItem.contact_number,
+          text: chunk
+        })
+      });
+
+      if (!evolutionResponse.ok) {
+        console.error('❌ Erro ao enviar mensagem via Evolution API');
+      } else {
+        console.log(`✅ Mensagem ${i + 1}/${messageChunks.length} enviada com sucesso`);
+      }
+
+      // Delay entre mensagens para parecer mais humano
+      if (i < messageChunks.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000)); // 2-5 segundos
+      }
+    }
+
+    // Salvar no histórico
+    await supabase
+      .from('whatsapp_test_messages')
+      .insert({
+        conversation_id: conversation.id,
+        instance_name: queueItem.instance_name,
+        contact_number: queueItem.contact_number,
+        message_type: 'text',
+        message_content: combinedMessage,
+        is_from_owner: false,
+        processed: true,
+        ai_response: assistantResponse
+      });
+
+    // Marcar fila como processada
+    await supabase
+      .from('whatsapp_test_queue')
+      .update({ 
+        status: 'completed',
+        processed_at: new Date().toISOString()
+      })
+      .eq('id', queueId);
+
+    console.log('✅ Processamento da fila concluído com sucesso');
+
   } catch (error) {
-    console.error('Erro ao enviar mensagem WhatsApp:', error);
-    throw error;
+    console.error('❌ Erro no processamento da fila:', error);
+    
+    // Marcar como falhou
+    await supabase
+      .from('whatsapp_test_queue')
+      .update({ 
+        status: 'failed',
+        processed_at: new Date().toISOString()
+      })
+      .eq('id', queueId);
   }
+}
+
+function breakMessageIntoChunks(message: string): string[] {
+  const maxLength = 300; // Tamanho máximo de cada chunk
+  const chunks: string[] = [];
+  
+  // Dividir por parágrafos primeiro
+  const paragraphs = message.split('\n\n');
+  
+  for (const paragraph of paragraphs) {
+    if (paragraph.length <= maxLength) {
+      chunks.push(paragraph.trim());
+    } else {
+      // Dividir parágrafo longo por frases
+      const sentences = paragraph.split(/[.!?]+/);
+      let currentChunk = '';
+      
+      for (const sentence of sentences) {
+        const trimmedSentence = sentence.trim();
+        if (!trimmedSentence) continue;
+        
+        const sentenceWithPunct = trimmedSentence + (sentence.match(/[.!?]/) ? '' : '.');
+        
+        if ((currentChunk + ' ' + sentenceWithPunct).length <= maxLength) {
+          currentChunk = currentChunk ? currentChunk + ' ' + sentenceWithPunct : sentenceWithPunct;
+        } else {
+          if (currentChunk) {
+            chunks.push(currentChunk);
+          }
+          currentChunk = sentenceWithPunct;
+        }
+      }
+      
+      if (currentChunk) {
+        chunks.push(currentChunk);
+      }
+    }
+  }
+  
+  // Se não conseguiu dividir, força divisão por tamanho
+  if (chunks.length === 0) {
+    for (let i = 0; i < message.length; i += maxLength) {
+      chunks.push(message.substring(i, i + maxLength));
+    }
+  }
+  
+  return chunks.filter(chunk => chunk.trim().length > 0);
 }
