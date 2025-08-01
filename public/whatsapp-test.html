@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste WhatsApp Webhook</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        button { padding: 10px 20px; margin: 10px 0; background: #25D366; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #128C7E; }
+        .log { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; white-space: pre-wrap; }
+        input, textarea { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Teste WhatsApp Automation</h1>
+        
+        <h3>Configuração do Teste</h3>
+        <input id="instanceName" placeholder="Nome da instância (ex: teste-instance)" value="teste-instance">
+        <input id="contactNumber" placeholder="Número do contato (ex: 5511999999999)" value="5511999999999">
+        <textarea id="messageText" placeholder="Digite a mensagem de teste aqui..." rows="3">Olá! Como você está?</textarea>
+        
+        <button onclick="sendTestMessage()">📱 Enviar Mensagem de Teste</button>
+        <button onclick="sendOwnerMessage()">👤 Simular Mensagem do Proprietário</button>
+        <button onclick="checkLogs()">📋 Verificar Logs</button>
+        
+        <h3>Log de Resultado</h3>
+        <div id="log" class="log">Clique em um dos botões acima para testar...</div>
+    </div>
+
+    <script>
+        const WEBHOOK_URL = 'https://ekfkrwueqwpqakpsrsjt.functions.supabase.co/whatsapp-webhook-test';
+        
+        function log(message) {
+            document.getElementById('log').textContent = message;
+        }
+        
+        async function sendTestMessage() {
+            const instanceName = document.getElementById('instanceName').value;
+            const contactNumber = document.getElementById('contactNumber').value;
+            const messageText = document.getElementById('messageText').value;
+            
+            const payload = {
+                event: 'messages.upsert',
+                instance: instanceName,
+                data: {
+                    key: {
+                        remoteJid: contactNumber + '@s.whatsapp.net',
+                        fromMe: false,
+                        id: 'test_' + Date.now()
+                    },
+                    message: {
+                        conversation: messageText
+                    },
+                    messageTimestamp: Date.now(),
+                    pushName: 'Usuário Teste'
+                }
+            };
+            
+            log('📤 Enviando mensagem de teste...\n' + JSON.stringify(payload, null, 2));
+            
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log('✅ Sucesso!\n\nResposta:\n' + JSON.stringify(result, null, 2));
+                } else {
+                    log('❌ Erro!\n\nResposta:\n' + JSON.stringify(result, null, 2));
+                }
+            } catch (error) {
+                log('❌ Erro de rede:\n' + error.message);
+            }
+        }
+        
+        async function sendOwnerMessage() {
+            const instanceName = document.getElementById('instanceName').value;
+            const contactNumber = document.getElementById('contactNumber').value;
+            
+            const payload = {
+                event: 'messages.upsert',
+                instance: instanceName,
+                data: {
+                    key: {
+                        remoteJid: contactNumber + '@s.whatsapp.net',
+                        fromMe: true,
+                        id: 'owner_' + Date.now()
+                    },
+                    message: {
+                        conversation: 'Mensagem do proprietário para pausar'
+                    },
+                    messageTimestamp: Date.now(),
+                    pushName: 'Proprietário'
+                }
+            };
+            
+            log('👤 Enviando mensagem do proprietário...\n' + JSON.stringify(payload, null, 2));
+            
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log('✅ Conversa pausada!\n\nResposta:\n' + JSON.stringify(result, null, 2));
+                } else {
+                    log('❌ Erro!\n\nResposta:\n' + JSON.stringify(result, null, 2));
+                }
+            } catch (error) {
+                log('❌ Erro de rede:\n' + error.message);
+            }
+        }
+        
+        function checkLogs() {
+            log('📋 Para verificar os logs detalhados:\n\n1. Acesse: https://supabase.com/dashboard/project/ekfkrwueqwpqakpsrsjt/functions/whatsapp-webhook-test/logs\n\n2. Ou use o terminal do Supabase para ver os logs em tempo real\n\n3. Os logs mostrarão todo o fluxo de processamento da mensagem');
+        }
+    </script>
+</body>
+</html>

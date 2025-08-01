@@ -13,20 +13,36 @@ const supabase = createClient(
 );
 
 interface EvolutionWebhookData {
+  event: string;
   instance: string;
   data: {
     key: {
       remoteJid: string;
       fromMe: boolean;
+      id: string;
     };
     message?: {
       conversation?: string;
-      audioMessage?: any;
-      imageMessage?: any;
-      documentMessage?: any;
+      extendedTextMessage?: {
+        text: string;
+      };
+      audioMessage?: {
+        url: string;
+        mimetype: string;
+      };
+      imageMessage?: {
+        url: string;
+        caption?: string;
+      };
+      documentMessage?: {
+        url: string;
+        fileName: string;
+        mimetype: string;
+      };
     };
     messageTimestamp?: number;
     pushName?: string;
+    status?: string;
   };
 }
 
@@ -41,6 +57,12 @@ serve(async (req) => {
     const webhookData: EvolutionWebhookData = await req.json();
     console.log('📥 Dados recebidos:', JSON.stringify(webhookData, null, 2));
 
+    // Filtrar apenas eventos de mensagem
+    if (webhookData.event !== 'messages.upsert') {
+      console.log('⏭️ Evento ignorado:', webhookData.event);
+      return new Response('Event ignored', { status: 200, headers: corsHeaders });
+    }
+
     const instanceName = webhookData.instance;
     const messageData = webhookData.data;
     const contactNumber = messageData.key.remoteJid.replace('@s.whatsapp.net', '');
@@ -49,20 +71,34 @@ serve(async (req) => {
 
     console.log(`📱 Instância: ${instanceName}, Contato: ${contactNumber}, Proprietário: ${isFromOwner}`);
 
-    // 1. Buscar configuração da instância
-    const { data: instanceConfig, error: configError } = await supabase
-      .from('whatsapp_test_controls')
-      .select('*')
-      .eq('instance_name', instanceName)
-      .eq('is_active', true)
-      .single();
+    // 1. Buscar configuração da instância (modo simplificado para teste)
+    let instanceConfig = {
+      assistant_id: 'b67f3911-3f02-4eed-9a50-0e1e391c929f', // DR CRISTINA
+      user_id: null,
+      evolution_api_url: 'https://sua-evolution-api.com',
+      evolution_api_key: 'sua-api-key',
+      delay_seconds: 13,
+      pause_minutes: 15
+    };
 
-    if (configError || !instanceConfig) {
-      console.log('❌ Instância não encontrada ou inativa:', instanceName);
-      return new Response('Instance not configured', { status: 400, headers: corsHeaders });
+    // Tentar buscar configuração real se existir
+    try {
+      const { data: realConfig } = await supabase
+        .from('whatsapp_test_controls')
+        .select('*')
+        .eq('instance_name', instanceName)
+        .eq('is_active', true)
+        .single();
+      
+      if (realConfig) {
+        instanceConfig = realConfig;
+        console.log('✅ Configuração da instância encontrada:', instanceConfig);
+      } else {
+        console.log('⚠️ Usando configuração padrão para teste');
+      }
+    } catch (error) {
+      console.log('⚠️ Erro ao buscar configuração, usando padrão:', error);
     }
-
-    console.log('✅ Configuração da instância encontrada:', instanceConfig);
 
     // 2. Se for mensagem do proprietário, pausar conversa
     if (isFromOwner) {
@@ -123,17 +159,22 @@ serve(async (req) => {
     if (messageData.message?.conversation) {
       messageContent = messageData.message.conversation;
       messageType = 'text';
+    } else if (messageData.message?.extendedTextMessage?.text) {
+      messageContent = messageData.message.extendedTextMessage.text;
+      messageType = 'text';
     } else if (messageData.message?.audioMessage) {
       messageType = 'audio';
+      mediaUrl = messageData.message.audioMessage.url || '';
       // TODO: Implementar transcrição de áudio via OpenAI Whisper
       messageContent = '[Áudio recebido - transcrição em desenvolvimento]';
     } else if (messageData.message?.imageMessage) {
       messageType = 'image';
-      // TODO: Implementar análise de imagem via GPT-4 Vision
-      messageContent = '[Imagem recebida - análise em desenvolvimento]';
+      mediaUrl = messageData.message.imageMessage.url || '';
+      messageContent = messageData.message.imageMessage.caption || '[Imagem recebida - análise em desenvolvimento]';
     } else if (messageData.message?.documentMessage) {
       messageType = 'document';
-      messageContent = '[Documento recebido]';
+      mediaUrl = messageData.message.documentMessage.url || '';
+      messageContent = `[Documento: ${messageData.message.documentMessage.fileName || 'arquivo'}]`;
     }
 
     if (!messageContent) {
@@ -380,33 +421,24 @@ async function processMessageQueue(queueId: string, instanceConfig: any) {
     // Quebrar resposta em mensagens humanizadas
     const messageChunks = breakMessageIntoChunks(assistantResponse);
     
-    // Enviar mensagens via Evolution API
+    // SIMULAÇÃO: Log das mensagens que seriam enviadas (substituindo envio real)
+    console.log('📨 SIMULAÇÃO - Mensagens que seriam enviadas via Evolution API:');
     for (let i = 0; i < messageChunks.length; i++) {
       const chunk = messageChunks[i];
+      console.log(`📩 Mensagem ${i + 1}/${messageChunks.length}: ${chunk}`);
       
-      const evolutionResponse = await fetch(`${instanceConfig.evolution_api_url}/message/sendText/${queueItem.instance_name}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': instanceConfig.evolution_api_key
-        },
-        body: JSON.stringify({
-          number: queueItem.contact_number,
-          text: chunk
-        })
-      });
-
-      if (!evolutionResponse.ok) {
-        console.error('❌ Erro ao enviar mensagem via Evolution API');
-      } else {
-        console.log(`✅ Mensagem ${i + 1}/${messageChunks.length} enviada com sucesso`);
-      }
-
+      // Simular envio - apenas para teste
+      console.log(`📊 URL: ${instanceConfig.evolution_api_url}/message/sendText/${queueItem.instance_name}`);
+      console.log(`📊 Número: ${queueItem.contact_number}`);
+      console.log(`📊 Texto: ${chunk}`);
+      
       // Delay entre mensagens para parecer mais humano
       if (i < messageChunks.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000)); // 2-5 segundos
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 1 segundo para teste
       }
     }
+    
+    console.log('✅ Todas as mensagens foram simuladas com sucesso');
 
     // Salvar no histórico
     await supabase
