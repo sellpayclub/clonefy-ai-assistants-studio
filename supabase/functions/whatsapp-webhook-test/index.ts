@@ -75,7 +75,7 @@ serve(async (req) => {
     let instanceConfig = {
       assistant_id: 'b67f3911-3f02-4eed-9a50-0e1e391c929f', // DR CRISTINA
       user_id: null,
-      evolution_api_url: 'https://sua-evolution-api.com',
+      evolution_api_url: 'https://evolutionapi.clonefyia.com',
       evolution_api_key: 'sua-api-key',
       delay_seconds: 13,
       pause_minutes: 15
