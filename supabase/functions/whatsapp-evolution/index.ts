@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const EVOLUTION_API_URL = 'https://evolutionapi.chatsellpay.com';
+const EVOLUTION_API_URL = 'https://evolutionapi.clonefyia.com';
 const EVOLUTION_API_KEY = '2eb6dd69c0cc273101c4efc974419be5';
 const WEBHOOK_URL = 'https://webhook.dcsaudeautomacao.com/webhook/clonefy';
 
