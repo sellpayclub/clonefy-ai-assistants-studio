@@ -134,19 +134,19 @@ export default {
     },
     clonefy: {
       title: "CLONEFY",
-      price: "97",
-      period: "/mês - SEM limites",
+      price: "297",
+      period: "PAGAMENTO ÚNICO - Sem mensalidades!",
       recommended: "RECOMENDADO",
       features: [
         "Disponível 24 horas por dia",
         "Sem férias ou feriados",
         "Nunca fica doente", 
-        "Sem conversas/atendimento limitados"
+        "Pode parcelar em até 12x ou à vista no Pix"
       ]
     },
     finalMessage: "Contrate IA e não humanos,",
     finalMessageHighlight: "o Futuro já Chegou!",
-    startNow: "Começar Agora por R$ 97/mês"
+    startNow: "Começar Agora por R$ 297"
   },
 
   // Footer
