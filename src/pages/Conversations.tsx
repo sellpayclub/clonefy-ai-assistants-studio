@@ -369,6 +369,47 @@ const Conversations = () => {
     }
   };
 
+  const deleteAllConversations = async () => {
+    if (!session || conversations.length === 0) return;
+    
+    if (!confirm(`Tem certeza que deseja excluir TODAS as ${conversations.length} conversas? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    const confirmDelete = confirm('CONFIRMAÇÃO FINAL: Clique OK para deletar todas as conversas ou Cancelar para abortar.');
+    if (!confirmDelete) return;
+
+    try {
+      setSending(true);
+      
+      // Deletar todas as conversas uma por uma
+      for (const conversation of conversations) {
+        await supabase.functions.invoke('chat-api', {
+          body: { action: 'delete_conversation', conversationId: conversation.id },
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+      }
+
+      toast({
+        title: "Todas as conversas foram excluídas!",
+        description: `${conversations.length} conversas removidas com sucesso.`,
+      });
+
+      setSelectedConversation(null);
+      setMessages([]);
+      await loadData();
+    } catch (error: any) {
+      console.error('Error deleting all conversations:', error);
+      toast({
+        title: "Erro ao excluir conversas",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -385,177 +426,244 @@ const Conversations = () => {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         
-        <main className="flex-1 flex flex-col lg:flex-row">
-          {/* Conversations Sidebar */}
-          <div className="w-full lg:w-80 border-r border-b lg:border-b-0 bg-muted/20 flex flex-col min-h-[300px] lg:min-h-full max-h-[50vh] lg:max-h-none">
-            <div className="p-3 md:p-4 border-b">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="lg:hidden">
-                  <SidebarTrigger />
-                </div>
-                <h2 className="font-semibold flex items-center gap-2 text-sm md:text-base">
-                  <MessageSquare className="h-4 w-4 md:h-5 md:w-5" />
-                  Conversas
-                </h2>
+        <main className="flex-1 flex flex-col">
+          {/* Mobile Header */}
+          <div className="lg:hidden p-3 border-b bg-background">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <SidebarTrigger />
+                <h1 className="font-semibold">Conversas</h1>
               </div>
-              
-              {/* New Conversation */}
-              <div className="space-y-2">
-                <Select value={selectedAssistant} onValueChange={setSelectedAssistant}>
-                  <SelectTrigger className="bg-background w-full">
-                    <SelectValue placeholder="Escolha um agente" />
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-background border border-border shadow-lg">
-                    {assistants.length === 0 ? (
-                      <div className="p-3 text-center text-muted-foreground">
-                        <p className="text-sm">
-                          {loading ? t('conversations.loadingAgents') : t('conversations.noAgents')}
-                        </p>
-                        {!loading && (
-                          <Button 
-                            size="sm" 
-                            variant="link" 
-                            onClick={() => navigate('/assistants')}
-                            className="text-xs mt-1"
-                          >
-                            Criar primeiro agente
-                          </Button>
-                        )}
-                      </div>
-                    ) : (
-                      assistants.map((assistant) => (
-                        <SelectItem key={assistant.id} value={assistant.id}>
-                          <div className="flex items-center gap-2">
-                            <Bot className="h-3 w-3" />
-                            <span className="truncate">{assistant.name}</span>
-                          </div>
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-                <Button 
-                  onClick={startNewConversation} 
-                  disabled={!selectedAssistant}
-                  className="w-full text-sm"
+              {conversations.length > 0 && (
+                <Button
+                  onClick={deleteAllConversations}
+                  disabled={sending}
+                  variant="destructive"
                   size="sm"
+                  className="text-xs"
                 >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Nova Conversa
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Excluir Tudo
                 </Button>
-              </div>
+              )}
             </div>
-
-            {/* Conversations List */}
-            <ScrollArea className="flex-1">
-              <div className="p-2 space-y-2">
-                {conversations.map((conversation) => (
-                  <Card 
-                    key={conversation.id} 
-                    className={`cursor-pointer hover:bg-accent transition-colors ${selectedConversation === conversation.id ? 'bg-accent' : ''}`}
-                    onClick={() => {
-                      setSelectedConversation(conversation.id);
-                      loadMessages(conversation.id);
-                    }}
-                  >
-                    <CardContent className="p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm truncate">{conversation.title}</h4>
-                          <Badge variant="secondary" className="text-xs mt-1">
-                            {conversation.assistants.name}
-                          </Badge>
-                          {conversation.messages.length > 0 && (
-                            <p className="text-xs text-muted-foreground mt-1 truncate">
-                              {conversation.messages[conversation.messages.length - 1]?.content}
-                            </p>
-                          )}
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteConversation(conversation.id);
-                          }}
-                          className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground flex-shrink-0"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </ScrollArea>
           </div>
 
-          {/* Chat Area */}
-          <div className="flex-1 flex flex-col min-h-[50vh] lg:min-h-full">
-            {selectedConversation ? (
-              <>
-                {/* Chat Header */}
-                <div className="p-3 md:p-4 border-b">
-                  <div className="flex items-center gap-2">
-                    <div className="lg:hidden">
-                      <SidebarTrigger />
-                    </div>
-                    <Bot className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-                    <h3 className="font-semibold text-sm md:text-base truncate">
-                      {conversations.find(c => c.id === selectedConversation)?.assistants.name}
-                    </h3>
+          <div className="flex-1 flex flex-col lg:flex-row">
+            {/* Conversations Sidebar */}
+            <div className="w-full lg:w-80 border-r border-b lg:border-b-0 bg-muted/20 flex flex-col max-h-[40vh] lg:max-h-none">
+              <div className="p-3 md:p-4 border-b bg-background">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="hidden lg:flex items-center gap-2">
+                    <h2 className="font-semibold flex items-center gap-2 text-sm md:text-base">
+                      <MessageSquare className="h-4 w-4 md:h-5 md:w-5" />
+                      Conversas
+                    </h2>
                   </div>
+                  {conversations.length > 0 && (
+                    <Button
+                      onClick={deleteAllConversations}
+                      disabled={sending}
+                      variant="destructive"
+                      size="sm"
+                      className="hidden lg:flex text-xs"
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Excluir Todas
+                    </Button>
+                  )}
                 </div>
-
-                {/* Messages */}
-                <ScrollArea className="flex-1 p-3 md:p-4">
-                  <div className="space-y-4">
-                    {messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex gap-2 md:gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        {message.role === 'assistant' && (
-                          <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <Bot className="h-3 w-3 md:h-4 md:w-4 text-primary" />
-                          </div>
-                        )}
-                        <div
-                          className={`max-w-[80%] md:max-w-[70%] p-2 md:p-3 rounded-lg ${
-                            message.role === 'user'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted'
-                          }`}
-                        >
-                          <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                          <p className="text-xs opacity-70 mt-1">
-                            {new Date(message.created_at).toLocaleTimeString('pt-BR')}
+                
+                {/* New Conversation */}
+                <div className="space-y-2">
+                  <Select value={selectedAssistant} onValueChange={setSelectedAssistant}>
+                    <SelectTrigger className="bg-background w-full">
+                      <SelectValue placeholder="Escolha um agente" />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 bg-background border border-border shadow-lg">
+                      {assistants.length === 0 ? (
+                        <div className="p-3 text-center text-muted-foreground">
+                          <p className="text-sm">
+                            {loading ? t('conversations.loadingAgents') : t('conversations.noAgents')}
                           </p>
+                          {!loading && (
+                            <Button 
+                              size="sm" 
+                              variant="link" 
+                              onClick={() => navigate('/assistants')}
+                              className="text-xs mt-1"
+                            >
+                              Criar primeiro agente
+                            </Button>
+                          )}
                         </div>
-                        {message.role === 'user' && (
-                          <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                            <UserIcon className="h-3 w-3 md:h-4 md:w-4" />
+                      ) : (
+                        assistants.map((assistant) => (
+                          <SelectItem key={assistant.id} value={assistant.id}>
+                            <div className="flex items-center gap-2">
+                              <Bot className="h-3 w-3" />
+                              <span className="truncate">{assistant.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    onClick={startNewConversation} 
+                    disabled={!selectedAssistant}
+                    className="w-full text-sm"
+                    size="sm"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Nova Conversa
+                  </Button>
+                </div>
+              </div>
+
+              {/* Conversations List */}
+              <ScrollArea className="flex-1">
+                <div className="p-2 space-y-2">
+                  {conversations.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground">
+                      <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">Nenhuma conversa ainda</p>
+                      <p className="text-xs mt-1">Selecione um agente e inicie uma nova conversa</p>
+                    </div>
+                  ) : (
+                    conversations.map((conversation) => (
+                      <Card 
+                        key={conversation.id} 
+                        className={`cursor-pointer hover:bg-accent transition-colors ${selectedConversation === conversation.id ? 'ring-2 ring-primary bg-accent' : ''}`}
+                        onClick={() => {
+                          setSelectedConversation(conversation.id);
+                          loadMessages(conversation.id);
+                        }}
+                      >
+                        <CardContent className="p-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm truncate">{conversation.title}</h4>
+                              <Badge variant="secondary" className="text-xs mt-1">
+                                {conversation.assistants.name}
+                              </Badge>
+                              {conversation.messages.length > 0 && (
+                                <p className="text-xs text-muted-foreground mt-1 truncate">
+                                  {conversation.messages[conversation.messages.length - 1]?.content}
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteConversation(conversation.id);
+                              }}
+                              className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground flex-shrink-0"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
                           </div>
-                        )}
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* Chat Area */}
+            <div className="flex-1 flex flex-col min-h-[60vh] lg:min-h-full">
+              {selectedConversation ? (
+                <>
+                  {/* Chat Header */}
+                  <div className="p-3 md:p-4 border-b bg-background">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Bot className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                        <h3 className="font-semibold text-sm md:text-base truncate">
+                          {conversations.find(c => c.id === selectedConversation)?.assistants.name}
+                        </h3>
                       </div>
-                    ))}
-                    {sending && (
-                      <div className="flex gap-2 md:gap-3 justify-start">
-                        <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Bot className="h-3 w-3 md:h-4 md:w-4 text-primary" />
-                        </div>
-                        <div className="bg-muted p-2 md:p-3 rounded-lg">
-                          <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
-                            <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                            <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    <div ref={messagesEndRef} />
+                      <Button
+                        onClick={() => {
+                          setSelectedConversation(null);
+                          setMessages([]);
+                        }}
+                        variant="ghost"
+                        size="sm"
+                        className="lg:hidden"
+                      >
+                        ✕
+                      </Button>
+                    </div>
                   </div>
-                </ScrollArea>
+
+                  {/* Messages */}
+                  <ScrollArea className="flex-1 p-3 md:p-4">
+                    <div className="space-y-4">
+                      {messages.length === 0 ? (
+                        <div className="flex items-center justify-center h-full min-h-[200px]">
+                          <div className="text-center text-muted-foreground">
+                            <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p className="text-sm">Comece uma conversa!</p>
+                            <p className="text-xs mt-1">Digite sua primeira mensagem abaixo</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {messages.map((message) => (
+                            <div
+                              key={message.id}
+                              className={`flex gap-2 md:gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                            >
+                              {message.role === 'assistant' && (
+                                <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                                  <Bot className="h-3 w-3 md:h-4 md:w-4 text-primary" />
+                                </div>
+                              )}
+                              <div
+                                className={`max-w-[85%] md:max-w-[70%] p-3 rounded-lg ${
+                                  message.role === 'user'
+                                    ? 'bg-primary text-primary-foreground rounded-br-none'
+                                    : 'bg-muted rounded-bl-none'
+                                }`}
+                              >
+                                <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                                <p className="text-xs opacity-70 mt-1">
+                                  {new Date(message.created_at).toLocaleTimeString('pt-BR', { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                  })}
+                                </p>
+                              </div>
+                              {message.role === 'user' && (
+                                <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-1">
+                                  <UserIcon className="h-3 w-3 md:h-4 md:w-4" />
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          {sending && (
+                            <div className="flex gap-2 md:gap-3 justify-start">
+                              <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                                <Bot className="h-3 w-3 md:h-4 md:w-4 text-primary" />
+                              </div>
+                              <div className="bg-muted p-3 rounded-lg rounded-bl-none">
+                                <div className="flex space-x-1">
+                                  <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
+                                  <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                  <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  </ScrollArea>
 
                 {/* Message Input */}
                 <div className="p-3 md:p-4 border-t">
@@ -572,22 +680,23 @@ const Conversations = () => {
                     </Button>
                   </form>
                 </div>
-              </>
-            ) : (
-              <div className="flex-1 flex items-center justify-center p-4">
-                <div className="text-center space-y-4 max-w-sm">
-                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
-                    <MessageSquare className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="text-base md:text-lg font-semibold mb-2">Selecione uma conversa</h3>
-                    <p className="text-muted-foreground text-sm md:text-base">
-                      {t('conversations.selectConversation')}
-                    </p>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center p-4">
+                  <div className="text-center space-y-4 max-w-sm">
+                    <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto">
+                      <MessageSquare className="h-8 w-8 text-muted-foreground/50" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Selecione uma conversa</h3>
+                      <p className="text-muted-foreground text-sm">
+                        Escolha uma conversa existente ou crie uma nova para começar a conversar com seus agentes
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </main>
         
