@@ -426,9 +426,9 @@ const Conversations = () => {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         
-        <main className="flex-1 flex flex-col">
+        <main className="flex-1 flex flex-col h-screen">
           {/* Mobile Header */}
-          <div className="lg:hidden p-3 border-b bg-background">
+          <div className="lg:hidden p-3 border-b bg-background shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <SidebarTrigger />
@@ -449,14 +449,14 @@ const Conversations = () => {
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col lg:flex-row">
+          <div className="flex-1 flex flex-col lg:flex-row min-h-0">
             {/* Conversations Sidebar */}
-            <div className="w-full lg:w-80 border-r border-b lg:border-b-0 bg-muted/20 flex flex-col max-h-[40vh] lg:max-h-none">
-              <div className="p-3 md:p-4 border-b bg-background">
+            <div className="w-full lg:w-80 lg:border-r bg-muted/20 flex flex-col max-h-[40vh] lg:max-h-none lg:h-full">
+              <div className="p-4 border-b bg-background shrink-0">
                 <div className="flex items-center justify-between mb-4">
                   <div className="hidden lg:flex items-center gap-2">
-                    <h2 className="font-semibold flex items-center gap-2 text-sm md:text-base">
-                      <MessageSquare className="h-4 w-4 md:h-5 md:w-5" />
+                    <h2 className="font-semibold flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5" />
                       Conversas
                     </h2>
                   </div>
@@ -522,67 +522,69 @@ const Conversations = () => {
               </div>
 
               {/* Conversations List */}
-              <ScrollArea className="flex-1">
-                <div className="p-2 space-y-2">
-                  {conversations.length === 0 ? (
-                    <div className="p-4 text-center text-muted-foreground">
-                      <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">Nenhuma conversa ainda</p>
-                      <p className="text-xs mt-1">Selecione um agente e inicie uma nova conversa</p>
-                    </div>
-                  ) : (
-                    conversations.map((conversation) => (
-                      <Card 
-                        key={conversation.id} 
-                        className={`cursor-pointer hover:bg-accent transition-colors ${selectedConversation === conversation.id ? 'ring-2 ring-primary bg-accent' : ''}`}
-                        onClick={() => {
-                          setSelectedConversation(conversation.id);
-                          loadMessages(conversation.id);
-                        }}
-                      >
-                        <CardContent className="p-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-sm truncate">{conversation.title}</h4>
-                              <Badge variant="secondary" className="text-xs mt-1">
-                                {conversation.assistants.name}
-                              </Badge>
-                              {conversation.messages.length > 0 && (
-                                <p className="text-xs text-muted-foreground mt-1 truncate">
-                                  {conversation.messages[conversation.messages.length - 1]?.content}
-                                </p>
-                              )}
+              <div className="flex-1 overflow-hidden">
+                <ScrollArea className="h-full">
+                  <div className="p-2 space-y-2">
+                    {conversations.length === 0 ? (
+                      <div className="p-4 text-center text-muted-foreground">
+                        <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">Nenhuma conversa ainda</p>
+                        <p className="text-xs mt-1">Selecione um agente e inicie uma nova conversa</p>
+                      </div>
+                    ) : (
+                      conversations.map((conversation) => (
+                        <Card 
+                          key={conversation.id} 
+                          className={`cursor-pointer hover:bg-accent transition-colors ${selectedConversation === conversation.id ? 'ring-2 ring-primary bg-accent' : ''}`}
+                          onClick={() => {
+                            setSelectedConversation(conversation.id);
+                            loadMessages(conversation.id);
+                          }}
+                        >
+                          <CardContent className="p-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-sm truncate">{conversation.title}</h4>
+                                <Badge variant="secondary" className="text-xs mt-1">
+                                  {conversation.assistants.name}
+                                </Badge>
+                                {conversation.messages.length > 0 && (
+                                  <p className="text-xs text-muted-foreground mt-1 truncate">
+                                    {conversation.messages[conversation.messages.length - 1]?.content}
+                                  </p>
+                                )}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteConversation(conversation.id);
+                                }}
+                                className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground flex-shrink-0"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
                             </div>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteConversation(conversation.id);
-                              }}
-                              className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground flex-shrink-0"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-                </div>
-              </ScrollArea>
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 flex flex-col min-h-[60vh] lg:min-h-full">
+            <div className="flex-1 flex flex-col min-h-[60vh] lg:min-h-0 lg:h-full">
               {selectedConversation ? (
-                <>
+                <div className="flex flex-col h-full">
                   {/* Chat Header */}
-                  <div className="p-3 md:p-4 border-b bg-background">
+                  <div className="p-4 border-b bg-background shrink-0">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Bot className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-                        <h3 className="font-semibold text-sm md:text-base truncate">
+                        <Bot className="h-5 w-5 text-primary" />
+                        <h3 className="font-semibold truncate">
                           {conversations.find(c => c.id === selectedConversation)?.assistants.name}
                         </h3>
                       </div>
@@ -601,86 +603,88 @@ const Conversations = () => {
                   </div>
 
                   {/* Messages */}
-                  <ScrollArea className="flex-1 p-3 md:p-4">
-                    <div className="space-y-4">
-                      {messages.length === 0 ? (
-                        <div className="flex items-center justify-center h-full min-h-[200px]">
-                          <div className="text-center text-muted-foreground">
-                            <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p className="text-sm">Comece uma conversa!</p>
-                            <p className="text-xs mt-1">Digite sua primeira mensagem abaixo</p>
+                  <div className="flex-1 overflow-hidden">
+                    <ScrollArea className="h-full p-4">
+                      <div className="space-y-4">
+                        {messages.length === 0 ? (
+                          <div className="flex items-center justify-center h-full min-h-[200px]">
+                            <div className="text-center text-muted-foreground">
+                              <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                              <p className="text-sm">Comece uma conversa!</p>
+                              <p className="text-xs mt-1">Digite sua primeira mensagem abaixo</p>
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <>
-                          {messages.map((message) => (
-                            <div
-                              key={message.id}
-                              className={`flex gap-2 md:gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                            >
-                              {message.role === 'assistant' && (
-                                <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                                  <Bot className="h-3 w-3 md:h-4 md:w-4 text-primary" />
-                                </div>
-                              )}
+                        ) : (
+                          <>
+                            {messages.map((message) => (
                               <div
-                                className={`max-w-[85%] md:max-w-[70%] p-3 rounded-lg ${
-                                  message.role === 'user'
-                                    ? 'bg-primary text-primary-foreground rounded-br-none'
-                                    : 'bg-muted rounded-bl-none'
-                                }`}
+                                key={message.id}
+                                className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                               >
-                                <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                                <p className="text-xs opacity-70 mt-1">
-                                  {new Date(message.created_at).toLocaleTimeString('pt-BR', { 
-                                    hour: '2-digit', 
-                                    minute: '2-digit' 
-                                  })}
-                                </p>
-                              </div>
-                              {message.role === 'user' && (
-                                <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-1">
-                                  <UserIcon className="h-3 w-3 md:h-4 md:w-4" />
+                                {message.role === 'assistant' && (
+                                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                                    <Bot className="h-4 w-4 text-primary" />
+                                  </div>
+                                )}
+                                <div
+                                  className={`max-w-[70%] p-3 rounded-lg ${
+                                    message.role === 'user'
+                                      ? 'bg-primary text-primary-foreground rounded-br-none'
+                                      : 'bg-muted rounded-bl-none'
+                                  }`}
+                                >
+                                  <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                                  <p className="text-xs opacity-70 mt-1">
+                                    {new Date(message.created_at).toLocaleTimeString('pt-BR', { 
+                                      hour: '2-digit', 
+                                      minute: '2-digit' 
+                                    })}
+                                  </p>
                                 </div>
-                              )}
-                            </div>
-                          ))}
-                          {sending && (
-                            <div className="flex gap-2 md:gap-3 justify-start">
-                              <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                                <Bot className="h-3 w-3 md:h-4 md:w-4 text-primary" />
+                                {message.role === 'user' && (
+                                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-1">
+                                    <UserIcon className="h-4 w-4" />
+                                  </div>
+                                )}
                               </div>
-                              <div className="bg-muted p-3 rounded-lg rounded-bl-none">
-                                <div className="flex space-x-1">
-                                  <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
-                                  <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                                  <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                            ))}
+                            {sending && (
+                              <div className="flex gap-3 justify-start">
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                                  <Bot className="h-4 w-4 text-primary" />
+                                </div>
+                                <div className="bg-muted p-3 rounded-lg rounded-bl-none">
+                                  <div className="flex space-x-1">
+                                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
+                                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
-                        </>
-                      )}
-                      <div ref={messagesEndRef} />
-                    </div>
-                  </ScrollArea>
+                            )}
+                          </>
+                        )}
+                        <div ref={messagesEndRef} />
+                      </div>
+                    </ScrollArea>
+                  </div>
 
-                {/* Message Input */}
-                <div className="p-3 md:p-4 border-t">
-                  <form onSubmit={sendMessage} className="flex gap-2">
-                    <Input
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Digite sua mensagem..."
-                      disabled={sending}
-                      className="flex-1 text-sm"
-                    />
-                    <Button type="submit" disabled={sending || !newMessage.trim()} size="sm" className="px-3">
-                      <Send className="h-3 w-3 md:h-4 md:w-4" />
-                    </Button>
-                  </form>
+                  {/* Message Input */}
+                  <div className="p-4 border-t bg-background shrink-0">
+                    <form onSubmit={sendMessage} className="flex gap-2">
+                      <Input
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        placeholder="Digite sua mensagem..."
+                        disabled={sending}
+                        className="flex-1"
+                      />
+                      <Button type="submit" disabled={sending || !newMessage.trim()}>
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </form>
+                  </div>
                 </div>
-                </>
               ) : (
                 <div className="flex-1 flex items-center justify-center p-4">
                   <div className="text-center space-y-4 max-w-sm">
