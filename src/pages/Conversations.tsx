@@ -579,28 +579,43 @@ const Conversations = () => {
             <div className="flex-1 flex flex-col min-h-[60vh] lg:min-h-0 lg:h-full">
               {selectedConversation ? (
                 <div className="flex flex-col h-full">
-                  {/* Chat Header */}
-                  <div className="p-4 border-b bg-background shrink-0">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Bot className="h-5 w-5 text-primary" />
-                        <h3 className="font-semibold truncate">
-                          {conversations.find(c => c.id === selectedConversation)?.assistants.name}
-                        </h3>
-                      </div>
-                      <Button
-                        onClick={() => {
-                          setSelectedConversation(null);
-                          setMessages([]);
-                        }}
-                        variant="ghost"
-                        size="sm"
-                        className="lg:hidden"
-                      >
-                        ✕
-                      </Button>
-                    </div>
-                  </div>
+          {/* Chat Header */}
+          <div className="p-4 border-b bg-background shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bot className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold truncate">
+                  {conversations.find(c => c.id === selectedConversation)?.assistants.name}
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                {conversations.length > 0 && (
+                  <Button
+                    onClick={deleteAllConversations}
+                    disabled={sending}
+                    variant="destructive"
+                    size="sm"
+                    className="text-xs"
+                    title="Excluir todas as conversas"
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Limpar Tudo
+                  </Button>
+                )}
+                <Button
+                  onClick={() => {
+                    setSelectedConversation(null);
+                    setMessages([]);
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="lg:hidden"
+                >
+                  ✕
+                </Button>
+              </div>
+            </div>
+          </div>
 
                   {/* Messages */}
                   <div className="flex-1 overflow-hidden">
