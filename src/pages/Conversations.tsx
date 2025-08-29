@@ -379,35 +379,37 @@ const Conversations = () => {
     const confirmDelete = confirm('CONFIRMAÇÃO FINAL: Clique OK para deletar todas as conversas ou Cancelar para abortar.');
     if (!confirmDelete) return;
 
-    try {
-      setSending(true);
-      
-      // Deletar todas as conversas uma por uma
-      for (const conversation of conversations) {
-        await supabase.functions.invoke('chat-api', {
-          body: { action: 'delete_conversation', conversationId: conversation.id },
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-      }
+  try {
+    setSending(true);
 
-      toast({
-        title: "Todas as conversas foram excluídas!",
-        description: `${conversations.length} conversas removidas com sucesso.`,
-      });
+    // Solicitação única ao backend para excluir todas as conversas
+    const response = await supabase.functions.invoke('chat-api', {
+      body: { action: 'delete_all_conversations' },
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
 
-      setSelectedConversation(null);
-      setMessages([]);
-      await loadData();
-    } catch (error: any) {
-      console.error('Error deleting all conversations:', error);
-      toast({
-        title: "Erro ao excluir conversas",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setSending(false);
+    if (response.error) {
+      throw response.error;
     }
+
+    toast({
+      title: "Todas as conversas foram excluídas!",
+      description: `${conversations.length} conversas removidas com sucesso.`,
+    });
+
+    setSelectedConversation(null);
+    setMessages([]);
+    await loadData();
+  } catch (error: any) {
+    console.error('Error deleting all conversations:', error);
+    toast({
+      title: "Erro ao excluir conversas",
+      description: error.message,
+      variant: "destructive",
+    });
+  } finally {
+    setSending(false);
+  }
   };
 
   if (loading) {

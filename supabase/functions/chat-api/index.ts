@@ -57,6 +57,8 @@ serve(async (req) => {
         return await getMessages(user.id, data.conversationId);
       case 'delete_conversation':
         return await deleteConversation(user.id, data.conversationId);
+      case 'delete_all_conversations':
+        return await deleteAllConversations(user.id);
       default:
         throw new Error('Invalid action');
     }
@@ -369,6 +371,23 @@ async function deleteConversation(userId: string, conversationId: string) {
     .update({ is_active: false })
     .eq('user_id', userId)
     .eq('id', conversationId);
+
+  if (error) {
+    throw new Error(`Database error: ${error.message}`);
+  }
+
+  return new Response(JSON.stringify({ success: true }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+async function deleteAllConversations(userId: string) {
+  // Soft delete all active conversations for the user
+  const { error } = await supabase
+    .from('conversations')
+    .update({ is_active: false })
+    .eq('user_id', userId)
+    .eq('is_active', true);
 
   if (error) {
     throw new Error(`Database error: ${error.message}`);
