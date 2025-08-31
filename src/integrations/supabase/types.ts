@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -807,6 +807,185 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_test_controls: {
+        Row: {
+          assistant_id: string | null
+          created_at: string
+          delay_seconds: number | null
+          evolution_api_key: string | null
+          evolution_api_url: string | null
+          id: string
+          instance_name: string
+          is_active: boolean | null
+          message_break_enabled: boolean | null
+          pause_minutes: number | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          assistant_id?: string | null
+          created_at?: string
+          delay_seconds?: number | null
+          evolution_api_key?: string | null
+          evolution_api_url?: string | null
+          id?: string
+          instance_name: string
+          is_active?: boolean | null
+          message_break_enabled?: boolean | null
+          pause_minutes?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          assistant_id?: string | null
+          created_at?: string
+          delay_seconds?: number | null
+          evolution_api_key?: string | null
+          evolution_api_url?: string | null
+          id?: string
+          instance_name?: string
+          is_active?: boolean | null
+          message_break_enabled?: boolean | null
+          pause_minutes?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      whatsapp_test_conversations: {
+        Row: {
+          assistant_id: string | null
+          contact_name: string | null
+          contact_number: string
+          created_at: string
+          id: string
+          instance_name: string
+          is_paused: boolean | null
+          last_owner_message_at: string | null
+          openai_thread_id: string | null
+          paused_until: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          assistant_id?: string | null
+          contact_name?: string | null
+          contact_number: string
+          created_at?: string
+          id?: string
+          instance_name: string
+          is_paused?: boolean | null
+          last_owner_message_at?: string | null
+          openai_thread_id?: string | null
+          paused_until?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          assistant_id?: string | null
+          contact_name?: string | null
+          contact_number?: string
+          created_at?: string
+          id?: string
+          instance_name?: string
+          is_paused?: boolean | null
+          last_owner_message_at?: string | null
+          openai_thread_id?: string | null
+          paused_until?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      whatsapp_test_messages: {
+        Row: {
+          ai_response: string | null
+          contact_number: string
+          conversation_id: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          instance_name: string
+          is_from_owner: boolean | null
+          message_content: string | null
+          message_id: string | null
+          message_media_url: string | null
+          message_type: string
+          processed: boolean | null
+        }
+        Insert: {
+          ai_response?: string | null
+          contact_number: string
+          conversation_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          instance_name: string
+          is_from_owner?: boolean | null
+          message_content?: string | null
+          message_id?: string | null
+          message_media_url?: string | null
+          message_type: string
+          processed?: boolean | null
+        }
+        Update: {
+          ai_response?: string | null
+          contact_number?: string
+          conversation_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          instance_name?: string
+          is_from_owner?: boolean | null
+          message_content?: string | null
+          message_id?: string | null
+          message_media_url?: string | null
+          message_type?: string
+          processed?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_test_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_test_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_test_queue: {
+        Row: {
+          contact_number: string
+          created_at: string
+          id: string
+          instance_name: string
+          messages: Json[] | null
+          process_at: string
+          processed_at: string | null
+          status: string | null
+        }
+        Insert: {
+          contact_number: string
+          created_at?: string
+          id?: string
+          instance_name: string
+          messages?: Json[] | null
+          process_at: string
+          processed_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          contact_number?: string
+          created_at?: string
+          id?: string
+          instance_name?: string
+          messages?: Json[] | null
+          process_at?: string
+          processed_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -819,14 +998,14 @@ export type Database = {
       get_user_usage_stats: {
         Args: { target_user_id?: string }
         Returns: {
-          user_id: string
-          user_email: string
-          max_assistants: number
-          max_whatsapp_connections: number
+          created_at: string
           current_assistants: number
           current_whatsapp_connections: number
+          max_assistants: number
+          max_whatsapp_connections: number
           plan_type: string
-          created_at: string
+          user_email: string
+          user_id: string
         }[]
       }
       upgrade_user_to_paid: {
