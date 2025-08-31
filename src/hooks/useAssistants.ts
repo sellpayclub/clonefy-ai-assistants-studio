@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
+import { cache } from '@/utils/cache';
 
 export interface Assistant {
   id: string;
@@ -39,16 +40,31 @@ export const useAssistants = (session: Session | null) => {
     return response.data;
   }, [session]);
 
-  // Otimiza o carregamento de assistentes
-  const loadAssistants = useCallback(async () => {
+  // Otimiza o carregamento de assistentes com cache
+  const loadAssistants = useCallback(async (forceRefresh = false) => {
     if (!session) return;
+    
+    const cacheKey = `assistants_${session.user.id}`;
+    
+    // Verificar cache primeiro (só se não for refresh forçado)
+    if (!forceRefresh) {
+      const cachedData = cache.get<Assistant[]>(cacheKey);
+      if (cachedData) {
+        setAssistants(cachedData);
+        return;
+      }
+    }
     
     setLoading(true);
     setError(null);
     
     try {
       const data = await callFunction({ action: 'list' });
-      setAssistants(data.assistants || []);
+      const assistantsList = data.assistants || [];
+      
+      setAssistants(assistantsList);
+      // Cache por 3 minutos
+      cache.set(cacheKey, assistantsList, 3);
     } catch (err: any) {
       setError(err.message);
       console.error('Error loading assistants:', err);
@@ -67,7 +83,12 @@ export const useAssistants = (session: Session | null) => {
       action: 'create',
       ...assistantData,
     });
-    await loadAssistants(); // Reload list
+    
+    // Invalidar cache e recarregar
+    if (session) {
+      cache.invalidate(`assistants_${session.user.id}`);
+    }
+    await loadAssistants(true); // Force refresh
     return data.assistant;
   };
 
@@ -82,7 +103,12 @@ export const useAssistants = (session: Session | null) => {
       assistantId,
       ...assistantData,
     });
-    await loadAssistants(); // Reload list
+    
+    // Invalidar cache e recarregar
+    if (session) {
+      cache.invalidate(`assistants_${session.user.id}`);
+    }
+    await loadAssistants(true); // Force refresh
     return data.assistant;
   };
 
@@ -91,7 +117,12 @@ export const useAssistants = (session: Session | null) => {
       action: 'delete',
       assistantId,
     });
-    await loadAssistants(); // Reload list
+    
+    // Invalidar cache e recarregar
+    if (session) {
+      cache.invalidate(`assistants_${session.user.id}`);
+    }
+    await loadAssistants(true); // Force refresh
   };
 
   const getAssistant = async (assistantId: string) => {

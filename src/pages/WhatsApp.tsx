@@ -1,4 +1,4 @@
-import { useState, useEffect, memo } from "react";
+import { useState, useEffect, memo, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from '@supabase/supabase-js';
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { useUserLimits } from "@/hooks/useUserLimits";
 import SupportChatWidget from "@/components/SupportChatWidget";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { cache } from "@/utils/cache";
 
 interface Assistant {
   id: string;
@@ -80,7 +81,7 @@ const WhatsApp = () => {
             if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
               setTimeout(async () => {
                 if (isMounted) {
-                  await loadData();
+                  await loadData(true); // Force refresh on auth change
                   setLoading(false);
                 }
               }, 100);
@@ -121,7 +122,8 @@ const WhatsApp = () => {
     };
   }, []);
 
-  const loadData = async () => {
+  // Otimizar loadData com cache e memoization
+  const loadData = useCallback(async (forceRefresh = false) => {
     let currentSession = session;
     if (!currentSession) {
       const { data } = await supabase.auth.getSession();
@@ -132,37 +134,57 @@ const WhatsApp = () => {
       return;
     }
 
+    const userId = currentSession.user.id;
+    const assistantsCacheKey = `assistants_${userId}`;
+    const connectionsCacheKey = `whatsapp_connections_${userId}`;
+
     try {
+      // Verificar cache primeiro (só se não for refresh forçado)
+      let assistantsData, connectionsData;
       
-      // Load assistants
-      const assistantsResponse = await supabase.functions.invoke('openai-assistants', {
-        body: { action: 'list' },
-        headers: { Authorization: `Bearer ${currentSession.access_token}` },
-      });
-
-      if (!assistantsResponse.error && assistantsResponse.data?.assistants) {
-        setAssistants(assistantsResponse.data.assistants);
-      } else {
-        console.warn('No assistants found or error:', assistantsResponse.error);
-        setAssistants([]);
+      if (!forceRefresh) {
+        assistantsData = cache.get(assistantsCacheKey);
+        connectionsData = cache.get(connectionsCacheKey);
       }
 
-      // Load WhatsApp connections
-      const connectionsResponse = await supabase.functions.invoke('whatsapp-evolution', {
-        body: { action: 'list' },
-        headers: { Authorization: `Bearer ${currentSession.access_token}` },
-      });
+      // Carregar assistants se não estiver em cache
+      if (!assistantsData) {
+        const assistantsResponse = await supabase.functions.invoke('openai-assistants', {
+          body: { action: 'list' },
+          headers: { Authorization: `Bearer ${currentSession.access_token}` },
+        });
 
-      if (!connectionsResponse.error && connectionsResponse.data?.connections) {
-        setConnections(connectionsResponse.data.connections);
-      } else {
-        console.warn('No connections found or error:', connectionsResponse.error);
-        setConnections([]);
+        if (!assistantsResponse.error && assistantsResponse.data?.assistants) {
+          assistantsData = assistantsResponse.data.assistants;
+          cache.set(assistantsCacheKey, assistantsData, 3); // Cache por 3 minutos
+        } else {
+          console.warn('No assistants found or error:', assistantsResponse.error);
+          assistantsData = [];
+        }
       }
+
+      // Carregar connections se não estiver em cache
+      if (!connectionsData) {
+        const connectionsResponse = await supabase.functions.invoke('whatsapp-evolution', {
+          body: { action: 'list' },
+          headers: { Authorization: `Bearer ${currentSession.access_token}` },
+        });
+
+        if (!connectionsResponse.error && connectionsResponse.data?.connections) {
+          connectionsData = connectionsResponse.data.connections;
+          cache.set(connectionsCacheKey, connectionsData, 2); // Cache por 2 minutos
+        } else {
+          console.warn('No connections found or error:', connectionsResponse.error);
+          connectionsData = [];
+        }
+      }
+
+      setAssistants(assistantsData);
+      setConnections(connectionsData);
     } catch (error: any) {
       console.error('WhatsApp: Error loading data:', error);
     }
-  };
+  }, [session]);
 
   const createConnection = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -259,8 +281,11 @@ const WhatsApp = () => {
       setInstanceName("");
       setSelectedAssistant("");
       
-      // Reload connections
-      await loadData();
+      // Invalidar cache e reload connections
+      if (user) {
+        cache.invalidate(`whatsapp_connections_${user.id}`);
+      }
+      await loadData(true); // Force refresh
       await reloadLimits(); // Reload limits after creating
       
       // Show QR code if available
@@ -345,7 +370,11 @@ const WhatsApp = () => {
         description: `A instância foi removida.`,
       });
 
-      await loadData();
+      // Invalidar cache e reload
+      if (user) {
+        cache.invalidate(`whatsapp_connections_${user.id}`);
+      }
+      await loadData(true); // Force refresh
       await reloadLimits(); // Reload limits after deleting
     } catch (error: any) {
       console.error('Error deleting connection:', error);
@@ -471,6 +500,23 @@ const WhatsApp = () => {
   };
 
 
+  // Handlers otimizados com memoization
+  const handleRefreshData = useCallback(() => {
+    loadData(true);
+  }, [loadData]);
+
+  const handleCheckStatus = useCallback((connection: WhatsAppConnection) => {
+    checkIndividualStatus(connection);
+  }, []);
+
+  const handleFetchQrCode = useCallback((connection: WhatsAppConnection) => {
+    fetchQrCode(connection);
+  }, []);
+
+  const handleDeleteConnection = useCallback((connection: WhatsAppConnection) => {
+    deleteConnection(connection);
+  }, []);
+
   const checkIndividualStatus = async (connection: WhatsAppConnection) => {
     // Get current session
     let currentSession = session;
@@ -561,7 +607,7 @@ const WhatsApp = () => {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
-              <Button onClick={loadData} variant="outline" size="sm" className="w-full sm:w-auto">
+              <Button onClick={handleRefreshData} variant="outline" size="sm" className="w-full sm:w-auto">
                 <RefreshCw className="h-4 w-4 mr-1" />
                 Atualizar
               </Button>
@@ -601,7 +647,7 @@ const WhatsApp = () => {
                       </CardDescription>
                     </div>
                     <Button 
-                      onClick={loadData} 
+                      onClick={handleRefreshData} 
                       variant="outline" 
                       size="sm"
                       className="flex items-center gap-2 w-full md:w-auto"
