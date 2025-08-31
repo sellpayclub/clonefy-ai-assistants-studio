@@ -51,27 +51,32 @@ export function preloadImage(src: string): Promise<HTMLImageElement> {
 
 // Cache em memória simples mas eficiente
 class SimpleCache<T> {
-  private cache = new Map<string, { data: T; timestamp: number }>();
-  private maxAge: number;
+  private cache = new Map<string, { data: T; timestamp: number; ttl: number }>();
+  private defaultMaxAge: number;
 
   constructor(maxAge = 5 * 60 * 1000) { // 5 minutos default
-    this.maxAge = maxAge;
+    this.defaultMaxAge = maxAge;
   }
 
-  set(key: string, data: T): void {
-    this.cache.set(key, { data, timestamp: Date.now() });
+  set(key: string, data: T, ttlMinutes?: number): void {
+    const ttl = ttlMinutes ? ttlMinutes * 60 * 1000 : this.defaultMaxAge;
+    this.cache.set(key, { data, timestamp: Date.now(), ttl });
   }
 
   get(key: string): T | null {
     const item = this.cache.get(key);
     if (!item) return null;
 
-    if (Date.now() - item.timestamp > this.maxAge) {
+    if (Date.now() - item.timestamp > item.ttl) {
       this.cache.delete(key);
       return null;
     }
 
     return item.data;
+  }
+
+  invalidate(key: string): void {
+    this.cache.delete(key);
   }
 
   clear(): void {

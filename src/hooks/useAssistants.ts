@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
-import { cache } from '@/utils/cache';
+import { performanceCache } from '@/utils/performance';
 
 export interface Assistant {
   id: string;
@@ -48,7 +48,7 @@ export const useAssistants = (session: Session | null) => {
     
     // Verificar cache primeiro (só se não for refresh forçado)
     if (!forceRefresh) {
-      const cachedData = cache.get<Assistant[]>(cacheKey);
+      const cachedData = performanceCache.get(cacheKey) as Assistant[] | null;
       if (cachedData) {
         setAssistants(cachedData);
         return;
@@ -64,7 +64,7 @@ export const useAssistants = (session: Session | null) => {
       
       setAssistants(assistantsList);
       // Cache por 3 minutos
-      cache.set(cacheKey, assistantsList, 3);
+      performanceCache.set(cacheKey, assistantsList, 3);
     } catch (err: any) {
       setError(err.message);
       console.error('Error loading assistants:', err);
@@ -86,7 +86,7 @@ export const useAssistants = (session: Session | null) => {
     
     // Invalidar cache e recarregar
     if (session) {
-      cache.invalidate(`assistants_${session.user.id}`);
+      performanceCache.invalidate(`assistants_${session.user.id}`);
     }
     await loadAssistants(true); // Force refresh
     return data.assistant;
@@ -106,7 +106,7 @@ export const useAssistants = (session: Session | null) => {
     
     // Invalidar cache e recarregar
     if (session) {
-      cache.invalidate(`assistants_${session.user.id}`);
+      performanceCache.invalidate(`assistants_${session.user.id}`);
     }
     await loadAssistants(true); // Force refresh
     return data.assistant;
@@ -120,7 +120,7 @@ export const useAssistants = (session: Session | null) => {
     
     // Invalidar cache e recarregar
     if (session) {
-      cache.invalidate(`assistants_${session.user.id}`);
+      performanceCache.invalidate(`assistants_${session.user.id}`);
     }
     await loadAssistants(true); // Force refresh
   };

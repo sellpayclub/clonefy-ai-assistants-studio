@@ -18,7 +18,7 @@ import { useUserLimits } from "@/hooks/useUserLimits";
 import SupportChatWidget from "@/components/SupportChatWidget";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { cache } from "@/utils/cache";
+import { performanceCache } from "@/utils/performance";
 
 interface Assistant {
   id: string;
@@ -143,8 +143,8 @@ const WhatsApp = () => {
       let assistantsData, connectionsData;
       
       if (!forceRefresh) {
-        assistantsData = cache.get(assistantsCacheKey);
-        connectionsData = cache.get(connectionsCacheKey);
+        assistantsData = performanceCache.get(assistantsCacheKey);
+        connectionsData = performanceCache.get(connectionsCacheKey);
       }
 
       // Carregar assistants se não estiver em cache
@@ -156,7 +156,7 @@ const WhatsApp = () => {
 
         if (!assistantsResponse.error && assistantsResponse.data?.assistants) {
           assistantsData = assistantsResponse.data.assistants;
-          cache.set(assistantsCacheKey, assistantsData, 3); // Cache por 3 minutos
+          performanceCache.set(assistantsCacheKey, assistantsData, 3); // Cache por 3 minutos
         } else {
           console.warn('No assistants found or error:', assistantsResponse.error);
           assistantsData = [];
@@ -172,7 +172,7 @@ const WhatsApp = () => {
 
         if (!connectionsResponse.error && connectionsResponse.data?.connections) {
           connectionsData = connectionsResponse.data.connections;
-          cache.set(connectionsCacheKey, connectionsData, 2); // Cache por 2 minutos
+          performanceCache.set(connectionsCacheKey, connectionsData, 2); // Cache por 2 minutos
         } else {
           console.warn('No connections found or error:', connectionsResponse.error);
           connectionsData = [];
@@ -283,7 +283,7 @@ const WhatsApp = () => {
       
       // Invalidar cache e reload connections
       if (user) {
-        cache.invalidate(`whatsapp_connections_${user.id}`);
+        performanceCache.invalidate(`whatsapp_connections_${user.id}`);
       }
       await loadData(true); // Force refresh
       await reloadLimits(); // Reload limits after creating
@@ -372,7 +372,7 @@ const WhatsApp = () => {
 
       // Invalidar cache e reload
       if (user) {
-        cache.invalidate(`whatsapp_connections_${user.id}`);
+        performanceCache.invalidate(`whatsapp_connections_${user.id}`);
       }
       await loadData(true); // Force refresh
       await reloadLimits(); // Reload limits after deleting
