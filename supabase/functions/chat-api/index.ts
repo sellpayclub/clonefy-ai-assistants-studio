@@ -288,7 +288,20 @@ async function sendMessage(userId: string, data: any) {
   const assistantMessage = messagesData.data.find((msg: any) => msg.role === 'assistant' && msg.run_id === run.id);
 
   if (assistantMessage) {
-    const messageContent = assistantMessage.content[0]?.text?.value || '';
+    // Extract text content safely (some messages may contain multiple content blocks)
+    let messageContent = '';
+    if (Array.isArray(assistantMessage.content)) {
+      for (const part of assistantMessage.content) {
+        if (part.type === 'text' && part.text?.value) {
+          messageContent += (messageContent ? '\n' : '') + part.text.value;
+        }
+      }
+    }
+    // Fallback
+    messageContent = messageContent || assistantMessage.content?.[0]?.text?.value || '';
+
+    // Replace any sandbox:* links with direct public URLs from our media library
+    const sanitizedContent = await replaceSandboxLinks(messageContent, conversation.assistant_id);
     
     // Save assistant message in database
     await supabase
@@ -296,7 +309,7 @@ async function sendMessage(userId: string, data: any) {
       .insert({
         conversation_id: conversationId,
         role: 'assistant',
-        content: messageContent,
+        content: sanitizedContent,
         openai_message_id: assistantMessage.id
       });
 
@@ -304,7 +317,7 @@ async function sendMessage(userId: string, data: any) {
       userMessage, 
       assistantMessage: {
         id: assistantMessage.id,
-        content: messageContent,
+        content: sanitizedContent,
         role: 'assistant'
       }
     }), {
@@ -396,4 +409,55 @@ async function deleteAllConversations(userId: string) {
   return new Response(JSON.stringify({ success: true }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
+}
+
+// Helper: replace sandbox:* markdown links with public URLs for this assistant's media files
+async function replaceSandboxLinks(text: string, assistantId: string): Promise<string> {
+  try {
+    if (!text || !text.includes('sandbox:')) return text;
+
+    const { data: files, error } = await supabase
+      .from('assistant_media')
+      .select('file_name, file_url')
+      .eq('assistant_id', assistantId);
+
+    if (error || !files || files.length === 0) return text;
+
+    const normalize = (s: string) => s
+      .toLowerCase()
+      .replace(/\.[a-z0-9]+$/, '')
+      .replace(/[^a-z0-9]+/g, '');
+
+    const findUrlFor = (hint: string) => {
+      const h = normalize(hint || '');
+      if (!h) return null;
+      const match = files.find((f: any) => {
+        const n = normalize(f.file_name || '');
+        return n.includes(h) || h.includes(n);
+      });
+      return match?.file_url || null;
+    };
+
+    let output = text;
+
+    // Images: ![alt](sandbox:xxx)
+    output = output.replace(/!\[([^\]]*)\]\((sandbox:[^)]+)\)/gi, (_m, alt) => {
+      const url = findUrlFor(alt) || files[0].file_url;
+      return `![${alt}](${url})`;
+    });
+
+    // Links: [alt](sandbox:xxx)
+    output = output.replace(/\[([^\]]*)\]\((sandbox:[^)]+)\)/gi, (_m, alt) => {
+      const url = findUrlFor(alt) || files[0].file_url;
+      return `[${alt}](${url})`;
+    });
+
+    // Bare (sandbox:xxx) → (first file url) as last resort
+    output = output.replace(/\((sandbox:[^)]+)\)/gi, () => `(${files[0].file_url})`);
+
+    return output;
+  } catch (_e) {
+    // If anything fails, return original text
+    return text;
+  }
 }
