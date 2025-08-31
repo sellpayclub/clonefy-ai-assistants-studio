@@ -114,7 +114,7 @@ export const AssistantMediaUpload = ({ assistantId, onUploadComplete }: Assistan
       setDescription("");
       if (fileInputRef.current) fileInputRef.current.value = "";
       loadMediaFiles();
-      onUploadComplete?.();
+      // onUploadComplete?.(); // Removido para evitar reload desnecessário
 
     } catch (error) {
       console.error('Erro no upload:', error);
@@ -151,7 +151,7 @@ export const AssistantMediaUpload = ({ assistantId, onUploadComplete }: Assistan
 
       toast.success('Arquivo removido com sucesso!');
       loadMediaFiles();
-      onUploadComplete?.();
+      // onUploadComplete?.(); // Removido para evitar reload desnecessário
 
     } catch (error) {
       console.error('Erro ao deletar arquivo:', error);
@@ -175,6 +175,18 @@ export const AssistantMediaUpload = ({ assistantId, onUploadComplete }: Assistan
           <p className="text-xs text-muted-foreground mb-4">
             Imagens, vídeos e documentos que a IA poderá enviar no WhatsApp
           </p>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-left">
+            <h4 className="text-xs font-medium text-blue-800 mb-2 flex items-center gap-1">
+              💡 Como a IA usa os arquivos:
+            </h4>
+            <div className="text-xs text-blue-700 space-y-1">
+              <p>• <strong>Automático:</strong> A IA já sabe sobre todos os arquivos enviados aqui</p>
+              <p>• <strong>Envio:</strong> Quando necessário, ela enviará a imagem/vídeo/documento certo</p>
+              <p>• <strong>Contexto:</strong> Use descrições para ajudar a IA escolher o arquivo correto</p>
+              <p>• <strong>Exemplo:</strong> Cliente pergunta sobre produtos → IA envia catálogo automaticamente</p>
+            </div>
+          </div>
           
           <div className="space-y-3">
             <div>

@@ -141,7 +141,7 @@ export const AssistantKnowledgeUpload = ({ assistantId, onUploadComplete }: Assi
       toast.success('Arquivo de conhecimento enviado com sucesso!');
       setDescription("");
       loadKnowledgeFiles();
-      onUploadComplete?.();
+      // onUploadComplete?.(); // Removido para evitar reload desnecessário
 
     } catch (error: any) {
       console.error('Erro no upload:', error);
@@ -200,7 +200,7 @@ export const AssistantKnowledgeUpload = ({ assistantId, onUploadComplete }: Assi
 
       toast.success('Arquivo de conhecimento removido!');
       loadKnowledgeFiles();
-      onUploadComplete?.();
+      // onUploadComplete?.(); // Removido para evitar reload desnecessário
 
     } catch (error: any) {
       console.error('Erro ao deletar:', error);
@@ -230,6 +230,18 @@ export const AssistantKnowledgeUpload = ({ assistantId, onUploadComplete }: Assi
         Faça upload de documentos que o assistente pode consultar para gerar respostas mais precisas. 
         Suporta: PDF, DOC, DOCX, TXT, CSV, JSON e MD.
       </p>
+      
+      <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
+        <h4 className="text-xs font-medium text-purple-800 mb-2 flex items-center gap-1">
+          🧠 Como a IA usa a base de conhecimento:
+        </h4>
+        <div className="text-xs text-purple-700 space-y-1">
+          <p>• <strong>Consulta:</strong> A IA lê e analisa automaticamente estes documentos</p>
+          <p>• <strong>Respostas:</strong> Usa as informações para dar respostas mais precisas</p>
+          <p>• <strong>Contexto:</strong> Combina conhecimento dos arquivos com a conversa</p>
+          <p>• <strong>Exemplo:</strong> Manual de produtos + FAQ = respostas completas sobre funcionalidades</p>
+        </div>
+      </div>
 
       <div className="space-y-4">
         <div>
