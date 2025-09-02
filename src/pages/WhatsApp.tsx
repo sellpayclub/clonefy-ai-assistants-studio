@@ -56,6 +56,10 @@ const WhatsApp = () => {
   const [instanceName, setInstanceName] = useState("");
   const [selectedAssistant, setSelectedAssistant] = useState("");
   
+  // ElevenLabs states (optional)
+  const [elevenLabsApiKey, setElevenLabsApiKey] = useState("");
+  const [voiceId, setVoiceId] = useState("");
+  
   const { toast } = useToast();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -253,6 +257,9 @@ const WhatsApp = () => {
           instanceName: instanceName,
           assistantId: selectedAssistant,
           userEmail: user.email,
+          // ElevenLabs optional fields
+          elevenLabsApiKey: elevenLabsApiKey.trim() || null,
+          voiceId: voiceId.trim() || null,
         },
         headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
@@ -280,6 +287,8 @@ const WhatsApp = () => {
       // Reset form
       setInstanceName("");
       setSelectedAssistant("");
+      setElevenLabsApiKey("");
+      setVoiceId("");
       
       // Invalidar cache e reload connections
       if (user) {
@@ -921,6 +930,67 @@ const WhatsApp = () => {
                           Nenhum assistente encontrado. Crie um assistente primeiro.
                         </p>
                       )}
+                    </div>
+
+                    {/* ElevenLabs Voice Integration - Optional */}
+                    <div className="space-y-4 p-4 border rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">🎙️</span>
+                        </div>
+                        <h3 className="font-semibold text-purple-900">ElevenLabs - Voz para IA (Opcional)</h3>
+                      </div>
+                      
+                      <p className="text-sm text-purple-700 leading-relaxed">
+                        Adicione voz natural às respostas da sua IA! Seus clientes poderão ouvir as respostas em áudio.
+                        <br />
+                        <strong>Como obter:</strong> Acesse <a href="https://elevenlabs.io" target="_blank" className="underline">elevenlabs.io</a> → 
+                        Crie conta → Copie sua API Key e escolha uma voz.
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="elevenLabsApiKey" className="text-purple-900">
+                            API Key do ElevenLabs
+                          </Label>
+                          <Input
+                            id="elevenLabsApiKey"
+                            value={elevenLabsApiKey}
+                            onChange={(e) => setElevenLabsApiKey(e.target.value)}
+                            placeholder="sk-..."
+                            disabled={creating}
+                            className="border-purple-200 focus:border-purple-400"
+                          />
+                          <p className="text-xs text-purple-600">
+                            Encontre em: Settings → API Keys
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="voiceId" className="text-purple-900">
+                            ID da Voz
+                          </Label>
+                          <Input
+                            id="voiceId"
+                            value={voiceId}
+                            onChange={(e) => setVoiceId(e.target.value)}
+                            placeholder="Ex: 9BWtsMINqrJLrRacOk9x"
+                            disabled={creating}
+                            className="border-purple-200 focus:border-purple-400"
+                          />
+                          <p className="text-xs text-purple-600">
+                            Encontre em: Voice Lab → Escolha uma voz → Copie ID
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="bg-purple-100 p-3 rounded-lg">
+                        <p className="text-xs text-purple-800">
+                          💡 <strong>Dica:</strong> Vozes populares - Aria: <code className="bg-white px-1 rounded">9BWtsMINqrJLrRacOk9x</code>, 
+                          Sarah: <code className="bg-white px-1 rounded">EXAVITQu4vr4xnSDxMaL</code>, 
+                          Charlie: <code className="bg-white px-1 rounded">IKne3meq5aSn9XLyUdCD</code>
+                        </p>
+                      </div>
                     </div>
 
                     <Button 

@@ -16,6 +16,8 @@ interface CreateInstanceRequest {
   instanceName?: string;
   assistantId?: string;
   userEmail?: string;
+  elevenLabsApiKey?: string;
+  voiceId?: string;
 }
 
 serve(async (req) => {
@@ -47,13 +49,13 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { action, instanceName, assistantId, userEmail } = body;
+    const { action, instanceName, assistantId, userEmail, elevenLabsApiKey, voiceId } = body;
 
     console.log('WhatsApp Evolution: Action:', action);
 
     switch (action) {
       case 'create':
-        return await createWhatsAppInstanceSequential(instanceName!, assistantId!, userEmail!, supabaseClient);
+        return await createWhatsAppInstanceSequential(instanceName!, assistantId!, userEmail!, supabaseClient, elevenLabsApiKey, voiceId);
       case 'list':
         return await listConnections(supabaseClient, user.email!);
       case 'delete':
@@ -86,7 +88,9 @@ async function createWhatsAppInstanceSequential(
   instanceName: string,
   assistantId: string,
   userEmail: string,
-  supabaseClient: any
+  supabaseClient: any,
+  elevenLabsApiKey?: string,
+  voiceId?: string
 ) {
   try {
     console.log('=== STEP 0: Checking if instance already exists ===');
@@ -251,16 +255,27 @@ async function createWhatsAppInstanceSequential(
 
     console.log('=== STEP 6: Saving to Supabase ===');
     
-    // 5. Salvar no Supabase com o openai_assistant_id correto
+    // 5. Salvar no Supabase com o openai_assistant_id correto e campos ElevenLabs
+    const dbData: any = {
+      id: Date.now(), // bigint precisa de valor explícito
+      nomeinstancia: instanceName,
+      idassistentgpt: assistantData.openai_assistant_id, // Usar openai_assistant_id
+      emailuser: userEmail,
+      timeout: '45' // QR expira em 45 segundos
+    };
+
+    // Adicionar campos ElevenLabs se fornecidos
+    if (elevenLabsApiKey) {
+      dbData.ApiELEVEN = elevenLabsApiKey;
+    }
+    
+    if (voiceId) {
+      dbData.IDvoz = voiceId;
+    }
+
     const { data: insertData, error } = await supabaseClient
       .from('n8n_fluxogpt')
-      .insert({
-        id: Date.now(), // bigint precisa de valor explícito
-        nomeinstancia: instanceName,
-        idassistentgpt: assistantData.openai_assistant_id, // Usar openai_assistant_id
-        emailuser: userEmail,
-        timeout: '45' // QR expira em 45 segundos
-      })
+      .insert(dbData)
       .select()
       .single();
 
