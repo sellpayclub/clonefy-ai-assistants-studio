@@ -66,6 +66,8 @@ serve(async (req) => {
         return await checkConnectionStatus(instanceName!, supabaseClient);
       case 'test_api':
         return await testEvolutionAPI();
+      case 'update_voice':
+        return await updateVoiceSettings(supabaseClient, body, user.email!);
       default:
         throw new Error('Invalid action');
     }
@@ -680,6 +682,93 @@ async function testEvolutionAPI() {
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+}
+
+/**
+ * Update voice settings for existing connection
+ */
+async function updateVoiceSettings(supabaseClient: any, body: any, userEmail: string) {
+  const { instance_name, voice_id, api_key } = body;
+  
+  if (!instance_name) {
+    return new Response(
+      JSON.stringify({ error: 'Instance name is required' }),
+      { 
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+  }
+
+  try {
+    console.log(`WhatsApp Evolution: Updating voice settings for instance: ${instance_name}`);
+    
+    // Build update object with only provided values
+    const updateData: any = {};
+    if (voice_id !== null) updateData.IDvoz = voice_id || null;
+    if (api_key !== null) updateData.ApiELEVEN = api_key || null;
+    
+    // Update the record in Supabase
+    const { data, error } = await supabaseClient
+      .from('n8n_fluxogpt')
+      .update(updateData)
+      .eq('nomeinstancia', instance_name)
+      .eq('emailuser', userEmail)
+      .select();
+
+    if (error) {
+      console.error('Supabase update error:', error);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Failed to update voice settings in database' 
+        }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    if (!data || data.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Connection not found or no access' 
+        }),
+        { 
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    console.log(`WhatsApp Evolution: Voice settings updated successfully for ${instance_name}`);
+    
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'Voice settings updated successfully',
+        data: data[0]
+      }),
+      { 
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+  } catch (error: any) {
+    console.error('Update voice settings error:', error);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message 
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

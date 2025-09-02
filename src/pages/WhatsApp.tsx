@@ -37,6 +37,8 @@ interface WhatsAppConnection {
   message?: string;
   timeout?: string;
   created_at: string;
+  IDvoz?: string;
+  ApiELEVEN?: string;
 }
 
 const WhatsApp = () => {
@@ -509,7 +511,42 @@ const WhatsApp = () => {
   };
 
 
-  // Handlers otimizados com memoization
+  // Update voice settings for existing connection
+  const updateVoiceSettings = useCallback(async (connection: WhatsAppConnection, voiceId: string | null, apiKey: string | null) => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('whatsapp-evolution', {
+        body: {
+          action: 'update_voice',
+          instance_name: connection.nomeinstancia,
+          voice_id: voiceId,
+          api_key: apiKey
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast({
+          title: "Sucesso!",
+          description: "Configurações de voz atualizadas com sucesso!",
+        });
+        loadData(true); // Refresh data
+      } else {
+        throw new Error(data?.error || 'Erro ao atualizar configurações de voz');
+      }
+    } catch (error) {
+      console.error('Error updating voice settings:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar configurações de voz: " + (error as Error).message,
+        variant: "destructive",
+      });
+    }
+  }, [user, loadData]);
+
+  // Memoized handlers for performance
   const handleRefreshData = useCallback(() => {
     loadData(true);
   }, [loadData]);
@@ -850,7 +887,7 @@ const WhatsApp = () => {
                             )}
                             
                             {/* Connection Details */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
                               <div>
                                 <span className="font-medium">Assistente:</span> {assistant?.name || 'Não encontrado'}
                               </div>
@@ -863,6 +900,54 @@ const WhatsApp = () => {
                               <div>
                                 <span className="font-medium">Criado em:</span> {new Date(connection.created_at).toLocaleDateString('pt-BR')}
                               </div>
+                              {connection.IDvoz && (
+                                <div>
+                                  <span className="font-medium">Voz ElevenLabs:</span> {connection.IDvoz}
+                                </div>
+                              )}
+                              {connection.ApiELEVEN && (
+                                <div>
+                                  <span className="font-medium">ElevenLabs API:</span> ****{connection.ApiELEVEN.slice(-4)}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* ElevenLabs Voice Settings Update */}
+                            <div className="mt-4 p-4 border rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                                  <span className="text-white text-xs">🎙️</span>
+                                </div>
+                                <h4 className="font-medium text-purple-900">Configurações de Voz ElevenLabs</h4>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <Label htmlFor={`voice-id-${connection.id}`} className="text-sm text-purple-800">Voice ID</Label>
+                                  <Input
+                                    id={`voice-id-${connection.id}`}
+                                    placeholder="Ex: 9BWtsMINqrJLrRacOk9x"
+                                    defaultValue={connection.IDvoz || ''}
+                                    className="mt-1 border-purple-200 focus:border-purple-400"
+                                    onBlur={(e) => updateVoiceSettings(connection, e.target.value, null)}
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor={`api-key-${connection.id}`} className="text-sm text-purple-800">API Key</Label>
+                                  <Input
+                                    id={`api-key-${connection.id}`}
+                                    type="password"
+                                    placeholder="sk_..."
+                                    defaultValue={connection.ApiELEVEN || ''}
+                                    className="mt-1 border-purple-200 focus:border-purple-400"
+                                    onBlur={(e) => updateVoiceSettings(connection, null, e.target.value)}
+                                  />
+                                </div>
+                              </div>
+                              
+                              <p className="text-xs text-purple-600 mt-2">
+                                Deixe vazio para desativar a voz. As alterações são salvas automaticamente.
+                              </p>
                             </div>
                           </div>
                         );
