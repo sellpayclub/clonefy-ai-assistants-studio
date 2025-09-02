@@ -18,7 +18,7 @@ import { useUserLimits } from "@/hooks/useUserLimits";
 import SupportChatWidget from "@/components/SupportChatWidget";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { performanceCache } from "@/utils/performance";
+import { performanceCache, requestCache } from '@/utils/performance';
 
 interface Assistant {
   id: string;
@@ -128,68 +128,100 @@ const WhatsApp = () => {
     };
   }, []);
 
-  // Otimizar loadData com cache e memoization
+  // Otimizar loadData com cache e requisições paralelas + request cache
   const loadData = useCallback(async (forceRefresh = false) => {
-    let currentSession = session;
-    if (!currentSession) {
-      const { data } = await supabase.auth.getSession();
-      currentSession = data.session;
-    }
-
-    if (!currentSession) {
-      return;
-    }
-
-    const userId = currentSession.user.id;
-    const assistantsCacheKey = `assistants_${userId}`;
-    const connectionsCacheKey = `whatsapp_connections_${userId}`;
-
-    try {
-      // Verificar cache primeiro (só se não for refresh forçado)
-      let assistantsData, connectionsData;
-      
-      if (!forceRefresh) {
-        assistantsData = performanceCache.get(assistantsCacheKey);
-        connectionsData = performanceCache.get(connectionsCacheKey);
+    const requestKey = 'whatsapp-loaddata';
+    
+    return requestCache.getOrExecute(requestKey, async () => {
+      let currentSession = session;
+      if (!currentSession) {
+        const { data } = await supabase.auth.getSession();
+        currentSession = data.session;
       }
 
-      // Carregar assistants se não estiver em cache
-      if (!assistantsData) {
-        const assistantsResponse = await supabase.functions.invoke('openai-assistants', {
-          body: { action: 'list' },
-          headers: { Authorization: `Bearer ${currentSession.access_token}` },
-        });
+      if (!currentSession) {
+        return;
+      }
 
-        if (!assistantsResponse.error && assistantsResponse.data?.assistants) {
-          assistantsData = assistantsResponse.data.assistants;
-          performanceCache.set(assistantsCacheKey, assistantsData, 3); // Cache por 3 minutos
-        } else {
-          console.warn('No assistants found or error:', assistantsResponse.error);
-          assistantsData = [];
+      const userId = currentSession.user.id;
+      const assistantsCacheKey = `assistants_${userId}`;
+      const connectionsCacheKey = `whatsapp_connections_${userId}`;
+
+      try {
+        // Verificar cache primeiro (só se não for refresh forçado)
+        let assistantsData, connectionsData;
+        
+        if (!forceRefresh) {
+          assistantsData = performanceCache.get(assistantsCacheKey);
+          connectionsData = performanceCache.get(connectionsCacheKey);
         }
-      }
 
-      // Carregar connections se não estiver em cache
-      if (!connectionsData) {
-        const connectionsResponse = await supabase.functions.invoke('whatsapp-evolution', {
-          body: { action: 'list' },
-          headers: { Authorization: `Bearer ${currentSession.access_token}` },
-        });
-
-        if (!connectionsResponse.error && connectionsResponse.data?.connections) {
-          connectionsData = connectionsResponse.data.connections;
-          performanceCache.set(connectionsCacheKey, connectionsData, 2); // Cache por 2 minutos
-        } else {
-          console.warn('No connections found or error:', connectionsResponse.error);
-          connectionsData = [];
+        // Se ambos estão em cache, retornar rapidamente
+        if (assistantsData && connectionsData) {
+          setAssistants(assistantsData);
+          setConnections(connectionsData);
+          return;
         }
-      }
 
-      setAssistants(assistantsData);
-      setConnections(connectionsData);
-    } catch (error: any) {
-      console.error('WhatsApp: Error loading data:', error);
-    }
+        // Se algum dos dados não estiver em cache, carregar em paralelo
+        const promises = [];
+        
+        if (!assistantsData) {
+          promises.push(
+            supabase.functions.invoke('openai-assistants', {
+              body: { action: 'list' },
+              headers: { Authorization: `Bearer ${currentSession.access_token}` },
+            }).then(response => ({ type: 'assistants', response }))
+          );
+        }
+
+        if (!connectionsData) {
+          promises.push(
+            supabase.functions.invoke('whatsapp-evolution', {
+              body: { action: 'list' },
+              headers: { Authorization: `Bearer ${currentSession.access_token}` },
+            }).then(response => ({ type: 'connections', response }))
+          );
+        }
+
+        // Executar todas as chamadas em paralelo
+        if (promises.length > 0) {
+          const results = await Promise.all(promises);
+          
+          results.forEach(({ type, response }) => {
+            if (type === 'assistants') {
+              if (!response.error && response.data?.assistants) {
+                assistantsData = response.data.assistants;
+                performanceCache.set(assistantsCacheKey, assistantsData, 10); // Cache por 10 minutos
+              } else {
+                console.warn('No assistants found or error:', response.error);
+                assistantsData = assistantsData || [];
+              }
+            } else if (type === 'connections') {
+              if (!response.error && response.data?.connections) {
+                connectionsData = response.data.connections;
+                performanceCache.set(connectionsCacheKey, connectionsData, 5); // Cache por 5 minutos
+              } else {
+                console.warn('No connections found or error:', response.error);
+                connectionsData = connectionsData || [];
+              }
+            }
+          });
+        }
+
+        // Garantir que temos dados válidos
+        assistantsData = assistantsData || [];
+        connectionsData = connectionsData || [];
+
+        setAssistants(assistantsData);
+        setConnections(connectionsData);
+      } catch (error: any) {
+        console.error('WhatsApp: Error loading data:', error);
+        // Em caso de erro, garantir que os estados não fiquem undefined
+        setAssistants([]);
+        setConnections([]);
+      }
+    });
   }, [session]);
 
   const createConnection = async (e: React.FormEvent) => {

@@ -1,27 +1,119 @@
-// Utilitários de performance para otimização geral
+// Cache otimizado com TTL mais longo e limpeza automática
+class PerformanceCache {
+  private cache = new Map<string, { data: any; expiry: number }>();
+  private cleanupInterval: NodeJS.Timeout;
 
-// Debounce otimizado
+  constructor() {
+    // Limpar cache a cada 5 minutos para evitar acúmulo
+    this.cleanupInterval = setInterval(() => {
+      this.cleanup();
+    }, 5 * 60 * 1000); // 5 minutos
+  }
+
+  set(key: string, data: any, ttlMinutes: number = 10) {
+    const expiry = Date.now() + (ttlMinutes * 60 * 1000);
+    this.cache.set(key, { data, expiry });
+  }
+
+  get(key: string) {
+    const item = this.cache.get(key);
+    if (!item) return null;
+    
+    if (Date.now() > item.expiry) {
+      this.cache.delete(key);
+      return null;
+    }
+    
+    return item.data;
+  }
+
+  clear(pattern?: string) {
+    if (pattern) {
+      // Limpar apenas chaves que correspondem ao padrão
+      for (const key of this.cache.keys()) {
+        if (key.includes(pattern)) {
+          this.cache.delete(key);
+        }
+      }
+    } else {
+      this.cache.clear();
+    }
+  }
+
+  invalidate(key: string) {
+    this.cache.delete(key);
+  }
+
+  private cleanup() {
+    const now = Date.now();
+    for (const [key, item] of this.cache.entries()) {
+      if (now > item.expiry) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  // Destroy method para cleanup
+  destroy() {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+    }
+    this.cache.clear();
+  }
+}
+
+export const performanceCache = new PerformanceCache();
+
+// Debounce otimizado com cancelamento
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
-  wait: number,
-  immediate = false
-): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
+  wait: number
+): T & { cancel: () => void } {
+  let timeoutId: NodeJS.Timeout | null = null;
   
-  return function executedFunction(...args: Parameters<T>) {
-    const later = () => {
-      timeout = null;
-      if (!immediate) func(...args);
-    };
+  const debounced = (...args: any[]) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
     
-    const callNow = immediate && !timeout;
-    
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-    
-    if (callNow) func(...args);
+    timeoutId = setTimeout(() => {
+      func.apply(null, args);
+    }, wait);
   };
+  
+  debounced.cancel = () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+  };
+  
+  return debounced as T & { cancel: () => void };
 }
+
+// Request cache para evitar duplicação de chamadas simultâneas
+class RequestCache {
+  private pendingRequests = new Map<string, Promise<any>>();
+
+  async getOrExecute<T>(key: string, executor: () => Promise<T>): Promise<T> {
+    if (this.pendingRequests.has(key)) {
+      return this.pendingRequests.get(key) as Promise<T>;
+    }
+
+    const promise = executor().finally(() => {
+      this.pendingRequests.delete(key);
+    });
+
+    this.pendingRequests.set(key, promise);
+    return promise;
+  }
+
+  clear() {
+    this.pendingRequests.clear();
+  }
+}
+
+export const requestCache = new RequestCache();
 
 // Throttle otimizado
 export function throttle<T extends (...args: any[]) => any>(
@@ -37,76 +129,6 @@ export function throttle<T extends (...args: any[]) => any>(
       setTimeout(() => inThrottle = false, limit);
     }
   };
-}
-
-// Preload de imagens críticas
-export function preloadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
-}
-
-// Cache em memória simples mas eficiente
-class SimpleCache<T> {
-  private cache = new Map<string, { data: T; timestamp: number; ttl: number }>();
-  private defaultMaxAge: number;
-
-  constructor(maxAge = 5 * 60 * 1000) { // 5 minutos default
-    this.defaultMaxAge = maxAge;
-  }
-
-  set(key: string, data: T, ttlMinutes?: number): void {
-    const ttl = ttlMinutes ? ttlMinutes * 60 * 1000 : this.defaultMaxAge;
-    this.cache.set(key, { data, timestamp: Date.now(), ttl });
-  }
-
-  get(key: string): T | null {
-    const item = this.cache.get(key);
-    if (!item) return null;
-
-    if (Date.now() - item.timestamp > item.ttl) {
-      this.cache.delete(key);
-      return null;
-    }
-
-    return item.data;
-  }
-
-  invalidate(key: string): void {
-    this.cache.delete(key);
-  }
-
-  clear(): void {
-    this.cache.clear();
-  }
-
-  size(): number {
-    return this.cache.size;
-  }
-}
-
-export const performanceCache = new SimpleCache();
-
-// Otimização de scroll
-export function optimizeScroll(element: HTMLElement, callback: () => void) {
-  let isScrolling = false;
-  
-  const scrollHandler = () => {
-    if (!isScrolling) {
-      requestAnimationFrame(() => {
-        callback();
-        isScrolling = false;
-      });
-      isScrolling = true;
-    }
-  };
-
-  element.addEventListener('scroll', scrollHandler, { passive: true });
-  
-  return () => element.removeEventListener('scroll', scrollHandler);
 }
 
 // Detecta se o device é mobile para otimizações específicas
