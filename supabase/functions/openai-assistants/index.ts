@@ -84,7 +84,7 @@ async function createAssistant(userId: string, data: any) {
   console.log('createAssistant called with data:', data);
   console.log('OpenAI API Key available:', !!openAIApiKey);
   
-  const { name, description, instructions, model = 'gpt-4o', calendar_enabled = false } = data;
+  const { name, description, instructions, model = 'gpt-4o-mini', calendar_enabled = false } = data;
 
   console.log('Creating assistant with model:', model);
   
