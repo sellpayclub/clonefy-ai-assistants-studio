@@ -95,7 +95,7 @@ export const useOptimizedConversations = (session: Session | null) => {
     if (!session) throw new Error('No session');
 
     const response = await supabase.functions.invoke('chat-api', {
-      body: { action: 'send_message', conversationId, message },
+      body: { action: 'send_message', conversationId, content: message },
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
 

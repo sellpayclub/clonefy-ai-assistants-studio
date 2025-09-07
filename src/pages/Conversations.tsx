@@ -257,8 +257,8 @@ const Conversations = memo(() => {
     try {
       const threadData = await createThread(selectedAssistant);
       
-      if (threadData?.conversationId) {
-        setSelectedConversation(threadData.conversationId);
+      if (threadData?.conversation?.id) {
+        setSelectedConversation(threadData.conversation.id);
         setMessages([]);
         loadConversations(); // Recarregar lista de conversas
         
