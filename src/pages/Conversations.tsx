@@ -190,6 +190,14 @@ const Conversations = memo(() => {
     }
   }, [session]);
 
+  // Carregar assistentes e conversas quando a sessão estiver disponível
+  useEffect(() => {
+    if (session) {
+      loadAssistants();
+      loadConversations();
+    }
+  }, [session, loadAssistants, loadConversations]);
+
   // Carregamento otimizado de mensagens
   const loadMessages = useCallback(async (conversationId: string) => {
     try {
