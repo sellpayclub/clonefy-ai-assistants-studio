@@ -16,6 +16,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import SupportChatWidget from "@/components/SupportChatWidget";
 import { useOptimizedConversations } from "@/hooks/useOptimizedConversations";
 import { performanceCache } from "@/utils/performance";
+import TypingIndicator from "@/components/TypingIndicator";
 
 interface Assistant {
   id: string;
@@ -83,6 +84,7 @@ const Conversations = memo(() => {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [selectedAssistant, setSelectedAssistant] = useState<string>("");
   const [creatingThread, setCreatingThread] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -222,23 +224,38 @@ const Conversations = memo(() => {
     const messageText = newMessage;
     setNewMessage("");
 
+    // Adicionar mensagem do usuário imediatamente
+    const userMessage: Message = {
+      id: `temp-${Date.now()}`,
+      role: 'user',
+      content: messageText,
+      created_at: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, userMessage]);
+
     try {
-      await sendOptimizedMessage(selectedConversation, messageText);
-      // Recarregar mensagens após envio
-      await loadMessages(selectedConversation);
+      // Mostrar indicador de digitação
+      setIsTyping(true);
       
-      toast({
-        title: "Sucesso",
-        description: "Mensagem enviada com sucesso!",
-      });
+      await sendOptimizedMessage(selectedConversation, messageText);
+      
+      // Aguardar um pouco e recarregar mensagens para pegar a resposta da IA
+      setTimeout(async () => {
+        await loadMessages(selectedConversation);
+        setIsTyping(false);
+      }, 1000); // 1 segundo de delay para simular digitação
+      
     } catch (error: any) {
       console.error('Error sending message:', error);
+      setIsTyping(false);
       toast({
         variant: "destructive",
         title: "Erro",
         description: error.message || "Falha ao enviar mensagem",
       });
       setNewMessage(messageText); // Restaurar mensagem em caso de erro
+      // Remover mensagem temporária em caso de erro
+      setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
     } finally {
       setSendingMessage(false);
     }
@@ -266,10 +283,7 @@ const Conversations = memo(() => {
         setMessages([]);
         await loadConversations(); // Recarregar lista de conversas
         
-        toast({
-          title: "Sucesso",
-          description: "Nova conversa criada!",
-        });
+        // Remover toast desnecessário - ação já é visível
       }
     } catch (error: any) {
       console.error('Error creating conversation:', error);
@@ -302,10 +316,7 @@ const Conversations = memo(() => {
       
       await loadConversations();
       
-      toast({
-        title: "Sucesso",
-        description: "Conversa excluída com sucesso!",
-      });
+      // Remover toast desnecessário - ação já é visível
     } catch (error: any) {
       console.error('Error deleting conversation:', error);
       toast({
@@ -359,10 +370,11 @@ const Conversations = memo(() => {
         {messages.map((message) => (
           <MessageItem key={message.id} message={message} />
         ))}
+        {isTyping && <TypingIndicator />}
         <div ref={messagesEndRef} />
       </div>
     </ScrollArea>
-  ), [messages]);
+  ), [messages, isTyping]);
 
   if (loading) {
     return (
