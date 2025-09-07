@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Bot, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import TypingMessage from "@/components/TypingMessage";
 
 interface Message {
   id: string;
@@ -18,64 +19,7 @@ interface Agent {
   description: string;
 }
 
-// Função para formatar o texto das mensagens
-const formatMessageContent = (content: string) => {
-  // Quebra o texto em parágrafos e formata
-  const paragraphs = content.split('\n\n').filter(p => p.trim());
-  
-  return paragraphs.map((paragraph, index) => {
-    const trimmedParagraph = paragraph.trim();
-    
-    // Detecta listas numeradas
-    if (/^\d+\./.test(trimmedParagraph)) {
-      const items = trimmedParagraph.split(/(?=\d+\.)/g).filter(item => item.trim());
-      return (
-        <ol key={index} className="list-decimal list-inside space-y-1 ml-2">
-          {items.map((item, itemIndex) => (
-            <li key={itemIndex} className="text-sm leading-relaxed">
-              {item.replace(/^\d+\.\s*/, '')}
-            </li>
-          ))}
-        </ol>
-      );
-    }
-    
-    // Detecta listas com bullets
-    if (/^[-•*]/.test(trimmedParagraph)) {
-      const items = trimmedParagraph.split(/(?=[-•*])/g).filter(item => item.trim());
-      return (
-        <ul key={index} className="list-disc list-inside space-y-1 ml-2">
-          {items.map((item, itemIndex) => (
-            <li key={itemIndex} className="text-sm leading-relaxed">
-              {item.replace(/^[-•*]\s*/, '')}
-            </li>
-          ))}
-        </ul>
-      );
-    }
-    
-    // Detecta títulos/cabeçalhos (linhas que terminam com :)
-    if (trimmedParagraph.endsWith(':') && trimmedParagraph.length < 100) {
-      return (
-        <h4 key={index} className="font-semibold text-sm mb-1 text-foreground">
-          {trimmedParagraph}
-        </h4>
-      );
-    }
-    
-    // Quebra linhas simples dentro do parágrafo
-    const lines = trimmedParagraph.split('\n').filter(line => line.trim());
-    return (
-      <div key={index} className="space-y-1">
-        {lines.map((line, lineIndex) => (
-          <p key={lineIndex} className="text-sm leading-relaxed break-words">
-            {line.trim()}
-          </p>
-        ))}
-      </div>
-    );
-  });
-};
+// Função removida - agora usando TypingMessage component
 
 const EmbedChat = () => {
   const { agentId } = useParams();
@@ -262,7 +206,11 @@ const EmbedChat = () => {
                       {message.content}
                     </p>
                   ) : (
-                    formatMessageContent(message.content)
+                    <TypingMessage 
+                      content={message.content}
+                      speed={30}
+                      className="text-sm"
+                    />
                   )}
                 </div>
               </div>

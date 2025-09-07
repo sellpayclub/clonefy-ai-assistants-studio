@@ -16,6 +16,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import SupportChatWidget from "@/components/SupportChatWidget";
 import { useOptimizedConversations } from "@/hooks/useOptimizedConversations";
 import { performanceCache } from "@/utils/performance";
+import TypingMessage from "@/components/TypingMessage";
 import TypingIndicator from "@/components/TypingIndicator";
 
 interface Assistant {
@@ -62,10 +63,24 @@ const MessageItem = memo<{ message: Message }>(({ message }) => (
           ? 'bg-primary text-primary-foreground' 
           : 'bg-secondary text-secondary-foreground'
       }`}>
-        <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-        <p className="text-xs opacity-70 mt-1">
-          {new Date(message.created_at).toLocaleTimeString()}
-        </p>
+        {message.role === 'user' ? (
+          <>
+            <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+            <p className="text-xs opacity-70 mt-1">
+              {new Date(message.created_at).toLocaleTimeString()}
+            </p>
+          </>
+        ) : (
+          <TypingMessage 
+            content={message.content}
+            speed={25}
+            className="text-sm"
+          >
+            <p className="text-xs opacity-70 mb-2">
+              {new Date(message.created_at).toLocaleTimeString()}
+            </p>
+          </TypingMessage>
+        )}
       </div>
     </div>
   </div>
