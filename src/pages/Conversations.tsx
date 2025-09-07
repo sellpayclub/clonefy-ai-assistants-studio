@@ -82,6 +82,7 @@ const Conversations = memo(() => {
   const [newMessage, setNewMessage] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const [selectedAssistant, setSelectedAssistant] = useState<string>("");
+  const [creatingThread, setCreatingThread] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -245,22 +246,25 @@ const Conversations = memo(() => {
 
   // Criação otimizada de conversa
   const createNewConversation = useCallback(async () => {
-    if (!selectedAssistant) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Selecione um assistente primeiro",
-      });
+    if (!selectedAssistant || creatingThread) {
+      if (!selectedAssistant) {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Selecione um assistente primeiro",
+        });
+      }
       return;
     }
 
+    setCreatingThread(true);
     try {
       const threadData = await createThread(selectedAssistant);
       
       if (threadData?.conversation?.id) {
         setSelectedConversation(threadData.conversation.id);
         setMessages([]);
-        loadConversations(); // Recarregar lista de conversas
+        await loadConversations(); // Recarregar lista de conversas
         
         toast({
           title: "Sucesso",
@@ -274,8 +278,10 @@ const Conversations = memo(() => {
         title: "Erro",
         description: error.message || "Falha ao criar conversa",
       });
+    } finally {
+      setCreatingThread(false);
     }
-  }, [selectedAssistant, createThread, loadConversations, toast]);
+  }, [selectedAssistant, creatingThread, createThread, loadConversations, toast]);
 
   // Seleção otimizada de conversa
   const selectConversation = useCallback((conversationId: string) => {
@@ -294,6 +300,8 @@ const Conversations = memo(() => {
         setMessages([]);
       }
       
+      await loadConversations();
+      
       toast({
         title: "Sucesso",
         description: "Conversa excluída com sucesso!",
@@ -306,7 +314,7 @@ const Conversations = memo(() => {
         description: error.message || "Falha ao excluir conversa",
       });
     }
-  }, [deleteOptimizedConversation, selectedConversation, toast]);
+  }, [deleteOptimizedConversation, selectedConversation, loadConversations, toast]);
 
   // Componentes memoizados
   const ConversationsList = useMemo(() => (
@@ -406,10 +414,19 @@ const Conversations = memo(() => {
                 <Button 
                   onClick={createNewConversation}
                   className="w-full"
-                  disabled={!selectedAssistant}
+                  disabled={!selectedAssistant || creatingThread}
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Conversa
+                  {creatingThread ? (
+                    <>
+                      <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></span>
+                      Criando...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nova Conversa
+                    </>
+                  )}
                 </Button>
               </div>
               
