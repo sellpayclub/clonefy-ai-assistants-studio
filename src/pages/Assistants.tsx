@@ -671,53 +671,43 @@ const Assistants = () => {
       init: function() {
         var iframe = d.createElement('iframe');
         iframe.src = this.baseUrl + '/embed/chat/' + this.agentId;
-        iframe.style.cssText = 'position:fixed;bottom:20px;right:20px;width:400px;height:600px;border:none;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999999;display:none;';
         iframe.id = 'clonefy-chat-widget';
+        iframe.style.cssText = 'position:fixed;bottom:90px;right:20px;width:420px;height:650px;border:none;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.15);z-index:999999;display:none;background:white;';
         
-        // Responsivo para mobile
-        if(window.innerWidth <= 768) {
-          iframe.style.cssText = 'position:fixed;bottom:10px;left:10px;right:10px;top:80px;width:auto;height:auto;border:none;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999999;display:none;';
+        // Responsividade melhorada
+        if(window.innerWidth <= 480) {
+          iframe.style.cssText = 'position:fixed;bottom:80px;left:10px;right:10px;top:80px;width:auto;height:auto;border:none;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,0.15);z-index:999999;display:none;background:white;';
+        } else if(window.innerWidth <= 768) {
+          iframe.style.cssText = 'position:fixed;bottom:85px;right:15px;width:380px;height:600px;border:none;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.15);z-index:999999;display:none;background:white;';
         }
         
-        d.body.appendChild(iframe);
+        // Botão do chat
+        var btn = d.createElement('button');
+        btn.innerHTML = '💬';
+        btn.style.cssText = 'position:fixed;bottom:20px;right:20px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#007bff,#0056b3);color:white;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(0,123,255,0.3);z-index:999998;font-size:24px;transition:all 0.3s ease;';
         
-        var button = d.createElement('div');
-        button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-        button.style.cssText = 'position:fixed;bottom:20px;right:20px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#007bff,#0056b3);color:white;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,123,255,0.3);z-index:999998;transition:all 0.3s ease;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;';
-        button.title = 'Chat com ' + this.agentName;
-        button.id = 'clonefy-chat-button';
-        
-        button.onmouseover = function() { this.style.transform = 'scale(1.1)'; };
-        button.onmouseout = function() { this.style.transform = 'scale(1)'; };
-        
-        var isOpen = false;
-        button.onclick = function() {
-          isOpen = !isOpen;
-          iframe.style.display = isOpen ? 'block' : 'none';
-          button.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+        btn.onclick = function(){
+          if(iframe.style.display === 'none') {
+            iframe.style.display = 'block';
+            btn.innerHTML = '✕';
+          } else {
+            iframe.style.display = 'none';
+            btn.innerHTML = '💬';
+          }
         };
         
-        // Responsividade
-        window.addEventListener('resize', function() {
-          if(window.innerWidth <= 768 && isOpen) {
-            iframe.style.cssText = 'position:fixed;bottom:10px;left:10px;right:10px;top:80px;width:auto;height:auto;border:none;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999999;display:block;';
-          } else if(isOpen) {
-            iframe.style.cssText = 'position:fixed;bottom:20px;right:20px;width:400px;height:600px;border:none;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999999;display:block;';
-          }
-        });
-        
-        d.body.appendChild(button);
+        d.body.appendChild(iframe);
+        d.body.appendChild(btn);
       }
     };
     
     if(d.readyState === 'loading') {
-      d.addEventListener('DOMContentLoaded', function() { chatWidget.init(); });
+      d.addEventListener('DOMContentLoaded', function(){ chatWidget.init(); });
     } else {
       chatWidget.init();
     }
   })();
-</script>
-<!-- Fim Chat Flutuante CLONEFY -->`;
+</script>`;
                           
                           navigator.clipboard.writeText(code);
                           toast({

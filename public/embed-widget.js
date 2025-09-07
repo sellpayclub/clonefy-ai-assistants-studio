@@ -61,23 +61,40 @@
           position: fixed;
           bottom: 90px;
           right: 20px;
-          width: 400px;
-          height: 600px;
+          width: 420px;
+          height: 650px;
           border: none;
           border-radius: 12px;
-          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+          box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
           z-index: 999999;
           display: none;
           background: white;
         }
         
-        @media (max-width: 768px) {
+        @media (max-width: 480px) {
           .clonefy-widget-iframe {
-            width: calc(100vw - 40px);
-            height: calc(100vh - 140px);
-            bottom: 90px;
-            right: 20px;
-            left: 20px;
+            width: calc(100vw - 20px);
+            height: calc(100vh - 110px);
+            bottom: 80px;
+            right: 10px;
+            left: 10px;
+            border-radius: 8px;
+          }
+        }
+        
+        @media (min-width: 481px) and (max-width: 768px) {
+          .clonefy-widget-iframe {
+            width: 380px;
+            height: 600px;
+            right: 15px;
+            bottom: 85px;
+          }
+        }
+        
+        @media (min-width: 769px) and (max-width: 1024px) {
+          .clonefy-widget-iframe {
+            width: 400px;
+            height: 650px;
           }
         }
       `;

@@ -197,7 +197,7 @@ const EmbedChat = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center">
           <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground">{error}</p>
@@ -208,7 +208,7 @@ const EmbedChat = () => {
 
   if (!agent) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center">
           <Bot className="h-8 w-8 text-primary mx-auto mb-2 animate-pulse" />
           <p className="text-sm text-muted-foreground">Carregando...</p>
@@ -218,92 +218,98 @@ const EmbedChat = () => {
   }
 
   return (
-    <div className="flex flex-col h-full max-h-[600px] w-full max-w-[400px] bg-background border border-border rounded-lg shadow-lg">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b bg-primary/5 rounded-t-lg">
-        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-          <Bot className="h-4 w-4 text-primary" />
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-2 sm:p-4">
+      <div className="flex flex-col h-full min-h-[500px] w-full bg-background border border-border rounded-lg shadow-lg
+                      max-w-[95vw] max-h-[95vh] 
+                      sm:max-w-[450px] sm:max-h-[650px] 
+                      md:max-w-[500px] md:max-h-[700px]
+                      mx-auto my-auto">
+        {/* Header */}
+        <div className="flex items-center gap-3 p-3 sm:p-4 border-b bg-primary/5 rounded-t-lg flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <Bot className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-sm truncate">{agent.name}</h3>
+            <p className="text-xs text-muted-foreground">Online agora</p>
+          </div>
         </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-sm">{agent.name}</h3>
-          <p className="text-xs text-muted-foreground">Online agora</p>
-        </div>
-      </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-4 scroll-smooth">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex gap-2 ${
-              message.role === 'user' ? 'justify-end' : 'justify-start'
-            }`}
-          >
-            {message.role === 'assistant' && (
-              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                <Bot className="h-3 w-3 text-primary" />
-              </div>
-            )}
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth min-h-0">
+          {messages.map((message) => (
             <div
-              className={`max-w-[85%] p-3 rounded-lg ${
-                message.role === 'user'
-                  ? 'bg-primary text-primary-foreground ml-auto'
-                  : 'bg-muted text-foreground'
+              key={message.id}
+              className={`flex gap-2 ${
+                message.role === 'user' ? 'justify-end' : 'justify-start'
               }`}
             >
-              <div className="space-y-3">
-                {message.role === 'user' ? (
-                  <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
-                    {message.content}
-                  </p>
-                ) : (
-                  formatMessageContent(message.content)
-                )}
+              {message.role === 'assistant' && (
+                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                  <Bot className="h-3 w-3 text-primary" />
+                </div>
+              )}
+              <div
+                className={`max-w-[82%] sm:max-w-[85%] p-2.5 sm:p-3 rounded-lg ${
+                  message.role === 'user'
+                    ? 'bg-primary text-primary-foreground ml-auto'
+                    : 'bg-muted text-foreground'
+                }`}
+              >
+                <div className="space-y-2 sm:space-y-3">
+                  {message.role === 'user' ? (
+                    <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
+                      {message.content}
+                    </p>
+                  ) : (
+                    formatMessageContent(message.content)
+                  )}
+                </div>
+              </div>
+              {message.role === 'user' && (
+                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-1">
+                  <User className="h-3 w-3" />
+                </div>
+              )}
+            </div>
+          ))}
+          {isLoading && (
+            <div className="flex gap-2">
+              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mt-1">
+                <Bot className="h-3 w-3 text-primary" />
+              </div>
+              <div className="bg-muted p-2.5 sm:p-3 rounded-lg">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                </div>
               </div>
             </div>
-            {message.role === 'user' && (
-              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-1">
-                <User className="h-3 w-3" />
-              </div>
-            )}
-          </div>
-        ))}
-        {isLoading && (
-          <div className="flex gap-2">
-            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mt-1">
-              <Bot className="h-3 w-3 text-primary" />
-            </div>
-            <div className="bg-muted p-3 rounded-lg">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-              </div>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} className="h-1" />
-      </div>
+          )}
+          <div ref={messagesEndRef} className="h-1" />
+        </div>
 
-      {/* Input */}
-      <div className="p-4 border-t bg-background/50">
-        <div className="flex gap-2">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Digite sua mensagem..."
-            disabled={isLoading}
-            className="flex-1 text-sm resize-none"
-          />
-          <Button
-            onClick={sendMessage}
-            disabled={!input.trim() || isLoading}
-            size="sm"
-            className="px-3 transition-all duration-200 hover:scale-105"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+        {/* Input */}
+        <div className="p-3 sm:p-4 border-t bg-background/50 flex-shrink-0">
+          <div className="flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Digite sua mensagem..."
+              disabled={isLoading}
+              className="flex-1 text-sm resize-none"
+            />
+            <Button
+              onClick={sendMessage}
+              disabled={!input.trim() || isLoading}
+              size="sm"
+              className="px-3 transition-all duration-200 hover:scale-105 flex-shrink-0"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
