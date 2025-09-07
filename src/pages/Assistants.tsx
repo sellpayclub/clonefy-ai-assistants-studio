@@ -655,10 +655,10 @@ const Assistants = () => {
                         size="sm" 
                         variant="outline"
                         onClick={() => {
-                          // Usar domínio customizado se disponível
-                          const baseUrl = window.location.hostname.includes('lovableproject.com') 
+                          // Usar domínio customizado CLONEFY
+                          const baseUrl = window.location.hostname.includes('lovable') 
                             ? window.location.origin 
-                            : window.location.origin; // Aqui você pode colocar seu domínio customizado
+                            : 'https://clonefy.ai'; // Domínio customizado CLONEFY
                           
                           const code = `<!-- Chat Flutuante CLONEFY -->
 <script>
@@ -738,7 +738,7 @@ const Assistants = () => {
     var chatWidget = {
       agentId: '${selectedAgentForEmbed.id}',
       agentName: '${selectedAgentForEmbed.name}',
-      baseUrl: '${window.location.origin}',
+      baseUrl: 'https://clonefy.ai',
       // Código do chat flutuante...
     };
     // Inicialização automática...
@@ -786,7 +786,7 @@ const Assistants = () => {
                     <Label className="text-sm font-medium">Link Direto do Chat (Responsivo)</Label>
                     <div className="flex flex-col sm:flex-row gap-2 mt-2">
                       <Input 
-                        value={`${window.location.origin}/embed/chat/${selectedAgentForEmbed.id}`}
+                        value={`https://clonefy.ai/embed/chat/${selectedAgentForEmbed.id}`}
                         readOnly
                         className="flex-1 text-xs sm:text-sm"
                       />
@@ -795,7 +795,7 @@ const Assistants = () => {
                         variant="outline"
                         className="w-full sm:w-auto"
                         onClick={() => {
-                          const url = `${window.location.origin}/embed/chat/${selectedAgentForEmbed.id}`;
+                          const url = `https://clonefy.ai/embed/chat/${selectedAgentForEmbed.id}`;
                           navigator.clipboard.writeText(url);
                           toast({
                             title: "Link copiado!",

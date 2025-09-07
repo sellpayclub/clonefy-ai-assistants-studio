@@ -100,7 +100,7 @@
     createIframe: function() {
       this.iframe = document.createElement('iframe');
       this.iframe.className = 'clonefy-widget-iframe';
-      this.iframe.src = window.location.protocol + '//' + window.location.host + '/embed/chat/' + this.agentId;
+      this.iframe.src = 'https://clonefy.ai/embed/chat/' + this.agentId;
       this.iframe.frameBorder = '0';
       // Pré-carrega o iframe mas mantém escondido
       this.iframe.style.display = 'none';
