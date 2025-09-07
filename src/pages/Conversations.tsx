@@ -108,7 +108,7 @@ const Conversations = memo(() => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, scrollToBottom]);
+  }, [messages, isTyping, scrollToBottom]);
 
   useEffect(() => {
     let isMounted = true;
