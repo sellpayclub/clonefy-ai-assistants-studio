@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo } from "react";
+import { useState, useEffect, useRef, memo, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from '@supabase/supabase-js';
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SupportChatWidget from "@/components/SupportChatWidget";
+import { useOptimizedConversations } from "@/hooks/useOptimizedConversations";
+import { performanceCache } from "@/utils/performance";
 
 interface Assistant {
   id: string;
@@ -39,28 +41,77 @@ interface Conversation {
   updated_at: string;
 }
 
-const Conversations = () => {
+// Componente de mensagem memoizado para performance
+const MessageItem = memo<{ message: Message }>(({ message }) => (
+  <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+    <div className={`flex max-w-[80%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'} items-start space-x-2`}>
+      <div className={`flex-shrink-0 ${message.role === 'user' ? 'ml-2' : 'mr-2'}`}>
+        {message.role === 'user' ? (
+          <div className="bg-primary text-primary-foreground rounded-full p-2">
+            <UserIcon className="h-4 w-4" />
+          </div>
+        ) : (
+          <div className="bg-secondary text-secondary-foreground rounded-full p-2">
+            <Bot className="h-4 w-4" />
+          </div>
+        )}
+      </div>
+      <div className={`rounded-lg p-3 max-w-full ${
+        message.role === 'user' 
+          ? 'bg-primary text-primary-foreground' 
+          : 'bg-secondary text-secondary-foreground'
+      }`}>
+        <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+        <p className="text-xs opacity-70 mt-1">
+          {new Date(message.created_at).toLocaleTimeString()}
+        </p>
+      </div>
+    </div>
+  </div>
+));
+
+MessageItem.displayName = 'MessageItem';
+
+const Conversations = memo(() => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [assistants, setAssistants] = useState<Assistant[]>([]);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [selectedAssistant, setSelectedAssistant] = useState<string>("");
-  const [sending, setSending] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  
+  // Hook otimizado para conversas
+  const {
+    conversations,
+    loadConversations,
+    loadMessages: loadOptimizedMessages,
+    sendMessage: sendOptimizedMessage,
+    createThread,
+    deleteConversation: deleteOptimizedConversation,
+  } = useOptimizedConversations(session);
+
+  // Scroll automático otimizado
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
 
   useEffect(() => {
     let isMounted = true;
 
     const initializeAuth = async () => {
       try {
-        // Set up auth state listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             if (!isMounted) return;
@@ -73,19 +124,13 @@ const Conversations = () => {
               return;
             }
 
-            // Carregar dados sempre que a sessão mudar
             if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-              setTimeout(async () => {
-                if (isMounted) {
-                  await loadData();
-                  setLoading(false);
-                }
-              }, 100);
+              await loadAssistants();
+              setLoading(false);
             }
           }
         );
 
-        // Check for existing session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!isMounted) return;
@@ -98,28 +143,9 @@ const Conversations = () => {
           return;
         }
         
-        // Carregar dados iniciais
-        await loadData();
+        await loadAssistants();
         setLoading(false);
         
-        // Verificar agente pré-selecionado
-        const savedAssistantId = localStorage.getItem('selectedAssistantId');
-        const autoStart = localStorage.getItem('autoStartConversation');
-        if (savedAssistantId && isMounted) {
-          setSelectedAssistant(savedAssistantId);
-          localStorage.removeItem('selectedAssistantId');
-          localStorage.removeItem('selectedAssistantName');
-          
-          if (autoStart === 'true') {
-            localStorage.removeItem('autoStartConversation');
-            setTimeout(() => {
-              if (isMounted) {
-                startNewConversationAuto(savedAssistantId);
-              }
-            }, 1000);
-          }
-        }
-
         return () => {
           subscription.unsubscribe();
         };
@@ -134,290 +160,200 @@ const Conversations = () => {
     return () => {
       isMounted = false;
     };
-  }, []); // Array vazio - só executa uma vez
+  }, [navigate]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // Carregamento otimizado de assistentes
+  const loadAssistants = useCallback(async () => {
+    if (!session) return;
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const loadData = async () => {
-    // Aguarda a sessão estar disponível
-    let currentSession = session;
-    if (!currentSession) {
-      const { data } = await supabase.auth.getSession();
-      currentSession = data.session;
-    }
-
-    if (!currentSession) {
+    const cacheKey = `assistants_${session.user.id}`;
+    const cached = performanceCache.get(cacheKey);
+    
+    if (cached) {
+      setAssistants(cached);
       return;
     }
 
     try {
-      // Load assistants
-      const assistantsResponse = await supabase.functions.invoke('openai-assistants', {
+      const response = await supabase.functions.invoke('openai-assistants', {
         body: { action: 'list' },
-        headers: { Authorization: `Bearer ${currentSession.access_token}` },
-      });
-
-      if (!assistantsResponse.error && assistantsResponse.data?.assistants) {
-        setAssistants(assistantsResponse.data.assistants);
-      } else {
-        setAssistants([]);
-      }
-
-      // Load conversations
-      const conversationsResponse = await supabase.functions.invoke('chat-api', {
-        body: { action: 'get_conversations' },
-        headers: { Authorization: `Bearer ${currentSession.access_token}` },
-      });
-
-      if (!conversationsResponse.error && conversationsResponse.data?.conversations) {
-        setConversations(conversationsResponse.data.conversations);
-      } else {
-        setConversations([]);
-      }
-    } catch (error: any) {
-      console.error('Error loading data:', error);
-    }
-  };
-
-  const loadMessages = async (conversationId: string) => {
-    if (!session) return;
-
-    try {
-      const response = await supabase.functions.invoke('chat-api', {
-        body: { action: 'get_messages', conversationId },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
-      if (response.error) {
-        throw response.error;
+      if (!response.error && response.data?.assistants) {
+        const assistantsList = response.data.assistants;
+        setAssistants(assistantsList);
+        performanceCache.set(cacheKey, assistantsList, 10);
       }
+    } catch (error: any) {
+      console.error('Error loading assistants:', error);
+    }
+  }, [session]);
 
-      setMessages(response.data.messages || []);
+  // Carregamento otimizado de mensagens
+  const loadMessages = useCallback(async (conversationId: string) => {
+    try {
+      const messagesData = await loadOptimizedMessages(conversationId);
+      setMessages(messagesData);
     } catch (error: any) {
       console.error('Error loading messages:', error);
       toast({
-        title: "Erro ao carregar mensagens",
-        description: error.message,
         variant: "destructive",
+        title: "Erro",
+        description: "Falha ao carregar mensagens",
       });
     }
-  };
+  }, [loadOptimizedMessages, toast]);
 
-  const startNewConversationAuto = async (assistantId: string) => {
-    if (!session) return;
+  // Envio otimizado de mensagem
+  const sendMessage = useCallback(async () => {
+    if (!newMessage.trim() || !selectedConversation) return;
 
-    try {
-      const assistant = assistants.find(a => a.id === assistantId);
-      if (!assistant) return;
-      
-      const response = await supabase.functions.invoke('chat-api', {
-        body: { 
-          action: 'create_thread', 
-          assistantId: assistantId,
-          title: `Conversa com ${assistant.name}`
-        },
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      if (response.error) {
-        throw response.error;
-      }
-
-      toast({
-        title: "Nova conversa criada!",
-        description: `Conversa iniciada com ${assistant.name}`,
-      });
-
-      await loadData();
-      setSelectedConversation(response.data.conversation.id);
-      setMessages([]);
-    } catch (error: any) {
-      console.error('Error creating conversation:', error);
-      toast({
-        title: "Erro ao criar conversa",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const startNewConversation = async () => {
-    if (!session || !selectedAssistant) return;
-
-    try {
-      const assistant = assistants.find(a => a.id === selectedAssistant);
-      
-      const response = await supabase.functions.invoke('chat-api', {
-        body: { 
-          action: 'create_thread', 
-          assistantId: selectedAssistant,
-          title: `Conversa com ${assistant?.name}`
-        },
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      if (response.error) {
-        throw response.error;
-      }
-
-      toast({
-        title: "Nova conversa criada!",
-        description: `Conversa iniciada com ${assistant?.name}`,
-      });
-
-      await loadData();
-      setSelectedConversation(response.data.conversation.id);
-      setMessages([]);
-    } catch (error: any) {
-      console.error('Error creating conversation:', error);
-      toast({
-        title: "Erro ao criar conversa",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!session || !selectedConversation || !newMessage.trim()) return;
-
-    const messageContent = newMessage.trim();
+    setSendingMessage(true);
+    const messageText = newMessage;
     setNewMessage("");
-    setSending(true);
-
-    // Add user message to UI immediately
-    const tempUserMessage: Message = {
-      id: `temp-${Date.now()}`,
-      role: 'user',
-      content: messageContent,
-      created_at: new Date().toISOString()
-    };
-    setMessages(prev => [...prev, tempUserMessage]);
 
     try {
-      const response = await supabase.functions.invoke('chat-api', {
-        body: { 
-          action: 'send_message', 
-          conversationId: selectedConversation,
-          content: messageContent
-        },
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      if (response.error) {
-        throw response.error;
-      }
-
-      // Remove temp message and add real messages
-      setMessages(prev => prev.filter(m => m.id !== tempUserMessage.id));
+      await sendOptimizedMessage(selectedConversation, messageText);
+      // Recarregar mensagens após envio
       await loadMessages(selectedConversation);
+      
+      toast({
+        title: "Sucesso",
+        description: "Mensagem enviada com sucesso!",
+      });
     } catch (error: any) {
       console.error('Error sending message:', error);
-      setMessages(prev => prev.filter(m => m.id !== tempUserMessage.id));
       toast({
-        title: "Erro ao enviar mensagem",
-        description: error.message,
         variant: "destructive",
+        title: "Erro",
+        description: error.message || "Falha ao enviar mensagem",
       });
+      setNewMessage(messageText); // Restaurar mensagem em caso de erro
     } finally {
-      setSending(false);
+      setSendingMessage(false);
     }
-  };
+  }, [newMessage, selectedConversation, sendOptimizedMessage, loadMessages, toast]);
 
-  const deleteConversation = async (conversationId: string) => {
-    if (!session) return;
-    
-    if (!confirm('Tem certeza que deseja excluir esta conversa?')) {
+  // Criação otimizada de conversa
+  const createNewConversation = useCallback(async () => {
+    if (!selectedAssistant) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Selecione um assistente primeiro",
+      });
       return;
     }
 
     try {
-      const response = await supabase.functions.invoke('chat-api', {
-        body: { action: 'delete_conversation', conversationId },
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      if (response.error) {
-        throw response.error;
+      const threadData = await createThread(selectedAssistant);
+      
+      if (threadData?.conversationId) {
+        setSelectedConversation(threadData.conversationId);
+        setMessages([]);
+        loadConversations(); // Recarregar lista de conversas
+        
+        toast({
+          title: "Sucesso",
+          description: "Nova conversa criada!",
+        });
       }
-
+    } catch (error: any) {
+      console.error('Error creating conversation:', error);
       toast({
-        title: "Conversa excluída!",
-        description: "A conversa foi removida com sucesso.",
+        variant: "destructive",
+        title: "Erro",
+        description: error.message || "Falha ao criar conversa",
       });
+    }
+  }, [selectedAssistant, createThread, loadConversations, toast]);
 
+  // Seleção otimizada de conversa
+  const selectConversation = useCallback((conversationId: string) => {
+    setSelectedConversation(conversationId);
+    setMessages([]);
+    loadMessages(conversationId);
+  }, [loadMessages]);
+
+  // Exclusão otimizada de conversa
+  const deleteConversation = useCallback(async (conversationId: string) => {
+    try {
+      await deleteOptimizedConversation(conversationId);
+      
       if (selectedConversation === conversationId) {
         setSelectedConversation(null);
         setMessages([]);
       }
       
-      await loadData();
+      toast({
+        title: "Sucesso",
+        description: "Conversa excluída com sucesso!",
+      });
     } catch (error: any) {
       console.error('Error deleting conversation:', error);
       toast({
-        title: "Erro ao excluir conversa",
-        description: error.message,
         variant: "destructive",
+        title: "Erro",
+        description: error.message || "Falha ao excluir conversa",
       });
     }
-  };
+  }, [deleteOptimizedConversation, selectedConversation, toast]);
 
-  const deleteAllConversations = async () => {
-    if (!session || conversations.length === 0) return;
-    
-    if (!confirm(`Tem certeza que deseja excluir TODAS as ${conversations.length} conversas? Esta ação não pode ser desfeita.`)) {
-      return;
-    }
+  // Componentes memoizados
+  const ConversationsList = useMemo(() => (
+    <div className="space-y-2">
+      {conversations.map((conversation) => (
+        <Card 
+          key={conversation.id}
+          className={`cursor-pointer transition-all hover:shadow-md ${
+            selectedConversation === conversation.id ? 'ring-2 ring-primary' : ''
+          }`}
+          onClick={() => selectConversation(conversation.id)}
+        >
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium truncate">
+                {conversation.title || 'Nova Conversa'}
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteConversation(conversation.id);
+                }}
+                className="text-destructive hover:text-destructive/80"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {conversation.assistants?.name}
+            </p>
+          </CardHeader>
+        </Card>
+      ))}
+    </div>
+  ), [conversations, selectedConversation, selectConversation, deleteConversation]);
 
-    const confirmDelete = confirm('CONFIRMAÇÃO FINAL: Clique OK para deletar todas as conversas ou Cancelar para abortar.');
-    if (!confirmDelete) return;
-
-  try {
-    setSending(true);
-
-    // Solicitação única ao backend para excluir todas as conversas
-    const response = await supabase.functions.invoke('chat-api', {
-      body: { action: 'delete_all_conversations' },
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    });
-
-    if (response.error) {
-      throw response.error;
-    }
-
-    toast({
-      title: "Todas as conversas foram excluídas!",
-      description: `${conversations.length} conversas removidas com sucesso.`,
-    });
-
-    setSelectedConversation(null);
-    setMessages([]);
-    await loadData();
-  } catch (error: any) {
-    console.error('Error deleting all conversations:', error);
-    toast({
-      title: "Erro ao excluir conversas",
-      description: error.message,
-      variant: "destructive",
-    });
-  } finally {
-    setSending(false);
-  }
-  };
+  const MessagesList = useMemo(() => (
+    <ScrollArea className="flex-1 px-4">
+      <div className="space-y-4 py-4">
+        {messages.map((message) => (
+          <MessageItem key={message.id} message={message} />
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+    </ScrollArea>
+  ), [messages]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Carregando...</p>
+          <p className="text-muted-foreground">Carregando conversas...</p>
         </div>
       </div>
     );
@@ -425,307 +361,98 @@ const Conversations = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="flex h-screen w-full bg-background">
         <AppSidebar />
         
-        <main className="flex-1 flex flex-col h-screen">
-          {/* Mobile Header */}
-          <div className="lg:hidden p-3 border-b bg-background shrink-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <SidebarTrigger />
-                <h1 className="font-semibold">Conversas</h1>
-              </div>
-              {conversations.length > 0 && (
-                <Button
-                  onClick={deleteAllConversations}
-                  disabled={sending}
-                  variant="destructive"
-                  size="sm"
-                  className="text-xs"
-                >
-                  <Trash2 className="h-3 w-3 mr-1" />
-                  Excluir Tudo
-                </Button>
-              )}
+        <div className="flex-1 flex flex-col">
+          <header className="border-b p-4">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger />
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <MessageSquare className="h-6 w-6" />
+                Conversas
+              </h1>
             </div>
-          </div>
+          </header>
 
-          <div className="flex-1 flex flex-col lg:flex-row min-h-0">
-            {/* Conversations Sidebar */}
-            <div className="w-full lg:w-80 lg:border-r bg-muted/20 flex flex-col max-h-[40vh] lg:max-h-none lg:h-full">
-              <div className="p-4 border-b bg-background shrink-0">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="hidden lg:flex items-center gap-2">
-                    <h2 className="font-semibold flex items-center gap-2">
-                      <MessageSquare className="h-5 w-5" />
-                      Conversas
-                    </h2>
-                  </div>
-                  {conversations.length > 0 && (
-                    <Button
-                      onClick={deleteAllConversations}
-                      disabled={sending}
-                      variant="destructive"
-                      size="sm"
-                      className="hidden lg:flex text-xs"
-                    >
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      Excluir Todas
-                    </Button>
-                  )}
-                </div>
+          <div className="flex flex-1 overflow-hidden">
+            {/* Sidebar de Conversas */}
+            <div className="w-80 border-r flex flex-col">
+              <div className="p-4 border-b space-y-4">
+                <Select
+                  value={selectedAssistant}
+                  onValueChange={setSelectedAssistant}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um assistente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {assistants.map(assistant => (
+                      <SelectItem key={assistant.id} value={assistant.id}>
+                        {assistant.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 
-                {/* New Conversation */}
-                <div className="space-y-2">
-                  <Select value={selectedAssistant} onValueChange={setSelectedAssistant}>
-                    <SelectTrigger className="bg-background w-full">
-                      <SelectValue placeholder="Escolha um agente" />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 bg-background border border-border shadow-lg">
-                      {assistants.length === 0 ? (
-                        <div className="p-3 text-center text-muted-foreground">
-                          <p className="text-sm">
-                            {loading ? t('conversations.loadingAgents') : t('conversations.noAgents')}
-                          </p>
-                          {!loading && (
-                            <Button 
-                              size="sm" 
-                              variant="link" 
-                              onClick={() => navigate('/assistants')}
-                              className="text-xs mt-1"
-                            >
-                              Criar primeiro agente
-                            </Button>
-                          )}
-                        </div>
-                      ) : (
-                        assistants.map((assistant) => (
-                          <SelectItem key={assistant.id} value={assistant.id}>
-                            <div className="flex items-center gap-2">
-                              <Bot className="h-3 w-3" />
-                              <span className="truncate">{assistant.name}</span>
-                            </div>
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <Button 
-                    onClick={startNewConversation} 
-                    disabled={!selectedAssistant}
-                    className="w-full text-sm"
-                    size="sm"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Nova Conversa
-                  </Button>
-                </div>
-              </div>
-
-              {/* Conversations List */}
-              <div className="flex-1 overflow-hidden">
-                <ScrollArea className="h-full">
-                  <div className="p-2 space-y-2">
-                    {conversations.length === 0 ? (
-                      <div className="p-4 text-center text-muted-foreground">
-                        <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">Nenhuma conversa ainda</p>
-                        <p className="text-xs mt-1">Selecione um agente e inicie uma nova conversa</p>
-                      </div>
-                    ) : (
-                      conversations.map((conversation) => (
-                        <Card 
-                          key={conversation.id} 
-                          className={`cursor-pointer hover:bg-accent transition-colors ${selectedConversation === conversation.id ? 'ring-2 ring-primary bg-accent' : ''}`}
-                          onClick={() => {
-                            setSelectedConversation(conversation.id);
-                            loadMessages(conversation.id);
-                          }}
-                        >
-                          <CardContent className="p-3">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-sm truncate">{conversation.title}</h4>
-                                <Badge variant="secondary" className="text-xs mt-1">
-                                  {conversation.assistants.name}
-                                </Badge>
-                                {conversation.messages.length > 0 && (
-                                  <p className="text-xs text-muted-foreground mt-1 truncate">
-                                    {conversation.messages[conversation.messages.length - 1]?.content}
-                                  </p>
-                                )}
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteConversation(conversation.id);
-                                }}
-                                className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground flex-shrink-0"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))
-                    )}
-                  </div>
-                </ScrollArea>
-              </div>
-            </div>
-
-            {/* Chat Area */}
-            <div className="flex-1 flex flex-col min-h-[60vh] lg:min-h-0 lg:h-full">
-              {selectedConversation ? (
-                <div className="flex flex-col h-full">
-          {/* Chat Header */}
-          <div className="p-4 border-b bg-background shrink-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bot className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold truncate">
-                  {conversations.find(c => c.id === selectedConversation)?.assistants.name}
-                </h3>
-              </div>
-              <div className="flex items-center gap-2">
-                {conversations.length > 0 && (
-                  <Button
-                    onClick={deleteAllConversations}
-                    disabled={sending}
-                    variant="destructive"
-                    size="sm"
-                    className="text-xs"
-                    title="Excluir todas as conversas"
-                  >
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    Limpar Tudo
-                  </Button>
-                )}
-                <Button
-                  onClick={() => {
-                    setSelectedConversation(null);
-                    setMessages([]);
-                  }}
-                  variant="ghost"
-                  size="sm"
-                  className="lg:hidden"
+                <Button 
+                  onClick={createNewConversation}
+                  className="w-full"
+                  disabled={!selectedAssistant}
                 >
-                  ✕
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nova Conversa
                 </Button>
               </div>
+              
+              <ScrollArea className="flex-1 p-4">
+                {ConversationsList}
+              </ScrollArea>
             </div>
-          </div>
 
-                  {/* Messages */}
-                  <div className="flex-1 overflow-hidden">
-                    <ScrollArea className="h-full p-4">
-                      <div className="space-y-4">
-                        {messages.length === 0 ? (
-                          <div className="flex items-center justify-center h-full min-h-[200px]">
-                            <div className="text-center text-muted-foreground">
-                              <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                              <p className="text-sm">Comece uma conversa!</p>
-                              <p className="text-xs mt-1">Digite sua primeira mensagem abaixo</p>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            {messages.map((message) => (
-                              <div
-                                key={message.id}
-                                className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                              >
-                                {message.role === 'assistant' && (
-                                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                                    <Bot className="h-4 w-4 text-primary" />
-                                  </div>
-                                )}
-                                <div
-                                  className={`max-w-[70%] p-3 rounded-lg ${
-                                    message.role === 'user'
-                                      ? 'bg-primary text-primary-foreground rounded-br-none'
-                                      : 'bg-muted rounded-bl-none'
-                                  }`}
-                                >
-                                  <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                                  <p className="text-xs opacity-70 mt-1">
-                                    {new Date(message.created_at).toLocaleTimeString('pt-BR', { 
-                                      hour: '2-digit', 
-                                      minute: '2-digit' 
-                                    })}
-                                  </p>
-                                </div>
-                                {message.role === 'user' && (
-                                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-1">
-                                    <UserIcon className="h-4 w-4" />
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                            {sending && (
-                              <div className="flex gap-3 justify-start">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                                  <Bot className="h-4 w-4 text-primary" />
-                                </div>
-                                <div className="bg-muted p-3 rounded-lg rounded-bl-none">
-                                  <div className="flex space-x-1">
-                                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
-                                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </>
-                        )}
-                        <div ref={messagesEndRef} />
-                      </div>
-                    </ScrollArea>
-                  </div>
-
-                  {/* Message Input */}
-                  <div className="p-4 border-t bg-background shrink-0">
-                    <form onSubmit={sendMessage} className="flex gap-2">
+            {/* Área de Chat */}
+            <div className="flex-1 flex flex-col">
+              {selectedConversation ? (
+                <>
+                  {MessagesList}
+                  
+                  <div className="border-t p-4">
+                    <div className="flex gap-2">
                       <Input
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Digite sua mensagem..."
-                        disabled={sending}
+                        onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                        disabled={sendingMessage}
                         className="flex-1"
                       />
-                      <Button type="submit" disabled={sending || !newMessage.trim()}>
+                      <Button 
+                        onClick={sendMessage}
+                        disabled={!newMessage.trim() || sendingMessage}
+                      >
                         <Send className="h-4 w-4" />
                       </Button>
-                    </form>
+                    </div>
                   </div>
-                </div>
+                </>
               ) : (
-                <div className="flex-1 flex items-center justify-center p-4">
-                  <div className="text-center space-y-4 max-w-sm">
-                    <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto">
-                      <MessageSquare className="h-8 w-8 text-muted-foreground/50" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2">Selecione uma conversa</h3>
-                      <p className="text-muted-foreground text-sm">
-                        Escolha uma conversa existente ou crie uma nova para começar a conversar com seus agentes
-                      </p>
-                    </div>
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center text-muted-foreground">
+                    <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Selecione uma conversa ou crie uma nova</p>
                   </div>
                 </div>
               )}
             </div>
           </div>
-        </main>
+        </div>
         
-        {/* Support Chat Widget for internal system */}
         <SupportChatWidget />
       </div>
     </SidebarProvider>
   );
-};
+});
 
-export default memo(Conversations);
+Conversations.displayName = 'Conversations';
+
+export default Conversations;

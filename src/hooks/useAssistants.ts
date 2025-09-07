@@ -40,7 +40,7 @@ export const useAssistants = (session: Session | null) => {
     return response.data;
   }, [session]);
 
-  // Otimiza o carregamento de assistentes com cache
+  // Otimiza o carregamento de assistentes com cache mais longo
   const loadAssistants = useCallback(async (forceRefresh = false) => {
     if (!session) return;
     
@@ -63,8 +63,8 @@ export const useAssistants = (session: Session | null) => {
       const assistantsList = data.assistants || [];
       
       setAssistants(assistantsList);
-      // Cache por 3 minutos
-      performanceCache.set(cacheKey, assistantsList, 3);
+      // Cache por 15 minutos para melhor performance
+      performanceCache.set(cacheKey, assistantsList, 15);
     } catch (err: any) {
       setError(err.message);
       console.error('Error loading assistants:', err);

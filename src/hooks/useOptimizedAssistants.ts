@@ -31,8 +31,8 @@ export const useOptimizedAssistants = (session: Session | null) => {
       try {
         const now = Date.now();
         
-        // Rate limiting
-        if (!forceRefresh && (now - lastLoadRef.current) < 2000) {
+        // Rate limiting reduzido para 1 segundo
+        if (!forceRefresh && (now - lastLoadRef.current) < 1000) {
           return;
         }
         lastLoadRef.current = now;
@@ -63,8 +63,8 @@ export const useOptimizedAssistants = (session: Session | null) => {
         const assistantsList = response.data?.assistants || [];
         setAssistants(assistantsList);
         
-        // Cache for 2 minutes
-        performanceCache.set(cacheKey, assistantsList);
+        // Cache for 15 minutes para melhor performance
+        performanceCache.set(cacheKey, assistantsList, 15);
       } catch (error: any) {
         console.error('Error loading assistants:', error);
         // Don't show error toast for cached requests
@@ -74,7 +74,7 @@ export const useOptimizedAssistants = (session: Session | null) => {
       } finally {
         setLoading(false);
       }
-    }, 500),
+    }, 300), // Reduzido debounce para 300ms
     [session]
   );
 

@@ -192,7 +192,9 @@ const WhatsApp = () => {
             if (type === 'assistants') {
               if (!response.error && response.data?.assistants) {
                 assistantsData = response.data.assistants;
-                performanceCache.set(assistantsCacheKey, assistantsData, 10); // Cache por 10 minutos
+        // Cache assistentes por 15 minutos, conexões por 10 minutos
+        performanceCache.set(assistantsCacheKey, assistantsData, 15);
+        performanceCache.set(connectionsCacheKey, connectionsData, 10);
               } else {
                 console.warn('No assistants found or error:', response.error);
                 assistantsData = assistantsData || [];

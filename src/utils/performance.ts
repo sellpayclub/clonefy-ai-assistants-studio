@@ -4,13 +4,13 @@ class PerformanceCache {
   private cleanupInterval: NodeJS.Timeout;
 
   constructor() {
-    // Limpar cache a cada 5 minutos para evitar acúmulo
+    // Limpar cache a cada 3 minutos para melhor performance
     this.cleanupInterval = setInterval(() => {
       this.cleanup();
-    }, 5 * 60 * 1000); // 5 minutos
+    }, 3 * 60 * 1000); // 3 minutos
   }
 
-  set(key: string, data: any, ttlMinutes: number = 10) {
+  set(key: string, data: any, ttlMinutes: number = 15) { // Aumentado para 15min
     const expiry = Date.now() + (ttlMinutes * 60 * 1000);
     this.cache.set(key, { data, expiry });
   }
