@@ -533,10 +533,12 @@ export type Database = {
       }
       n8n_fluxogpt: {
         Row: {
+          ApiELEVEN: string | null
           created_at: string | null
           emailuser: string | null
           id: number
           idassistentgpt: string | null
+          IDvoz: string | null
           message: string | null
           nomeinstancia: string | null
           threadid: string | null
@@ -544,10 +546,12 @@ export type Database = {
           whatsappuser: string | null
         }
         Insert: {
+          ApiELEVEN?: string | null
           created_at?: string | null
           emailuser?: string | null
           id: number
           idassistentgpt?: string | null
+          IDvoz?: string | null
           message?: string | null
           nomeinstancia?: string | null
           threadid?: string | null
@@ -555,10 +559,12 @@ export type Database = {
           whatsappuser?: string | null
         }
         Update: {
+          ApiELEVEN?: string | null
           created_at?: string | null
           emailuser?: string | null
           id?: number
           idassistentgpt?: string | null
+          IDvoz?: string | null
           message?: string | null
           nomeinstancia?: string | null
           threadid?: string | null
