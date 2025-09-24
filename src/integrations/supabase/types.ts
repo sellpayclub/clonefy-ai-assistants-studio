@@ -992,6 +992,147 @@ export type Database = {
         }
         Relationships: []
       }
+      widget_analytics: {
+        Row: {
+          assistant_id: string
+          avg_session_duration: unknown | null
+          created_at: string
+          date: string
+          id: string
+          total_bot_messages: number
+          total_conversations: number
+          total_messages: number
+          total_user_messages: number
+          unique_visitors: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assistant_id: string
+          avg_session_duration?: unknown | null
+          created_at?: string
+          date?: string
+          id?: string
+          total_bot_messages?: number
+          total_conversations?: number
+          total_messages?: number
+          total_user_messages?: number
+          unique_visitors?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assistant_id?: string
+          avg_session_duration?: unknown | null
+          created_at?: string
+          date?: string
+          id?: string
+          total_bot_messages?: number
+          total_conversations?: number
+          total_messages?: number
+          total_user_messages?: number
+          unique_visitors?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      widget_customizations: {
+        Row: {
+          assistant_id: string
+          avatar_url: string | null
+          button_icon_url: string | null
+          button_position: string
+          created_at: string
+          id: string
+          is_active: boolean
+          primary_color: string
+          secondary_color: string
+          text_color: string
+          updated_at: string
+          user_id: string
+          welcome_message: string | null
+          widget_name: string
+        }
+        Insert: {
+          assistant_id: string
+          avatar_url?: string | null
+          button_icon_url?: string | null
+          button_position?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          primary_color?: string
+          secondary_color?: string
+          text_color?: string
+          updated_at?: string
+          user_id: string
+          welcome_message?: string | null
+          widget_name?: string
+        }
+        Update: {
+          assistant_id?: string
+          avatar_url?: string | null
+          button_icon_url?: string | null
+          button_position?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          primary_color?: string
+          secondary_color?: string
+          text_color?: string
+          updated_at?: string
+          user_id?: string
+          welcome_message?: string | null
+          widget_name?: string
+        }
+        Relationships: []
+      }
+      widget_sessions: {
+        Row: {
+          assistant_id: string
+          conversation_id: string | null
+          created_at: string
+          end_time: string | null
+          id: string
+          messages_count: number
+          session_id: string
+          start_time: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+          visitor_ip: string | null
+        }
+        Insert: {
+          assistant_id: string
+          conversation_id?: string | null
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          messages_count?: number
+          session_id: string
+          start_time?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+          visitor_ip?: string | null
+        }
+        Update: {
+          assistant_id?: string
+          conversation_id?: string | null
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          messages_count?: number
+          session_id?: string
+          start_time?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+          visitor_ip?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
