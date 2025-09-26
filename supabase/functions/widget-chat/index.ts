@@ -149,7 +149,7 @@ serve(async (req) => {
       let runStatus = run.status;
       let attempts = 0;
       const maxAttempts = 60; // Increased attempts but shorter intervals
-      const pollInterval = 500; // Faster polling - 500ms instead of 1000ms
+      const pollInterval = 300; // Ainda mais rápido - 300ms para melhor experiência
 
       while (runStatus === 'queued' || runStatus === 'in_progress' || runStatus === 'requires_action') {
         if (attempts >= maxAttempts) {
@@ -217,8 +217,8 @@ serve(async (req) => {
         runStatus = statusData.status;
         attempts++;
         
-        // Log progress for debugging
-        if (attempts % 4 === 0) { // Log every 2 seconds
+        // Log progress para debugging - reduzindo logs
+        if (attempts % 6 === 0) { // Log a cada ~1.8 segundos
           console.log(`Assistant processing... Status: ${runStatus}, Attempt: ${attempts}`);
         }
       }
@@ -234,10 +234,10 @@ serve(async (req) => {
 
         const messagesData = await messagesResponse.json();
         const assistantMessage = messagesData.data[0];
+        // Retornar resposta imediatamente sem aguardar save no DB
         const responseText = assistantMessage.content[0].text.value;
 
-        // Save assistant message to database (background task)
-        // Save assistant message to database (fire and forget)
+        // Background save - não bloquear resposta (sem catch)
         supabase.from('messages').insert({
           conversation_id: currentConversationId,
           role: 'assistant',
@@ -247,7 +247,6 @@ serve(async (req) => {
           console.log('Assistant message saved to database');
         });
 
-        // Return response immediately without waiting for DB save
         return new Response(JSON.stringify({ 
           response: responseText,
           conversationId: currentConversationId 

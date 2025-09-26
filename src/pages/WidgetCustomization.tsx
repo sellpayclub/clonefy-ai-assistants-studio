@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Palette, Settings, BarChart3, Copy, Eye, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import WidgetPreview from '@/components/widget/WidgetPreview';
+import OptimizedWidgetPreview from '@/components/widget/OptimizedWidgetPreview';
 import ColorPicker from '@/components/widget/ColorPicker';
 import ImageUpload from '@/components/widget/ImageUpload';
-import { useWidgetCustomization } from '@/hooks/useWidgetCustomization';
+import { useOptimizedWidgetCustomization } from '@/hooks/useOptimizedWidgetCustomization';
 
 const WidgetCustomization = () => {
   const [searchParams] = useSearchParams();
@@ -29,7 +29,7 @@ const WidgetCustomization = () => {
     loading,
     saveCustomization,
     loadCustomization
-  } = useWidgetCustomization(selectedAssistant || assistantId || '');
+  } = useOptimizedWidgetCustomization(selectedAssistant || assistantId || '');
 
   const [formData, setFormData] = useState({
     widget_name: 'Assistente Virtual',
@@ -43,6 +43,14 @@ const WidgetCustomization = () => {
     is_active: true
   });
 
+  // Memoize preview data para melhor performance
+  const previewData = useMemo(() => formData, [formData]);
+
+  // Debounced update para preview em tempo real
+  const updateFormData = useCallback((field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  }, []);
+
   useEffect(() => {
     loadAssistants();
   }, []);
@@ -55,7 +63,7 @@ const WidgetCustomization = () => {
 
   useEffect(() => {
     if (customization) {
-      setFormData({
+      const newFormData = {
         widget_name: customization.widget_name || 'Assistente Virtual',
         avatar_url: customization.avatar_url || '',
         button_icon_url: customization.button_icon_url || '',
@@ -65,9 +73,17 @@ const WidgetCustomization = () => {
         text_color: customization.text_color || '#333333',
         button_position: (customization.button_position as 'left' | 'right') || 'right',
         is_active: customization.is_active !== false
-      });
+      };
+      setFormData(newFormData);
     }
   }, [customization]);
+
+  // Carregar customização quando assistente muda
+  useEffect(() => {
+    if (selectedAssistant) {
+      loadCustomization();
+    }
+  }, [selectedAssistant, loadCustomization]);
 
   const loadAssistants = async () => {
     try {
@@ -95,12 +111,19 @@ const WidgetCustomization = () => {
     }
 
     try {
-      await saveCustomization(formData);
+      const result = await saveCustomization(formData);
+      
+      // Recarregar dados após salvar para garantir sincronização
+      if (result) {
+        await loadCustomization();
+      }
+      
       toast({
         title: 'Sucesso!',
         description: 'Personalização salva com sucesso',
       });
     } catch (error) {
+      console.error('Erro ao salvar:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao salvar personalização',
@@ -208,7 +231,7 @@ const WidgetCustomization = () => {
                         <Input
                           id="widget_name"
                           value={formData.widget_name}
-                          onChange={(e) => setFormData({...formData, widget_name: e.target.value})}
+                          onChange={(e) => updateFormData('widget_name', e.target.value)}
                           placeholder="Nome que aparece no chat"
                         />
                       </div>
@@ -218,7 +241,7 @@ const WidgetCustomization = () => {
                         <Textarea
                           id="welcome_message"
                           value={formData.welcome_message}
-                          onChange={(e) => setFormData({...formData, welcome_message: e.target.value})}
+                          onChange={(e) => updateFormData('welcome_message', e.target.value)}
                           placeholder="Primeira mensagem que o usuário vê"
                           rows={3}
                         />
@@ -234,14 +257,14 @@ const WidgetCustomization = () => {
                       <ImageUpload
                         label="Avatar do Assistente"
                         value={formData.avatar_url}
-                        onChange={(url) => setFormData({...formData, avatar_url: url})}
+                        onChange={(url) => updateFormData('avatar_url', url)}
                         bucket="assistant-media"
                       />
 
                       <ImageUpload
                         label="Ícone do Botão Flutuante"
                         value={formData.button_icon_url}
-                        onChange={(url) => setFormData({...formData, button_icon_url: url})}
+                        onChange={(url) => updateFormData('button_icon_url', url)}
                         bucket="assistant-media"
                       />
                     </CardContent>
@@ -255,19 +278,19 @@ const WidgetCustomization = () => {
                       <ColorPicker
                         label="Cor Principal"
                         value={formData.primary_color}
-                        onChange={(color) => setFormData({...formData, primary_color: color})}
+                        onChange={(color) => updateFormData('primary_color', color)}
                       />
 
                       <ColorPicker
                         label="Cor Secundária (Fundo)"
                         value={formData.secondary_color}
-                        onChange={(color) => setFormData({...formData, secondary_color: color})}
+                        onChange={(color) => updateFormData('secondary_color', color)}
                       />
 
                       <ColorPicker
                         label="Cor do Texto"
                         value={formData.text_color}
-                        onChange={(color) => setFormData({...formData, text_color: color})}
+                        onChange={(color) => updateFormData('text_color', color)}
                       />
                     </CardContent>
                   </Card>
@@ -283,7 +306,7 @@ const WidgetCustomization = () => {
                         <Label>Posição do Botão</Label>
                         <Select 
                           value={formData.button_position} 
-                          onValueChange={(value: 'left' | 'right') => setFormData({...formData, button_position: value})}
+                          onValueChange={(value: 'left' | 'right') => updateFormData('button_position', value)}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -300,7 +323,7 @@ const WidgetCustomization = () => {
                           type="checkbox"
                           id="is_active"
                           checked={formData.is_active}
-                          onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
+                          onChange={(e) => updateFormData('is_active', e.target.checked)}
                           className="rounded border-gray-300"
                         />
                         <Label htmlFor="is_active">Widget Ativo</Label>
@@ -359,7 +382,10 @@ const WidgetCustomization = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <WidgetPreview customization={formData} />
+                  <OptimizedWidgetPreview 
+                    customization={previewData} 
+                    key={`preview-${selectedAssistant}-${Date.now()}`} 
+                  />
                 </CardContent>
               </Card>
             </div>
