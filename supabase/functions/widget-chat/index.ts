@@ -237,6 +237,7 @@ serve(async (req) => {
         const responseText = assistantMessage.content[0].text.value;
 
         // Save assistant message to database (background task)
+        // Save assistant message to database (fire and forget)
         supabase.from('messages').insert({
           conversation_id: currentConversationId,
           role: 'assistant',
@@ -244,8 +245,6 @@ serve(async (req) => {
           openai_message_id: assistantMessage.id
         }).then(() => {
           console.log('Assistant message saved to database');
-        }).catch((error: any) => {
-          console.error('Error saving assistant message:', error);
         });
 
         // Return response immediately without waiting for DB save

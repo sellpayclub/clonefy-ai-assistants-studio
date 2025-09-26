@@ -320,7 +320,7 @@ async function listConnections(supabaseClient: any, userEmail: string) {
 
   // Check status of each connection in Evolution API and update database
   const connectionsWithStatus = await Promise.all(
-    (data || []).map(async (connection) => {
+    (data || []).map(async (connection: any) => {
       try {
         console.log(`=== CHECKING STATUS for: ${connection.nomeinstancia} ===`);
         

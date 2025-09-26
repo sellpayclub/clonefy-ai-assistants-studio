@@ -73,7 +73,7 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error('Error in openai-assistants function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -593,7 +593,7 @@ async function uploadKnowledgeFile(data: any) {
     
   } catch (error) {
     console.error('Error uploading knowledge file:', error);
-    throw new Error(`Failed to upload knowledge file: ${error.message}`);
+    throw new Error(`Failed to upload knowledge file: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -619,6 +619,6 @@ async function deleteKnowledgeFile(openaiFileId: string) {
     
   } catch (error) {
     console.error('Error deleting knowledge file:', error);
-    throw new Error(`Failed to delete knowledge file: ${error.message}`);
+    throw new Error(`Failed to delete knowledge file: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }

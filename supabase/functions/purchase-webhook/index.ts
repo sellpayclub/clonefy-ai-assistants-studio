@@ -48,7 +48,7 @@ serve(async (req) => {
       webhookData = JSON.parse(payload);
       logStep("Parsed webhook data", webhookData);
     } catch (error) {
-      logStep("ERROR: Invalid JSON payload", error.message);
+      logStep("ERROR: Invalid JSON payload", error instanceof Error ? error.message : 'Unknown error');
       return new Response("Invalid JSON", { 
         status: 400, 
         headers: corsHeaders 
@@ -166,7 +166,7 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR: Erro geral", { message: errorMessage, stack: error.stack });
+    logStep("ERROR: Erro geral", { message: errorMessage, stack: error instanceof Error ? error.stack : 'No stack trace' });
     
     return new Response(
       JSON.stringify({ 
