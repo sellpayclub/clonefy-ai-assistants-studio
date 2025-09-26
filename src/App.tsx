@@ -22,6 +22,8 @@ const LazyConversations = lazy(() => import("./pages/Conversations"));
 const LazyAdmin = lazy(() => import("./pages/Admin"));
 const LazyEspanol = lazy(() => import("./pages/Espanol"));
 const LazyCalendar = lazy(() => import("./pages/Calendar"));
+const LazyWidgetCustomization = lazy(() => import("./pages/WidgetCustomization"));
+const LazyWidgetAnalytics = lazy(() => import("./pages/WidgetAnalytics"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,9 +95,20 @@ const App = () => {
                       <LazyEspanol />
                     </Suspense>
                   } />
-                  <Route path="/embed/chat/:agentId" element={<EmbedChat />} />
-                  <Route path="/thank-you" element={<ThankYou />} />
-                  <Route path="/lead-capture" element={<LeadCapture />} />
+                   <Route path="/embed/chat/:agentId" element={<EmbedChat />} />
+                   <Route path="/embed-chat/:assistantId" element={<EmbedChat />} />
+                   <Route path="/widget-customization" element={
+                     <Suspense fallback={<LoadingFallback />}>
+                       <LazyWidgetCustomization />
+                     </Suspense>
+                   } />
+                   <Route path="/widget-analytics" element={
+                     <Suspense fallback={<LoadingFallback />}>
+                       <LazyWidgetAnalytics />
+                     </Suspense>
+                   } />
+                   <Route path="/thank-you" element={<ThankYou />} />
+                   <Route path="/lead-capture" element={<LeadCapture />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
               </Routes>

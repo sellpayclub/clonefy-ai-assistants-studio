@@ -22,7 +22,8 @@ interface Agent {
 // Função removida - agora usando TypingMessage component
 
 const EmbedChat = () => {
-  const { agentId } = useParams();
+  const { agentId, assistantId } = useParams();
+  const actualAgentId = agentId || assistantId;
   const [agent, setAgent] = useState<Agent | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -42,14 +43,14 @@ const EmbedChat = () => {
 
   useEffect(() => {
     const initializeChat = async () => {
-      if (!agentId) return;
+      if (!actualAgentId) return;
 
       try {
         // Carregamento rápido sem delays desnecessários
         const { data, error } = await supabase.functions.invoke('widget-chat', {
           body: {
             action: 'get_agent',
-            agentId: agentId
+            agentId: actualAgentId
           }
         });
 
@@ -76,10 +77,10 @@ const EmbedChat = () => {
 
     // Executa imediatamente sem timeout
     initializeChat();
-  }, [agentId]);
+  }, [actualAgentId]);
 
   const sendMessage = async () => {
-    if (!input.trim() || isLoading || !agentId) return;
+    if (!input.trim() || isLoading || !actualAgentId) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -96,7 +97,7 @@ const EmbedChat = () => {
       const { data, error } = await supabase.functions.invoke('widget-chat', {
         body: {
           action: 'send_message',
-          agentId: agentId,
+          agentId: actualAgentId,
           message: input,
           conversationId: conversationId
         }
