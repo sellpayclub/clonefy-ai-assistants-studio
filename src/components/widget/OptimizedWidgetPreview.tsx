@@ -29,11 +29,23 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Debug - log customization data
-  console.log('🎨 Widget Customization Data:', {
+  console.log('🎨 Widget Customization Data (COMPLETE):', {
     widget_name: customization.widget_name,
     avatar_url: customization.avatar_url,
+    button_icon_url: customization.button_icon_url,
     welcome_message: customization.welcome_message,
+    primary_color: customization.primary_color,
+    secondary_color: customization.secondary_color,
+    text_color: customization.text_color,
+    button_position: customization.button_position,
     is_active: customization.is_active
+  });
+  
+  console.log('🔍 Header Data Check:', {
+    hasName: !!customization.widget_name,
+    nameValue: customization.widget_name,
+    hasAvatar: !!customization.avatar_url,
+    avatarValue: customization.avatar_url
   });
 
   // Simular respostas automáticas - memoizada para performance

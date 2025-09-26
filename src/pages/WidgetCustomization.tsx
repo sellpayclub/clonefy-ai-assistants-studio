@@ -78,8 +78,16 @@ const WidgetCustomization = () => {
         button_position: (customization.button_position as 'left' | 'right') || 'right',
         is_active: customization.is_active !== false
       };
+      
+      console.log('🔄 Updating form data from DB:', {
+        loaded: customization,
+        newFormData
+      });
+      
       setFormData(newFormData);
       resetPreviewData(newFormData); // Sincronizar preview
+      
+      console.log('✅ Form and preview data synchronized');
     }
   }, [customization, resetPreviewData]);
 
