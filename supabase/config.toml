@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.widget-analytics]
 verify_jwt = false
+
+[functions.add-sample-analytics]
+verify_jwt = true

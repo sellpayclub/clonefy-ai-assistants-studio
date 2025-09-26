@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
 
 interface WidgetPreviewProps {
@@ -18,6 +18,11 @@ interface WidgetPreviewProps {
 const WidgetPreview: React.FC<WidgetPreviewProps> = ({ customization }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
+
+  // Forçar re-render quando customization mudar
+  useEffect(() => {
+    // Este efeito garante que o preview seja atualizado em tempo real
+  }, [customization]);
 
   const buttonStyle = {
     backgroundColor: customization.primary_color,

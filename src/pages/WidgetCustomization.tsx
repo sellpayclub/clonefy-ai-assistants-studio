@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Palette, Settings, BarChart3, Copy, Eye } from 'lucide-react';
+import { Palette, Settings, BarChart3, Copy, Eye, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import WidgetPreview from '@/components/widget/WidgetPreview';
 import ColorPicker from '@/components/widget/ColorPicker';
@@ -18,6 +18,7 @@ import { useWidgetCustomization } from '@/hooks/useWidgetCustomization';
 
 const WidgetCustomization = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const assistantId = searchParams.get('assistant');
   const [selectedAssistant, setSelectedAssistant] = useState<string>('');
   const [assistants, setAssistants] = useState<any[]>([]);
@@ -137,6 +138,14 @@ const WidgetCustomization = () => {
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/dashboard')} 
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar ao Dashboard
+          </Button>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Personalizar Widget de Chat
           </h1>

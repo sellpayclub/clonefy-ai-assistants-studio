@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MessageCircle, Users, Clock, TrendingUp, Download } from 'lucide-react';
+import { Calendar, MessageCircle, Users, Clock, TrendingUp, Download, ArrowLeft, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useWidgetAnalytics } from '@/hooks/useWidgetAnalytics';
+import { useToast } from '@/hooks/use-toast';
 import AnalyticsDashboard from '@/components/widget/AnalyticsDashboard';
 
 const WidgetAnalytics = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const assistantId = searchParams.get('assistant');
   const [selectedAssistant, setSelectedAssistant] = useState<string>('');
   const [assistants, setAssistants] = useState<any[]>([]);
   const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('30d');
+  const [generatingData, setGeneratingData] = useState(false);
+  const { toast } = useToast();
   
   const {
     analytics,
@@ -112,10 +116,51 @@ const WidgetAnalytics = () => {
     }
   };
 
+  const generateSampleData = async () => {
+    if (!selectedAssistant) return;
+    
+    try {
+      setGeneratingData(true);
+      
+      const { error } = await supabase.functions.invoke('add-sample-analytics', {
+        body: { assistantId: selectedAssistant }
+      });
+
+      if (error) throw error;
+
+      // Recarregar dados após gerar
+      await loadAnalytics();
+      await loadSessions();
+
+      toast({
+        title: 'Sucesso!',
+        description: 'Dados de exemplo gerados com sucesso',
+      });
+
+    } catch (error) {
+      console.error('Erro ao gerar dados de exemplo:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao gerar dados de exemplo',
+        variant: 'destructive'
+      });
+    } finally {
+      setGeneratingData(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/dashboard')} 
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar ao Dashboard
+          </Button>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Analytics do Widget
           </h1>
@@ -125,7 +170,7 @@ const WidgetAnalytics = () => {
         </div>
 
         {/* Seletores */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardContent className="pt-6">
               <div>
@@ -166,9 +211,23 @@ const WidgetAnalytics = () => {
 
           <Card>
             <CardContent className="pt-6">
-              <Button onClick={handleExport} variant="outline" className="w-full">
+              <Button onClick={handleExport} variant="outline" className="w-full mb-2">
                 <Download className="h-4 w-4 mr-2" />
                 Exportar Dados
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <Button 
+                onClick={generateSampleData} 
+                variant="outline" 
+                className="w-full"
+                disabled={generatingData || !selectedAssistant}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${generatingData ? 'animate-spin' : ''}`} />
+                {generatingData ? 'Gerando...' : 'Gerar Dados de Exemplo'}
               </Button>
             </CardContent>
           </Card>
