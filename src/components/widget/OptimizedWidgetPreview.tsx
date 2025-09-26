@@ -28,24 +28,14 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Debug - log customization data
-  console.log('🎨 Widget Customization Data (COMPLETE):', {
-    widget_name: customization.widget_name,
-    avatar_url: customization.avatar_url,
-    button_icon_url: customization.button_icon_url,
-    welcome_message: customization.welcome_message,
-    primary_color: customization.primary_color,
-    secondary_color: customization.secondary_color,
-    text_color: customization.text_color,
-    button_position: customization.button_position,
-    is_active: customization.is_active
-  });
-  
-  console.log('🔍 Header Data Check:', {
-    hasName: !!customization.widget_name,
-    nameValue: customization.widget_name,
+  // Debug essencial - dados do widget
+  console.log('🎨 Widget Preview:', {
+    name: customization.widget_name,
     hasAvatar: !!customization.avatar_url,
-    avatarValue: customization.avatar_url
+    colors: {
+      primary: customization.primary_color,
+      secondary: customization.secondary_color
+    }
   });
 
   // Simular respostas automáticas - memoizada para performance
@@ -230,43 +220,61 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
         >
           {/* Header */}
           <div 
-            className="p-4 flex items-center gap-3"
-            style={styles.header}
+            className="p-4 flex items-center gap-3 relative"
+            style={{
+              backgroundColor: customization.primary_color,
+              background: `linear-gradient(135deg, ${customization.primary_color}, ${customization.primary_color}dd)`,
+              borderTopLeftRadius: '12px',
+              borderTopRightRadius: '12px'
+            }}
           >
-            {customization.avatar_url ? (
-              <img 
-                src={customization.avatar_url} 
-                alt={customization.widget_name || 'Avatar'}
-                className="w-8 h-8 rounded-full object-cover"
-                loading="lazy"
-                onError={(e) => {
-                  console.log('❌ Erro ao carregar avatar:', customization.avatar_url);
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                <MessageCircle className="h-4 w-4" />
-              </div>
-            )}
-            <div className="flex-1">
+            {/* Avatar */}
+            <div className="flex-shrink-0">
+              {customization.avatar_url ? (
+                <img 
+                  src={customization.avatar_url} 
+                  alt={customization.widget_name || 'Avatar'}
+                  className="w-10 h-10 rounded-full object-cover border-2 shadow-sm"
+                  style={{ borderColor: customization.secondary_color + '60' }}
+                  loading="lazy"
+                  onError={(e) => {
+                    console.log('❌ Erro ao carregar avatar no header:', customization.avatar_url);
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div 
+                  className="w-10 h-10 rounded-full flex items-center justify-center border-2 shadow-sm"
+                  style={{ 
+                    backgroundColor: customization.secondary_color + '20',
+                    borderColor: customization.secondary_color + '60' 
+                  }}
+                >
+                  <MessageCircle className="h-5 w-5" style={{ color: customization.secondary_color }} />
+                </div>
+              )}
+            </div>
+
+            {/* Nome e Status */}
+            <div className="flex-1 min-w-0 space-y-1">
               <div 
-                className="font-medium text-sm" 
+                className="font-bold text-base truncate leading-tight"
                 style={{ 
                   color: customization.secondary_color,
-                  fontWeight: '600',
-                  lineHeight: '1.2'
+                  textShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                  filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))'
                 }}
               >
                 {customization.widget_name || 'Assistente Virtual'}
               </div>
               <div 
-                className="text-xs opacity-80" 
+                className="text-xs flex items-center gap-1"
                 style={{ 
                   color: customization.secondary_color,
-                  fontSize: '11px'
+                  opacity: 0.9
                 }}
               >
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
                 Online agora
               </div>
             </div>
