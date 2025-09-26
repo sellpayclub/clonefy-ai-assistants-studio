@@ -1,4 +1,4 @@
-import React, { useState, memo, useMemo, useEffect } from 'react';
+import React, { useState, memo, useMemo, useEffect, useCallback, useRef } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
 import TypingIndicator from '../TypingIndicator';
 
@@ -25,9 +25,11 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
     { role: 'bot', content: 'Claro! Ficarei feliz em explicar nossos serviços. O que especificamente você gostaria de saber?' }
   ]);
   const [isTyping, setIsTyping] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Simular respostas automáticas
-  const simulateResponse = (userMessage: string) => {
+  // Simular respostas automáticas - memoizada para performance
+  const simulateResponse = useCallback((userMessage: string) => {
     const responses = [
       'Obrigado pela sua mensagem! Como posso ajudar você melhor?',
       'Entendo sua situação. Vamos encontrar a melhor solução para você.',
@@ -38,13 +40,18 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
     ];
     
     return responses[Math.floor(Math.random() * responses.length)];
-  };
+  }, []);
 
   // Função para enviar mensagem
-  const handleSendMessage = () => {
+  const handleSendMessage = useCallback(() => {
     if (!message.trim()) return;
 
     const userMessage = message.trim();
+    
+    // Limpar timeout anterior se existir
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     
     // Adicionar mensagem do usuário
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
@@ -52,29 +59,64 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
     setIsTyping(true);
 
     // Simular resposta do bot após delay
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       const botResponse = simulateResponse(userMessage);
       setMessages(prev => [...prev, { role: 'bot', content: botResponse }]);
       setIsTyping(false);
+      timeoutRef.current = null;
     }, 1500 + Math.random() * 1000); // 1.5-2.5s delay
-  };
+  }, [message, simulateResponse]);
 
   // Handle Enter key
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
-  };
+  }, [handleSendMessage]);
 
-  // Atualizar mensagem de boas-vindas quando customization mudar
+  // Scroll automático para nova mensagem
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  // Efeito para scroll automático quando mensagens mudam
   useEffect(() => {
-    setMessages([
-      { role: 'bot', content: customization.welcome_message || 'Olá! Como posso ajudar você hoje?' },
-      { role: 'user', content: 'Gostaria de saber mais sobre os serviços.' },
-      { role: 'bot', content: 'Claro! Ficarei feliz em explicar nossos serviços. O que especificamente você gostaria de saber?' }
-    ]);
+    scrollToBottom();
+  }, [messages, isTyping, scrollToBottom]);
+
+  // Atualizar APENAS a primeira mensagem (welcome) quando customization mudar
+  useEffect(() => {
+    setMessages(prev => {
+      if (prev.length === 0) return prev;
+      
+      // Só atualizar a primeira mensagem se ela ainda for a mensagem de boas-vindas padrão
+      const firstMsg = prev[0];
+      if (firstMsg.role === 'bot' && (
+        firstMsg.content === 'Olá! Como posso ajudar você hoje?' ||
+        firstMsg.content.includes('Gostaria de saber mais sobre os serviços')
+      )) {
+        // Reset completo apenas se ainda estiver com mensagens iniciais
+        return [
+          { role: 'bot', content: customization.welcome_message || 'Olá! Como posso ajudar você hoje?' },
+          { role: 'user', content: 'Gostaria de saber mais sobre os serviços.' },
+          { role: 'bot', content: 'Claro! Ficarei feliz em explicar nossos serviços. O que especificamente você gostaria de saber?' }
+        ];
+      }
+      
+      // Se já houver interação do usuário, manter mensagens
+      return prev;
+    });
   }, [customization.welcome_message]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   // Memoize styles para evitar recalculos
   const styles = useMemo(() => ({
@@ -224,26 +266,31 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
                 </div>
               </div>
             )}
+            
+            {/* Elemento para scroll automático */}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}
           <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="text-xs text-center text-muted-foreground mb-2">
-              💬 Preview Interativo - Digite para testar
-            </div>
+                <div className="text-xs text-center text-muted-foreground mb-2" id="chat-input-help">
+                  💬 Preview Interativo - Digite para testar
+                </div>
             <div className="flex gap-2">
-              <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Digite sua mensagem de teste..."
-                className="flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
-                style={{
-                  borderColor: `${customization.primary_color}40`
-                }}
-                disabled={isTyping}
-              />
+                  <input
+                    type="text"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Digite sua mensagem de teste..."
+                    className="flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                    style={{
+                      borderColor: `${customization.primary_color}40`
+                    }}
+                    disabled={isTyping}
+                    aria-label="Campo de mensagem para testar o chat"
+                    aria-describedby="chat-input-help"
+                  />
               <button
                 onClick={handleSendMessage}
                 disabled={!message.trim() || isTyping}
