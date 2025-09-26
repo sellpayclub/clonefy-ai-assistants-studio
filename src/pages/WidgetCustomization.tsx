@@ -15,6 +15,7 @@ import OptimizedWidgetPreview from '@/components/widget/OptimizedWidgetPreview';
 import ColorPicker from '@/components/widget/ColorPicker';
 import ImageUpload from '@/components/widget/ImageUpload';
 import { useOptimizedWidgetCustomization } from '@/hooks/useOptimizedWidgetCustomization';
+import { useRealtimePreview } from '@/hooks/useRealtimePreview';
 
 const WidgetCustomization = () => {
   const [searchParams] = useSearchParams();
@@ -43,13 +44,14 @@ const WidgetCustomization = () => {
     is_active: true
   });
 
-  // Memoize preview data para melhor performance
-  const previewData = useMemo(() => formData, [formData]);
+  // Hook para preview em tempo real otimizado
+  const { previewData, updatePreviewData, resetPreviewData } = useRealtimePreview(formData);
 
-  // Debounced update para preview em tempo real
+  // Update formData e preview simultaneamente
   const updateFormData = useCallback((field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  }, []);
+    updatePreviewData(field as any, value);
+  }, [updatePreviewData]);
 
   useEffect(() => {
     loadAssistants();
@@ -75,8 +77,9 @@ const WidgetCustomization = () => {
         is_active: customization.is_active !== false
       };
       setFormData(newFormData);
+      resetPreviewData(newFormData); // Sincronizar preview
     }
-  }, [customization]);
+  }, [customization, resetPreviewData]);
 
   // Carregar customização quando assistente muda
   useEffect(() => {
@@ -382,10 +385,11 @@ const WidgetCustomization = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <OptimizedWidgetPreview 
-                    customization={previewData} 
-                    key={`preview-${selectedAssistant}-${Date.now()}`} 
-                  />
+                  <div className="relative overflow-hidden">
+                    <OptimizedWidgetPreview 
+                      customization={previewData}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             </div>

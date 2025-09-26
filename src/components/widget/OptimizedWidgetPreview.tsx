@@ -73,10 +73,10 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
           <div className="text-xs text-gray-400 mb-2 text-center">Preview do Widget</div>
         </div>
 
-        {/* Chat Button - ABSOLUTE, não FIXED */}
+        {/* Chat Button - Z-INDEX ALTO PARA PREVIEW */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`absolute ${customization.button_position === 'left' ? 'left-6' : 'right-6'} bottom-6 z-20 w-14 h-14 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110`}
+          className={`absolute ${customization.button_position === 'left' ? 'left-6' : 'right-6'} bottom-6 z-[10000] w-14 h-14 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110`}
           style={styles.button}
           aria-label={isOpen ? "Fechar chat" : "Abrir chat"}
         >
@@ -94,10 +94,10 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
           )}
         </button>
 
-        {/* Chat Window - ABSOLUTE, não FIXED */}
+        {/* Chat Window - Z-INDEX ALTO PARA PREVIEW */}
         {isOpen && (
           <div
-            className={`absolute ${customization.button_position === 'left' ? 'left-6' : 'right-6'} bottom-24 z-30 w-80 h-96 rounded-xl shadow-2xl border overflow-hidden transition-all duration-300`}
+            className={`absolute ${customization.button_position === 'left' ? 'left-6' : 'right-6'} bottom-24 z-[10001] w-80 h-96 rounded-xl shadow-2xl border overflow-hidden transition-all duration-300`}
             style={styles.chat}
           >
           {/* Header */}

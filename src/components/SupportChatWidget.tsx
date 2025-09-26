@@ -18,11 +18,11 @@ const SupportChatWidget = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Pré-carrega o iframe para abertura instantânea
+  // Pré-carrega o iframe para abertura instantânea (melhorado)
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoaded(true);
-    }, 1000); // Carrega após 1 segundo para não impactar o carregamento inicial
+    }, 2000); // Aumentado para 2 segundos para melhor performance
     
     return () => clearTimeout(timer);
   }, []);
@@ -37,7 +37,7 @@ const SupportChatWidget = () => {
       <button
         onClick={toggleChat}
         className={`
-          fixed bottom-24 right-20 z-[9999] 
+          fixed bottom-24 right-20 z-[9997] 
           w-14 h-14 rounded-full 
           bg-gradient-to-r from-blue-600 to-blue-500
           hover:from-blue-700 hover:to-blue-600
@@ -59,7 +59,7 @@ const SupportChatWidget = () => {
       {/* Support Chat Iframe - Pré-carregado para abertura instantânea */}
       <div
         className={`
-          fixed z-[9998] overflow-hidden
+          fixed z-[9996] overflow-hidden
           transition-all duration-200 ease-out
           ${isOpen
             ? isMobile 
