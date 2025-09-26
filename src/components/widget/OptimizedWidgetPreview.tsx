@@ -28,6 +28,14 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Debug - log customization data
+  console.log('🎨 Widget Customization Data:', {
+    widget_name: customization.widget_name,
+    avatar_url: customization.avatar_url,
+    welcome_message: customization.welcome_message,
+    is_active: customization.is_active
+  });
+
   // Simular respostas automáticas - memoizada para performance
   const simulateResponse = useCallback((userMessage: string) => {
     const responses = [
@@ -213,16 +221,26 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
             className="p-4 flex items-center gap-3"
             style={styles.header}
           >
-            {customization.avatar_url && (
+            {customization.avatar_url ? (
               <img 
                 src={customization.avatar_url} 
-                alt={customization.widget_name}
+                alt={customization.widget_name || 'Avatar'}
                 className="w-8 h-8 rounded-full object-cover"
                 loading="lazy"
+                onError={(e) => {
+                  console.log('❌ Erro ao carregar avatar:', customization.avatar_url);
+                  e.currentTarget.style.display = 'none';
+                }}
               />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
+                <MessageCircle className="h-4 w-4" />
+              </div>
             )}
             <div>
-              <div className="font-medium text-sm">{customization.widget_name}</div>
+              <div className="font-medium text-sm">
+                {customization.widget_name || 'Assistente Virtual'}
+              </div>
               <div className="text-xs opacity-80">Online agora</div>
             </div>
           </div>
@@ -231,13 +249,25 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
           <div className="flex-1 p-4 space-y-4" style={{ height: '240px', overflowY: 'auto' }}>
             {messages.map((msg, index) => (
               <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'items-start gap-2'}`}>
-                {msg.role === 'bot' && customization.avatar_url && (
-                  <img 
-                    src={customization.avatar_url} 
-                    alt={customization.widget_name}
-                    className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-1"
-                    loading="lazy"
-                  />
+                {msg.role === 'bot' && (
+                  <div className="flex-shrink-0">
+                    {customization.avatar_url ? (
+                      <img 
+                        src={customization.avatar_url} 
+                        alt={customization.widget_name || 'Avatar'}
+                        className="w-6 h-6 rounded-full object-cover mt-1"
+                        loading="lazy"
+                        onError={(e) => {
+                          console.log('❌ Erro ao carregar avatar na mensagem:', customization.avatar_url);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center mt-1">
+                        <MessageCircle className="h-3 w-3" />
+                      </div>
+                    )}
+                  </div>
                 )}
                 <div 
                   className="max-w-xs px-3 py-2 rounded-lg text-sm"
@@ -251,13 +281,17 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
             {/* Typing Indicator */}
             {isTyping && (
               <div className="flex items-start gap-2">
-                {customization.avatar_url && (
+                {customization.avatar_url ? (
                   <img 
                     src={customization.avatar_url} 
-                    alt={customization.widget_name}
+                    alt={customization.widget_name || 'Avatar'}
                     className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-1"
                     loading="lazy"
                   />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center mt-1">
+                    <MessageCircle className="h-3 w-3" />
+                  </div>
                 )}
                 <div className="flex space-x-1 items-center px-3 py-2 rounded-lg" style={styles.botMessage}>
                   <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0ms' }}></div>
