@@ -59,47 +59,48 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
   }
 
   return (
-    <div className="relative bg-gray-100 dark:bg-gray-800 rounded-lg p-8 min-h-[500px] overflow-hidden">
+    <div className="relative bg-gray-100 dark:bg-gray-800 rounded-lg p-4 min-h-[600px] overflow-visible">
       {/* Simulação de uma página web */}
-      <div className="bg-white dark:bg-gray-900 rounded-md p-6 h-full shadow-sm relative">
-        <div className="space-y-4">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse"></div>
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse"></div>
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6 animate-pulse"></div>
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3 animate-pulse"></div>
+      <div className="bg-white dark:bg-gray-900 rounded-md p-4 h-96 shadow-sm relative overflow-visible">
+        <div className="space-y-3 mb-4">
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse"></div>
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse"></div>
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6 animate-pulse"></div>
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3 animate-pulse"></div>
         </div>
         
-        <div className="absolute top-4 left-4 right-4 bottom-4 pointer-events-none">
-          <div className="text-xs text-gray-400 mb-2 text-center">Preview do Widget</div>
+        <div className="absolute top-2 left-2 right-2 pointer-events-none">
+          <div className="text-xs text-gray-400 text-center">Preview do Widget</div>
         </div>
 
-        {/* Chat Button - Z-INDEX ALTO PARA PREVIEW */}
+        {/* Chat Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`absolute ${customization.button_position === 'left' ? 'left-6' : 'right-6'} bottom-6 z-[10000] w-14 h-14 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110`}
+          className={`absolute ${customization.button_position === 'left' ? 'left-4' : 'right-4'} bottom-4 w-12 h-12 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 z-10`}
           style={styles.button}
           aria-label={isOpen ? "Fechar chat" : "Abrir chat"}
         >
           {isOpen ? (
-            <X size={20} />
+            <X size={18} />
           ) : customization.button_icon_url ? (
             <img 
               src={customization.button_icon_url} 
               alt="Chat" 
-              className="w-6 h-6 object-cover rounded"
+              className="w-5 h-5 object-cover rounded"
               loading="lazy"
             />
           ) : (
-            <MessageCircle size={20} />
+            <MessageCircle size={18} />
           )}
         </button>
+      </div>
 
-        {/* Chat Window - Z-INDEX ALTO PARA PREVIEW */}
-        {isOpen && (
-          <div
-            className={`absolute ${customization.button_position === 'left' ? 'left-6' : 'right-6'} bottom-24 z-[10001] w-80 h-96 rounded-xl shadow-2xl border overflow-hidden transition-all duration-300`}
-            style={styles.chat}
-          >
+      {/* Chat Window - FORA DO CONTAINER DA PÁGINA SIMULADA */}
+      {isOpen && (
+        <div
+          className={`absolute ${customization.button_position === 'left' ? 'left-8' : 'right-8'} top-8 w-72 h-80 rounded-xl shadow-2xl border overflow-hidden transition-all duration-300 z-20`}
+          style={styles.chat}
+        >
           {/* Header */}
           <div 
             className="p-4 flex items-center gap-3"
@@ -189,10 +190,9 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
                 <Send size={16} />
               </button>
             </div>
-          </div>
-          </div>
-        )}
-      </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 });

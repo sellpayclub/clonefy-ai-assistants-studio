@@ -385,7 +385,7 @@ const WidgetCustomization = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="relative overflow-hidden">
+                  <div className="relative overflow-visible min-h-[600px]">
                     <OptimizedWidgetPreview 
                       customization={previewData}
                     />
