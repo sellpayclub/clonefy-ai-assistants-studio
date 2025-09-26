@@ -1,5 +1,6 @@
-import React, { useState, memo, useMemo } from 'react';
+import React, { useState, memo, useMemo, useEffect } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
+import TypingIndicator from '../TypingIndicator';
 
 interface WidgetPreviewProps {
   customization: {
@@ -18,6 +19,62 @@ interface WidgetPreviewProps {
 const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customization }) => {
   const [isOpen, setIsOpen] = useState(true); // Deixar aberto por padrão
   const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState([
+    { role: 'bot', content: customization.welcome_message || 'Olá! Como posso ajudar você hoje?' },
+    { role: 'user', content: 'Gostaria de saber mais sobre os serviços.' },
+    { role: 'bot', content: 'Claro! Ficarei feliz em explicar nossos serviços. O que especificamente você gostaria de saber?' }
+  ]);
+  const [isTyping, setIsTyping] = useState(false);
+
+  // Simular respostas automáticas
+  const simulateResponse = (userMessage: string) => {
+    const responses = [
+      'Obrigado pela sua mensagem! Como posso ajudar você melhor?',
+      'Entendo sua situação. Vamos encontrar a melhor solução para você.',
+      'Interessante! Conte-me mais detalhes sobre isso.',
+      'Perfeito! Vou verificar as opções disponíveis para você.',
+      'Claro! Ficarei feliz em esclarecer suas dúvidas.',
+      'Excelente pergunta! Deixe-me explicar isso para você.',
+    ];
+    
+    return responses[Math.floor(Math.random() * responses.length)];
+  };
+
+  // Função para enviar mensagem
+  const handleSendMessage = () => {
+    if (!message.trim()) return;
+
+    const userMessage = message.trim();
+    
+    // Adicionar mensagem do usuário
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setMessage('');
+    setIsTyping(true);
+
+    // Simular resposta do bot após delay
+    setTimeout(() => {
+      const botResponse = simulateResponse(userMessage);
+      setMessages(prev => [...prev, { role: 'bot', content: botResponse }]);
+      setIsTyping(false);
+    }, 1500 + Math.random() * 1000); // 1.5-2.5s delay
+  };
+
+  // Handle Enter key
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  // Atualizar mensagem de boas-vindas quando customization mudar
+  useEffect(() => {
+    setMessages([
+      { role: 'bot', content: customization.welcome_message || 'Olá! Como posso ajudar você hoje?' },
+      { role: 'user', content: 'Gostaria de saber mais sobre os serviços.' },
+      { role: 'bot', content: 'Claro! Ficarei feliz em explicar nossos serviços. O que especificamente você gostaria de saber?' }
+    ]);
+  }, [customization.welcome_message]);
 
   // Memoize styles para evitar recalculos
   const styles = useMemo(() => ({
@@ -130,68 +187,67 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
 
           {/* Messages */}
           <div className="flex-1 p-4 space-y-4" style={{ height: '240px', overflowY: 'auto' }}>
-            {/* Welcome message */}
-            <div className="flex items-start gap-2">
-              {customization.avatar_url && (
-                <img 
-                  src={customization.avatar_url} 
-                  alt={customization.widget_name}
-                  className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-1"
-                  loading="lazy"
-                />
-              )}
-              <div 
-                className="max-w-xs px-3 py-2 rounded-lg text-sm"
-                style={styles.botMessage}
-              >
-                {customization.welcome_message}
+            {messages.map((msg, index) => (
+              <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'items-start gap-2'}`}>
+                {msg.role === 'bot' && customization.avatar_url && (
+                  <img 
+                    src={customization.avatar_url} 
+                    alt={customization.widget_name}
+                    className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-1"
+                    loading="lazy"
+                  />
+                )}
+                <div 
+                  className="max-w-xs px-3 py-2 rounded-lg text-sm"
+                  style={msg.role === 'user' ? styles.userMessage : styles.botMessage}
+                >
+                  {msg.content}
+                </div>
               </div>
-            </div>
-
-            {/* Sample user message */}
-            <div className="flex justify-end">
-              <div 
-                className="max-w-xs px-3 py-2 rounded-lg text-sm"
-                style={styles.userMessage}
-              >
-                Olá! Gostaria de saber mais sobre os serviços.
+            ))}
+            
+            {/* Typing Indicator */}
+            {isTyping && (
+              <div className="flex items-start gap-2">
+                {customization.avatar_url && (
+                  <img 
+                    src={customization.avatar_url} 
+                    alt={customization.widget_name}
+                    className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-1"
+                    loading="lazy"
+                  />
+                )}
+                <div className="flex space-x-1 items-center px-3 py-2 rounded-lg" style={styles.botMessage}>
+                  <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '300ms' }}></div>
+                </div>
               </div>
-            </div>
-
-            {/* Sample bot response */}
-            <div className="flex items-start gap-2">
-              {customization.avatar_url && (
-                <img 
-                  src={customization.avatar_url} 
-                  alt={customization.widget_name}
-                  className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-1"
-                  loading="lazy"
-                />
-              )}
-              <div 
-                className="max-w-xs px-3 py-2 rounded-lg text-sm"
-                style={styles.botMessage}
-              >
-                Claro! Ficarei feliz em ajudar você com informações sobre nossos serviços. O que você gostaria de saber especificamente?
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Input */}
           <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="text-xs text-center text-muted-foreground mb-2">
+              💬 Preview Interativo - Digite para testar
+            </div>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Digite sua mensagem..."
+                onKeyPress={handleKeyPress}
+                placeholder="Digite sua mensagem de teste..."
                 className="flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
                 style={{
                   borderColor: `${customization.primary_color}40`
                 }}
+                disabled={isTyping}
               />
               <button
-                className="px-3 py-2 rounded-lg text-sm transition-colors"
+                onClick={handleSendMessage}
+                disabled={!message.trim() || isTyping}
+                className="px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={styles.userMessage}
                 aria-label="Enviar mensagem"
               >
