@@ -237,11 +237,26 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
                 <MessageCircle className="h-4 w-4" />
               </div>
             )}
-            <div>
-              <div className="font-medium text-sm">
+            <div className="flex-1">
+              <div 
+                className="font-medium text-sm" 
+                style={{ 
+                  color: customization.secondary_color,
+                  fontWeight: '600',
+                  lineHeight: '1.2'
+                }}
+              >
                 {customization.widget_name || 'Assistente Virtual'}
               </div>
-              <div className="text-xs opacity-80">Online agora</div>
+              <div 
+                className="text-xs opacity-80" 
+                style={{ 
+                  color: customization.secondary_color,
+                  fontSize: '11px'
+                }}
+              >
+                Online agora
+              </div>
             </div>
           </div>
 
