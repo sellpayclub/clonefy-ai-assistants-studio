@@ -19,11 +19,6 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
 
-  // Debug do estado isOpen
-  React.useEffect(() => {
-    console.log('Preview widget isOpen changed:', isOpen);
-  }, [isOpen]);
-
   // Memoize styles para evitar recalculos
   const styles = useMemo(() => ({
     button: {
@@ -80,10 +75,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
 
         {/* Chat Button - ABSOLUTE, não FIXED */}
         <button
-          onClick={() => {
-            console.log('Preview button clicked, isOpen:', isOpen);
-            setIsOpen(!isOpen);
-          }}
+          onClick={() => setIsOpen(!isOpen)}
           className={`absolute ${customization.button_position === 'left' ? 'left-6' : 'right-6'} bottom-6 z-20 w-14 h-14 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110`}
           style={styles.button}
           aria-label={isOpen ? "Fechar chat" : "Abrir chat"}
