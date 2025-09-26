@@ -15,7 +15,6 @@ import OptimizedWidgetPreview from '@/components/widget/OptimizedWidgetPreview';
 import ColorPicker from '@/components/widget/ColorPicker';
 import ImageUpload from '@/components/widget/ImageUpload';
 import { useOptimizedWidgetCustomization } from '@/hooks/useOptimizedWidgetCustomization';
-import { useRealtimePreview } from '@/hooks/useRealtimePreview';
 import AppSidebar from '@/components/AppSidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
@@ -46,14 +45,10 @@ const WidgetCustomization = () => {
     is_active: true
   });
 
-  // Hook para preview em tempo real otimizado
-  const { previewData, updatePreviewData, resetPreviewData } = useRealtimePreview(formData);
-
-  // Update formData e preview simultaneamente
+  // Update formData diretamente - removido preview separado para evitar conflitos
   const updateFormData = useCallback((field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    updatePreviewData(field as any, value);
-  }, [updatePreviewData]);
+  }, []);
 
   useEffect(() => {
     loadAssistants();
@@ -85,11 +80,10 @@ const WidgetCustomization = () => {
       });
       
       setFormData(newFormData);
-      resetPreviewData(newFormData); // Sincronizar preview
       
-      console.log('✅ Form and preview data synchronized');
+      console.log('✅ Form data synchronized');
     }
-  }, [customization, resetPreviewData]);
+  }, [customization]);
 
   // Carregar customização quando assistente muda
   useEffect(() => {
@@ -400,7 +394,7 @@ const WidgetCustomization = () => {
                 <CardContent>
                   <div className="relative overflow-visible min-h-[600px]">
                     <OptimizedWidgetPreview 
-                      customization={previewData}
+                      customization={formData}
                     />
                   </div>
                 </CardContent>

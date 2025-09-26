@@ -28,15 +28,11 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Debug essencial - dados do widget
-  console.log('🎨 Widget Preview:', {
-    name: customization.widget_name,
-    hasAvatar: !!customization.avatar_url,
-    colors: {
-      primary: customization.primary_color,
-      secondary: customization.secondary_color
-    }
-  });
+  // Só fazer log quando houver mudanças importantes
+  const hasValidData = customization.widget_name && customization.widget_name !== 'Assistente Virtual';
+  if (hasValidData) {
+    console.log('✅ Widget carregado:', customization.widget_name, customization.avatar_url ? '(com avatar)' : '(sem avatar)');
+  }
 
   // Simular respostas automáticas - memoizada para performance
   const simulateResponse = useCallback((userMessage: string) => {
