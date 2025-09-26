@@ -1,6 +1,5 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,15 +13,15 @@ serve(async (req) => {
   }
 
   try {
+    const body = await req.json();
     const { 
       assistantId, 
       action, 
       sessionId,
       conversationId,
       visitorIp,
-      userAgent,
-      messagesCount 
-    } = await req.json();
+      userAgent
+    } = body;
 
     if (!assistantId) {
       return new Response(
@@ -62,8 +61,10 @@ serve(async (req) => {
 
     switch (action) {
       case 'start_session':
+        console.log('Iniciando sessão:', { sessionId, assistantId });
+        
         // Registrar nova sessão
-        const { data: session, error: sessionError } = await supabase
+        const { error: sessionError } = await supabase
           .from('widget_sessions')
           .insert({
             session_id: sessionId,
@@ -73,35 +74,54 @@ serve(async (req) => {
             visitor_ip: visitorIp || null,
             user_agent: userAgent || null,
             messages_count: 0
-          })
-          .select()
-          .single();
+          });
 
         if (sessionError) {
           console.error('Erro ao criar sessão:', sessionError);
         }
 
-        // Atualizar analytics diários - incrementar visitantes únicos
-        await supabase
+        // Incrementar visitantes únicos do dia
+        const { data: existingAnalytics } = await supabase
           .from('widget_analytics')
-          .upsert({
-            assistant_id: assistantId,
-            user_id: userId,
-            date: today,
-            unique_visitors: 1
-          }, {
-            onConflict: 'assistant_id,date'
-          });
+          .select('*')
+          .eq('assistant_id', assistantId)
+          .eq('date', today)
+          .single();
+
+        if (existingAnalytics) {
+          await supabase
+            .from('widget_analytics')
+            .update({
+              unique_visitors: existingAnalytics.unique_visitors + 1,
+              updated_at: new Date().toISOString()
+            })
+            .eq('assistant_id', assistantId)
+            .eq('date', today);
+        } else {
+          await supabase
+            .from('widget_analytics')
+            .insert({
+              assistant_id: assistantId,
+              user_id: userId,
+              date: today,
+              unique_visitors: 1,
+              total_conversations: 0,
+              total_messages: 0,
+              total_user_messages: 0,
+              total_bot_messages: 0
+            });
+        }
 
         break;
 
       case 'end_session':
-        // Atualizar sessão com fim e contagem de mensagens
+        console.log('Finalizando sessão:', { sessionId });
+        
+        // Atualizar sessão com fim
         const { error: endSessionError } = await supabase
           .from('widget_sessions')
           .update({
-            end_time: new Date().toISOString(),
-            messages_count: messagesCount || 0
+            end_time: new Date().toISOString()
           })
           .eq('session_id', sessionId)
           .eq('assistant_id', assistantId);
@@ -113,57 +133,99 @@ serve(async (req) => {
         break;
 
       case 'new_conversation':
+        console.log('Nova conversa:', { conversationId, assistantId });
+        
         // Incrementar conversas do dia
-        const { error: convError } = await supabase
-          .rpc('increment_daily_stat', {
-            p_assistant_id: assistantId,
-            p_user_id: userId,
-            p_date: today,
-            p_field: 'total_conversations',
-            p_increment: 1
-          });
+        const { data: convAnalytics } = await supabase
+          .from('widget_analytics')
+          .select('*')
+          .eq('assistant_id', assistantId)
+          .eq('date', today)
+          .single();
 
-        if (convError) {
-          console.error('Erro ao incrementar conversas:', convError);
-          // Fallback manual se a função RPC não existir
+        if (convAnalytics) {
           await supabase
             .from('widget_analytics')
-            .upsert({
+            .update({
+              total_conversations: convAnalytics.total_conversations + 1,
+              updated_at: new Date().toISOString()
+            })
+            .eq('assistant_id', assistantId)
+            .eq('date', today);
+        } else {
+          await supabase
+            .from('widget_analytics')
+            .insert({
               assistant_id: assistantId,
               user_id: userId,
               date: today,
-              total_conversations: 1
-            }, {
-              onConflict: 'assistant_id,date'
+              unique_visitors: 0,
+              total_conversations: 1,
+              total_messages: 0,
+              total_user_messages: 0,
+              total_bot_messages: 0
             });
         }
 
         break;
 
       case 'new_message':
-        const { messageType } = await req.json();
+        const messageType = body.messageType || 'user';
+        console.log('Nova mensagem:', { messageType, assistantId });
         
-        // Incrementar mensagens totais
-        await supabase
+        // Incrementar mensagens do dia
+        const { data: msgAnalytics } = await supabase
           .from('widget_analytics')
-          .upsert({
-            assistant_id: assistantId,
-            user_id: userId,
-            date: today,
-            total_messages: 1,
-            total_user_messages: messageType === 'user' ? 1 : 0,
-            total_bot_messages: messageType === 'assistant' ? 1 : 0
-          }, {
-            onConflict: 'assistant_id,date'
-          });
+          .select('*')
+          .eq('assistant_id', assistantId)
+          .eq('date', today)
+          .single();
 
-        // Atualizar contagem na sessão
-        if (sessionId) {
+        if (msgAnalytics) {
           await supabase
-            .rpc('increment_session_messages', {
-              p_session_id: sessionId,
-              p_assistant_id: assistantId
+            .from('widget_analytics')
+            .update({
+              total_messages: msgAnalytics.total_messages + 1,
+              total_user_messages: msgAnalytics.total_user_messages + (messageType === 'user' ? 1 : 0),
+              total_bot_messages: msgAnalytics.total_bot_messages + (messageType === 'assistant' ? 1 : 0),
+              updated_at: new Date().toISOString()
+            })
+            .eq('assistant_id', assistantId)
+            .eq('date', today);
+        } else {
+          await supabase
+            .from('widget_analytics')
+            .insert({
+              assistant_id: assistantId,
+              user_id: userId,
+              date: today,
+              unique_visitors: 0,
+              total_conversations: 0,
+              total_messages: 1,
+              total_user_messages: messageType === 'user' ? 1 : 0,
+              total_bot_messages: messageType === 'assistant' ? 1 : 0
             });
+        }
+
+        // Atualizar contagem na sessão se existir
+        if (sessionId) {
+          const { data: sessionData } = await supabase
+            .from('widget_sessions')
+            .select('messages_count')
+            .eq('session_id', sessionId)
+            .eq('assistant_id', assistantId)
+            .single();
+
+          if (sessionData) {
+            await supabase
+              .from('widget_sessions')
+              .update({
+                messages_count: sessionData.messages_count + 1,
+                updated_at: new Date().toISOString()
+              })
+              .eq('session_id', sessionId)
+              .eq('assistant_id', assistantId);
+          }
         }
 
         break;
@@ -190,7 +252,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Erro interno do servidor',
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error'
       }),
       { 
         status: 500, 

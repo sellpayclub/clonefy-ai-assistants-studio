@@ -104,7 +104,7 @@ serve(async (req) => {
           .select('openai_thread_id')
           .eq('id', currentConversationId)
           .single();
-        threadId = conversation.openai_thread_id;
+        threadId = conversation?.openai_thread_id;
       }
 
       // Parallel operations for better performance
@@ -244,7 +244,7 @@ serve(async (req) => {
           openai_message_id: assistantMessage.id
         }).then(() => {
           console.log('Assistant message saved to database');
-        }).catch((error) => {
+        }).catch((error: any) => {
           console.error('Error saving assistant message:', error);
         });
 
@@ -267,7 +267,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in widget-chat function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
