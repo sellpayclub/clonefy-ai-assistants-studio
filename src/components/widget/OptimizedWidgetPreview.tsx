@@ -59,9 +59,9 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
   }
 
   return (
-    <div className="relative bg-gray-100 dark:bg-gray-800 rounded-lg p-8 min-h-[400px] overflow-hidden">
+    <div className="relative bg-gray-100 dark:bg-gray-800 rounded-lg p-8 min-h-[500px] overflow-hidden">
       {/* Simulação de uma página web */}
-      <div className="bg-white dark:bg-gray-900 rounded-md p-6 h-full shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-md p-6 h-full shadow-sm relative">
         <div className="space-y-4">
           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse"></div>
           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse"></div>
@@ -72,15 +72,14 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
         <div className="absolute top-4 left-4 right-4 bottom-4 pointer-events-none">
           <div className="text-xs text-gray-400 mb-2 text-center">Preview do Widget</div>
         </div>
-      </div>
 
-      {/* Chat Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 z-50 w-14 h-14 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110"
-        style={styles.button}
-        aria-label={isOpen ? "Fechar chat" : "Abrir chat"}
-      >
+        {/* Chat Button - ABSOLUTE, não FIXED */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className={`absolute ${customization.button_position === 'left' ? 'left-6' : 'right-6'} bottom-6 z-20 w-14 h-14 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110`}
+          style={styles.button}
+          aria-label={isOpen ? "Fechar chat" : "Abrir chat"}
+        >
         {isOpen ? (
           <X size={20} />
         ) : customization.button_icon_url ? (
@@ -95,12 +94,12 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
         )}
       </button>
 
-      {/* Chat Window */}
-      {isOpen && (
-        <div
-          className="fixed bottom-24 z-40 w-80 h-96 rounded-xl shadow-2xl border overflow-hidden transition-all duration-300 animate-in slide-in-from-bottom-2"
-          style={styles.chat}
-        >
+        {/* Chat Window - ABSOLUTE, não FIXED */}
+        {isOpen && (
+          <div
+            className={`absolute ${customization.button_position === 'left' ? 'left-6' : 'right-6'} bottom-24 z-30 w-80 h-96 rounded-xl shadow-2xl border overflow-hidden transition-all duration-300`}
+            style={styles.chat}
+          >
           {/* Header */}
           <div 
             className="p-4 flex items-center gap-3"
@@ -191,8 +190,9 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
               </button>
             </div>
           </div>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 });
