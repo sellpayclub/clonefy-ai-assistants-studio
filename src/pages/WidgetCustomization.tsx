@@ -16,6 +16,8 @@ import ColorPicker from '@/components/widget/ColorPicker';
 import ImageUpload from '@/components/widget/ImageUpload';
 import { useOptimizedWidgetCustomization } from '@/hooks/useOptimizedWidgetCustomization';
 import { useRealtimePreview } from '@/hooks/useRealtimePreview';
+import AppSidebar from '@/components/AppSidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
 const WidgetCustomization = () => {
   const [searchParams] = useSearchParams();
@@ -161,51 +163,50 @@ const WidgetCustomization = () => {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/dashboard')} 
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar ao Dashboard
-          </Button>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Personalizar Widget de Chat
-          </h1>
-          <p className="text-muted-foreground">
-            Customize a aparência do seu widget de chat flutuante
-          </p>
-        </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        
+        <main className="flex-1 p-3 sm:p-4 md:p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <SidebarTrigger />
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+                Personalizar Widget de Chat
+              </h1>
+              <p className="text-muted-foreground text-sm md:text-base">
+                Customize a aparência do seu widget de chat flutuante
+              </p>
+            </div>
+          </div>
 
-        {/* Seletor de Assistente */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Selecionar Assistente
-            </CardTitle>
-            <CardDescription>
-              Escolha qual assistente você quer personalizar
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Select value={selectedAssistant} onValueChange={setSelectedAssistant}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione um assistente" />
-              </SelectTrigger>
-              <SelectContent>
-                {assistants.map((assistant) => (
-                  <SelectItem key={assistant.id} value={assistant.id}>
-                    {assistant.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
+          <div className="max-w-6xl mx-auto">
+            {/* Seletor de Assistente */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Selecionar Assistente
+                </CardTitle>
+                <CardDescription>
+                  Escolha qual assistente você quer personalizar
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Select value={selectedAssistant} onValueChange={setSelectedAssistant}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione um assistente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {assistants.map((assistant) => (
+                      <SelectItem key={assistant.id} value={assistant.id}>
+                        {assistant.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
 
         {selectedAssistant && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -400,7 +401,9 @@ const WidgetCustomization = () => {
           </div>
         )}
       </div>
-    </div>
+    </main>
+  </div>
+</SidebarProvider>
   );
 };
 
