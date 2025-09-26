@@ -16,7 +16,7 @@ interface WidgetPreviewProps {
 }
 
 const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customization }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true); // Deixar aberto por padrão
   const [message, setMessage] = useState('');
 
   // Memoize styles para evitar recalculos
@@ -72,6 +72,14 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
         <div className="absolute top-2 left-2 right-2 pointer-events-none">
           <div className="text-xs text-gray-400 text-center">Preview do Widget</div>
         </div>
+
+        {/* Dica visual quando chat está fechado */}
+        {!isOpen && (
+          <div className={`absolute ${customization.button_position === 'left' ? 'left-20' : 'right-20'} bottom-8 bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs shadow-lg animate-pulse z-10`}>
+            👆 Clique para testar o chat
+            <div className={`absolute top-1/2 -translate-y-1/2 ${customization.button_position === 'left' ? '-left-1' : '-right-1'} w-2 h-2 bg-primary rotate-45`}></div>
+          </div>
+        )}
 
         {/* Chat Button */}
         <button

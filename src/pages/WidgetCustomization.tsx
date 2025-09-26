@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Palette, Settings, BarChart3, Copy, Eye, ArrowLeft } from 'lucide-react';
+import { Palette, Settings, BarChart3, Copy, Eye, ArrowLeft, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import OptimizedWidgetPreview from '@/components/widget/OptimizedWidgetPreview';
 import ColorPicker from '@/components/widget/ColorPicker';
@@ -364,6 +364,10 @@ const WidgetCustomization = () => {
               <div className="flex gap-2">
                 <Button onClick={handleSave} disabled={loading} className="flex-1">
                   {loading ? 'Salvando...' : 'Salvar Personalização'}
+                </Button>
+                <Button variant="outline" onClick={() => window.open(`/embed-chat?assistant=${selectedAssistant}`, '_blank')}>
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Testar Chat
                 </Button>
                 <Button variant="outline" onClick={() => window.open(`/widget-analytics?assistant=${selectedAssistant}`, '_blank')}>
                   <BarChart3 className="h-4 w-4 mr-2" />
