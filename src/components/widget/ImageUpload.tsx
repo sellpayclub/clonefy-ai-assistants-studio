@@ -22,6 +22,12 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ label, value, onChange, bucke
     try {
       setUploading(true);
 
+      // Verificar se o usuário está autenticado
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
       // Validar tipo de arquivo
       if (!file.type.startsWith('image/')) {
         throw new Error('Arquivo deve ser uma imagem');
@@ -32,10 +38,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ label, value, onChange, bucke
         throw new Error('Arquivo deve ter no máximo 5MB');
       }
 
-      // Gerar nome único
+      // Gerar nome único com pasta do usuário (necessário para RLS)
       const fileExt = file.name.split('.').pop();
       const fileName = `widget_${Date.now()}.${fileExt}`;
-      const filePath = fileName;
+      const filePath = `${user.id}/${fileName}`;
 
       // Upload para o Supabase Storage
       const { data, error } = await supabase.storage
