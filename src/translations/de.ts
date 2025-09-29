@@ -58,61 +58,12 @@ export default {
       title: "Agent-Dateien",
       description: "Fügen Sie Bilder, Videos und Dokumente hinzu, die die KI automatisch in WhatsApp-Gesprächen senden kann."
     }
-  }
   },
 
-  // Pricing Section
-  pricing: {
-    title: "Wählen Sie Ihren Plan",
-    subtitle: "Flexible Pläne für kleine Unternehmen bis hin zu großen Konzernen",
-    currency: "€",
-    plans: {
-      basic: {
-        title: "Basis-Plan",
-        price: "17",
-        period: "/Monat",
-        features: [
-          "1 personalisierter KI-Agent",
-          "1 WhatsApp-Verbindung",
-          "24/7 Support",
-          "Schwebender Chat auf der Website"
-        ],
-        button: "Basis-Plan wählen"
-      },
-      professional: {
-        title: "Profi-Plan",
-        price: "49",
-        period: "/Monat",
-        recommended: "BELIEBTEST",
-        features: [
-          "3 personalisierte KI-Agenten",
-          "3 WhatsApp-Verbindungen",
-          "24/7 Support",
-          "Schwebender Chat auf der Website",
-          "Prioritäts-Support"
-        ],
-        button: "Profi-Plan wählen"
-      },
-      enterprise: {
-        title: "Unternehmens-Plan",
-        price: "79",
-        period: "einmalige Jahreszahlung",
-        installment: "In bis zu 12 Raten zahlbar",
-        features: [
-          "5 personalisierte KI-Agenten",
-          "5 WhatsApp-Verbindungen",
-          "24/7 Support",
-          "Schwebender Chat auf der Website",
-          "Prioritäts-Support",
-          "2 Monate Ersparnis"
-        ],
-        button: "Unternehmens-Plan wählen"
-      }
-    },
-    finalMessage: "Stellen Sie KI ein und keine Menschen,",
-    finalMessageHighlight: "die Zukunft ist da!",
-    startNow: "Für €17/Monat starten"
-  },
+  // Dashboard
+  dashboard: {
+    title: "Dashboard",
+    welcome: "Willkommen zurück",
 
   // Footer
   footer: {
@@ -417,6 +368,60 @@ export default {
       title: "So Einfach ist es!",
       description: "In weniger als 10 Minuten können Sie Ihren eigenen KI-Agenten zum Laufen bringen. Keine Programmierung, keine Komplikationen.",
       cta: "Preise Jetzt Ansehen"
+    }
+  },
+
+  // Pricing Section
+  pricing: {
+    title: "Pläne und Preise",
+    subtitle: "Wählen Sie den besten Plan für Ihr Unternehmen",
+    currency: "€",
+    finalMessage: "Starten Sie jetzt und transformieren Sie Ihren Kundenservice mit KI!",
+    finalMessageHighlight: "Keine Verpflichtung, jederzeit kündbar.",
+    plans: {
+      basic: {
+        title: "Basis",
+        price: "97",
+        period: "pro Monat",
+        features: [
+          "1 KI-Klon",
+          "1.000 Nachrichten/Monat",
+          "E-Mail-Support",
+          "WhatsApp-Integration"
+        ],
+        button: "Jetzt Starten"
+      },
+      professional: {
+        title: "Professionell",
+        price: "197",
+        period: "pro Monat",
+        recommended: "Empfohlen",
+        features: [
+          "3 KI-Klone",
+          "5.000 Nachrichten/Monat",
+          "Prioritäts-Support",
+          "WhatsApp-Integration",
+          "Website-Widget",
+          "Intelligente Terminplanung"
+        ],
+        button: "Jetzt Starten"
+      },
+      enterprise: {
+        title: "Enterprise",
+        price: "497",
+        period: "pro Monat",
+        installment: "oder 12x €49,70",
+        features: [
+          "Unbegrenzte Klone",
+          "20.000 Nachrichten/Monat",
+          "VIP-Support 24/7",
+          "Alle Integrationen",
+          "Benutzerdefiniertes Widget",
+          "Unbegrenzte Terminplanung",
+          "Erweiterte Berichte"
+        ],
+        button: "Jetzt Starten"
+      }
     }
   },
 

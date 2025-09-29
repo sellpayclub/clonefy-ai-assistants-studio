@@ -58,61 +58,12 @@ export default {
       title: "Agent Files",
       description: "Add images, videos and documents that AI can automatically send in WhatsApp conversations."
     }
-  }
   },
 
-  // Pricing Section
-  pricing: {
-    title: "Choose Your Plan",
-    subtitle: "Flexible plans to serve from small businesses to large enterprises",
-    currency: "$",
-    plans: {
-      basic: {
-        title: "Basic Plan",
-        price: "19",
-        period: "/month",
-        features: [
-          "1 personalized AI agent",
-          "1 WhatsApp connection",
-          "24/7 support",
-          "Floating chat on website"
-        ],
-        button: "Choose Basic Plan"
-      },
-      professional: {
-        title: "Professional Plan",
-        price: "59",
-        period: "/month",
-        recommended: "MOST POPULAR",
-        features: [
-          "3 personalized AI agents",
-          "3 WhatsApp connections",
-          "24/7 support",
-          "Floating chat on website",
-          "Priority support"
-        ],
-        button: "Choose Professional Plan"
-      },
-      enterprise: {
-        title: "Enterprise Plan",
-        price: "99",
-        period: "annual payment",
-        installment: "Payable in up to 12 installments",
-        features: [
-          "5 personalized AI agents",
-          "5 WhatsApp connections",
-          "24/7 support",
-          "Floating chat on website",
-          "Priority support",
-          "2 months savings"
-        ],
-        button: "Choose Enterprise Plan"
-      }
-    },
-    finalMessage: "Hire AI and not humans,",
-    finalMessageHighlight: "the Future has Arrived!",
-    startNow: "Start for $19/month"
-  },
+  // Dashboard
+  dashboard: {
+    title: "Dashboard",
+    welcome: "Welcome back",
 
   // Footer
   footer: {
@@ -417,6 +368,60 @@ export default {
       title: "It's That Simple!",
       description: "In less than 10 minutes you can have your own AI agent working. No programming, no complications.",
       cta: "See Prices Now"
+    }
+  },
+
+  // Pricing Section
+  pricing: {
+    title: "Plans and Pricing",
+    subtitle: "Choose the best plan for your business",
+    currency: "$",
+    finalMessage: "Start now and transform your customer service with AI!",
+    finalMessageHighlight: "No commitment, cancel anytime.",
+    plans: {
+      basic: {
+        title: "Basic",
+        price: "97",
+        period: "per month",
+        features: [
+          "1 AI Clone",
+          "1,000 messages/month",
+          "Email support",
+          "WhatsApp integration"
+        ],
+        button: "Get Started"
+      },
+      professional: {
+        title: "Professional",
+        price: "197",
+        period: "per month",
+        recommended: "Recommended",
+        features: [
+          "3 AI Clones",
+          "5,000 messages/month",
+          "Priority support",
+          "WhatsApp integration",
+          "Website widget",
+          "Smart scheduling"
+        ],
+        button: "Get Started"
+      },
+      enterprise: {
+        title: "Enterprise",
+        price: "497",
+        period: "per month",
+        installment: "or 12x $49.70",
+        features: [
+          "Unlimited clones",
+          "20,000 messages/month",
+          "VIP support 24/7",
+          "All integrations",
+          "Custom widget",
+          "Unlimited scheduling",
+          "Advanced reports"
+        ],
+        button: "Get Started"
+      }
     }
   },
 

@@ -116,13 +116,8 @@ export default {
     }
   },
 
-  // Pricing Section
-  pricing: {
-    title: "Escolha Seu Plano",
-    subtitle: "Planos flexíveis para atender desde pequenos negócios até grandes empresas",
-    currency: "R$",
-    plans: {
-      basic: {
+  // Dashboard
+  dashboard: {
         title: "Plano Básico",
         price: "97",
         period: "/mês",
@@ -442,6 +437,60 @@ export default {
       description: "Nossa solução é ideal para empresas com pelo menos 2 funcionários.",
       suggestion: "Que tal crescer um pouco mais e voltar aqui?",
       cta: "Voltar ao Início"
+    }
+  },
+
+  // Pricing Section
+  pricing: {
+    title: "Planos e Preços",
+    subtitle: "Escolha o melhor plano para o seu negócio",
+    currency: "R$",
+    finalMessage: "Comece agora e transforme seu atendimento com IA!",
+    finalMessageHighlight: "Sem compromisso, cancele quando quiser.",
+    plans: {
+      basic: {
+        title: "Básico",
+        price: "97",
+        period: "por mês",
+        features: [
+          "1 Clone de IA",
+          "1.000 mensagens/mês",
+          "Suporte por email",
+          "Integração WhatsApp"
+        ],
+        button: "Começar Agora"
+      },
+      professional: {
+        title: "Profissional",
+        price: "197",
+        period: "por mês",
+        recommended: "Recomendado",
+        features: [
+          "3 Clones de IA",
+          "5.000 mensagens/mês",
+          "Suporte prioritário",
+          "Integração WhatsApp",
+          "Widget para site",
+          "Agendamentos inteligentes"
+        ],
+        button: "Começar Agora"
+      },
+      enterprise: {
+        title: "Empresarial",
+        price: "497",
+        period: "por mês",
+        installment: "ou 12x de R$ 49,70",
+        features: [
+          "Clones ilimitados",
+          "20.000 mensagens/mês",
+          "Suporte VIP 24/7",
+          "Todas as integrações",
+          "Widget personalizado",
+          "Agendamentos ilimitados",
+          "Relatórios avançados"
+        ],
+        button: "Começar Agora"
+      }
     }
   },
 

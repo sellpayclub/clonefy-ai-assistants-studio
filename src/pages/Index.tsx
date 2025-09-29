@@ -519,7 +519,7 @@ const Index = () => {
               <p className="text-muted-foreground text-sm sm:text-base">{t('pricing.plans.basic.period')}</p>
             </div>
             <ul className="space-y-3 text-muted-foreground mb-8">
-              {t('pricing.plans.basic.features').map((feature, index) => (
+              {['1 Clone de IA', '1.000 mensagens/mês', 'Suporte por email', 'Integração WhatsApp'].map((feature, index) => (
                 <li key={index} className="flex items-center gap-2 text-sm sm:text-base">
                   <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
                   {feature}
@@ -547,7 +547,7 @@ const Index = () => {
               <p className="text-muted-foreground text-sm sm:text-base">{t('pricing.plans.professional.period')}</p>
             </div>
             <ul className="space-y-3 text-primary mb-8">
-              {t('pricing.plans.professional.features').map((feature, index) => (
+              {['3 Clones de IA', '5.000 mensagens/mês', 'Suporte prioritário', 'Integração WhatsApp', 'Widget para site', 'Agendamentos inteligentes'].map((feature, index) => (
                 <li key={index} className="flex items-center gap-2 text-sm sm:text-base">
                   <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
                   {feature}
@@ -571,7 +571,7 @@ const Index = () => {
               <p className="text-xs text-green-600 font-medium">{t('pricing.plans.enterprise.installment')}</p>
             </div>
             <ul className="space-y-3 text-muted-foreground mb-8">
-              {t('pricing.plans.enterprise.features').map((feature, index) => (
+              {['Clones ilimitados', '20.000 mensagens/mês', 'Suporte VIP 24/7', 'Todas as integrações', 'Widget personalizado', 'Agendamentos ilimitados', 'Relatórios avançados'].map((feature, index) => (
                 <li key={index} className="flex items-center gap-2 text-sm sm:text-base">
                   <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
                   {feature}

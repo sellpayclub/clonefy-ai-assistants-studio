@@ -84,7 +84,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
   }, [message, simulateResponse]);
 
   // Handle Enter key
-  const handleKeyPress = useCallback((e: KeyboardEvent) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
