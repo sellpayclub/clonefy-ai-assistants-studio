@@ -123,8 +123,8 @@ const Index = () => {
               onClick={scrollToPricing}
               className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 px-8 py-4 text-lg font-semibold"
             >
-              <span className="sm:hidden">Ver Preços</span>
-              <span className="hidden sm:inline">Ver Preços</span>
+              <span className="sm:hidden">{t('pricing.startNow')}</span>
+              <span className="hidden sm:inline">{t('pricing.startNow')}</span>
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </div>
@@ -504,9 +504,9 @@ const Index = () => {
       {/* Pricing Section */}
       <section id="pricing-section" className="container mx-auto px-4 py-12 sm:py-16 lg:py-20">
         <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 px-2">Escolha Seu Plano</h2>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 px-2">{t('pricing.title')}</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg px-2">
-            Planos flexíveis para atender desde pequenos negócios até grandes empresas
+            {t('pricing.subtitle')}
           </p>
         </div>
 
@@ -514,31 +514,21 @@ const Index = () => {
           {/* Plano 1 - Básico */}
           <div className="p-6 sm:p-8 rounded-xl sm:rounded-2xl border bg-card/30">
             <div className="text-center mb-6">
-              <h3 className="text-xl sm:text-2xl font-bold mb-2">Plano Básico</h3>
-              <div className="text-3xl sm:text-4xl font-bold text-primary">R$ 97</div>
-              <p className="text-muted-foreground text-sm sm:text-base">/mês</p>
+              <h3 className="text-xl sm:text-2xl font-bold mb-2">{t('pricing.plans.basic.title')}</h3>
+              <div className="text-3xl sm:text-4xl font-bold text-primary">{t('pricing.currency')} {t('pricing.plans.basic.price')}</div>
+              <p className="text-muted-foreground text-sm sm:text-base">{t('pricing.plans.basic.period')}</p>
             </div>
             <ul className="space-y-3 text-muted-foreground mb-8">
-              <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                1 agente de IA personalizado
-              </li>
-              <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                1 conexão WhatsApp
-              </li>
-              <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                Atendimento 24/7
-              </li>
-              <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                Chat flutuante no site
-              </li>
+              {t('pricing.plans.basic.features').map((feature, index) => (
+                <li key={index} className="flex items-center gap-2 text-sm sm:text-base">
+                  <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+                  {feature}
+                </li>
+              ))}
             </ul>
             <a href="https://lastlink.com/p/C202BF9D3/checkout-payment/" target="_blank" rel="noopener noreferrer">
               <Button className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
-                Escolher Plano Básico
+                {t('pricing.plans.basic.button')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </a>
@@ -548,39 +538,25 @@ const Index = () => {
           <div className="p-6 sm:p-8 rounded-xl sm:rounded-2xl border-2 border-primary bg-gradient-to-br from-primary/5 to-primary/10 relative overflow-hidden">
             <div className="absolute top-3 sm:top-4 right-3 sm:right-4">
               <span className="bg-primary text-primary-foreground px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
-                MAIS POPULAR
+                {t('pricing.plans.professional.recommended')}
               </span>
             </div>
             <div className="text-center mb-6">
-              <h3 className="text-xl sm:text-2xl font-bold mb-2">Plano Profissional</h3>
-              <div className="text-3xl sm:text-4xl font-bold text-primary">R$ 297</div>
-              <p className="text-muted-foreground text-sm sm:text-base">/mês</p>
+              <h3 className="text-xl sm:text-2xl font-bold mb-2">{t('pricing.plans.professional.title')}</h3>
+              <div className="text-3xl sm:text-4xl font-bold text-primary">{t('pricing.currency')} {t('pricing.plans.professional.price')}</div>
+              <p className="text-muted-foreground text-sm sm:text-base">{t('pricing.plans.professional.period')}</p>
             </div>
             <ul className="space-y-3 text-primary mb-8">
-              <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                3 agentes de IA personalizados
-              </li>
-              <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                3 conexões WhatsApp
-              </li>
-              <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                Atendimento 24/7
-              </li>
-              <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                Chat flutuante no site
-              </li>
-              <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                Suporte prioritário
-              </li>
+              {t('pricing.plans.professional.features').map((feature, index) => (
+                <li key={index} className="flex items-center gap-2 text-sm sm:text-base">
+                  <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+                  {feature}
+                </li>
+              ))}
             </ul>
             <a href="https://lastlink.com/p/C0141B7E4/checkout-payment/" target="_blank" rel="noopener noreferrer">
               <Button className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
-                Escolher Plano Profissional
+                {t('pricing.plans.professional.button')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </a>
@@ -589,40 +565,22 @@ const Index = () => {
           {/* Plano 3 - Empresarial */}
           <div className="p-6 sm:p-8 rounded-xl sm:rounded-2xl border bg-card/30">
             <div className="text-center mb-6">
-              <h3 className="text-xl sm:text-2xl font-bold mb-2">Plano Empresarial</h3>
-              <div className="text-3xl sm:text-4xl font-bold text-primary">R$ 497</div>
-              <p className="text-muted-foreground text-sm sm:text-base">pagamento único anual</p>
-              <p className="text-xs text-green-600 font-medium">Parcelável em até 12x no cartão</p>
+              <h3 className="text-xl sm:text-2xl font-bold mb-2">{t('pricing.plans.enterprise.title')}</h3>
+              <div className="text-3xl sm:text-4xl font-bold text-primary">{t('pricing.currency')} {t('pricing.plans.enterprise.price')}</div>
+              <p className="text-muted-foreground text-sm sm:text-base">{t('pricing.plans.enterprise.period')}</p>
+              <p className="text-xs text-green-600 font-medium">{t('pricing.plans.enterprise.installment')}</p>
             </div>
             <ul className="space-y-3 text-muted-foreground mb-8">
-              <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                5 agentes de IA personalizados
-              </li>
-              <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                5 conexões WhatsApp
-              </li>
-              <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                Atendimento 24/7
-              </li>
-              <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                Chat flutuante no site
-              </li>
-              <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                Suporte prioritário
-              </li>
-              <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                Economia de 2 meses
-              </li>
+              {t('pricing.plans.enterprise.features').map((feature, index) => (
+                <li key={index} className="flex items-center gap-2 text-sm sm:text-base">
+                  <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+                  {feature}
+                </li>
+              ))}
             </ul>
             <a href="https://lastlink.com/p/CCA6AF0AD/checkout-payment/" target="_blank" rel="noopener noreferrer">
               <Button className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
-                Escolher Plano Empresarial
+                {t('pricing.plans.enterprise.button')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </a>
@@ -631,7 +589,7 @@ const Index = () => {
 
         <div className="text-center mt-8 sm:mt-12">
           <p className="text-lg sm:text-xl lg:text-2xl font-bold mb-6 sm:mb-8 px-2">
-            Contrate IA e não humanos, <span className="text-primary">o Futuro já Chegou!</span>
+            {t('pricing.finalMessage')} <span className="text-primary">{t('pricing.finalMessageHighlight')}</span>
           </p>
         </div>
       </section>

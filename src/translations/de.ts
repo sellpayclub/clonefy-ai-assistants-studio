@@ -63,35 +63,55 @@ export default {
 
   // Pricing Section
   pricing: {
-    title: "Einheitlicher und Erschwinglicher Plan",
-    subtitle: "Vergleichen Sie Kosten und sehen Sie, wie CLONEFY effizienter ist",
+    title: "Wählen Sie Ihren Plan",
+    subtitle: "Flexible Pläne für kleine Unternehmen bis hin zu großen Konzernen",
     currency: "€",
-    traditional: {
-      title: "Traditioneller Mitarbeiter",
-      price: "320+",
-      period: "/Monat + Steuern, Urlaub, etc.",
-      features: [
-        "Arbeitet nur von 8 bis 17 Uhr",
-        "Urlaub und Feiertage", 
-        "Kann krank werden",
-        "Zusätzliche Kosten"
-      ]
-    },
-    clonefy: {
-      title: "CLONEFY",
-      price: "20",
-      period: "/Monat - OHNE Limits",
-      recommended: "EMPFOHLEN",
-      features: [
-        "24 Stunden am Tag verfügbar",
-        "Kein Urlaub oder Feiertage",
-        "Wird nie krank", 
-        "Keine Gesprächs-/Service-Limits"
-      ]
+    plans: {
+      basic: {
+        title: "Basis-Plan",
+        price: "17",
+        period: "/Monat",
+        features: [
+          "1 personalisierter KI-Agent",
+          "1 WhatsApp-Verbindung",
+          "24/7 Support",
+          "Schwebender Chat auf der Website"
+        ],
+        button: "Basis-Plan wählen"
+      },
+      professional: {
+        title: "Profi-Plan",
+        price: "49",
+        period: "/Monat",
+        recommended: "BELIEBTEST",
+        features: [
+          "3 personalisierte KI-Agenten",
+          "3 WhatsApp-Verbindungen",
+          "24/7 Support",
+          "Schwebender Chat auf der Website",
+          "Prioritäts-Support"
+        ],
+        button: "Profi-Plan wählen"
+      },
+      enterprise: {
+        title: "Unternehmens-Plan",
+        price: "79",
+        period: "einmalige Jahreszahlung",
+        installment: "In bis zu 12 Raten zahlbar",
+        features: [
+          "5 personalisierte KI-Agenten",
+          "5 WhatsApp-Verbindungen",
+          "24/7 Support",
+          "Schwebender Chat auf der Website",
+          "Prioritäts-Support",
+          "2 Monate Ersparnis"
+        ],
+        button: "Unternehmens-Plan wählen"
+      }
     },
     finalMessage: "Stellen Sie KI ein und keine Menschen,",
     finalMessageHighlight: "die Zukunft ist da!",
-    startNow: "Jetzt für €20/Monat starten"
+    startNow: "Für €17/Monat starten"
   },
 
   // Footer
@@ -200,6 +220,209 @@ export default {
     loading: "Laden...",
     reload: "Neuladen",
     error: "Fehler",
-    success: "Erfolg"
+    success: "Erfolg",
+    confirm: "Bestätigen",
+    close: "Schließen"
+  },
+
+  // Widget Customization
+  widgetCustomization: {
+    title: "Widget-Anpassung",
+    subtitle: "Passen Sie das Aussehen und Verhalten Ihres schwebenden Chats an",
+    selectAssistant: "Assistent auswählen",
+    selectAssistantPlaceholder: "Wählen Sie einen Assistenten zur Anpassung",
+    appearance: "Aussehen",
+    behavior: "Verhalten",
+    basicInfo: {
+      title: "Grundinformationen",
+      assistantName: "Assistentenname",
+      assistantNamePlaceholder: "Z.B.: Virtueller Assistent",
+      welcomeMessage: "Willkommensnachricht",
+      welcomeMessagePlaceholder: "Z.B.: Hallo! Wie kann ich Ihnen heute helfen?"
+    },
+    images: {
+      title: "Bilder",
+      avatar: "Assistenten-Avatar",
+      avatarDescription: "Bild, das im Chat erscheint",
+      buttonIcon: "Button-Symbol",
+      buttonIconDescription: "Benutzerdefiniertes Symbol für den schwebenden Button"
+    },
+    colors: {
+      title: "Farben",
+      primaryColor: "Primärfarbe",
+      secondaryColor: "Sekundärfarbe",
+      textColor: "Textfarbe"
+    },
+    position: {
+      title: "Position",
+      buttonPosition: "Button-Position",
+      left: "Links",
+      right: "Rechts"
+    },
+    status: {
+      title: "Status",
+      active: "Aktiv",
+      inactive: "Inaktiv"
+    },
+    actions: {
+      save: "Anpassung speichern",
+      saving: "Speichern...",
+      testChat: "Chat testen",
+      analytics: "Analytics"
+    },
+    preview: {
+      title: "Widget-Vorschau",
+      description: "Sehen Sie, wie Ihr Widget auf der Website erscheint"
+    }
+  },
+
+  // Widget Analytics
+  widgetAnalytics: {
+    title: "Widget-Analytics",
+    subtitle: "Verfolgen Sie die Leistung Ihres Chat-Widgets",
+    backToDashboard: "Zurück zum Dashboard",
+    selectAssistant: "Assistent",
+    selectAssistantPlaceholder: "Wählen Sie einen Assistenten",
+    period: "Zeitraum",
+    generateSampleData: "Beispieldaten generieren",
+    generatingData: "Daten werden generiert...",
+    noAssistantSelected: "Wählen Sie einen Assistenten",
+    noAssistantSelectedDescription: "Wählen Sie einen Assistenten, um Widget-Leistungsmetriken zu sehen"
+  },
+
+  // Lead Capture
+  leadCapture: {
+    title: "Lead-Qualifizierung",
+    subtitle: "Füllen Sie die Daten aus, um fortzufahren",
+    form: {
+      name: "Vollständiger Name",
+      namePlaceholder: "Ihr vollständiger Name",
+      email: "E-Mail",
+      emailPlaceholder: "ihre@email.com",
+      phone: "Telefon",
+      phonePlaceholder: "(555) 123-4567",
+      company: "Unternehmen",
+      companyPlaceholder: "Name Ihres Unternehmens",
+      businessType: "Geschäftstyp",
+      businessTypePlaceholder: "Wählen Sie den Typ",
+      employees: "Anzahl der Mitarbeiter",
+      employeesPlaceholder: "Wie viele Mitarbeiter?",
+      monthlyRevenue: "Monatlicher Umsatz",
+      monthlyRevenuePlaceholder: "Ungefährer Umsatz",
+      submit: "Fortfahren"
+    },
+    businessTypes: {
+      ecommerce: "E-Commerce",
+      services: "Dienstleistungen",
+      consulting: "Beratung",
+      technology: "Technologie",
+      retail: "Einzelhandel",
+      other: "Andere"
+    },
+    employeeRanges: {
+      "1-5": "1-5 Mitarbeiter",
+      "6-20": "6-20 Mitarbeiter",
+      "21-50": "21-50 Mitarbeiter",
+      "51-200": "51-200 Mitarbeiter",
+      "200+": "Mehr als 200 Mitarbeiter"
+    },
+    revenueRanges: {
+      "0-10k": "Bis zu €10.000",
+      "10k-50k": "€10.000 - €50.000",
+      "50k-100k": "€50.000 - €100.000",
+      "100k-500k": "€100.000 - €500.000",
+      "500k+": "Über €500.000"
+    },
+    qualified: {
+      title: "Herzlichen Glückwunsch! Sie haben sich qualifiziert!",
+      description: "Basierend auf Ihren Antworten sind Sie ein idealer Kandidat für unsere Lösung.",
+      benefits: [
+        "24/7 automatisierter Support",
+        "Erhöhte Konversionen",
+        "Reduzierte Betriebskosten",
+        "Unbegrenzte Skalierbarkeit"
+      ],
+      cta: "Jetzt für €17/Monat starten"
+    },
+    notQualified: {
+      title: "Ups! Sie haben sich noch nicht qualifiziert",
+      description: "Unsere Lösung ist ideal für Unternehmen mit mindestens 2 Mitarbeitern.",
+      suggestion: "Wie wäre es, ein bisschen zu wachsen und hierher zurückzukommen?",
+      cta: "Zurück zur Startseite"
+    }
+  },
+
+  // Demo Section
+  demo: {
+    title: "Wie Einfach es ist, CLONEFY zu Verwenden",
+    subtitle: "Sehen Sie in der Praxis, wie Sie Ihre KI-Agenten in wenigen Klicks erstellen und konfigurieren",
+    steps: {
+      step1: {
+        title: "Erstellen Sie Ihren Agenten",
+        description: "Klicken Sie auf \"Neuer Agent\" und fertig! Eine einfache und intuitive Benutzeroberfläche, um mit der Konfiguration Ihres virtuellen Assistenten zu beginnen.",
+        features: [
+          "Saubere und benutzerfreundliche Oberfläche",
+          "Schritt-für-Schritt geführter Prozess",
+          "Konfiguration in Minuten"
+        ]
+      },
+      step2: {
+        title: "Vollständig Anpassen",
+        description: "Definieren Sie den Namen, die Beschreibung und detaillierte Anweisungen. Bringen Sie Ihrem Agenten bei, genau das zu sein, was Sie brauchen - ein Verkäufer, Betreuer, Sekretär oder jede andere Funktion!",
+        features: [
+          "Name und Funktion anpassen",
+          "Spezifische Anweisungen konfigurieren",
+          "Dateien und Wissen hinzufügen"
+        ]
+      },
+      step3: {
+        title: "Verwalten Sie Ihre Agenten",
+        description: "Zeigen Sie alle Ihre erstellten Agenten an, bearbeiten Sie sie bei Bedarf, testen Sie Gespräche und überwachen Sie die Leistung.",
+        features: [
+          "Organisiertes und klares Dashboard",
+          "Schnellzugriff-Buttons",
+          "Testen vor dem Live-Schalten"
+        ]
+      },
+      step4: {
+        title: "Mit WhatsApp Verbinden",
+        description: "Verbinden Sie Ihre Agenten in Sekunden mit WhatsApp! Scannen Sie einfach den QR-Code und Ihr Agent ist bereit, Ihre Kunden 24/7 zu betreuen.",
+        features: [
+          "QR-Code-Verbindung",
+          "Mehrere WhatsApp-Instanzen",
+          "Automatische 24/7-Betreuung"
+        ]
+      },
+      step5: {
+        title: "In Ihre Website Einbetten",
+        description: "NEBEN WhatsApp können Sie einen schwebenden Chat zu Ihrer Website hinzufügen! Kopieren und fügen Sie den Code ein und fertig - Ihre Besucher können direkt mit Ihrem Agenten sprechen.",
+        features: [
+          "Kopierfertiger Code",
+          "Responsives Widget",
+          "Integration auf jeder Website",
+          "+ WhatsApp immer aktiv"
+        ]
+      },
+      result: {
+        title: "Agent Funktioniert Perfekt!",
+        description: "Sehen Sie Ihren Agenten in Aktion! Natürliche Gespräche, intelligente Antworten und professionelle Betreuung 24 Stunden am Tag, jeden Tag.",
+        features: [
+          "Natürliche und flüssige Gespräche",
+          "Kontextualisierte Antworten",
+          "24/7 ohne Pausen verfügbar"
+        ]
+      }
+    },
+    final: {
+      title: "So Einfach ist es!",
+      description: "In weniger als 10 Minuten können Sie Ihren eigenen KI-Agenten zum Laufen bringen. Keine Programmierung, keine Komplikationen.",
+      cta: "Preise Jetzt Ansehen"
+    }
+  },
+
+  // Video Section
+  video: {
+    title: "Sehen Sie, Wie es Innen Funktioniert",
+    subtitle: "Vollständige Plattform-Demonstration und wie Sie Ihren intelligenten Assistenten erstellen"
   }
 };

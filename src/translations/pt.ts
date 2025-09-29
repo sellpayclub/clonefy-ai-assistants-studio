@@ -118,35 +118,55 @@ export default {
 
   // Pricing Section
   pricing: {
-    title: "Plano Único e Acessível",
-    subtitle: "Compare os custos e veja como o CLONEFY é mais eficiente",
+    title: "Escolha Seu Plano",
+    subtitle: "Planos flexíveis para atender desde pequenos negócios até grandes empresas",
     currency: "R$",
-    traditional: {
-      title: "Funcionário Tradicional",
-      price: "1.518+",
-      period: "/mês + taxas, férias, etc.",
-      features: [
-        "Trabalha apenas das 08h às 17h",
-        "Férias e feriados", 
-        "Pode ficar doente",
-        "Custos adicionais"
-      ]
-    },
-    clonefy: {
-      title: "CLONEFY",
-      price: "297",
-      period: "PAGAMENTO ÚNICO - Sem mensalidades!",
-      recommended: "RECOMENDADO",
-      features: [
-        "Disponível 24 horas por dia",
-        "Sem férias ou feriados",
-        "Nunca fica doente", 
-        "Pode parcelar em até 12x ou à vista no Pix"
-      ]
+    plans: {
+      basic: {
+        title: "Plano Básico",
+        price: "97",
+        period: "/mês",
+        features: [
+          "1 agente de IA personalizado",
+          "1 conexão WhatsApp",
+          "Atendimento 24/7",
+          "Chat flutuante no site"
+        ],
+        button: "Escolher Plano Básico"
+      },
+      professional: {
+        title: "Plano Profissional",
+        price: "297",
+        period: "/mês",
+        recommended: "MAIS POPULAR",
+        features: [
+          "3 agentes de IA personalizados",
+          "3 conexões WhatsApp",
+          "Atendimento 24/7",
+          "Chat flutuante no site",
+          "Suporte prioritário"
+        ],
+        button: "Escolher Plano Profissional"
+      },
+      enterprise: {
+        title: "Plano Empresarial",
+        price: "497",
+        period: "pagamento único anual",
+        installment: "Parcelável em até 12x no cartão",
+        features: [
+          "5 agentes de IA personalizados",
+          "5 conexões WhatsApp",
+          "Atendimento 24/7",
+          "Chat flutuante no site",
+          "Suporte prioritário",
+          "Economia de 2 meses"
+        ],
+        button: "Escolher Plano Empresarial"
+      }
     },
     finalMessage: "Contrate IA e não humanos,",
     finalMessageHighlight: "o Futuro já Chegou!",
-    startNow: "Começar Agora por R$ 297"
+    startNow: "Começar por R$ 97"
   },
 
   // Footer
@@ -296,5 +316,206 @@ export default {
     loadingAgents: "Carregando agentes...",
     noAgents: "Nenhum agente encontrado",
     selectConversation: "Escolha uma conversa existente ou inicie uma nova com seus agentes"
+  },
+
+  // Widget Customization
+  widgetCustomization: {
+    title: "Personalização do Widget",
+    subtitle: "Personalize a aparência e comportamento do seu chat flutuante",
+    selectAssistant: "Selecionar Assistente",
+    selectAssistantPlaceholder: "Escolha um assistente para personalizar",
+    appearance: "Aparência",
+    behavior: "Comportamento",
+    basicInfo: {
+      title: "Informações Básicas",
+      assistantName: "Nome do Assistente",
+      assistantNamePlaceholder: "Ex: Assistente Virtual",
+      welcomeMessage: "Mensagem de Boas-vindas",
+      welcomeMessagePlaceholder: "Ex: Olá! Como posso ajudar você hoje?"
+    },
+    images: {
+      title: "Imagens",
+      avatar: "Avatar do Assistente",
+      avatarDescription: "Imagem que aparecerá no chat",
+      buttonIcon: "Ícone do Botão",
+      buttonIconDescription: "Ícone personalizado para o botão flutuante"
+    },
+    colors: {
+      title: "Cores",
+      primaryColor: "Cor Primária",
+      secondaryColor: "Cor Secundária",
+      textColor: "Cor do Texto"
+    },
+    position: {
+      title: "Posição",
+      buttonPosition: "Posição do Botão",
+      left: "Esquerda",
+      right: "Direita"
+    },
+    status: {
+      title: "Status",
+      active: "Ativo",
+      inactive: "Inativo"
+    },
+    actions: {
+      save: "Salvar Personalização",
+      saving: "Salvando...",
+      testChat: "Testar Chat",
+      analytics: "Analytics"
+    },
+    preview: {
+      title: "Preview do Widget",
+      description: "Veja como seu widget aparecerá no site"
+    }
+  },
+
+  // Widget Analytics
+  widgetAnalytics: {
+    title: "Analytics do Widget",
+    subtitle: "Acompanhe o desempenho do seu widget de chat",
+    backToDashboard: "Voltar ao Dashboard",
+    selectAssistant: "Assistente",
+    selectAssistantPlaceholder: "Selecione um assistente",
+    period: "Período",
+    generateSampleData: "Gerar Dados de Exemplo",
+    generatingData: "Gerando dados...",
+    noAssistantSelected: "Selecione um assistente",
+    noAssistantSelectedDescription: "Escolha um assistente para ver as métricas de desempenho do widget"
+  },
+
+  // Lead Capture
+  leadCapture: {
+    title: "Qualificação de Lead",
+    subtitle: "Preencha os dados para continuar",
+    form: {
+      name: "Nome Completo",
+      namePlaceholder: "Seu nome completo",
+      email: "Email",
+      emailPlaceholder: "seu@email.com",
+      phone: "Telefone",
+      phonePlaceholder: "(11) 99999-9999",
+      company: "Empresa",
+      companyPlaceholder: "Nome da sua empresa",
+      businessType: "Tipo de Negócio",
+      businessTypePlaceholder: "Selecione o tipo",
+      employees: "Número de Funcionários",
+      employeesPlaceholder: "Quantos funcionários?",
+      monthlyRevenue: "Faturamento Mensal",
+      monthlyRevenuePlaceholder: "Faturamento aproximado",
+      submit: "Continuar"
+    },
+    businessTypes: {
+      ecommerce: "E-commerce",
+      services: "Serviços",
+      consulting: "Consultoria",
+      technology: "Tecnologia",
+      retail: "Varejo",
+      other: "Outro"
+    },
+    employeeRanges: {
+      "1-5": "1-5 funcionários",
+      "6-20": "6-20 funcionários",
+      "21-50": "21-50 funcionários",
+      "51-200": "51-200 funcionários",
+      "200+": "Mais de 200 funcionários"
+    },
+    revenueRanges: {
+      "0-10k": "Até R$ 10.000",
+      "10k-50k": "R$ 10.000 - R$ 50.000",
+      "50k-100k": "R$ 50.000 - R$ 100.000",
+      "100k-500k": "R$ 100.000 - R$ 500.000",
+      "500k+": "Acima de R$ 500.000"
+    },
+    qualified: {
+      title: "Parabéns! Você se qualificou!",
+      description: "Com base nas suas respostas, você é um candidato ideal para nossa solução.",
+      benefits: [
+        "Atendimento 24/7 automatizado",
+        "Aumento de conversões",
+        "Redução de custos operacionais",
+        "Escalabilidade ilimitada"
+      ],
+      cta: "Começar Agora por R$ 97/mês"
+    },
+    notQualified: {
+      title: "Ops! Você ainda não se qualificou",
+      description: "Nossa solução é ideal para empresas com pelo menos 2 funcionários.",
+      suggestion: "Que tal crescer um pouco mais e voltar aqui?",
+      cta: "Voltar ao Início"
+    }
+  },
+
+  // Demo Section
+  demo: {
+    title: "Como é Simples Usar o CLONEFY",
+    subtitle: "Veja na prática como criar e configurar seus agentes de IA em poucos cliques",
+    steps: {
+      step1: {
+        title: "Criar Seu Agente",
+        description: "Clique em \"Novo Agente\" e pronto! Uma interface simples e intuitiva para começar a configurar seu assistente virtual.",
+        features: [
+          "Interface clean e fácil de usar",
+          "Processo guiado passo a passo",
+          "Configuração em minutos"
+        ]
+      },
+      step2: {
+        title: "Personalizar Completamente",
+        description: "Defina o nome, descrição e instruções detalhadas. Ensine seu agente a ser exatamente como você precisa - um vendedor, atendente, secretária ou qualquer função!",
+        features: [
+          "Personalize o nome e função",
+          "Configure instruções específicas",
+          "Adicione arquivos e conhecimento"
+        ]
+      },
+      step3: {
+        title: "Gerenciar Seus Agentes",
+        description: "Visualize todos os seus agentes criados, edite quando necessário, teste as conversas e monitore o desempenho.",
+        features: [
+          "Dashboard organizado e claro",
+          "Botões de ação rápida",
+          "Teste antes de colocar no ar"
+        ]
+      },
+      step4: {
+        title: "Conectar ao WhatsApp",
+        description: "Conecte seus agentes ao WhatsApp em segundos! Basta escanear o QR Code e seu agente estará pronto para atender seus clientes 24/7.",
+        features: [
+          "Conexão por QR Code",
+          "Múltiplas instâncias WhatsApp",
+          "Atendimento automático 24/7"
+        ]
+      },
+      step5: {
+        title: "Incorporar no Seu Site",
+        description: "ALÉM do WhatsApp, você pode adicionar um chat flutuante no seu site! Copie e cole o código e pronto - seus visitantes poderão falar com seu agente diretamente.",
+        features: [
+          "Código pronto para copiar",
+          "Widget responsivo",
+          "Integração em qualquer site",
+          "+ WhatsApp sempre ativo"
+        ]
+      },
+      result: {
+        title: "Agente Funcionando Perfeitamente!",
+        description: "Veja seu agente em ação! Conversas naturais, respostas inteligentes e atendimento profissional 24 horas por dia, todos os dias.",
+        features: [
+          "Conversas naturais e fluidas",
+          "Respostas contextualizadas",
+          "Disponível 24/7 sem pausas"
+        ]
+      }
+    },
+    final: {
+      title: "É Assim de Simples!",
+      description: "Em menos de 10 minutos você pode ter seu próprio agente de IA funcionando. Sem programação, sem complicação.",
+      cta: "Ver Preços Agora"
+    }
+  },
+
+  // Video Section
+  video: {
+    title: "Veja Como Funciona Por Dentro",
+    subtitle: "Demonstração completa da plataforma e como criar seu assistente inteligente"
   }
 };

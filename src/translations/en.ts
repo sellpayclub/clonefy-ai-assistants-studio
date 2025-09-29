@@ -63,35 +63,55 @@ export default {
 
   // Pricing Section
   pricing: {
-    title: "Single and Affordable Plan",
-    subtitle: "Compare costs and see how CLONEFY is more efficient",
+    title: "Choose Your Plan",
+    subtitle: "Flexible plans to serve from small businesses to large enterprises",
     currency: "$",
-    traditional: {
-      title: "Traditional Employee",
-      price: "380+",
-      period: "/month + taxes, vacation, etc.",
-      features: [
-        "Works only from 8am to 5pm",
-        "Vacation and holidays", 
-        "Can get sick",
-        "Additional costs"
-      ]
-    },
-    clonefy: {
-      title: "CLONEFY",
-      price: "24",
-      period: "/month - NO limits",
-      recommended: "RECOMMENDED",
-      features: [
-        "Available 24 hours a day",
-        "No vacation or holidays",
-        "Never gets sick", 
-        "No conversation/service limits"
-      ]
+    plans: {
+      basic: {
+        title: "Basic Plan",
+        price: "19",
+        period: "/month",
+        features: [
+          "1 personalized AI agent",
+          "1 WhatsApp connection",
+          "24/7 support",
+          "Floating chat on website"
+        ],
+        button: "Choose Basic Plan"
+      },
+      professional: {
+        title: "Professional Plan",
+        price: "59",
+        period: "/month",
+        recommended: "MOST POPULAR",
+        features: [
+          "3 personalized AI agents",
+          "3 WhatsApp connections",
+          "24/7 support",
+          "Floating chat on website",
+          "Priority support"
+        ],
+        button: "Choose Professional Plan"
+      },
+      enterprise: {
+        title: "Enterprise Plan",
+        price: "99",
+        period: "annual payment",
+        installment: "Payable in up to 12 installments",
+        features: [
+          "5 personalized AI agents",
+          "5 WhatsApp connections",
+          "24/7 support",
+          "Floating chat on website",
+          "Priority support",
+          "2 months savings"
+        ],
+        button: "Choose Enterprise Plan"
+      }
     },
     finalMessage: "Hire AI and not humans,",
     finalMessageHighlight: "the Future has Arrived!",
-    startNow: "Start Now for $24/month"
+    startNow: "Start for $19/month"
   },
 
   // Footer
@@ -200,6 +220,209 @@ export default {
     loading: "Loading...",
     reload: "Reload",
     error: "Error",
-    success: "Success"
+    success: "Success",
+    confirm: "Confirm",
+    close: "Close"
+  },
+
+  // Widget Customization
+  widgetCustomization: {
+    title: "Widget Customization",
+    subtitle: "Customize the appearance and behavior of your floating chat",
+    selectAssistant: "Select Assistant",
+    selectAssistantPlaceholder: "Choose an assistant to customize",
+    appearance: "Appearance",
+    behavior: "Behavior",
+    basicInfo: {
+      title: "Basic Information",
+      assistantName: "Assistant Name",
+      assistantNamePlaceholder: "Ex: Virtual Assistant",
+      welcomeMessage: "Welcome Message",
+      welcomeMessagePlaceholder: "Ex: Hello! How can I help you today?"
+    },
+    images: {
+      title: "Images",
+      avatar: "Assistant Avatar",
+      avatarDescription: "Image that will appear in the chat",
+      buttonIcon: "Button Icon",
+      buttonIconDescription: "Custom icon for the floating button"
+    },
+    colors: {
+      title: "Colors",
+      primaryColor: "Primary Color",
+      secondaryColor: "Secondary Color",
+      textColor: "Text Color"
+    },
+    position: {
+      title: "Position",
+      buttonPosition: "Button Position",
+      left: "Left",
+      right: "Right"
+    },
+    status: {
+      title: "Status",
+      active: "Active",
+      inactive: "Inactive"
+    },
+    actions: {
+      save: "Save Customization",
+      saving: "Saving...",
+      testChat: "Test Chat",
+      analytics: "Analytics"
+    },
+    preview: {
+      title: "Widget Preview",
+      description: "See how your widget will appear on the site"
+    }
+  },
+
+  // Widget Analytics
+  widgetAnalytics: {
+    title: "Widget Analytics",
+    subtitle: "Track your chat widget performance",
+    backToDashboard: "Back to Dashboard",
+    selectAssistant: "Assistant",
+    selectAssistantPlaceholder: "Select an assistant",
+    period: "Period",
+    generateSampleData: "Generate Sample Data",
+    generatingData: "Generating data...",
+    noAssistantSelected: "Select an assistant",
+    noAssistantSelectedDescription: "Choose an assistant to see widget performance metrics"
+  },
+
+  // Lead Capture
+  leadCapture: {
+    title: "Lead Qualification",
+    subtitle: "Fill in the data to continue",
+    form: {
+      name: "Full Name",
+      namePlaceholder: "Your full name",
+      email: "Email",
+      emailPlaceholder: "your@email.com",
+      phone: "Phone",
+      phonePlaceholder: "(555) 123-4567",
+      company: "Company",
+      companyPlaceholder: "Your company name",
+      businessType: "Business Type",
+      businessTypePlaceholder: "Select the type",
+      employees: "Number of Employees",
+      employeesPlaceholder: "How many employees?",
+      monthlyRevenue: "Monthly Revenue",
+      monthlyRevenuePlaceholder: "Approximate revenue",
+      submit: "Continue"
+    },
+    businessTypes: {
+      ecommerce: "E-commerce",
+      services: "Services",
+      consulting: "Consulting",
+      technology: "Technology",
+      retail: "Retail",
+      other: "Other"
+    },
+    employeeRanges: {
+      "1-5": "1-5 employees",
+      "6-20": "6-20 employees",
+      "21-50": "21-50 employees",
+      "51-200": "51-200 employees",
+      "200+": "More than 200 employees"
+    },
+    revenueRanges: {
+      "0-10k": "Up to $10,000",
+      "10k-50k": "$10,000 - $50,000",
+      "50k-100k": "$50,000 - $100,000",
+      "100k-500k": "$100,000 - $500,000",
+      "500k+": "Above $500,000"
+    },
+    qualified: {
+      title: "Congratulations! You qualified!",
+      description: "Based on your answers, you are an ideal candidate for our solution.",
+      benefits: [
+        "24/7 automated support",
+        "Increased conversions",
+        "Reduced operational costs",
+        "Unlimited scalability"
+      ],
+      cta: "Start Now for $19/month"
+    },
+    notQualified: {
+      title: "Oops! You haven't qualified yet",
+      description: "Our solution is ideal for companies with at least 2 employees.",
+      suggestion: "How about growing a bit more and coming back here?",
+      cta: "Back to Home"
+    }
+  },
+
+  // Demo Section
+  demo: {
+    title: "How Simple It Is to Use CLONEFY",
+    subtitle: "See in practice how to create and configure your AI agents in a few clicks",
+    steps: {
+      step1: {
+        title: "Create Your Agent",
+        description: "Click \"New Agent\" and you're done! A simple and intuitive interface to start configuring your virtual assistant.",
+        features: [
+          "Clean and easy-to-use interface",
+          "Step-by-step guided process",
+          "Configuration in minutes"
+        ]
+      },
+      step2: {
+        title: "Fully Customize",
+        description: "Define the name, description and detailed instructions. Teach your agent to be exactly what you need - a salesperson, attendant, secretary or any function!",
+        features: [
+          "Customize name and function",
+          "Configure specific instructions",
+          "Add files and knowledge"
+        ]
+      },
+      step3: {
+        title: "Manage Your Agents",
+        description: "View all your created agents, edit when necessary, test conversations and monitor performance.",
+        features: [
+          "Organized and clear dashboard",
+          "Quick action buttons",
+          "Test before going live"
+        ]
+      },
+      step4: {
+        title: "Connect to WhatsApp",
+        description: "Connect your agents to WhatsApp in seconds! Just scan the QR Code and your agent will be ready to serve your customers 24/7.",
+        features: [
+          "QR Code connection",
+          "Multiple WhatsApp instances",
+          "Automatic 24/7 support"
+        ]
+      },
+      step5: {
+        title: "Embed on Your Site",
+        description: "BESIDES WhatsApp, you can add a floating chat to your site! Copy and paste the code and you're done - your visitors can talk to your agent directly.",
+        features: [
+          "Ready-to-copy code",
+          "Responsive widget",
+          "Integration on any site",
+          "+ WhatsApp always active"
+        ]
+      },
+      result: {
+        title: "Agent Working Perfectly!",
+        description: "See your agent in action! Natural conversations, intelligent responses and professional support 24 hours a day, every day.",
+        features: [
+          "Natural and fluid conversations",
+          "Contextualized responses",
+          "Available 24/7 without breaks"
+        ]
+      }
+    },
+    final: {
+      title: "It's That Simple!",
+      description: "In less than 10 minutes you can have your own AI agent working. No programming, no complications.",
+      cta: "See Prices Now"
+    }
+  },
+
+  // Video Section
+  video: {
+    title: "See How It Works Inside",
+    subtitle: "Complete platform demonstration and how to create your intelligent assistant"
   }
 };
