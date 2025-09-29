@@ -51,7 +51,10 @@ export default {
     fastService: {
       title: "Schneller Service",
       description: "Ihre Kunden und Leads werden jederzeit schnell beantwortet! Übernehmen Sie die Kontrolle und überwachen Sie alles, was die KI sagt."
+    }
   },
+
+  // Assistants Section
   assistants: {
     used: "Agenten erstellt",
     files: {
@@ -62,10 +65,6 @@ export default {
 
   // Dashboard
   dashboard: {
-    title: "Dashboard",
-    welcome: "Willkommen zurück",
-
-  // Footer
   footer: {
     copyright: "© 2024 CLONEFY. Alle Rechte vorbehalten."
   },

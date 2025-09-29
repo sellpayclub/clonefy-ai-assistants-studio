@@ -51,7 +51,10 @@ export default {
     fastService: {
       title: "Fast Service",
       description: "Your customers and Leads answered quickly at any time! Take control and monitor everything the AI says."
+    }
   },
+
+  // Assistants Section
   assistants: {
     used: "agents created",
     files: {
@@ -62,10 +65,6 @@ export default {
 
   // Dashboard
   dashboard: {
-    title: "Dashboard",
-    welcome: "Welcome back",
-
-  // Footer
   footer: {
     copyright: "© 2024 CLONEFY. All rights reserved."
   },

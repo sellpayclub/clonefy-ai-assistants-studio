@@ -118,39 +118,6 @@ export default {
 
   // Dashboard
   dashboard: {
-    title: "Dashboard",
-    welcome: "Bienvenido de nuevo",
-
-  // Footer
-  footer: {
-    copyright: "© 2024 CLONEFY. Todos los derechos reservados."
-  },
-
-  // Auth Pages
-  auth: {
-    title: "CLONEFY",
-    subtitle: "Plataforma de Clones de IA para WhatsApp",
-    signin: "Iniciar Sesión",
-    signup: "Registrarse",
-    email: "Email",
-    password: "Contraseña",
-    fullName: "Nombre Completo",
-    emailPlaceholder: "tu@email.com",
-    passwordPlaceholder: "••••••••",
-    fullNamePlaceholder: "Tu Nombre",
-    signInButton: "Iniciar Sesión",
-    signUpButton: "Crear Cuenta",
-    signingIn: "Iniciando sesión...",
-    signingUp: "Creando cuenta...",
-    accountCreated: "¡Cuenta creada exitosamente!",
-    checkEmail: "Revisa tu email para confirmar tu cuenta.",
-    signInError: "Error al iniciar sesión",
-    signUpError: "Error al crear cuenta",
-    signOutError: "Error al cerrar sesión"
-  },
-  
-  // Dashboard
-  dashboard: {
     title: "Panel de Control",
     welcome: "Bienvenido de vuelta",
     loading: "Cargando...",
@@ -179,9 +146,8 @@ export default {
       }
     }
   },
-  
+
   // Sidebar
-  sidebar: {
     mainMenu: "Menú Principal",
     dashboard: {
       title: "Panel",
