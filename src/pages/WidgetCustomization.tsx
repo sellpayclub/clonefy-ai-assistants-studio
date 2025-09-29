@@ -52,7 +52,7 @@ const WidgetCustomization = () => {
   const updateFormData = useCallback((field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Forçar re-render do preview para mudanças importantes
-    if (['avatar_url', 'widget_name', 'primary_color', 'secondary_color'].includes(field)) {
+    if (['avatar_url', 'widget_name', 'primary_color', 'secondary_color', 'welcome_message'].includes(field)) {
       setPreviewKey(prev => prev + 1);
     }
   }, []);
@@ -115,8 +115,14 @@ const WidgetCustomization = () => {
   useEffect(() => {
     if (selectedAssistant) {
       console.log('🔄 Mudando para assistente:', selectedAssistant);
+      console.log('🔄 FormData atual antes da mudança:', formData);
+      
       // Limpar cache do assistente anterior
       clearCache();
+      
+      // Forçar re-render imediato do preview
+      setPreviewKey(prev => prev + 1);
+      
       // Carregar personalização do novo assistente
       loadCustomization();
     }
@@ -444,6 +450,9 @@ const WidgetCustomization = () => {
                       <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
                         <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                         <span className="font-medium">Preview em Tempo Real</span>
+                        <span className="text-xs bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">
+                          Key: {previewKey}
+                        </span>
                       </div>
                       <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                         As alterações são refletidas instantaneamente no preview

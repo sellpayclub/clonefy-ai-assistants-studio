@@ -1,4 +1,4 @@
-import { useState, memo, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
 import TypingIndicator from '../TypingIndicator';
 
@@ -16,7 +16,7 @@ interface WidgetPreviewProps {
   };
 }
 
-const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customization }) => {
+const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization }) => {
   const [isOpen, setIsOpen] = useState(true); // Deixar aberto por padrão
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([
@@ -403,8 +403,6 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
       )}
     </div>
   );
-});
-
-OptimizedWidgetPreview.displayName = 'OptimizedWidgetPreview';
+};
 
 export default OptimizedWidgetPreview;
