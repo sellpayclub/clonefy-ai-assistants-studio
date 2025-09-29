@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, User, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import TypingMessage from "@/components/TypingMessage";
 
@@ -79,6 +79,25 @@ const EmbedChat = () => {
     initializeChat();
   }, [actualAgentId]);
 
+  // Escutar mensagens do widget pai
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+
+      const { type, data } = event.data;
+      
+      switch (type) {
+        case 'clonefy:config':
+          // Configuração recebida do widget
+          console.log('Configuração recebida:', data);
+          break;
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   const sendMessage = async () => {
     if (!input.trim() || isLoading || !actualAgentId) return;
 
@@ -92,6 +111,12 @@ const EmbedChat = () => {
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
+
+    // Notificar widget pai sobre nova mensagem do usuário
+    window.parent.postMessage({
+      type: 'clonefy:message_sent',
+      data: { messageType: 'user' }
+    }, '*');
 
     try {
       const { data, error } = await supabase.functions.invoke('widget-chat', {
@@ -115,8 +140,19 @@ const EmbedChat = () => {
 
         setMessages(prev => [...prev, assistantMessage]);
         
+        // Notificar widget pai sobre nova mensagem do assistente
+        window.parent.postMessage({
+          type: 'clonefy:message_sent',
+          data: { messageType: 'assistant' }
+        }, '*');
+        
         if (data.conversationId && !conversationId) {
           setConversationId(data.conversationId);
+          // Notificar widget pai sobre nova conversa
+          window.parent.postMessage({
+            type: 'clonefy:conversation_started',
+            data: { conversationId: data.conversationId }
+          }, '*');
         }
       }
     } catch (err) {
@@ -178,6 +214,19 @@ const EmbedChat = () => {
             <h3 className="font-semibold text-sm truncate">{agent.name}</h3>
             <p className="text-xs text-muted-foreground">Online agora</p>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              window.parent.postMessage({
+                type: 'clonefy:close_widget',
+                data: {}
+              }, '*');
+            }}
+            className="h-8 w-8 p-0 hover:bg-destructive/10"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
 
         {/* Messages */}

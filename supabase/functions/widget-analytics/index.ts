@@ -61,7 +61,11 @@ serve(async (req) => {
 
     switch (action) {
       case 'start_session':
-        console.log('Iniciando sessão:', { sessionId, assistantId });
+        console.log('=== INICIANDO SESSÃO ===');
+        console.log('Session ID:', sessionId);
+        console.log('Assistant ID:', assistantId);
+        console.log('User ID:', userId);
+        console.log('Date:', today);
         
         // Registrar nova sessão
         const { error: sessionError } = await supabase
@@ -80,7 +84,7 @@ serve(async (req) => {
           console.error('Erro ao criar sessão:', sessionError);
         }
 
-        // Incrementar visitantes únicos do dia
+        // Verificar se já existe analytics para hoje
         const { data: existingAnalytics } = await supabase
           .from('widget_analytics')
           .select('*')
@@ -89,14 +93,25 @@ serve(async (req) => {
           .single();
 
         if (existingAnalytics) {
-          await supabase
-            .from('widget_analytics')
-            .update({
-              unique_visitors: existingAnalytics.unique_visitors + 1,
-              updated_at: new Date().toISOString()
-            })
+          // Verificar se já existe uma sessão para este visitante hoje
+          const { data: existingSession } = await supabase
+            .from('widget_sessions')
+            .select('id')
             .eq('assistant_id', assistantId)
-            .eq('date', today);
+            .eq('session_id', sessionId)
+            .single();
+
+          // Só incrementar visitantes únicos se for uma nova sessão
+          if (!existingSession) {
+            await supabase
+              .from('widget_analytics')
+              .update({
+                unique_visitors: existingAnalytics.unique_visitors + 1,
+                updated_at: new Date().toISOString()
+              })
+              .eq('assistant_id', assistantId)
+              .eq('date', today);
+          }
         } else {
           await supabase
             .from('widget_analytics')
@@ -133,7 +148,10 @@ serve(async (req) => {
         break;
 
       case 'new_conversation':
-        console.log('Nova conversa:', { conversationId, assistantId });
+        console.log('=== NOVA CONVERSA ===');
+        console.log('Conversation ID:', conversationId);
+        console.log('Assistant ID:', assistantId);
+        console.log('Date:', today);
         
         // Incrementar conversas do dia
         const { data: convAnalytics } = await supabase
@@ -171,7 +189,11 @@ serve(async (req) => {
 
       case 'new_message':
         const messageType = body.messageType || 'user';
-        console.log('Nova mensagem:', { messageType, assistantId });
+        console.log('=== NOVA MENSAGEM ===');
+        console.log('Message Type:', messageType);
+        console.log('Assistant ID:', assistantId);
+        console.log('Session ID:', sessionId);
+        console.log('Date:', today);
         
         // Incrementar mensagens do dia
         const { data: msgAnalytics } = await supabase
