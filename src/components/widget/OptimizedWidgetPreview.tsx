@@ -30,23 +30,9 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Debug: Log das mudanças de customization
+  // Forçar re-render quando customization mudar
   useEffect(() => {
-    console.log('🔄 Widget Preview - Customization atualizada:', {
-      widget_name: customization.widget_name,
-      avatar_url: customization.avatar_url,
-      primary_color: customization.primary_color,
-      is_active: customization.is_active
-    });
-  }, [customization]);
-
-  // Forçar re-render quando customization mudar (especialmente nome e avatar)
-  useEffect(() => {
-    console.log('🔄 Forçando atualização do preview - Nome:', customization.widget_name, 'Avatar:', customization.avatar_url);
-    console.log('🔄 HeaderKey será incrementado de:', headerKey, 'para:', headerKey + 1);
-    // Forçar re-render do header quando customization mudar
     setHeaderKey(prev => prev + 1);
-    // Forçar re-render completo do componente
     setForceRender(prev => prev + 1);
   }, [customization.widget_name, customization.avatar_url, customization.primary_color, customization.secondary_color]);
 
@@ -247,36 +233,32 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
               borderTopLeftRadius: '12px',
               borderTopRightRadius: '12px'
             }}
-            onLoad={() => console.log('🔄 Header renderizado com key:', headerKey, 'Nome:', customization.widget_name, 'Avatar:', customization.avatar_url)}
           >
             {/* Avatar */}
-            <div className="flex-shrink-0" key={`avatar-${customization.avatar_url}-${Date.now()}`}>
-              {customization.avatar_url && customization.avatar_url.trim() !== '' ? (
-                <img 
-                  src={customization.avatar_url} 
-                  alt={customization.widget_name || 'Avatar'}
-                  className="w-10 h-10 rounded-full object-cover border-2 shadow-sm"
-                  style={{ borderColor: customization.secondary_color + '60' }}
-                  loading="lazy"
-                  onLoad={() => console.log('✅ Avatar carregado no header:', customization.avatar_url)}
-                  onError={(e) => {
-                    console.log('❌ Erro ao carregar avatar no header:', customization.avatar_url);
-                    e.currentTarget.style.display = 'none';
-                    // Mostrar fallback quando avatar falha
-                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                    if (fallback) fallback.style.display = 'flex';
-                  }}
-                />
-              ) : (
-                console.log('⚠️ Nenhum avatar definido, mostrando fallback')
-              )}
+            <div className="flex-shrink-0">
+              <img 
+                src={customization.avatar_url || ''} 
+                alt={customization.widget_name || 'Avatar'}
+                className="w-10 h-10 rounded-full object-cover border-2 shadow-sm"
+                style={{ 
+                  borderColor: customization.secondary_color + '60',
+                  display: customization.avatar_url && customization.avatar_url.trim() !== '' ? 'block' : 'none'
+                }}
+                loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = 'flex';
+                }}
+              />
               
-              {/* Fallback avatar - sempre presente mas oculto quando avatar carrega */}
+              {/* Fallback avatar */}
               <div 
-                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 shadow-sm ${customization.avatar_url && customization.avatar_url.trim() !== '' ? 'hidden' : 'flex'}`}
+                className="w-10 h-10 rounded-full flex items-center justify-center border-2 shadow-sm"
                 style={{ 
                   backgroundColor: customization.secondary_color + '20',
-                  borderColor: customization.secondary_color + '60' 
+                  borderColor: customization.secondary_color + '60',
+                  display: !customization.avatar_url || customization.avatar_url.trim() === '' ? 'flex' : 'none'
                 }}
               >
                 <MessageCircle className="h-5 w-5" style={{ color: customization.secondary_color }} />
@@ -292,8 +274,6 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                   textShadow: '0 1px 2px rgba(0,0,0,0.2)',
                   filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))'
                 }}
-                key={`name-${customization.widget_name}-${Date.now()}`}
-                onLoad={() => console.log('✅ Nome renderizado no header:', customization.widget_name)}
               >
                 {customization.widget_name || 'Assistente Virtual'}
               </div>

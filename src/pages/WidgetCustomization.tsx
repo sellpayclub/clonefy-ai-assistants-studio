@@ -446,18 +446,6 @@ const WidgetCustomization = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="relative overflow-visible min-h-[600px]">
-                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                        <span className="font-medium">Preview em Tempo Real</span>
-                        <span className="text-xs bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">
-                          Key: {previewKey}
-                        </span>
-                      </div>
-                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                        As alterações são refletidas instantaneamente no preview
-                      </p>
-                    </div>
                     <div key={previewKey}>
                       <OptimizedWidgetPreview 
                         customization={formData}
