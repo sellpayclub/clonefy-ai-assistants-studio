@@ -26,6 +26,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [headerKey, setHeaderKey] = useState(0);
+  const [forceRender, setForceRender] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -42,8 +43,11 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
   // Forçar re-render quando customization mudar (especialmente nome e avatar)
   useEffect(() => {
     console.log('🔄 Forçando atualização do preview - Nome:', customization.widget_name, 'Avatar:', customization.avatar_url);
+    console.log('🔄 HeaderKey será incrementado de:', headerKey, 'para:', headerKey + 1);
     // Forçar re-render do header quando customization mudar
     setHeaderKey(prev => prev + 1);
+    // Forçar re-render completo do componente
+    setForceRender(prev => prev + 1);
   }, [customization.widget_name, customization.avatar_url, customization.primary_color, customization.secondary_color]);
 
   // Simular respostas automáticas - memoizada para performance
@@ -183,7 +187,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
   }
 
   return (
-    <div className="relative bg-gray-100 dark:bg-gray-800 rounded-lg p-4 min-h-[600px] overflow-visible">
+    <div key={`widget-${forceRender}`} className="relative bg-gray-100 dark:bg-gray-800 rounded-lg p-4 min-h-[600px] overflow-visible">
       {/* Simulação de uma página web */}
       <div className="bg-white dark:bg-gray-900 rounded-md p-4 h-96 shadow-sm relative overflow-visible">
         <div className="space-y-3 mb-4">
@@ -243,6 +247,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
               borderTopLeftRadius: '12px',
               borderTopRightRadius: '12px'
             }}
+            onLoad={() => console.log('🔄 Header renderizado com key:', headerKey, 'Nome:', customization.widget_name, 'Avatar:', customization.avatar_url)}
           >
             {/* Avatar */}
             <div className="flex-shrink-0" key={`avatar-${customization.avatar_url}-${Date.now()}`}>
@@ -253,6 +258,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                   className="w-10 h-10 rounded-full object-cover border-2 shadow-sm"
                   style={{ borderColor: customization.secondary_color + '60' }}
                   loading="lazy"
+                  onLoad={() => console.log('✅ Avatar carregado no header:', customization.avatar_url)}
                   onError={(e) => {
                     console.log('❌ Erro ao carregar avatar no header:', customization.avatar_url);
                     e.currentTarget.style.display = 'none';
@@ -261,7 +267,9 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                     if (fallback) fallback.style.display = 'flex';
                   }}
                 />
-              ) : null}
+              ) : (
+                console.log('⚠️ Nenhum avatar definido, mostrando fallback')
+              )}
               
               {/* Fallback avatar - sempre presente mas oculto quando avatar carrega */}
               <div 
@@ -285,6 +293,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                   filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))'
                 }}
                 key={`name-${customization.widget_name}-${Date.now()}`}
+                onLoad={() => console.log('✅ Nome renderizado no header:', customization.widget_name)}
               >
                 {customization.widget_name || 'Assistente Virtual'}
               </div>
