@@ -175,37 +175,6 @@ export default {
     signOutError: "Erro ao sair"
   },
   
-  // Dashboard
-  dashboard: {
-    title: "Dashboard",
-    welcome: "Bem-vindo de volta",
-    loading: "Carregando...",
-    signOut: "Sair",
-    stats: {
-      agents: "Agentes",
-      agentsDesc: "Total de agentes criados",
-      connections: "Conexões WhatsApp",
-      connectionsDesc: "Instâncias conectadas"
-    },
-    quickActions: {
-      createAgent: {
-        title: "Criar Agente",
-        description: "Configure um novo agente de IA personalizado",
-        button: "Novo Agente"
-      },
-      connectWhatsApp: {
-        title: "Conectar WhatsApp",
-        description: "Adicione uma nova conexão WhatsApp via QR Code",
-        button: "Nova Conexão"
-      },
-      startChat: {
-        title: "Iniciar Chat",
-        description: "Teste seus clones de IA em uma conversa",
-        button: "Chat de Teste"
-      }
-    }
-  },
-  
   // Sidebar
   sidebar: {
     mainMenu: "Menu Principal",

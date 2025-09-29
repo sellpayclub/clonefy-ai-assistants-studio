@@ -148,6 +148,7 @@ export default {
   },
 
   // Sidebar
+  sidebar: {
     mainMenu: "Menú Principal",
     dashboard: {
       title: "Panel",

@@ -63,13 +63,12 @@ export default {
     }
   },
 
-  // Dashboard
-  dashboard: {
+  // Footer
   footer: {
     copyright: "© 2024 CLONEFY. All rights reserved."
   },
 
-  // Internal pages
+  // Auth Pages
   auth: {
     title: "CLONEFY",
     subtitle: "AI Clones Platform for WhatsApp",
@@ -92,6 +91,7 @@ export default {
     signOutError: "Sign out error"
   },
   
+  // Dashboard
   dashboard: {
     title: "Dashboard",
     welcome: "Welcome back",
@@ -122,6 +122,7 @@ export default {
     }
   },
   
+  // Sidebar
   sidebar: {
     mainMenu: "Main Menu",
     dashboard: {
