@@ -1,4 +1,4 @@
-import React, { useState, memo, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, memo, useMemo, useEffect, useCallback, useRef } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
 import TypingIndicator from '../TypingIndicator';
 
@@ -28,11 +28,15 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Só fazer log quando houver mudanças importantes
-  const hasValidData = customization.widget_name && customization.widget_name !== 'Assistente Virtual';
-  if (hasValidData) {
-    console.log('✅ Widget carregado:', customization.widget_name, customization.avatar_url ? '(com avatar)' : '(sem avatar)');
-  }
+  // Debug: Log das mudanças de customization
+  useEffect(() => {
+    console.log('🔄 Widget Preview - Customization atualizada:', {
+      widget_name: customization.widget_name,
+      avatar_url: customization.avatar_url,
+      primary_color: customization.primary_color,
+      is_active: customization.is_active
+    });
+  }, [customization]);
 
   // Simular respostas automáticas - memoizada para performance
   const simulateResponse = useCallback((userMessage: string) => {
@@ -74,7 +78,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
   }, [message, simulateResponse]);
 
   // Handle Enter key
-  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
+  const handleKeyPress = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -91,18 +95,15 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
     scrollToBottom();
   }, [messages, isTyping, scrollToBottom]);
 
-  // Atualizar APENAS a primeira mensagem (welcome) quando customization mudar
+  // Atualizar mensagens quando customization mudar (incluindo welcome message)
   useEffect(() => {
     setMessages(prev => {
-      if (prev.length === 0) return prev;
-      
-      // Só atualizar a primeira mensagem se ela ainda for a mensagem de boas-vindas padrão
-      const firstMsg = prev[0];
-      if (firstMsg.role === 'bot' && (
-        firstMsg.content === 'Olá! Como posso ajudar você hoje?' ||
-        firstMsg.content.includes('Gostaria de saber mais sobre os serviços')
-      )) {
-        // Reset completo apenas se ainda estiver com mensagens iniciais
+      // Se não há mensagens ou se ainda está com as mensagens padrão, resetar
+      if (prev.length === 0 || 
+          (prev.length === 3 && 
+           prev[0].content === 'Olá! Como posso ajudar você hoje?' &&
+           prev[1].content === 'Gostaria de saber mais sobre os serviços.')) {
+        
         return [
           { role: 'bot', content: customization.welcome_message || 'Olá! Como posso ajudar você hoje?' },
           { role: 'user', content: 'Gostaria de saber mais sobre os serviços.' },
@@ -110,7 +111,17 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
         ];
       }
       
-      // Se já houver interação do usuário, manter mensagens
+      // Se já houver interação do usuário, apenas atualizar a primeira mensagem se necessário
+      if (prev.length > 0 && prev[0].role === 'bot') {
+        const newWelcomeMessage = customization.welcome_message || 'Olá! Como posso ajudar você hoje?';
+        if (prev[0].content !== newWelcomeMessage) {
+          return [
+            { role: 'bot', content: newWelcomeMessage },
+            ...prev.slice(1)
+          ];
+        }
+      }
+      
       return prev;
     });
   }, [customization.welcome_message]);
@@ -226,7 +237,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
           >
             {/* Avatar */}
             <div className="flex-shrink-0">
-              {customization.avatar_url ? (
+              {customization.avatar_url && customization.avatar_url.trim() !== '' ? (
                 <img 
                   src={customization.avatar_url} 
                   alt={customization.widget_name || 'Avatar'}
@@ -236,19 +247,23 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
                   onError={(e) => {
                     console.log('❌ Erro ao carregar avatar no header:', customization.avatar_url);
                     e.currentTarget.style.display = 'none';
+                    // Mostrar fallback quando avatar falha
+                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
                   }}
                 />
-              ) : (
-                <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center border-2 shadow-sm"
-                  style={{ 
-                    backgroundColor: customization.secondary_color + '20',
-                    borderColor: customization.secondary_color + '60' 
-                  }}
-                >
-                  <MessageCircle className="h-5 w-5" style={{ color: customization.secondary_color }} />
-                </div>
-              )}
+              ) : null}
+              
+              {/* Fallback avatar - sempre presente mas oculto quando avatar carrega */}
+              <div 
+                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 shadow-sm ${customization.avatar_url && customization.avatar_url.trim() !== '' ? 'hidden' : 'flex'}`}
+                style={{ 
+                  backgroundColor: customization.secondary_color + '20',
+                  borderColor: customization.secondary_color + '60' 
+                }}
+              >
+                <MessageCircle className="h-5 w-5" style={{ color: customization.secondary_color }} />
+              </div>
             </div>
 
             {/* Nome e Status */}
@@ -282,7 +297,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
               <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'items-start gap-2'}`}>
                 {msg.role === 'bot' && (
                   <div className="flex-shrink-0">
-                    {customization.avatar_url ? (
+                    {customization.avatar_url && customization.avatar_url.trim() !== '' ? (
                       <img 
                         src={customization.avatar_url} 
                         alt={customization.widget_name || 'Avatar'}
@@ -291,13 +306,20 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
                         onError={(e) => {
                           console.log('❌ Erro ao carregar avatar na mensagem:', customization.avatar_url);
                           e.currentTarget.style.display = 'none';
+                          // Mostrar fallback quando avatar falha
+                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
                         }}
                       />
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center mt-1">
-                        <MessageCircle className="h-3 w-3" />
-                      </div>
-                    )}
+                    ) : null}
+                    
+                    {/* Fallback avatar para mensagens */}
+                    <div 
+                      className={`w-6 h-6 rounded-full flex items-center justify-center mt-1 ${customization.avatar_url && customization.avatar_url.trim() !== '' ? 'hidden' : 'flex'}`}
+                      style={{ backgroundColor: `${customization.primary_color}20` }}
+                    >
+                      <MessageCircle className="h-3 w-3" style={{ color: customization.primary_color }} />
+                    </div>
                   </div>
                 )}
                 <div 
@@ -312,18 +334,28 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = memo(({ customizati
             {/* Typing Indicator */}
             {isTyping && (
               <div className="flex items-start gap-2">
-                {customization.avatar_url ? (
+                {customization.avatar_url && customization.avatar_url.trim() !== '' ? (
                   <img 
                     src={customization.avatar_url} 
                     alt={customization.widget_name || 'Avatar'}
                     className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-1"
                     loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
                   />
-                ) : (
-                  <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center mt-1">
-                    <MessageCircle className="h-3 w-3" />
-                  </div>
-                )}
+                ) : null}
+                
+                {/* Fallback avatar para typing indicator */}
+                <div 
+                  className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${customization.avatar_url && customization.avatar_url.trim() !== '' ? 'hidden' : 'flex'}`}
+                  style={{ backgroundColor: `${customization.primary_color}20` }}
+                >
+                  <MessageCircle className="h-3 w-3" style={{ color: customization.primary_color }} />
+                </div>
+                
                 <div className="flex space-x-1 items-center px-3 py-2 rounded-lg" style={styles.botMessage}>
                   <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0ms' }}></div>
                   <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '150ms' }}></div>

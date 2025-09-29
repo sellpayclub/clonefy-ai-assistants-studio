@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,10 +44,16 @@ const WidgetCustomization = () => {
     button_position: 'right' as 'left' | 'right',
     is_active: true
   });
+  
+  const [previewKey, setPreviewKey] = useState(0);
 
   // Update formData diretamente - removido preview separado para evitar conflitos
   const updateFormData = useCallback((field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Forçar re-render do preview para mudanças importantes
+    if (['avatar_url', 'widget_name', 'primary_color', 'secondary_color'].includes(field)) {
+      setPreviewKey(prev => prev + 1);
+    }
   }, []);
 
   useEffect(() => {
@@ -74,14 +80,16 @@ const WidgetCustomization = () => {
         is_active: customization.is_active !== false
       };
       
-      console.log('🔄 Updating form data from DB:', {
+      console.log('🔄 Atualizando formData do banco de dados:', {
         loaded: customization,
         newFormData
       });
       
       setFormData(newFormData);
       
-      console.log('✅ Form data synchronized');
+      console.log('✅ FormData sincronizado com sucesso');
+    } else {
+      console.log('⚠️ Nenhuma personalização encontrada, usando valores padrão');
     }
   }, [customization]);
 
@@ -118,22 +126,28 @@ const WidgetCustomization = () => {
     }
 
     try {
+      console.log('💾 Salvando personalização:', formData);
+      
       const result = await saveCustomization(formData);
       
-      // Recarregar dados após salvar para garantir sincronização
       if (result) {
+        console.log('✅ Personalização salva com sucesso:', result);
+        
+        // Forçar reload dos dados para garantir sincronização
         await loadCustomization();
+        
+        toast({
+          title: 'Sucesso!',
+          description: 'Personalização salva e ativa no widget',
+        });
+      } else {
+        throw new Error('Nenhum resultado retornado do salvamento');
       }
-      
-      toast({
-        title: 'Sucesso!',
-        description: 'Personalização salva com sucesso',
-      });
     } catch (error) {
-      console.error('Erro ao salvar:', error);
+      console.error('❌ Erro ao salvar personalização:', error);
       toast({
         title: 'Erro',
-        description: 'Erro ao salvar personalização',
+        description: `Erro ao salvar personalização: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: 'destructive'
       });
     }
@@ -334,9 +348,13 @@ const WidgetCustomization = () => {
                         />
                         <Label htmlFor="is_active">Widget Ativo</Label>
                         {formData.is_active ? (
-                          <Badge variant="default">Ativo</Badge>
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Ativo
+                          </span>
                         ) : (
-                          <Badge variant="secondary">Inativo</Badge>
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            Inativo
+                          </span>
                         )}
                       </div>
                     </CardContent>
@@ -366,7 +384,14 @@ const WidgetCustomization = () => {
 
               <div className="flex gap-2">
                 <Button onClick={handleSave} disabled={loading} className="flex-1">
-                  {loading ? 'Salvando...' : 'Salvar Personalização'}
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Salvando...
+                    </>
+                  ) : (
+                    'Salvar Personalização'
+                  )}
                 </Button>
                 <Button variant="outline" onClick={() => window.open(`/embed-chat?assistant=${selectedAssistant}`, '_blank')}>
                   <MessageCircle className="h-4 w-4 mr-2" />
@@ -393,9 +418,20 @@ const WidgetCustomization = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="relative overflow-visible min-h-[600px]">
-                    <OptimizedWidgetPreview 
-                      customization={formData}
-                    />
+                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                        <span className="font-medium">Preview em Tempo Real</span>
+                      </div>
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        As alterações são refletidas instantaneamente no preview
+                      </p>
+                    </div>
+                    <div key={previewKey}>
+                      <OptimizedWidgetPreview 
+                        customization={formData}
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
