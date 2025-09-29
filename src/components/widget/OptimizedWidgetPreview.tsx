@@ -36,6 +36,14 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
     setForceRender(prev => prev + 1);
   }, [customization.widget_name, customization.avatar_url, customization.primary_color, customization.secondary_color]);
 
+  // Forçar re-render do chat quando customization mudar (mesmo com chat aberto)
+  useEffect(() => {
+    if (isOpen) {
+      // Forçar re-render do chat window quando customization mudar
+      setForceRender(prev => prev + 1);
+    }
+  }, [customization.widget_name, customization.avatar_url, isOpen]);
+
   // Simular respostas automáticas - memoizada para performance
   const simulateResponse = useCallback((userMessage: string) => {
     const responses = [
@@ -220,6 +228,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
       {/* Chat Window - FORA DO CONTAINER DA PÁGINA SIMULADA */}
       {isOpen && (
         <div
+          key={`chat-${forceRender}`}
           className={`absolute ${customization.button_position === 'left' ? 'left-8' : 'right-8'} top-8 w-72 h-80 rounded-xl shadow-2xl border overflow-hidden transition-all duration-300 z-20`}
           style={styles.chat}
         >
