@@ -25,6 +25,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
     { role: 'bot', content: 'Claro! Ficarei feliz em explicar nossos serviços. O que especificamente você gostaria de saber?' }
   ]);
   const [isTyping, setIsTyping] = useState(false);
+  const [headerKey, setHeaderKey] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -37,6 +38,13 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
       is_active: customization.is_active
     });
   }, [customization]);
+
+  // Forçar re-render quando customization mudar (especialmente nome e avatar)
+  useEffect(() => {
+    console.log('🔄 Forçando atualização do preview - Nome:', customization.widget_name, 'Avatar:', customization.avatar_url);
+    // Forçar re-render do header quando customization mudar
+    setHeaderKey(prev => prev + 1);
+  }, [customization.widget_name, customization.avatar_url, customization.primary_color, customization.secondary_color]);
 
   // Simular respostas automáticas - memoizada para performance
   const simulateResponse = useCallback((userMessage: string) => {
@@ -227,6 +235,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
         >
           {/* Header */}
           <div 
+            key={`header-${headerKey}`}
             className="p-4 flex items-center gap-3 relative"
             style={{
               backgroundColor: customization.primary_color,
@@ -236,7 +245,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
             }}
           >
             {/* Avatar */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0" key={`avatar-${customization.avatar_url}-${Date.now()}`}>
               {customization.avatar_url && customization.avatar_url.trim() !== '' ? (
                 <img 
                   src={customization.avatar_url} 
@@ -275,6 +284,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                   textShadow: '0 1px 2px rgba(0,0,0,0.2)',
                   filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))'
                 }}
+                key={`name-${customization.widget_name}-${Date.now()}`}
               >
                 {customization.widget_name || 'Assistente Virtual'}
               </div>
