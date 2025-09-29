@@ -61,6 +61,7 @@ const WidgetAnalytics = () => {
     }
   };
 
+
   const calculateTotals = () => {
     if (!analytics.length) {
       return {
@@ -117,7 +118,14 @@ const WidgetAnalytics = () => {
   };
 
   const generateSampleData = async () => {
-    if (!selectedAssistant) return;
+    if (!selectedAssistant) {
+      toast({
+        title: 'Erro',
+        description: 'Selecione um assistente primeiro',
+        variant: 'destructive'
+      });
+      return;
+    }
     
     try {
       setGeneratingData(true);

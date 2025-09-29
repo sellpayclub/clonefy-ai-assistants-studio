@@ -24,13 +24,19 @@ export const useOptimizedWidgetCustomization = (assistantId: string) => {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const loadCustomization = useCallback(async () => {
-    if (!assistantId) return;
+    if (!assistantId) {
+      setCustomization(null);
+      return;
+    }
+
+    console.log('🔄 Carregando personalização para assistente:', assistantId);
 
     // Verificar cache local
     const cached = customizationCache.get(assistantId);
     const now = Date.now();
     
     if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+      console.log('📦 Usando dados do cache para assistente:', assistantId);
       setCustomization(cached.data);
       return;
     }
@@ -60,6 +66,8 @@ export const useOptimizedWidgetCustomization = (assistantId: string) => {
           button_position: (data.button_position as 'left' | 'right') || 'right'
         };
         
+        console.log('✅ Personalização carregada do banco:', customizationData);
+        
         // Atualizar cache
         customizationCache.set(assistantId, {
           data: customizationData,
@@ -67,9 +75,13 @@ export const useOptimizedWidgetCustomization = (assistantId: string) => {
         });
         
         setCustomization(customizationData);
+      } else {
+        console.log('⚠️ Nenhuma personalização encontrada para assistente:', assistantId);
+        setCustomization(null);
       }
     } catch (error: any) {
-      console.error('Erro ao carregar personalização:', error);
+      console.error('❌ Erro ao carregar personalização:', error);
+      setCustomization(null);
     } finally {
       setLoading(false);
     }
@@ -132,11 +144,17 @@ export const useOptimizedWidgetCustomization = (assistantId: string) => {
     };
   }, []);
 
+  // Limpar cache quando mudar de assistente
+  const clearCache = useCallback(() => {
+    customizationCache.delete(assistantId);
+    console.log('🗑️ Cache limpo para assistente:', assistantId);
+  }, [assistantId]);
+
   return {
     customization,
     loading,
     loadCustomization,
     saveCustomization,
-    clearCache: () => customizationCache.delete(assistantId)
+    clearCache
   };
 };

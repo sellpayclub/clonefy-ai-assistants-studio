@@ -30,7 +30,8 @@ const WidgetCustomization = () => {
     customization,
     loading,
     saveCustomization,
-    loadCustomization
+    loadCustomization,
+    clearCache
   } = useOptimizedWidgetCustomization(selectedAssistant || assistantId || '');
 
   const [formData, setFormData] = useState({
@@ -81,24 +82,45 @@ const WidgetCustomization = () => {
       };
       
       console.log('🔄 Atualizando formData do banco de dados:', {
+        assistantId: selectedAssistant,
         loaded: customization,
         newFormData
       });
       
       setFormData(newFormData);
       
+      // Forçar re-render do preview quando mudar de assistente
+      setPreviewKey(prev => prev + 1);
+      
       console.log('✅ FormData sincronizado com sucesso');
     } else {
       console.log('⚠️ Nenhuma personalização encontrada, usando valores padrão');
+      // Reset para valores padrão quando não há personalização
+      setFormData({
+        widget_name: 'Assistente Virtual',
+        avatar_url: '',
+        button_icon_url: '',
+        welcome_message: 'Olá! Como posso ajudar você hoje?',
+        primary_color: '#0066cc',
+        secondary_color: '#f8f9fa',
+        text_color: '#333333',
+        button_position: 'right' as 'left' | 'right',
+        is_active: true
+      });
+      setPreviewKey(prev => prev + 1);
     }
-  }, [customization]);
+  }, [customization, selectedAssistant]);
 
   // Carregar customização quando assistente muda
   useEffect(() => {
     if (selectedAssistant) {
+      console.log('🔄 Mudando para assistente:', selectedAssistant);
+      // Limpar cache do assistente anterior
+      clearCache();
+      // Carregar personalização do novo assistente
       loadCustomization();
     }
-  }, [selectedAssistant, loadCustomization]);
+  }, [selectedAssistant, loadCustomization, clearCache]);
 
   const loadAssistants = async () => {
     try {

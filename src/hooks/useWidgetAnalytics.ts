@@ -34,46 +34,70 @@ export const useWidgetAnalytics = (assistantId: string, period: '7d' | '30d' | '
   };
 
   const loadAnalytics = useCallback(async () => {
-    if (!assistantId) return;
+    if (!assistantId) {
+      console.log('⚠️ Analytics: Nenhum assistente selecionado');
+      return;
+    }
 
     try {
       setLoading(true);
       const days = getPeriodDays(period);
+      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
+      console.log('📊 Carregando analytics para assistente:', assistantId, 'período:', period, 'desde:', startDate);
       
       const { data, error } = await supabase
         .from('widget_analytics')
         .select('*')
         .eq('assistant_id', assistantId)
-        .gte('date', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+        .gte('date', startDate)
         .order('date', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao carregar analytics:', error);
+        throw error;
+      }
+      
+      console.log('✅ Analytics carregados:', data?.length || 0, 'registros');
       setAnalytics(data || []);
     } catch (error) {
-      console.error('Erro ao carregar analytics:', error);
+      console.error('❌ Erro ao carregar analytics:', error);
+      setAnalytics([]);
     } finally {
       setLoading(false);
     }
   }, [assistantId, period]);
 
   const loadSessions = useCallback(async () => {
-    if (!assistantId) return;
+    if (!assistantId) {
+      console.log('⚠️ Sessions: Nenhum assistente selecionado');
+      return;
+    }
 
     try {
       const days = getPeriodDays(period);
+      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+      
+      console.log('📊 Carregando sessões para assistente:', assistantId, 'desde:', startDate);
       
       const { data, error } = await supabase
         .from('widget_sessions')
         .select('*')
         .eq('assistant_id', assistantId)
-        .gte('start_time', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
+        .gte('start_time', startDate)
         .order('start_time', { ascending: false })
         .limit(100);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao carregar sessões:', error);
+        throw error;
+      }
+      
+      console.log('✅ Sessões carregadas:', data?.length || 0, 'registros');
       setSessions(data || []);
     } catch (error) {
-      console.error('Erro ao carregar sessões:', error);
+      console.error('❌ Erro ao carregar sessões:', error);
+      setSessions([]);
     }
   }, [assistantId, period]);
 
