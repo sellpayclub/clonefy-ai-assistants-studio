@@ -76,13 +76,13 @@ const Index = () => {
                 {t('header.login')}
               </Button>
             </Link>
-            <a href="https://pay.plataformasellpay.com.br/checkout-white-6917/?add-to-cart=6917" target="_blank" rel="noopener noreferrer">
+            <a href="https://lastlink.com/p/C202BF9D3/checkout-payment/" target="_blank" rel="noopener noreferrer">
               <Button 
                 size="sm" 
                 className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-sm lg:text-base px-3 sm:px-4 lg:px-6"
               >
-                <span className="hidden sm:inline">{t('header.startFree')}</span>
-                <span className="sm:hidden">Começar</span>
+                <span className="hidden sm:inline">Começar por R$ 97</span>
+                <span className="sm:hidden">R$ 97</span>
               </Button>
             </a>
           </div>
@@ -504,83 +504,135 @@ const Index = () => {
       {/* Pricing Section */}
       <section id="pricing-section" className="container mx-auto px-4 py-12 sm:py-16 lg:py-20">
         <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 px-2">{t('pricing.title')}</h2>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 px-2">Escolha Seu Plano</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg px-2">
-            {t('pricing.subtitle')}
+            Planos flexíveis para atender desde pequenos negócios até grandes empresas
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
-          {/* Funcionário Tradicional */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
+          {/* Plano 1 - Básico */}
           <div className="p-6 sm:p-8 rounded-xl sm:rounded-2xl border bg-card/30">
             <div className="text-center mb-6">
-              <h3 className="text-xl sm:text-2xl font-bold text-muted-foreground mb-2">{t('pricing.traditional.title')}</h3>
-              <div className="text-3xl sm:text-4xl font-bold text-muted-foreground">{t('pricing.currency')}{t('pricing.traditional.price')}</div>
-              <p className="text-muted-foreground text-sm sm:text-base">{t('pricing.traditional.period')}</p>
+              <h3 className="text-xl sm:text-2xl font-bold mb-2">Plano Básico</h3>
+              <div className="text-3xl sm:text-4xl font-bold text-primary">R$ 97</div>
+              <p className="text-muted-foreground text-sm sm:text-base">/mês</p>
             </div>
-            <ul className="space-y-3 text-muted-foreground">
+            <ul className="space-y-3 text-muted-foreground mb-8">
               <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-muted-foreground/50 flex-shrink-0"></div>
-                {t('pricing.traditional.features.0')}
+                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+                1 agente de IA personalizado
               </li>
               <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-muted-foreground/50 flex-shrink-0"></div>
-                {t('pricing.traditional.features.1')}
+                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+                1 conexão WhatsApp
               </li>
               <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-muted-foreground/50 flex-shrink-0"></div>
-                {t('pricing.traditional.features.2')}
+                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+                Atendimento 24/7
               </li>
               <li className="flex items-center gap-2 text-sm sm:text-base">
-                <div className="w-2 h-2 rounded-full bg-muted-foreground/50 flex-shrink-0"></div>
-                {t('pricing.traditional.features.3')}
+                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+                Chat flutuante no site
               </li>
             </ul>
+            <a href="https://lastlink.com/p/C202BF9D3/checkout-payment/" target="_blank" rel="noopener noreferrer">
+              <Button className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
+                Escolher Plano Básico
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </a>
           </div>
 
-          {/* CLONEFY */}
+          {/* Plano 2 - Profissional */}
           <div className="p-6 sm:p-8 rounded-xl sm:rounded-2xl border-2 border-primary bg-gradient-to-br from-primary/5 to-primary/10 relative overflow-hidden">
             <div className="absolute top-3 sm:top-4 right-3 sm:right-4">
               <span className="bg-primary text-primary-foreground px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
-                {t('pricing.clonefy.recommended')}
+                MAIS POPULAR
               </span>
             </div>
             <div className="text-center mb-6">
-              <h3 className="text-xl sm:text-2xl font-bold mb-2">{t('pricing.clonefy.title')}</h3>
-              <div className="text-3xl sm:text-4xl font-bold text-primary">{t('pricing.currency')}{t('pricing.clonefy.price')}</div>
-              <p className="text-muted-foreground text-sm sm:text-base">{t('pricing.clonefy.period')}</p>
+              <h3 className="text-xl sm:text-2xl font-bold mb-2">Plano Profissional</h3>
+              <div className="text-3xl sm:text-4xl font-bold text-primary">R$ 297</div>
+              <p className="text-muted-foreground text-sm sm:text-base">/mês</p>
             </div>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-primary text-sm sm:text-base">
+            <ul className="space-y-3 text-primary mb-8">
+              <li className="flex items-center gap-2 text-sm sm:text-base">
                 <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                {t('pricing.clonefy.features.0')}
+                3 agentes de IA personalizados
               </li>
-              <li className="flex items-center gap-2 text-primary text-sm sm:text-base">
+              <li className="flex items-center gap-2 text-sm sm:text-base">
                 <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                {t('pricing.clonefy.features.1')}
+                3 conexões WhatsApp
               </li>
-              <li className="flex items-center gap-2 text-primary text-sm sm:text-base">
+              <li className="flex items-center gap-2 text-sm sm:text-base">
                 <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                {t('pricing.clonefy.features.2')}
+                Atendimento 24/7
               </li>
-              <li className="flex items-center gap-2 text-primary text-sm sm:text-base">
+              <li className="flex items-center gap-2 text-sm sm:text-base">
                 <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-                {t('pricing.clonefy.features.3')}
+                Chat flutuante no site
+              </li>
+              <li className="flex items-center gap-2 text-sm sm:text-base">
+                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+                Suporte prioritário
               </li>
             </ul>
+            <a href="https://lastlink.com/p/C0141B7E4/checkout-payment/" target="_blank" rel="noopener noreferrer">
+              <Button className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
+                Escolher Plano Profissional
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </a>
+          </div>
+
+          {/* Plano 3 - Empresarial */}
+          <div className="p-6 sm:p-8 rounded-xl sm:rounded-2xl border bg-card/30">
+            <div className="text-center mb-6">
+              <h3 className="text-xl sm:text-2xl font-bold mb-2">Plano Empresarial</h3>
+              <div className="text-3xl sm:text-4xl font-bold text-primary">R$ 497</div>
+              <p className="text-muted-foreground text-sm sm:text-base">pagamento único anual</p>
+              <p className="text-xs text-green-600 font-medium">Parcelável em até 12x no cartão</p>
+            </div>
+            <ul className="space-y-3 text-muted-foreground mb-8">
+              <li className="flex items-center gap-2 text-sm sm:text-base">
+                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+                5 agentes de IA personalizados
+              </li>
+              <li className="flex items-center gap-2 text-sm sm:text-base">
+                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+                5 conexões WhatsApp
+              </li>
+              <li className="flex items-center gap-2 text-sm sm:text-base">
+                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+                Atendimento 24/7
+              </li>
+              <li className="flex items-center gap-2 text-sm sm:text-base">
+                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+                Chat flutuante no site
+              </li>
+              <li className="flex items-center gap-2 text-sm sm:text-base">
+                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+                Suporte prioritário
+              </li>
+              <li className="flex items-center gap-2 text-sm sm:text-base">
+                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+                Economia de 2 meses
+              </li>
+            </ul>
+            <a href="https://lastlink.com/p/CCA6AF0AD/checkout-payment/" target="_blank" rel="noopener noreferrer">
+              <Button className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
+                Escolher Plano Empresarial
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </a>
           </div>
         </div>
 
         <div className="text-center mt-8 sm:mt-12">
           <p className="text-lg sm:text-xl lg:text-2xl font-bold mb-6 sm:mb-8 px-2">
-            {t('pricing.finalMessage')} <span className="text-primary">{t('pricing.finalMessageHighlight')}</span>
+            Contrate IA e não humanos, <span className="text-primary">o Futuro já Chegou!</span>
           </p>
-          <a href="https://pay.plataformasellpay.com.br/checkout-white-6917/?add-to-cart=6917" target="_blank" rel="noopener noreferrer">
-            <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 px-8 sm:px-12 py-4 sm:py-6 text-base sm:text-lg">
-              {t('pricing.startNow')}
-              <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
-          </a>
         </div>
       </section>
 

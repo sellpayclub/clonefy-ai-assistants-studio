@@ -44,7 +44,7 @@ const LeadCapture = () => {
   };
 
   const redirectToClonefy = () => {
-    window.open("https://pay.plataformasellpay.com.br/checkout-white-6917/?add-to-cart=6917", "_blank");
+    window.open("https://lastlink.com/p/C202BF9D3/checkout-payment/", "_blank");
   };
 
   if (isQualified === false) {
