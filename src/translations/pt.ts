@@ -118,50 +118,33 @@ export default {
 
   // Dashboard
   dashboard: {
-        title: "Plano Básico",
-        price: "97",
-        period: "/mês",
-        features: [
-          "1 agente de IA personalizado",
-          "1 conexão WhatsApp",
-          "Atendimento 24/7",
-          "Chat flutuante no site"
-        ],
-        button: "Escolher Plano Básico"
-      },
-      professional: {
-        title: "Plano Profissional",
-        price: "297",
-        period: "/mês",
-        recommended: "MAIS POPULAR",
-        features: [
-          "3 agentes de IA personalizados",
-          "3 conexões WhatsApp",
-          "Atendimento 24/7",
-          "Chat flutuante no site",
-          "Suporte prioritário"
-        ],
-        button: "Escolher Plano Profissional"
-      },
-      enterprise: {
-        title: "Plano Empresarial",
-        price: "497",
-        period: "pagamento único anual",
-        installment: "Parcelável em até 12x no cartão",
-        features: [
-          "5 agentes de IA personalizados",
-          "5 conexões WhatsApp",
-          "Atendimento 24/7",
-          "Chat flutuante no site",
-          "Suporte prioritário",
-          "Economia de 2 meses"
-        ],
-        button: "Escolher Plano Empresarial"
-      }
+    title: "Dashboard",
+    welcome: "Bem-vindo de volta",
+    loading: "Carregando...",
+    signOut: "Sair",
+    stats: {
+      agents: "Agentes",
+      agentsDesc: "Total de agentes criados",
+      connections: "Conexões WhatsApp",
+      connectionsDesc: "Instâncias conectadas"
     },
-    finalMessage: "Contrate IA e não humanos,",
-    finalMessageHighlight: "o Futuro já Chegou!",
-    startNow: "Começar por R$ 97"
+    quickActions: {
+      createAgent: {
+        title: "Criar Agente",
+        description: "Configure um novo agente de IA personalizado",
+        button: "Novo Agente"
+      },
+      connectWhatsApp: {
+        title: "Conectar WhatsApp",
+        description: "Adicione uma nova conexão WhatsApp via QR Code",
+        button: "Nova Conexão"
+      },
+      startChat: {
+        title: "Iniciar Chat",
+        description: "Teste seus clones de IA em uma conversa",
+        button: "Chat de Teste"
+      }
+    }
   },
 
   // Footer
