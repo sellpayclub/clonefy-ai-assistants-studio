@@ -7,7 +7,7 @@ export default {
   
   // Hero Section
   hero: {
-    badge: "🚀 Lernen Sie die Künstliche Intelligenz kennen, die 24/7 für Sie verkauft",
+    badge: "🚀 Treffen Sie die Künstliche Intelligenz, die 24/7 für Sie verkauft",
     title: "Klonen Sie Ihren besten",
     roles: {
       vendedor: "Verkäufer",
@@ -16,102 +16,51 @@ export default {
       funcionario: "Angestellten"
     },
     titleEnd: "mit KI!",
-    subtitle: "Haben Sie KI-Agenten, die für Ihr Unternehmen trainiert sind und 24 Stunden am Tag auf WhatsApp arbeiten.",
+    subtitle: "Haben Sie KI-Agenten, die für Ihr Unternehmen geschult sind und 24 Stunden am Tag über WhatsApp bedienen.",
     subtitleBold: "100% automatisch und humanisiert!",
-    createAssistant: "Meinen Ersten Assistenten Erstellen",
+    createAssistant: "Meinen Ersten KI-Klon Erstellen",
     watchDemo: "Demo Ansehen",
-    description1: "Bringen Sie Ihrem Klon bei, Ihr Verkaufsskript oder Ihren Service zu befolgen und automatisieren Sie 100% Ihres WhatsApp",
-    description2: "Ihr Mitarbeiter ist 24 Stunden am Tag verfügbar, ohne Pause und zahlt 10% eines Gehalts."
+    description1: "Bringen Sie Ihrem Klon bei, Ihrem Verkaufsskript oder Ihrem Service zu folgen und automatisieren Sie 100% Ihres WhatsApp",
+    description2: "Ihr Mitarbeiter 24 Stunden am Tag verfügbar, ohne Pause und zahlt 10% eines Gehalts."
   },
 
   // Features Section
   features: {
     title: "Leistungsstarke Funktionen",
-    subtitle: "Alles was Sie brauchen, um Ihren Kundenservice zu automatisieren und zu skalieren",
+    subtitle: "Alles, was Sie brauchen, um Ihren Kundenservice zu automatisieren und zu skalieren",
     salesAgent: {
-      title: "Vertriebsagent",
-      description: "SDR, Closer, Professioneller Verkäufer! Bringen Sie Ihrem Klon bei, Ihr Produkt/Service zu verkaufen und erstellen Sie einen professionellen Verkäufer, der sich mit jedem Gespräch anpasst und verbessert, personalisierte Links, Videos und vieles mehr sendet."
+      title: "Verkaufsagent",
+      description: "SDR, Closer, Professioneller Verkäufer! Bringen Sie Ihrem Klon bei, Ihr Produkt/Ihre Dienstleistung zu verkaufen und erstellen Sie einen professionellen Verkäufer, der sich mit jedem Gespräch anpasst und verbessert, personalisierte Links, Videos und vieles mehr sendet."
     },
     scheduling: {
       title: "Terminplanung",
-      description: "Erstellen Sie eine Sekretär.KI und lassen Sie sie sich um Ihren Terminkalender kümmern und die Betreuung Ihrer Kunden intelligent und personalisiert verwalten."
+      description: "Erstellen Sie eine secretar.AI und lassen Sie sie sich um Ihre Agenda kümmern und den Service Ihrer Kunden auf intelligente und personalisierte Weise verwalten."
     },
     multiService: {
       title: "Multi-Service",
-      description: "Ihr Klon wird einen Gesprächsverlauf haben und jeden Kunden personalisiert betreuen, sich an alle erinnern und eine 100% personalisierte Betreuung schaffen."
+      description: "Ihr Klon hat eine Gesprächshistorie und bedient jeden Kunden auf personalisierte Weise, erinnert sich an alle und erstellt einen 100% personalisierten Service."
     },
     support: {
       title: "Support & Service",
-      description: "Nutzen Sie Ihren Klon, um Ihren Kundensupport und -service zu automatisieren, fügen Sie alle Informationen über Ihr Unternehmen hinzu und stellen Sie ihn zur Verfügung, um Ihren Kunden zu helfen."
+      description: "Nutzen Sie Ihren Klon, um Ihren Kundensupport und -service zu automatisieren, fügen Sie alle Informationen über Ihr Unternehmen hinzu und stellen Sie sie bereit, um Ihren Kunden zu helfen."
     },
     naturalConversations: {
       title: "Natürliche Gespräche",
-      description: "Ihre Künstliche Intelligenz unterhält sich natürlich und humanisiert, immer mit viel Sympathie und Professionalität."
+      description: "Ihre Künstliche Intelligenz unterhält sich natürlich und humanisiert, immer mit großer Sympathie und Professionalität."
     },
     fastService: {
       title: "Schneller Service",
       description: "Ihre Kunden und Leads werden jederzeit schnell beantwortet! Übernehmen Sie die Kontrolle und überwachen Sie alles, was die KI sagt."
+    }
   },
+
+  // Assistants Section
   assistants: {
     used: "Agenten erstellt",
     files: {
-      title: "Agent-Dateien",
+      title: "Agentendateien",
       description: "Fügen Sie Bilder, Videos und Dokumente hinzu, die die KI automatisch in WhatsApp-Gesprächen senden kann."
     }
-  }
-  },
-
-  // Pricing Section
-  pricing: {
-    title: "Wählen Sie Ihren Plan",
-    subtitle: "Flexible Pläne für kleine Unternehmen bis hin zu großen Konzernen",
-    currency: "€",
-    plans: {
-      basic: {
-        title: "Basis-Plan",
-        price: "17",
-        period: "/Monat",
-        features: [
-          "1 personalisierter KI-Agent",
-          "1 WhatsApp-Verbindung",
-          "24/7 Support",
-          "Schwebender Chat auf der Website"
-        ],
-        button: "Basis-Plan wählen"
-      },
-      professional: {
-        title: "Profi-Plan",
-        price: "49",
-        period: "/Monat",
-        recommended: "BELIEBTEST",
-        features: [
-          "3 personalisierte KI-Agenten",
-          "3 WhatsApp-Verbindungen",
-          "24/7 Support",
-          "Schwebender Chat auf der Website",
-          "Prioritäts-Support"
-        ],
-        button: "Profi-Plan wählen"
-      },
-      enterprise: {
-        title: "Unternehmens-Plan",
-        price: "79",
-        period: "einmalige Jahreszahlung",
-        installment: "In bis zu 12 Raten zahlbar",
-        features: [
-          "5 personalisierte KI-Agenten",
-          "5 WhatsApp-Verbindungen",
-          "24/7 Support",
-          "Schwebender Chat auf der Website",
-          "Prioritäts-Support",
-          "2 Monate Ersparnis"
-        ],
-        button: "Unternehmens-Plan wählen"
-      }
-    },
-    finalMessage: "Stellen Sie KI ein und keine Menschen,",
-    finalMessageHighlight: "die Zukunft ist da!",
-    startNow: "Für €17/Monat starten"
   },
 
   // Footer
@@ -119,10 +68,10 @@ export default {
     copyright: "© 2024 CLONEFY. Alle Rechte vorbehalten."
   },
 
-  // Interne Seiten
+  // Auth Pages
   auth: {
     title: "CLONEFY",
-    subtitle: "KI-Assistenten-Plattform für WhatsApp",
+    subtitle: "KI-Klone-Plattform für WhatsApp",
     signin: "Anmelden",
     signup: "Registrieren",
     email: "E-Mail",
@@ -133,7 +82,7 @@ export default {
     fullNamePlaceholder: "Ihr Name",
     signInButton: "Anmelden",
     signUpButton: "Konto Erstellen",
-    signingIn: "Anmeldung...",
+    signingIn: "Anmeldung läuft...",
     signingUp: "Konto wird erstellt...",
     accountCreated: "Konto erfolgreich erstellt!",
     checkEmail: "Überprüfen Sie Ihre E-Mail, um Ihr Konto zu bestätigen.",
@@ -142,6 +91,7 @@ export default {
     signOutError: "Abmeldefehler"
   },
   
+  // Dashboard
   dashboard: {
     title: "Dashboard",
     welcome: "Willkommen zurück",
@@ -149,38 +99,39 @@ export default {
     signOut: "Abmelden",
     stats: {
       agents: "Agenten",
-      agentsDesc: "Erstellte Agenten insgesamt",
+      agentsDesc: "Insgesamt erstellte Agenten",
       connections: "WhatsApp-Verbindungen",
       connectionsDesc: "Verbundene Instanzen"
     },
     quickActions: {
       createAgent: {
         title: "Agent Erstellen",
-        description: "Einen neuen personalisierten KI-Agenten einrichten",
+        description: "Richten Sie einen neuen personalisierten KI-Agenten ein",
         button: "Neuer Agent"
       },
       connectWhatsApp: {
         title: "WhatsApp Verbinden",
-        description: "Eine neue WhatsApp-Verbindung über QR-Code hinzufügen",
+        description: "Fügen Sie eine neue WhatsApp-Verbindung über QR-Code hinzu",
         button: "Neue Verbindung"
       },
       startChat: {
         title: "Chat Starten",
-        description: "Testen Sie Ihre Assistenten in einem Gespräch",
-        button: "Test-Chat"
+        description: "Testen Sie Ihre KI-Klone in einem Gespräch",
+        button: "Chat Testen"
       }
     }
   },
   
+  // Sidebar
   sidebar: {
     mainMenu: "Hauptmenü",
     dashboard: {
       title: "Dashboard",
-      description: "Übersicht"
+      description: "Systemübersicht"
     },
     agents: {
-      title: "Agenten",
-      description: "KI-Assistenten"
+      title: "KI-Klone",
+      description: "Ihre Agenten"
     },
     whatsapp: {
       title: "WhatsApp",
@@ -200,7 +151,7 @@ export default {
   // Navigation
   nav: {
     dashboard: "Dashboard",
-    assistants: "Assistenten", 
+    assistants: "KI-Klone", 
     conversations: "Gespräche",
     whatsapp: "WhatsApp",
     settings: "Einstellungen",
@@ -216,9 +167,9 @@ export default {
     create: "Erstellen",
     back: "Zurück",
     next: "Weiter",
-    previous: "Vorherige",
+    previous: "Zurück",
     loading: "Laden...",
-    reload: "Neuladen",
+    reload: "Neu laden",
     error: "Fehler",
     success: "Erfolg",
     confirm: "Bestätigen",
@@ -229,12 +180,12 @@ export default {
   widgetCustomization: {
     title: "Widget-Anpassung",
     subtitle: "Passen Sie das Aussehen und Verhalten Ihres schwebenden Chats an",
-    selectAssistant: "Assistent auswählen",
-    selectAssistantPlaceholder: "Wählen Sie einen Assistenten zur Anpassung",
+    selectAssistant: "Assistent Auswählen",
+    selectAssistantPlaceholder: "Wählen Sie einen Assistenten zum Anpassen",
     appearance: "Aussehen",
     behavior: "Verhalten",
     basicInfo: {
-      title: "Grundinformationen",
+      title: "Grundlegende Informationen",
       assistantName: "Assistentenname",
       assistantNamePlaceholder: "Z.B.: Virtueller Assistent",
       welcomeMessage: "Willkommensnachricht",
@@ -243,7 +194,7 @@ export default {
     images: {
       title: "Bilder",
       avatar: "Assistenten-Avatar",
-      avatarDescription: "Bild, das im Chat erscheint",
+      avatarDescription: "Bild, das im Chat angezeigt wird",
       buttonIcon: "Button-Symbol",
       buttonIconDescription: "Benutzerdefiniertes Symbol für den schwebenden Button"
     },
@@ -265,26 +216,26 @@ export default {
       inactive: "Inaktiv"
     },
     actions: {
-      save: "Anpassung speichern",
-      saving: "Speichern...",
-      testChat: "Chat testen",
-      analytics: "Analytics"
+      save: "Anpassung Speichern",
+      saving: "Wird gespeichert...",
+      testChat: "Chat Testen",
+      analytics: "Analytik"
     },
     preview: {
       title: "Widget-Vorschau",
-      description: "Sehen Sie, wie Ihr Widget auf der Website erscheint"
+      description: "Sehen Sie, wie Ihr Widget auf der Website erscheinen wird"
     }
   },
 
   // Widget Analytics
   widgetAnalytics: {
-    title: "Widget-Analytics",
+    title: "Widget-Analytik",
     subtitle: "Verfolgen Sie die Leistung Ihres Chat-Widgets",
     backToDashboard: "Zurück zum Dashboard",
     selectAssistant: "Assistent",
     selectAssistantPlaceholder: "Wählen Sie einen Assistenten",
     period: "Zeitraum",
-    generateSampleData: "Beispieldaten generieren",
+    generateSampleData: "Beispieldaten Generieren",
     generatingData: "Daten werden generiert...",
     noAssistantSelected: "Wählen Sie einen Assistenten",
     noAssistantSelectedDescription: "Wählen Sie einen Assistenten, um Widget-Leistungsmetriken zu sehen"
@@ -302,14 +253,14 @@ export default {
       phone: "Telefon",
       phonePlaceholder: "(555) 123-4567",
       company: "Unternehmen",
-      companyPlaceholder: "Name Ihres Unternehmens",
-      businessType: "Geschäftstyp",
+      companyPlaceholder: "Ihr Unternehmensname",
+      businessType: "Geschäftsart",
       businessTypePlaceholder: "Wählen Sie den Typ",
       employees: "Anzahl der Mitarbeiter",
       employeesPlaceholder: "Wie viele Mitarbeiter?",
       monthlyRevenue: "Monatlicher Umsatz",
       monthlyRevenuePlaceholder: "Ungefährer Umsatz",
-      submit: "Fortfahren"
+      submit: "Weiter"
     },
     businessTypes: {
       ecommerce: "E-Commerce",
@@ -342,12 +293,12 @@ export default {
         "Reduzierte Betriebskosten",
         "Unbegrenzte Skalierbarkeit"
       ],
-      cta: "Jetzt für €17/Monat starten"
+      cta: "Jetzt für €19/Monat Starten"
     },
     notQualified: {
-      title: "Ups! Sie haben sich noch nicht qualifiziert",
+      title: "Oops! Sie haben sich noch nicht qualifiziert",
       description: "Unsere Lösung ist ideal für Unternehmen mit mindestens 2 Mitarbeitern.",
-      suggestion: "Wie wäre es, ein bisschen zu wachsen und hierher zurückzukommen?",
+      suggestion: "Wie wäre es, ein bisschen mehr zu wachsen und hier zurückzukommen?",
       cta: "Zurück zur Startseite"
     }
   },
@@ -355,11 +306,11 @@ export default {
   // Demo Section
   demo: {
     title: "Wie Einfach es ist, CLONEFY zu Verwenden",
-    subtitle: "Sehen Sie in der Praxis, wie Sie Ihre KI-Agenten in wenigen Klicks erstellen und konfigurieren",
+    subtitle: "Sehen Sie in der Praxis, wie Sie Ihre KI-Agenten mit wenigen Klicks erstellen und konfigurieren",
     steps: {
       step1: {
         title: "Erstellen Sie Ihren Agenten",
-        description: "Klicken Sie auf \"Neuer Agent\" und fertig! Eine einfache und intuitive Benutzeroberfläche, um mit der Konfiguration Ihres virtuellen Assistenten zu beginnen.",
+        description: "Klicken Sie auf \"Neuer Agent\" und fertig! Eine einfache und intuitive Oberfläche, um die Konfiguration Ihres virtuellen Assistenten zu starten.",
         features: [
           "Saubere und benutzerfreundliche Oberfläche",
           "Schritt-für-Schritt geführter Prozess",
@@ -368,7 +319,7 @@ export default {
       },
       step2: {
         title: "Vollständig Anpassen",
-        description: "Definieren Sie den Namen, die Beschreibung und detaillierte Anweisungen. Bringen Sie Ihrem Agenten bei, genau das zu sein, was Sie brauchen - ein Verkäufer, Betreuer, Sekretär oder jede andere Funktion!",
+        description: "Definieren Sie den Namen, die Beschreibung und detaillierte Anweisungen. Bringen Sie Ihrem Agenten bei, genau das zu sein, was Sie brauchen - ein Verkäufer, Mitarbeiter, Sekretär oder eine beliebige Funktion!",
         features: [
           "Name und Funktion anpassen",
           "Spezifische Anweisungen konfigurieren",
@@ -377,27 +328,27 @@ export default {
       },
       step3: {
         title: "Verwalten Sie Ihre Agenten",
-        description: "Zeigen Sie alle Ihre erstellten Agenten an, bearbeiten Sie sie bei Bedarf, testen Sie Gespräche und überwachen Sie die Leistung.",
+        description: "Sehen Sie alle Ihre erstellten Agenten, bearbeiten Sie sie bei Bedarf, testen Sie Gespräche und überwachen Sie die Leistung.",
         features: [
-          "Organisiertes und klares Dashboard",
-          "Schnellzugriff-Buttons",
-          "Testen vor dem Live-Schalten"
+          "Organisiertes und übersichtliches Dashboard",
+          "Schnelle Aktionsschaltflächen",
+          "Testen Sie, bevor Sie live gehen"
         ]
       },
       step4: {
         title: "Mit WhatsApp Verbinden",
-        description: "Verbinden Sie Ihre Agenten in Sekunden mit WhatsApp! Scannen Sie einfach den QR-Code und Ihr Agent ist bereit, Ihre Kunden 24/7 zu betreuen.",
+        description: "Verbinden Sie Ihre Agenten in Sekunden mit WhatsApp! Scannen Sie einfach den QR-Code und Ihr Agent ist bereit, Ihre Kunden 24/7 zu bedienen.",
         features: [
           "QR-Code-Verbindung",
           "Mehrere WhatsApp-Instanzen",
-          "Automatische 24/7-Betreuung"
+          "Automatischer 24/7-Support"
         ]
       },
       step5: {
-        title: "In Ihre Website Einbetten",
-        description: "NEBEN WhatsApp können Sie einen schwebenden Chat zu Ihrer Website hinzufügen! Kopieren und fügen Sie den Code ein und fertig - Ihre Besucher können direkt mit Ihrem Agenten sprechen.",
+        title: "Auf Ihrer Website Einbetten",
+        description: "ZUSÄTZLICH zu WhatsApp können Sie einen schwebenden Chat zu Ihrer Website hinzufügen! Kopieren und fügen Sie den Code ein und fertig - Ihre Besucher können direkt mit Ihrem Agenten sprechen.",
         features: [
-          "Kopierfertiger Code",
+          "Kopierfreundlicher Code",
           "Responsives Widget",
           "Integration auf jeder Website",
           "+ WhatsApp immer aktiv"
@@ -405,18 +356,72 @@ export default {
       },
       result: {
         title: "Agent Funktioniert Perfekt!",
-        description: "Sehen Sie Ihren Agenten in Aktion! Natürliche Gespräche, intelligente Antworten und professionelle Betreuung 24 Stunden am Tag, jeden Tag.",
+        description: "Sehen Sie Ihren Agenten in Aktion! Natürliche Gespräche, intelligente Antworten und professioneller Support 24 Stunden am Tag, jeden Tag.",
         features: [
-          "Natürliche und flüssige Gespräche",
+          "Natürliche und fließende Gespräche",
           "Kontextualisierte Antworten",
-          "24/7 ohne Pausen verfügbar"
+          "24/7 verfügbar ohne Pausen"
         ]
       }
     },
     final: {
-      title: "So Einfach ist es!",
-      description: "In weniger als 10 Minuten können Sie Ihren eigenen KI-Agenten zum Laufen bringen. Keine Programmierung, keine Komplikationen.",
+      title: "So Einfach ist das!",
+      description: "In weniger als 10 Minuten können Sie Ihren eigenen KI-Agenten arbeiten lassen. Keine Programmierung, keine Komplikationen.",
       cta: "Preise Jetzt Ansehen"
+    }
+  },
+
+  // Pricing Section
+  pricing: {
+    title: "Pläne und Preise",
+    subtitle: "Wählen Sie den besten Plan für Ihr Unternehmen",
+    currency: "€",
+    finalMessage: "Starten Sie jetzt und transformieren Sie Ihren Kundenservice mit KI!",
+    finalMessageHighlight: "Keine Verpflichtung, jederzeit kündbar.",
+    plans: {
+      basic: {
+        title: "Basic",
+        price: "97",
+        period: "pro Monat",
+        features: [
+          "1 KI-Klon",
+          "1.000 Nachrichten/Monat",
+          "E-Mail-Support",
+          "WhatsApp-Integration"
+        ],
+        button: "Jetzt Starten"
+      },
+      professional: {
+        title: "Professional",
+        price: "197",
+        period: "pro Monat",
+        recommended: "Empfohlen",
+        features: [
+          "3 KI-Klone",
+          "5.000 Nachrichten/Monat",
+          "Prioritätssupport",
+          "WhatsApp-Integration",
+          "Website-Widget",
+          "Intelligente Terminplanung"
+        ],
+        button: "Jetzt Starten"
+      },
+      enterprise: {
+        title: "Enterprise",
+        price: "497",
+        period: "pro Monat",
+        installment: "oder 12x €49,70",
+        features: [
+          "Unbegrenzte Klone",
+          "20.000 Nachrichten/Monat",
+          "VIP-Support 24/7",
+          "Alle Integrationen",
+          "Benutzerdefiniertes Widget",
+          "Unbegrenzte Terminplanung",
+          "Erweiterte Berichte"
+        ],
+        button: "Jetzt Starten"
+      }
     }
   },
 

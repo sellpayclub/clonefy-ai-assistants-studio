@@ -116,87 +116,6 @@ export default {
     }
   },
 
-  // Pricing Section
-  pricing: {
-    title: "Elige Tu Plan",
-    subtitle: "Planes flexibles para atender desde pequeñas empresas hasta grandes corporaciones",
-    currency: "€",
-    plans: {
-      basic: {
-        title: "Plan Básico",
-        price: "17",
-        period: "/mes",
-        features: [
-          "1 agente de IA personalizado",
-          "1 conexión WhatsApp",
-          "Atención 24/7",
-          "Chat flotante en el sitio"
-        ],
-        button: "Elegir Plan Básico"
-      },
-      professional: {
-        title: "Plan Profesional",
-        price: "49",
-        period: "/mes",
-        recommended: "MÁS POPULAR",
-        features: [
-          "3 agentes de IA personalizados",
-          "3 conexiones WhatsApp",
-          "Atención 24/7",
-          "Chat flotante en el sitio",
-          "Soporte prioritario"
-        ],
-        button: "Elegir Plan Profesional"
-      },
-      enterprise: {
-        title: "Plan Empresarial",
-        price: "79",
-        period: "pago único anual",
-        installment: "Parcelable en hasta 12 cuotas",
-        features: [
-          "5 agentes de IA personalizados",
-          "5 conexiones WhatsApp",
-          "Atención 24/7",
-          "Chat flotante en el sitio",
-          "Soporte prioritario",
-          "Ahorro de 2 meses"
-        ],
-        button: "Elegir Plan Empresarial"
-      }
-    },
-    finalMessage: "Contrata IA y no humanos,",
-    finalMessageHighlight: "¡el Futuro ya Llegó!",
-    startNow: "Comenzar por €17/mes"
-  },
-
-  // Footer
-  footer: {
-    copyright: "© 2024 CLONEFY. Todos los derechos reservados."
-  },
-
-  // Auth Pages
-  auth: {
-    title: "CLONEFY",
-    subtitle: "Plataforma de Clones de IA para WhatsApp",
-    signin: "Iniciar Sesión",
-    signup: "Registrarse",
-    email: "Email",
-    password: "Contraseña",
-    fullName: "Nombre Completo",
-    emailPlaceholder: "tu@email.com",
-    passwordPlaceholder: "••••••••",
-    fullNamePlaceholder: "Tu Nombre",
-    signInButton: "Iniciar Sesión",
-    signUpButton: "Crear Cuenta",
-    signingIn: "Iniciando sesión...",
-    signingUp: "Creando cuenta...",
-    accountCreated: "¡Cuenta creada exitosamente!",
-    checkEmail: "Revisa tu email para confirmar tu cuenta.",
-    signInError: "Error al iniciar sesión",
-    signUpError: "Error al crear cuenta",
-    signOutError: "Error al cerrar sesión"
-  },
-  
   // Dashboard
   dashboard: {
     title: "Panel de Control",
@@ -227,7 +146,7 @@ export default {
       }
     }
   },
-  
+
   // Sidebar
   sidebar: {
     mainMenu: "Menú Principal",
@@ -442,6 +361,60 @@ export default {
       description: "Nuestra solución es ideal para empresas con al menos 2 empleados.",
       suggestion: "¿Qué tal crecer un poco más y volver aquí?",
       cta: "Volver al Inicio"
+    }
+  },
+
+  // Pricing Section
+  pricing: {
+    title: "Planes y Precios",
+    subtitle: "Elige el mejor plan para tu negocio",
+    currency: "$",
+    finalMessage: "¡Comienza ahora y transforma tu atención al cliente con IA!",
+    finalMessageHighlight: "Sin compromiso, cancela cuando quieras.",
+    plans: {
+      basic: {
+        title: "Básico",
+        price: "97",
+        period: "por mes",
+        features: [
+          "1 Clon de IA",
+          "1.000 mensajes/mes",
+          "Soporte por email",
+          "Integración WhatsApp"
+        ],
+        button: "Comenzar Ahora"
+      },
+      professional: {
+        title: "Profesional",
+        price: "197",
+        period: "por mes",
+        recommended: "Recomendado",
+        features: [
+          "3 Clones de IA",
+          "5.000 mensajes/mes",
+          "Soporte prioritario",
+          "Integración WhatsApp",
+          "Widget para sitio web",
+          "Programación inteligente"
+        ],
+        button: "Comenzar Ahora"
+      },
+      enterprise: {
+        title: "Empresarial",
+        price: "497",
+        period: "por mes",
+        installment: "o 12x de $49,70",
+        features: [
+          "Clones ilimitados",
+          "20.000 mensajes/mes",
+          "Soporte VIP 24/7",
+          "Todas las integraciones",
+          "Widget personalizado",
+          "Programación ilimitada",
+          "Informes avanzados"
+        ],
+        button: "Comenzar Ahora"
+      }
     }
   },
 
