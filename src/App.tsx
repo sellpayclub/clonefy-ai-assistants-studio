@@ -51,8 +51,6 @@ const LoadingFallback = () => (
 );
 
 const App = () => {
-  console.log('=== APP.TSX INICIALIZANDO ===');
-  
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>

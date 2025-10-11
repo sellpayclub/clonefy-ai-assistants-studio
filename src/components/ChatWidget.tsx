@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 
 const ChatWidget = () => {
@@ -7,16 +7,16 @@ const ChatWidget = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  const checkMobile = useCallback(() => {
+    setIsMobile(window.innerWidth <= 768);
+  }, []);
+
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    
     checkMobile();
     window.addEventListener('resize', checkMobile);
     
     return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  }, [checkMobile]);
 
   // Pré-carrega o iframe para abertura instantânea
   useEffect(() => {
@@ -27,9 +27,23 @@ const ChatWidget = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const toggleChat = () => {
-    setIsOpen(!isOpen);
-  };
+  const toggleChat = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
+
+  // Suporte a teclado para fechar chat
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen]);
 
   return (
     <>
@@ -45,14 +59,16 @@ const ChatWidget = () => {
           flex items-center justify-center
           transition-all duration-300 ease-in-out
           hover:scale-110 active:scale-95
+          focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
           ${isOpen ? 'rotate-180' : 'rotate-0'}
         `}
-        title="Chat com clonefy ia tira duvidas"
+        title="Chat com Clonefy IA - Tire suas dúvidas"
+        aria-label="Abrir chat de suporte"
       >
         {isOpen ? (
-          <X size={24} />
+          <X size={24} aria-hidden="true" />
         ) : (
-          <MessageCircle size={24} />
+          <MessageCircle size={24} aria-hidden="true" />
         )}
       </button>
 
@@ -79,6 +95,7 @@ const ChatWidget = () => {
             src="https://clonefy.app/embed/chat/7a218984-6ada-4581-b1b6-2119b4771260"
             className={`w-full h-full border-none ${isMobile ? '' : 'rounded-xl'}`}
             title="Clonefy Chat Support"
+            aria-label="Widget de chat Clonefy - Suporte ao cliente"
             allow="microphone; camera"
             style={{ 
               display: 'block',

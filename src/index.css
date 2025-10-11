@@ -9,6 +9,15 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Otimizações de GPU para animações */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
 html {
   scroll-behavior: smooth;
 }

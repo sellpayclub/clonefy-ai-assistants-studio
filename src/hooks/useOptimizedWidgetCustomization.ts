@@ -29,14 +29,14 @@ export const useOptimizedWidgetCustomization = (assistantId: string) => {
       return;
     }
 
-    console.log('🔄 Carregando personalização para assistente:', assistantId);
+    // Carregando personalização para assistente
 
     // Verificar cache local
     const cached = customizationCache.get(assistantId);
     const now = Date.now();
     
     if (cached && (now - cached.timestamp) < CACHE_DURATION) {
-      console.log('📦 Usando dados do cache para assistente:', assistantId);
+      // Usando dados do cache
       setCustomization(cached.data);
       return;
     }
@@ -147,7 +147,7 @@ export const useOptimizedWidgetCustomization = (assistantId: string) => {
   // Limpar cache quando mudar de assistente
   const clearCache = useCallback(() => {
     customizationCache.delete(assistantId);
-    console.log('🗑️ Cache limpo para assistente:', assistantId);
+    // Cache limpo
   }, [assistantId]);
 
   return {
