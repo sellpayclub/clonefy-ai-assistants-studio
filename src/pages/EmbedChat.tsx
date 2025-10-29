@@ -43,9 +43,13 @@ const EmbedChat = () => {
 
   useEffect(() => {
     const initializeChat = async () => {
-      if (!actualAgentId) return;
+      if (!actualAgentId) {
+        setError('ID do agente não encontrado');
+        return;
+      }
 
       try {
+        console.log('Loading agent:', actualAgentId);
         // Carregamento rápido sem delays desnecessários
         const { data, error } = await supabase.functions.invoke('widget-chat', {
           body: {
@@ -54,9 +58,14 @@ const EmbedChat = () => {
           }
         });
 
-        if (error) throw error;
+        console.log('Agent data received:', data);
 
-        if (data.agent) {
+        if (error) {
+          console.error('Supabase error:', error);
+          throw error;
+        }
+
+        if (data && data.agent) {
           setAgent(data.agent);
           // Add welcome message instantaneamente
           const welcomeMessage = {
@@ -66,7 +75,9 @@ const EmbedChat = () => {
             timestamp: new Date()
           };
           setMessages([welcomeMessage]);
+          console.log('Agent loaded successfully');
         } else {
+          console.error('No agent data in response');
           setError('Agente não encontrado');
         }
       } catch (err) {
