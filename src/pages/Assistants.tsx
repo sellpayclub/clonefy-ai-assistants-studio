@@ -632,7 +632,7 @@ const Assistants = () => {
                             💡 Demonstração
                           </span>
                           <a 
-                            href={`/embed/chat/${selectedAgentForEmbed.id}`}
+                            href={`${window.location.origin}/embed/chat/${selectedAgentForEmbed.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs text-blue-600 hover:text-blue-700 underline"
@@ -802,7 +802,7 @@ const Assistants = () => {
                         Link direto para teste ou compartilhamento - totalmente responsivo
                       </p>
                       <a 
-                        href={`/embed/chat/${selectedAgentForEmbed.id}`}
+                        href={`${window.location.origin}/embed/chat/${selectedAgentForEmbed.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs text-blue-600 hover:text-blue-700 underline"
