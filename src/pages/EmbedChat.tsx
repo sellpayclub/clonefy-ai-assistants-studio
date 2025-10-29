@@ -238,29 +238,33 @@ const EmbedChat = () => {
     );
   }
 
-  // Aplicar cores customizadas
+  // Aplicar cores customizadas com fallbacks seguros
   const primaryColor = customization?.primary_color || '#0066cc';
-  const secondaryColor = customization?.secondary_color || '#f8f9fa';
-  const textColor = customization?.text_color || '#333333';
+  const secondaryColor = customization?.secondary_color || '#f0f0f0';
+  const textColor = customization?.text_color || '#1a1a1a';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-2 sm:p-4">
+    <div 
+      className="min-h-screen flex items-center justify-center p-2 sm:p-4"
+      style={{ backgroundColor: '#f5f5f5' }}
+    >
       <div 
-        className="flex flex-col h-full min-h-[500px] w-full bg-background border border-border rounded-lg shadow-lg
+        className="flex flex-col h-full min-h-[500px] w-full rounded-lg shadow-lg
                         max-w-[95vw] max-h-[95vh] 
                         sm:max-w-[450px] sm:max-h-[650px] 
                         md:max-w-[500px] md:max-h-[700px]
                         mx-auto my-auto"
         style={{ 
-          borderColor: primaryColor + '20'
+          backgroundColor: '#ffffff',
+          border: `1px solid ${primaryColor}30`
         }}
       >
         {/* Header */}
         <div 
           className="flex items-center gap-3 p-3 sm:p-4 border-b rounded-t-lg flex-shrink-0"
           style={{ 
-            backgroundColor: primaryColor + '10',
-            borderBottomColor: primaryColor + '20'
+            backgroundColor: `${primaryColor}15`,
+            borderBottom: `1px solid ${primaryColor}30`
           }}
         >
           {customization?.avatar_url ? (
@@ -272,7 +276,7 @@ const EmbedChat = () => {
           ) : (
             <div 
               className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: primaryColor + '20' }}
+              style={{ backgroundColor: `${primaryColor}20` }}
             >
               <Bot className="h-4 w-4" style={{ color: primaryColor }} />
             </div>
@@ -281,7 +285,7 @@ const EmbedChat = () => {
             <h3 className="font-semibold text-sm truncate" style={{ color: textColor }}>
               {customization?.widget_name || agent.name}
             </h3>
-            <p className="text-xs text-muted-foreground">Online agora</p>
+            <p className="text-xs" style={{ color: '#6b7280' }}>Online agora</p>
           </div>
           <Button
             variant="ghost"
@@ -292,14 +296,21 @@ const EmbedChat = () => {
                 data: {}
               }, '*');
             }}
-            className="h-8 w-8 p-0 hover:bg-destructive/10"
+            className="h-8 w-8 p-0"
+            style={{ 
+              backgroundColor: 'transparent',
+              color: '#6b7280'
+            }}
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth min-h-0">
+        <div 
+          className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth min-h-0"
+          style={{ backgroundColor: '#ffffff' }}
+        >
           {messages.map((message) => (
             <div
               key={message.id}
@@ -317,7 +328,7 @@ const EmbedChat = () => {
                 ) : (
                   <div 
                     className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1"
-                    style={{ backgroundColor: primaryColor + '20' }}
+                    style={{ backgroundColor: `${primaryColor}20` }}
                   >
                     <Bot className="h-3 w-3" style={{ color: primaryColor }} />
                   </div>
@@ -353,9 +364,9 @@ const EmbedChat = () => {
               {message.role === 'user' && (
                 <div 
                   className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1"
-                  style={{ backgroundColor: secondaryColor }}
+                  style={{ backgroundColor: '#f0f0f0' }}
                 >
-                  <User className="h-3 w-3" style={{ color: textColor }} />
+                  <User className="h-3 w-3" style={{ color: '#6b7280' }} />
                 </div>
               )}
             </div>
@@ -371,7 +382,7 @@ const EmbedChat = () => {
               ) : (
                 <div 
                   className="w-6 h-6 rounded-full flex items-center justify-center mt-1"
-                  style={{ backgroundColor: primaryColor + '20' }}
+                  style={{ backgroundColor: `${primaryColor}20` }}
                 >
                   <Bot className="h-3 w-3" style={{ color: primaryColor }} />
                 </div>
@@ -401,7 +412,13 @@ const EmbedChat = () => {
         </div>
 
         {/* Input */}
-        <div className="p-3 sm:p-4 border-t bg-background/50 flex-shrink-0">
+        <div 
+          className="p-3 sm:p-4 border-t flex-shrink-0"
+          style={{ 
+            backgroundColor: '#ffffff',
+            borderTop: `1px solid ${primaryColor}20`
+          }}
+        >
           <div className="flex gap-2">
             <Input
               value={input}
@@ -409,7 +426,11 @@ const EmbedChat = () => {
               onKeyPress={handleKeyPress}
               placeholder="Digite sua mensagem..."
               disabled={isLoading}
-              className="flex-1 text-sm resize-none"
+              className="flex-1 text-sm resize-none border-gray-300"
+              style={{
+                backgroundColor: '#ffffff',
+                color: textColor
+              }}
             />
             <Button
               onClick={sendMessage}
