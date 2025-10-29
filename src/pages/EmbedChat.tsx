@@ -19,12 +19,22 @@ interface Agent {
   description: string;
 }
 
+interface WidgetCustomization {
+  primary_color: string;
+  secondary_color: string;
+  text_color: string;
+  welcome_message: string;
+  widget_name: string;
+  avatar_url?: string;
+}
+
 // Função removida - agora usando TypingMessage component
 
 const EmbedChat = () => {
   const { agentId, assistantId } = useParams();
   const actualAgentId = agentId || assistantId;
   const [agent, setAgent] = useState<Agent | null>(null);
+  const [customization, setCustomization] = useState<WidgetCustomization | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -50,28 +60,47 @@ const EmbedChat = () => {
 
       try {
         console.log('Loading agent:', actualAgentId);
-        // Carregamento rápido sem delays desnecessários
-        const { data, error } = await supabase.functions.invoke('widget-chat', {
-          body: {
-            action: 'get_agent',
-            agentId: actualAgentId
-          }
-        });
+        
+        // Carregar agente e customização em paralelo
+        const [agentResponse, customizationResponse] = await Promise.all([
+          supabase.functions.invoke('widget-chat', {
+            body: {
+              action: 'get_agent',
+              agentId: actualAgentId
+            }
+          }),
+          supabase
+            .from('widget_customizations')
+            .select('*')
+            .eq('assistant_id', actualAgentId)
+            .eq('is_active', true)
+            .single()
+        ]);
 
-        console.log('Agent data received:', data);
+        console.log('Agent data received:', agentResponse.data);
+        console.log('Customization data received:', customizationResponse.data);
 
-        if (error) {
-          console.error('Supabase error:', error);
-          throw error;
+        if (agentResponse.error) {
+          console.error('Supabase error:', agentResponse.error);
+          throw agentResponse.error;
         }
 
-        if (data && data.agent) {
-          setAgent(data.agent);
-          // Add welcome message instantaneamente
+        if (agentResponse.data && agentResponse.data.agent) {
+          setAgent(agentResponse.data.agent);
+          
+          // Carregar customização se existir
+          if (customizationResponse.data) {
+            setCustomization(customizationResponse.data);
+          }
+          
+          // Add welcome message usando customização se disponível
+          const welcomeText = customizationResponse.data?.welcome_message || 
+                            `Olá! Eu sou ${agentResponse.data.agent.name}. ${agentResponse.data.agent.description || 'Como posso te ajudar hoje?'}`;
+          
           const welcomeMessage = {
             id: '1',
             role: 'assistant' as const,
-            content: `Olá! Eu sou ${data.agent.name}. ${data.agent.description || 'Como posso te ajudar hoje?'}`,
+            content: welcomeText,
             timestamp: new Date()
           };
           setMessages([welcomeMessage]);
@@ -209,20 +238,49 @@ const EmbedChat = () => {
     );
   }
 
+  // Aplicar cores customizadas
+  const primaryColor = customization?.primary_color || '#0066cc';
+  const secondaryColor = customization?.secondary_color || '#f8f9fa';
+  const textColor = customization?.text_color || '#333333';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-2 sm:p-4">
-      <div className="flex flex-col h-full min-h-[500px] w-full bg-background border border-border rounded-lg shadow-lg
-                      max-w-[95vw] max-h-[95vh] 
-                      sm:max-w-[450px] sm:max-h-[650px] 
-                      md:max-w-[500px] md:max-h-[700px]
-                      mx-auto my-auto">
+      <div 
+        className="flex flex-col h-full min-h-[500px] w-full bg-background border border-border rounded-lg shadow-lg
+                        max-w-[95vw] max-h-[95vh] 
+                        sm:max-w-[450px] sm:max-h-[650px] 
+                        md:max-w-[500px] md:max-h-[700px]
+                        mx-auto my-auto"
+        style={{ 
+          borderColor: primaryColor + '20'
+        }}
+      >
         {/* Header */}
-        <div className="flex items-center gap-3 p-3 sm:p-4 border-b bg-primary/5 rounded-t-lg flex-shrink-0">
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-            <Bot className="h-4 w-4 text-primary" />
-          </div>
+        <div 
+          className="flex items-center gap-3 p-3 sm:p-4 border-b rounded-t-lg flex-shrink-0"
+          style={{ 
+            backgroundColor: primaryColor + '10',
+            borderBottomColor: primaryColor + '20'
+          }}
+        >
+          {customization?.avatar_url ? (
+            <img 
+              src={customization.avatar_url} 
+              alt="Avatar"
+              className="w-8 h-8 rounded-full object-cover"
+            />
+          ) : (
+            <div 
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: primaryColor + '20' }}
+            >
+              <Bot className="h-4 w-4" style={{ color: primaryColor }} />
+            </div>
+          )}
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-sm truncate">{agent.name}</h3>
+            <h3 className="font-semibold text-sm truncate" style={{ color: textColor }}>
+              {customization?.widget_name || agent.name}
+            </h3>
             <p className="text-xs text-muted-foreground">Online agora</p>
           </div>
           <Button
@@ -250,16 +308,33 @@ const EmbedChat = () => {
               }`}
             >
               {message.role === 'assistant' && (
-                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                  <Bot className="h-3 w-3 text-primary" />
-                </div>
+                customization?.avatar_url ? (
+                  <img 
+                    src={customization.avatar_url} 
+                    alt="Avatar"
+                    className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-1"
+                  />
+                ) : (
+                  <div 
+                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1"
+                    style={{ backgroundColor: primaryColor + '20' }}
+                  >
+                    <Bot className="h-3 w-3" style={{ color: primaryColor }} />
+                  </div>
+                )
               )}
               <div
-                className={`max-w-[82%] sm:max-w-[85%] p-2.5 sm:p-3 rounded-lg ${
-                  message.role === 'user'
-                    ? 'bg-primary text-primary-foreground ml-auto'
-                    : 'bg-muted text-foreground'
-                }`}
+                className={`max-w-[82%] sm:max-w-[85%] p-2.5 sm:p-3 rounded-lg`}
+                style={message.role === 'user' 
+                  ? { 
+                      backgroundColor: primaryColor,
+                      color: '#ffffff'
+                    }
+                  : { 
+                      backgroundColor: secondaryColor,
+                      color: textColor
+                    }
+                }
               >
                 <div className="space-y-2 sm:space-y-3">
                   {message.role === 'user' ? (
@@ -276,22 +351,48 @@ const EmbedChat = () => {
                 </div>
               </div>
               {message.role === 'user' && (
-                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-1">
-                  <User className="h-3 w-3" />
+                <div 
+                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1"
+                  style={{ backgroundColor: secondaryColor }}
+                >
+                  <User className="h-3 w-3" style={{ color: textColor }} />
                 </div>
               )}
             </div>
           ))}
           {isLoading && (
             <div className="flex gap-2">
-              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mt-1">
-                <Bot className="h-3 w-3 text-primary" />
-              </div>
-              <div className="bg-muted p-2.5 sm:p-3 rounded-lg">
+              {customization?.avatar_url ? (
+                <img 
+                  src={customization.avatar_url} 
+                  alt="Avatar"
+                  className="w-6 h-6 rounded-full object-cover mt-1"
+                />
+              ) : (
+                <div 
+                  className="w-6 h-6 rounded-full flex items-center justify-center mt-1"
+                  style={{ backgroundColor: primaryColor + '20' }}
+                >
+                  <Bot className="h-3 w-3" style={{ color: primaryColor }} />
+                </div>
+              )}
+              <div 
+                className="p-2.5 sm:p-3 rounded-lg"
+                style={{ backgroundColor: secondaryColor }}
+              >
                 <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  <div 
+                    className="w-2 h-2 rounded-full animate-bounce"
+                    style={{ backgroundColor: primaryColor }}
+                  ></div>
+                  <div 
+                    className="w-2 h-2 rounded-full animate-bounce" 
+                    style={{ backgroundColor: primaryColor, animationDelay: '0.1s' }}
+                  ></div>
+                  <div 
+                    className="w-2 h-2 rounded-full animate-bounce" 
+                    style={{ backgroundColor: primaryColor, animationDelay: '0.2s' }}
+                  ></div>
                 </div>
               </div>
             </div>
@@ -315,6 +416,10 @@ const EmbedChat = () => {
               disabled={!input.trim() || isLoading}
               size="sm"
               className="px-3 transition-all duration-200 hover:scale-105 flex-shrink-0"
+              style={{
+                backgroundColor: primaryColor,
+                color: '#ffffff'
+              }}
             >
               <Send className="h-4 w-4" />
             </Button>
