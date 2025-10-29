@@ -658,7 +658,7 @@ const Assistants = () => {
                           // Usar domínio customizado CLONEFY
                           const baseUrl = window.location.hostname.includes('lovable') 
                             ? window.location.origin 
-                            : 'https://clonefy.ai'; // Domínio customizado CLONEFY
+                            : 'https://clonefy.app'; // Domínio customizado CLONEFY
                           
                           const code = `<!-- Chat Flutuante CLONEFY -->
 <script>
@@ -728,7 +728,7 @@ const Assistants = () => {
     var chatWidget = {
       agentId: '${selectedAgentForEmbed.id}',
       agentName: '${selectedAgentForEmbed.name}',
-      baseUrl: 'https://clonefy.ai',
+      baseUrl: 'https://clonefy.app',
       // Código do chat flutuante...
     };
     // Inicialização automática...
@@ -776,7 +776,7 @@ const Assistants = () => {
                     <Label className="text-sm font-medium">Link Direto do Chat (Responsivo)</Label>
                     <div className="flex flex-col sm:flex-row gap-2 mt-2">
                       <Input 
-                        value={`https://clonefy.ai/embed/chat/${selectedAgentForEmbed.id}`}
+                        value={`https://clonefy.app/embed/chat/${selectedAgentForEmbed.id}`}
                         readOnly
                         className="flex-1 text-xs sm:text-sm"
                       />
@@ -785,7 +785,7 @@ const Assistants = () => {
                         variant="outline"
                         className="w-full sm:w-auto"
                         onClick={() => {
-                          const url = `https://clonefy.ai/embed/chat/${selectedAgentForEmbed.id}`;
+                          const url = `https://clonefy.app/embed/chat/${selectedAgentForEmbed.id}`;
                           navigator.clipboard.writeText(url);
                           toast({
                             title: "Link copiado!",
