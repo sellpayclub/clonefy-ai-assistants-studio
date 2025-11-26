@@ -245,21 +245,13 @@ const EmbedChat = () => {
 
   return (
     <div 
-      className="w-full h-screen overflow-hidden"
-      style={{ 
-        backgroundColor: '#f5f5f5',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0
-      }}
+      className="min-h-screen flex items-center justify-center p-0 sm:p-4"
+      style={{ backgroundColor: '#f5f5f5' }}
     >
       <div 
-        className="flex flex-col w-full h-full
-                        sm:max-w-[450px] sm:max-h-[650px] sm:rounded-lg sm:shadow-lg
-                        sm:mx-auto sm:my-4
-                        md:max-w-[500px] md:max-h-[700px] md:my-6"
+        className="flex flex-col w-full h-screen sm:h-auto sm:min-h-[500px] sm:max-h-[90vh] sm:rounded-lg shadow-lg
+                        sm:max-w-[450px] 
+                        md:max-w-[500px] md:max-h-[700px]"
         style={{ 
           backgroundColor: '#ffffff',
           border: `1px solid ${primaryColor}30`
@@ -314,7 +306,7 @@ const EmbedChat = () => {
 
         {/* Messages */}
         <div 
-          className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 space-y-3 sm:space-y-4 min-h-0"
+          className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth min-h-0"
           style={{ 
             backgroundColor: '#ffffff',
             overscrollBehavior: 'contain',
@@ -345,7 +337,7 @@ const EmbedChat = () => {
                 )
               )}
               <div
-                className={`max-w-[75%] sm:max-w-[80%] p-2.5 sm:p-3 rounded-lg break-words`}
+                className={`max-w-[80%] sm:max-w-[85%] p-2.5 sm:p-3 rounded-lg break-words`}
                 style={message.role === 'user' 
                   ? { 
                       backgroundColor: primaryColor,
