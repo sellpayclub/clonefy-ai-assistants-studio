@@ -245,15 +245,21 @@ const EmbedChat = () => {
 
   return (
     <div 
-      className="min-h-screen flex items-center justify-center p-2 sm:p-4"
-      style={{ backgroundColor: '#f5f5f5' }}
+      className="w-full h-screen overflow-hidden"
+      style={{ 
+        backgroundColor: '#f5f5f5',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0
+      }}
     >
       <div 
-        className="flex flex-col h-full min-h-[500px] w-full rounded-lg shadow-lg
-                        max-w-[95vw] max-h-[95vh] 
-                        sm:max-w-[450px] sm:max-h-[650px] 
-                        md:max-w-[500px] md:max-h-[700px]
-                        mx-auto my-auto"
+        className="flex flex-col w-full h-full
+                        sm:max-w-[450px] sm:max-h-[650px] sm:rounded-lg sm:shadow-lg
+                        sm:mx-auto sm:my-4
+                        md:max-w-[500px] md:max-h-[700px] md:my-6"
         style={{ 
           backgroundColor: '#ffffff',
           border: `1px solid ${primaryColor}30`
@@ -308,8 +314,12 @@ const EmbedChat = () => {
 
         {/* Messages */}
         <div 
-          className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth min-h-0"
-          style={{ backgroundColor: '#ffffff' }}
+          className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 space-y-3 sm:space-y-4 min-h-0"
+          style={{ 
+            backgroundColor: '#ffffff',
+            overscrollBehavior: 'contain',
+            WebkitOverflowScrolling: 'touch'
+          }}
         >
           {messages.map((message) => (
             <div
@@ -335,15 +345,19 @@ const EmbedChat = () => {
                 )
               )}
               <div
-                className={`max-w-[82%] sm:max-w-[85%] p-2.5 sm:p-3 rounded-lg`}
+                className={`max-w-[75%] sm:max-w-[80%] p-2.5 sm:p-3 rounded-lg break-words`}
                 style={message.role === 'user' 
                   ? { 
                       backgroundColor: primaryColor,
-                      color: '#ffffff'
+                      color: '#ffffff',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word'
                     }
                   : { 
                       backgroundColor: secondaryColor,
-                      color: textColor
+                      color: textColor,
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word'
                     }
                 }
               >
