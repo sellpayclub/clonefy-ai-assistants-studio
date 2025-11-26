@@ -722,18 +722,23 @@ const Assistants = () => {
                     </div>
                     <div className="p-4 bg-muted rounded-lg overflow-auto">
                       <code className="text-xs text-muted-foreground break-all whitespace-pre-wrap">
-                        {`<!-- Chat Flutuante CLONEFY -->
+                        {(() => {
+                          const exampleBaseUrl = window.location.hostname.includes('lovable') 
+                            ? window.location.origin 
+                            : 'https://clonefy.app';
+                          return `<!-- Chat Flutuante CLONEFY -->
 <script>
   (function(){
     var chatWidget = {
       agentId: '${selectedAgentForEmbed.id}',
       agentName: '${selectedAgentForEmbed.name}',
-      baseUrl: 'https://clonefy.app',
+      baseUrl: '${exampleBaseUrl}',
       // Código do chat flutuante...
     };
     // Inicialização automática...
   })();
-</script>`}
+</script>`;
+                        })()}
                       </code>
                     </div>
                   </div>
@@ -776,7 +781,7 @@ const Assistants = () => {
                     <Label className="text-sm font-medium">Link Direto do Chat (Responsivo)</Label>
                     <div className="flex flex-col sm:flex-row gap-2 mt-2">
                       <Input 
-                        value={`https://clonefy.app/embed/chat/${selectedAgentForEmbed.id}`}
+                        value={`${window.location.origin}/embed/chat/${selectedAgentForEmbed.id}`}
                         readOnly
                         className="flex-1 text-xs sm:text-sm"
                       />
@@ -785,7 +790,7 @@ const Assistants = () => {
                         variant="outline"
                         className="w-full sm:w-auto"
                         onClick={() => {
-                          const url = `https://clonefy.app/embed/chat/${selectedAgentForEmbed.id}`;
+                          const url = `${window.location.origin}/embed/chat/${selectedAgentForEmbed.id}`;
                           navigator.clipboard.writeText(url);
                           toast({
                             title: "Link copiado!",

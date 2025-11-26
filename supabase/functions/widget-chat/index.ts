@@ -76,7 +76,15 @@ serve(async (req) => {
           },
         });
 
+        if (!threadResponse.ok) {
+          const errorData = await threadResponse.json().catch(() => ({}));
+          throw new Error(`Failed to create OpenAI thread: ${errorData.error?.message || threadResponse.statusText}`);
+        }
+
         const thread = await threadResponse.json();
+        if (!thread.id) {
+          throw new Error('OpenAI thread creation failed: no thread ID returned');
+        }
         threadId = thread.id;
 
         // Create new conversation with thread ID already included
@@ -99,12 +107,20 @@ serve(async (req) => {
         currentConversationId = newConversation.id;
       } else {
         // Get existing thread ID
-        const { data: conversation } = await supabase
+        const { data: conversation, error: convFetchError } = await supabase
           .from('conversations')
           .select('openai_thread_id')
           .eq('id', currentConversationId)
           .single();
+        
+        if (convFetchError || !conversation) {
+          throw new Error('Conversation not found');
+        }
+        
         threadId = conversation?.openai_thread_id;
+        if (!threadId) {
+          throw new Error('Thread ID not found for conversation');
+        }
       }
 
       // Parallel operations for better performance
@@ -143,7 +159,15 @@ serve(async (req) => {
         }),
       });
 
+      if (!runResponse.ok) {
+        const errorData = await runResponse.json().catch(() => ({}));
+        throw new Error(`Failed to create OpenAI run: ${errorData.error?.message || runResponse.statusText}`);
+      }
+
       const run = await runResponse.json();
+      if (!run.id || !run.status) {
+        throw new Error('Invalid run response from OpenAI');
+      }
 
       // Optimized polling with tool call handling
       let runStatus = run.status;
@@ -153,7 +177,7 @@ serve(async (req) => {
 
       while (runStatus === 'queued' || runStatus === 'in_progress' || runStatus === 'requires_action') {
         if (attempts >= maxAttempts) {
-          throw new Error('Assistant response timeout after 30 seconds');
+          throw new Error('Assistant response timeout - a resposta está demorando mais que o esperado');
         }
 
         if (runStatus === 'requires_action') {
@@ -232,10 +256,25 @@ serve(async (req) => {
           },
         });
 
+        if (!messagesResponse.ok) {
+          throw new Error('Failed to fetch assistant response');
+        }
+
         const messagesData = await messagesResponse.json();
+        if (!messagesData.data || messagesData.data.length === 0) {
+          throw new Error('No messages found in response');
+        }
+
         const assistantMessage = messagesData.data[0];
+        if (!assistantMessage.content || assistantMessage.content.length === 0) {
+          throw new Error('Empty message content from assistant');
+        }
+
         // Retornar resposta imediatamente sem aguardar save no DB
-        const responseText = assistantMessage.content[0].text.value;
+        const responseText = assistantMessage.content[0]?.text?.value;
+        if (!responseText) {
+          throw new Error('Invalid message format from assistant');
+        }
 
         // Background save - não bloquear resposta (sem catch)
         supabase.from('messages').insert({

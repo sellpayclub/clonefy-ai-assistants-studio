@@ -85,11 +85,20 @@ const EmbedChat = () => {
           throw agentResponse.error;
         }
 
+        // Verificar se há erro na resposta
+        if (agentResponse.data?.error) {
+          console.error('API error:', agentResponse.data.error);
+          setError(agentResponse.data.error === 'Agent not found' 
+            ? 'Agente não encontrado' 
+            : 'Erro ao carregar o agente');
+          return;
+        }
+
         if (agentResponse.data && agentResponse.data.agent) {
           setAgent(agentResponse.data.agent);
           
-          // Carregar customização se existir
-          if (customizationResponse.data) {
+          // Carregar customização se existir (ignorar erro se não houver customização)
+          if (customizationResponse.data && !customizationResponse.error) {
             setCustomization(customizationResponse.data);
           }
           
@@ -111,7 +120,10 @@ const EmbedChat = () => {
         }
       } catch (err) {
         console.error('Error loading agent:', err);
-        setError('Erro ao carregar o agente');
+        const errorMessage = err instanceof Error 
+          ? err.message 
+          : 'Erro ao carregar o agente. Verifique sua conexão e tente novamente.';
+        setError(errorMessage);
       }
     };
 
@@ -153,10 +165,12 @@ const EmbedChat = () => {
     setIsLoading(true);
 
     // Notificar widget pai sobre nova mensagem do usuário
-    window.parent.postMessage({
-      type: 'clonefy:message_sent',
-      data: { messageType: 'user' }
-    }, '*');
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'clonefy:message_sent',
+        data: { messageType: 'user' }
+      }, '*');
+    }
 
     try {
       const { data, error } = await supabase.functions.invoke('widget-chat', {
@@ -168,9 +182,18 @@ const EmbedChat = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
-      if (data.response) {
+      // Verificar se há erro na resposta
+      if (data?.error) {
+        console.error('API error:', data.error);
+        throw new Error(data.error);
+      }
+
+      if (data && data.response) {
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
@@ -181,26 +204,36 @@ const EmbedChat = () => {
         setMessages(prev => [...prev, assistantMessage]);
         
         // Notificar widget pai sobre nova mensagem do assistente
-        window.parent.postMessage({
-          type: 'clonefy:message_sent',
-          data: { messageType: 'assistant' }
-        }, '*');
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({
+            type: 'clonefy:message_sent',
+            data: { messageType: 'assistant' }
+          }, '*');
+        }
         
         if (data.conversationId && !conversationId) {
           setConversationId(data.conversationId);
           // Notificar widget pai sobre nova conversa
-          window.parent.postMessage({
-            type: 'clonefy:conversation_started',
-            data: { conversationId: data.conversationId }
-          }, '*');
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+              type: 'clonefy:conversation_started',
+              data: { conversationId: data.conversationId }
+            }, '*');
+          }
         }
+      } else {
+        throw new Error('Resposta inválida do servidor');
       }
     } catch (err) {
       console.error('Error sending message:', err);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Desculpe, ocorreu um erro. Tente novamente.',
+        content: err instanceof Error && err.message.includes('timeout')
+          ? 'A resposta está demorando mais que o esperado. Por favor, tente novamente.'
+          : err instanceof Error && err.message.includes('not found')
+          ? 'Agente não encontrado. Verifique se o agente está ativo.'
+          : 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente em alguns instantes.',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -289,10 +322,15 @@ const EmbedChat = () => {
             variant="ghost"
             size="sm"
             onClick={() => {
-              window.parent.postMessage({
-                type: 'clonefy:close_widget',
-                data: {}
-              }, '*');
+              if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                  type: 'clonefy:close_widget',
+                  data: {}
+                }, '*');
+              } else {
+                // Se não estiver em iframe, apenas recarrega a página
+                window.location.href = '/';
+              }
             }}
             className="h-8 w-8 p-0"
             style={{ 

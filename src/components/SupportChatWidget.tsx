@@ -74,7 +74,7 @@ const SupportChatWidget = () => {
         {isLoaded && (
           <iframe
             ref={iframeRef}
-            src="https://clonefy.app/embed/chat/d9b3b811-73ea-40c0-bc55-9f0ef87a6091?hideHeader=true&fullscreen=true"
+            src={`${window.location.origin}/embed/chat/d9b3b811-73ea-40c0-bc55-9f0ef87a6091?hideHeader=true&fullscreen=true`}
             className={`w-full h-full border-none ${isMobile ? '' : 'rounded-xl'}`}
             title="Clonefy Support Chat"
             allow="microphone; camera"
