@@ -7,10 +7,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Bot, Plus, Edit, Trash2, MessageSquare, Settings, RefreshCw, Code, Copy, Expand, Calendar } from "lucide-react";
+import { Bot, Plus, Edit, Trash2, MessageSquare, Settings, RefreshCw, Code, Copy, Expand } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useUserLimits } from "@/hooks/useUserLimits";
@@ -63,7 +63,11 @@ const Assistants = () => {
   const [instructions, setInstructions] = useState("");
   const [model] = useState("gpt-4o"); // Always use GPT-4o for now
   const [instructionsExpanded, setInstructionsExpanded] = useState(false);
-  const [calendarEnabled, setCalendarEnabled] = useState(false);
+  const [agentRole, setAgentRole] = useState<string>("atendente/suporte");
+  const [customRole, setCustomRole] = useState("");
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [knowledgeUrls, setKnowledgeUrls] = useState<string[]>([]);
+  const [newUrl, setNewUrl] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -133,8 +137,12 @@ const Assistants = () => {
     setName("");
     setDescription("");
     setInstructions("");
-    setCalendarEnabled(false);
     setEditingAssistant(null);
+    setAgentRole("atendente/suporte");
+    setCustomRole("");
+    setPendingFiles([]);
+    setKnowledgeUrls([]);
+    setNewUrl("");
   };
 
   const openCreateDialog = () => {
@@ -156,8 +164,6 @@ const Assistants = () => {
     setName(assistant.name);
     setDescription(assistant.description || "");
     setInstructions(assistant.instructions || "");
-    // Check if assistant has calendar tools configured
-    setCalendarEnabled(assistant.tools && Array.isArray(assistant.tools) && assistant.tools.length > 0);
     setEditingAssistant(assistant);
     setIsCreateOpen(true);
   };
@@ -166,9 +172,125 @@ const Assistants = () => {
     setName(template.name);
     setDescription(template.description);
     setInstructions(template.instructions);
-    setCalendarEnabled(false); // Reset calendar when using template
     setActiveTab("assistants");
     setIsCreateOpen(true);
+  };
+
+  // Função para construir instruções com função do agente
+  const buildInstructionsWithRole = () => {
+    let roleText = "";
+    if (agentRole === "custom" && customRole.trim()) {
+      roleText = customRole.trim();
+    } else {
+      const roleMap: { [key: string]: string } = {
+        "atendente/suporte": "Você é um atendente/suporte especializado em ajudar clientes com dúvidas, problemas e solicitações. Seu objetivo é fornecer suporte excepcional, resolver problemas rapidamente e garantir a satisfação do cliente.",
+        "vendedor/closer": "Você é um vendedor/closer especializado em identificar necessidades, apresentar soluções e fechar vendas. Seu objetivo é entender o cliente, apresentar o valor da solução e conduzir o processo de compra de forma natural e consultiva.",
+        "sdr/qualificador": "Você é um SDR (Sales Development Representative)/qualificador especializado em identificar leads qualificados, fazer perguntas estratégicas e qualificar oportunidades. Seu objetivo é entender o perfil do cliente, suas necessidades e determinar se há fit para uma conversa comercial."
+      };
+      roleText = roleMap[agentRole] || roleMap["atendente/suporte"];
+    }
+    
+    return `${roleText}\n\n${instructions}`;
+  };
+
+  // Função para fazer upload de arquivos pendentes
+  const uploadPendingFiles = async (assistantId: string) => {
+    if (pendingFiles.length === 0) return;
+
+    for (const file of pendingFiles) {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) continue;
+
+        // Upload para Supabase Storage
+        const fileName = `${user.user.id}/${assistantId}/${Date.now()}-${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('assistant-knowledge')
+          .upload(fileName, file);
+
+        if (uploadError) {
+          console.error('Erro ao fazer upload:', uploadError);
+          continue;
+        }
+
+        // Obter URL público
+        const { data: { publicUrl } } = supabase.storage
+          .from('assistant-knowledge')
+          .getPublicUrl(fileName);
+
+        // Converter arquivo para base64
+        const fileToBase64 = (file: File): Promise<string> => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+              const result = reader.result as string;
+              resolve(result.split(',')[1]);
+            };
+            reader.onerror = error => reject(error);
+          });
+        };
+
+        // Upload para OpenAI
+        const response = await supabase.functions.invoke('openai-assistants', {
+          body: {
+            action: 'upload-knowledge-file',
+            file: await fileToBase64(file),
+            fileName: file.name,
+            mimeType: file.type
+          },
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+        });
+
+        if (response.error) {
+          console.error('Erro ao fazer upload para OpenAI:', response.error);
+          continue;
+        }
+
+        // Salvar metadados no banco
+        await supabase
+          .from('assistant_knowledge_files')
+          .insert({
+            assistant_id: assistantId,
+            user_id: user.user.id,
+            file_name: file.name,
+            file_url: publicUrl,
+            openai_file_id: response.data.openai_file_id,
+            file_size: file.size,
+            mime_type: file.type,
+          });
+      } catch (error) {
+        console.error('Erro ao processar arquivo:', error);
+      }
+    }
+  };
+
+  // Função para processar URLs
+  const processKnowledgeUrls = async (assistantId: string) => {
+    if (knowledgeUrls.length === 0) return;
+
+    for (const url of knowledgeUrls) {
+      try {
+        // Chamar função de scraper
+        const response = await supabase.functions.invoke('web-scraper', {
+          body: {
+            url: url,
+            assistantId: assistantId
+          },
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+        });
+
+        if (response.error) {
+          console.error('Erro ao processar URL:', response.error);
+        }
+      } catch (error) {
+        console.error('Erro ao processar URL:', error);
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -178,10 +300,13 @@ const Assistants = () => {
     setFormLoading(true);
 
     try {
+      // Construir instruções com função
+      const finalInstructions = buildInstructionsWithRole();
+      
       const action = editingAssistant ? 'update' : 'create';
       const body = editingAssistant 
-        ? { action, assistantId: editingAssistant.id, name, description, instructions, model: "gpt-4o", calendar_enabled: calendarEnabled }
-        : { action, name, description, instructions, model: "gpt-4o", calendar_enabled: calendarEnabled };
+        ? { action, assistantId: editingAssistant.id, name, description, instructions: finalInstructions, model: "gpt-4o" }
+        : { action, name, description, instructions: finalInstructions, model: "gpt-4o" };
 
       const response = await supabase.functions.invoke('openai-assistants', {
         body,
@@ -192,6 +317,21 @@ const Assistants = () => {
 
       if (response.error) {
         throw response.error;
+      }
+
+      const createdAssistantId = response.data?.assistant?.id || response.data?.id;
+
+      // Se for criação, processar arquivos e URLs
+      if (!editingAssistant && createdAssistantId) {
+        // Upload de arquivos pendentes
+        if (pendingFiles.length > 0) {
+          await uploadPendingFiles(createdAssistantId);
+        }
+
+        // Processar URLs
+        if (knowledgeUrls.length > 0) {
+          await processKnowledgeUrls(createdAssistantId);
+        }
       }
 
       toast({
@@ -477,6 +617,135 @@ const Assistants = () => {
                     </div>
 
                     <div className="space-y-2">
+                      <Label htmlFor="agentRole">Função do Agente</Label>
+                      <Select value={agentRole} onValueChange={setAgentRole}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a função" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="atendente/suporte">Atendente/Suporte</SelectItem>
+                          <SelectItem value="vendedor/closer">Vendedor/Closer</SelectItem>
+                          <SelectItem value="sdr/qualificador">SDR/Qualificador</SelectItem>
+                          <SelectItem value="custom">Função Personalizada</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {agentRole === "custom" && (
+                        <Input
+                          placeholder="Descreva a função do agente (ex: Consultor de vendas, Especialista em onboarding...)"
+                          value={customRole}
+                          onChange={(e) => setCustomRole(e.target.value)}
+                          className="mt-2"
+                        />
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        A função será incluída automaticamente nas instruções do agente.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Base de Conhecimento - Arquivos</Label>
+                      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4">
+                        <input
+                          type="file"
+                          multiple
+                          accept=".pdf,.doc,.docx,.txt,.csv,.json,.md"
+                          onChange={(e) => {
+                            if (e.target.files) {
+                              setPendingFiles(Array.from(e.target.files));
+                            }
+                          }}
+                          className="hidden"
+                          id="knowledge-files-input"
+                        />
+                        <label
+                          htmlFor="knowledge-files-input"
+                          className="cursor-pointer flex flex-col items-center justify-center gap-2"
+                        >
+                          <Bot className="h-8 w-8 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
+                            Clique para adicionar arquivos (PDF, DOC, DOCX, TXT, CSV, JSON, MD)
+                          </span>
+                        </label>
+                        {pendingFiles.length > 0 && (
+                          <div className="mt-4 space-y-2">
+                            {pendingFiles.map((file, index) => (
+                              <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                                <span className="text-sm">{file.name}</span>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setPendingFiles(pendingFiles.filter((_, i) => i !== index));
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Arquivos serão adicionados à base de conhecimento após criar o agente.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Base de Conhecimento - URLs</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="https://exemplo.com"
+                          value={newUrl}
+                          onChange={(e) => setNewUrl(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && newUrl.trim()) {
+                              e.preventDefault();
+                              if (!knowledgeUrls.includes(newUrl.trim())) {
+                                setKnowledgeUrls([...knowledgeUrls, newUrl.trim()]);
+                                setNewUrl("");
+                              }
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            if (newUrl.trim() && !knowledgeUrls.includes(newUrl.trim())) {
+                              setKnowledgeUrls([...knowledgeUrls, newUrl.trim()]);
+                              setNewUrl("");
+                            }
+                          }}
+                        >
+                          Adicionar
+                        </Button>
+                      </div>
+                      {knowledgeUrls.length > 0 && (
+                        <div className="mt-2 space-y-2">
+                          {knowledgeUrls.map((url, index) => (
+                            <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                              <span className="text-sm truncate flex-1">{url}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setKnowledgeUrls(knowledgeUrls.filter((_, i) => i !== index));
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        URLs serão processadas e adicionadas à base de conhecimento após criar o agente.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="instructions">Instruções</Label>
                         <Button
@@ -501,33 +770,6 @@ const Assistants = () => {
                       <p className="text-xs text-muted-foreground">
                         Seja específico sobre como o agente deve responder e se comportar.
                       </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <Label htmlFor="calendar-enabled">Calendário de Agendamentos</Label>
-                          <p className="text-xs text-muted-foreground">
-                            Permite que o agente gerencie agendamentos automaticamente
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            id="calendar-enabled"
-                            checked={calendarEnabled}
-                            onCheckedChange={setCalendarEnabled}
-                          />
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      </div>
-                      {calendarEnabled && (
-                        <div className="p-3 bg-blue-50 dark:bg-blue-950/50 rounded-lg">
-                          <p className="text-xs text-blue-600 dark:text-blue-400">
-                            ✓ Este agente poderá verificar disponibilidade, criar, cancelar e reagendar 
-                            compromissos automaticamente nas conversas.
-                          </p>
-                        </div>
-                      )}
                     </div>
 
                     <div className="flex justify-end gap-2">

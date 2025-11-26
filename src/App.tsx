@@ -22,7 +22,6 @@ const LazyWhatsApp = lazy(() => import("./pages/WhatsApp"));
 const LazyConversations = lazy(() => import("./pages/Conversations"));
 const LazyAdmin = lazy(() => import("./pages/Admin"));
 const LazyEspanol = lazy(() => import("./pages/Espanol"));
-const LazyCalendar = lazy(() => import("./pages/Calendar"));
 const LazyWidgetCustomization = lazy(() => import("./pages/WidgetCustomization"));
 const LazyWidgetAnalytics = lazy(() => import("./pages/WidgetAnalytics"));
 
@@ -78,11 +77,6 @@ const App = () => {
                  <Route path="/conversations" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <LazyConversations />
-                  </Suspense>
-                } />
-                <Route path="/calendar" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <LazyCalendar />
                   </Suspense>
                 } />
                  <Route path="/admin" element={
