@@ -5,9 +5,12 @@ import SupportChatWidget from './SupportChatWidget';
 const ConditionalSupportWidget = () => {
   const location = useLocation();
   
-  // Não mostrar o widget de suporte na página de customização
+  // Não mostrar o widget de suporte nas rotas de embed, auth e customização
   const hiddenPaths = ['/widget-customization'];
-  const shouldShow = !hiddenPaths.includes(location.pathname);
+  const hiddenPathPrefixes = ['/embed/', '/auth', '/embed-chat/'];
+  
+  const shouldShow = !hiddenPaths.includes(location.pathname) && 
+                     !hiddenPathPrefixes.some(prefix => location.pathname.includes(prefix));
   
   if (!shouldShow) {
     return null;
