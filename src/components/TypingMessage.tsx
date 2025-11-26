@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { useTypingEffect } from '@/hooks/useTypingEffect';
+import { ExternalLink } from 'lucide-react';
 
 interface TypingMessageProps {
   content: string;
@@ -8,6 +9,48 @@ interface TypingMessageProps {
   className?: string;
   children?: React.ReactNode;
 }
+
+// Função para detectar e renderizar links como botões
+const renderTextWithLinks = (text: string) => {
+  // Regex para detectar URLs (http, https, www)
+  const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = urlRegex.exec(text)) !== null) {
+    // Adiciona texto antes do link
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
+    
+    // Adiciona o link como botão
+    const url = match[0];
+    const fullUrl = url.startsWith('www.') ? `https://${url}` : url;
+    
+    parts.push(
+      <a
+        key={match.index}
+        href={fullUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 mx-1 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium no-underline"
+      >
+        <ExternalLink className="w-3.5 h-3.5" />
+        <span>Acessar link</span>
+      </a>
+    );
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  // Adiciona o texto restante
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+  
+  return parts.length > 0 ? parts : text;
+};
 
 const TypingMessage = memo(({ 
   content, 
@@ -76,7 +119,7 @@ const TypingMessage = memo(({
             <div key={index} className="space-y-1">
               {lines.map((line, lineIndex) => (
                 <p key={lineIndex} className="text-sm leading-relaxed break-words">
-                  {line.trim()}
+                  {renderTextWithLinks(line.trim())}
                 </p>
               ))}
             </div>
