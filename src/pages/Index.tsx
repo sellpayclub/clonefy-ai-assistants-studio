@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import ChatWidget from "@/components/ChatWidget";
 import { useTheme } from "@/components/ThemeProvider";
 import YouTubePlayer from "@/components/YouTubePlayer";
 import LazyImage from "@/components/LazyImage";
@@ -611,8 +610,6 @@ const Index = () => {
         </div>
       </footer>
 
-      {/* Chat Widget */}
-      <ChatWidget />
     </div>
   );
 };
