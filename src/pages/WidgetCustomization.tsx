@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Palette, Settings, BarChart3, Copy, Eye, ArrowLeft, MessageCircle, Layout, Plus, Trash2, HelpCircle, User, MessageSquare } from 'lucide-react';
+import { Palette, Settings, BarChart3, Copy, Eye, MessageCircle, Plus, Trash2, HelpCircle, User, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import OptimizedWidgetPreview from '@/components/widget/OptimizedWidgetPreview';
 import ColorPicker from '@/components/widget/ColorPicker';
@@ -17,6 +17,7 @@ import ImageUpload from '@/components/widget/ImageUpload';
 import { useOptimizedWidgetCustomization, WidgetTemplate, ActionButton } from '@/hooks/useOptimizedWidgetCustomization';
 import AppSidebar from '@/components/AppSidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { useDebounce } from '@/hooks/useDebounce';
 
 // Template options with visual cards
 const TEMPLATE_OPTIONS: { id: WidgetTemplate; name: string; description: string; icon: React.ReactNode }[] = [
@@ -81,15 +82,12 @@ const WidgetCustomization = () => {
     status_text: 'Online agora'
   });
   
-  const [previewKey, setPreviewKey] = useState(0);
+  // Debounce formData para o preview (evita re-render a cada keystroke)
+  const debouncedFormData = useDebounce(formData, 300);
 
-  // Update formData diretamente - removido preview separado para evitar conflitos
+  // Update formData diretamente - sem forçar re-render do preview
   const updateFormData = useCallback((field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Forçar re-render do preview para mudanças importantes
-    if (['avatar_url', 'widget_name', 'primary_color', 'secondary_color', 'welcome_message', 'widget_template', 'bubble_message', 'quick_questions', 'action_buttons', 'show_status_indicator', 'status_text'].includes(field)) {
-      setPreviewKey(prev => prev + 1);
-    }
   }, []);
 
   // Helper functions for managing quick questions
@@ -105,7 +103,6 @@ const WidgetCustomization = () => {
       ...prev,
       quick_questions: prev.quick_questions.map((q, i) => i === index ? value : q)
     }));
-    setPreviewKey(prev => prev + 1);
   }, []);
 
   const removeQuickQuestion = useCallback((index: number) => {
@@ -113,7 +110,6 @@ const WidgetCustomization = () => {
       ...prev,
       quick_questions: prev.quick_questions.filter((_, i) => i !== index)
     }));
-    setPreviewKey(prev => prev + 1);
   }, []);
 
   // Helper functions for managing action buttons
@@ -131,7 +127,6 @@ const WidgetCustomization = () => {
         i === index ? { ...btn, [field]: value } : btn
       )
     }));
-    setPreviewKey(prev => prev + 1);
   }, []);
 
   const removeActionButton = useCallback((index: number) => {
@@ -139,7 +134,6 @@ const WidgetCustomization = () => {
       ...prev,
       action_buttons: prev.action_buttons.filter((_, i) => i !== index)
     }));
-    setPreviewKey(prev => prev + 1);
   }, []);
 
   useEffect(() => {
@@ -181,9 +175,6 @@ const WidgetCustomization = () => {
       
       setFormData(newFormData);
       
-      // Forçar re-render do preview quando mudar de assistente
-      setPreviewKey(prev => prev + 1);
-      
       console.log('✅ FormData sincronizado com sucesso');
     } else {
       console.log('⚠️ Nenhuma personalização encontrada, usando valores padrão');
@@ -206,7 +197,6 @@ const WidgetCustomization = () => {
         show_status_indicator: true,
         status_text: 'Online agora'
       });
-      setPreviewKey(prev => prev + 1);
     }
   }, [customization, selectedAssistant]);
 
@@ -214,13 +204,9 @@ const WidgetCustomization = () => {
   useEffect(() => {
     if (selectedAssistant) {
       console.log('🔄 Mudando para assistente:', selectedAssistant);
-      console.log('🔄 FormData atual antes da mudança:', formData);
       
       // Limpar cache do assistente anterior
       clearCache();
-      
-      // Forçar re-render imediato do preview
-      setPreviewKey(prev => prev + 1);
       
       // Carregar personalização do novo assistente
       loadCustomization();
@@ -355,193 +341,154 @@ const WidgetCustomization = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Configurações */}
             <div className="space-y-6">
-              <Tabs defaultValue="template" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="template">
-                    <Layout className="h-4 w-4 mr-2" />
-                    Template
-                  </TabsTrigger>
+              <Tabs defaultValue="appearance" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="appearance">
                     <Palette className="h-4 w-4 mr-2" />
                     Aparência
                   </TabsTrigger>
                   <TabsTrigger value="behavior">
                     <Settings className="h-4 w-4 mr-2" />
-                    Comportamento
+                    Configurações
                   </TabsTrigger>
                 </TabsList>
 
-                {/* Template Selection Tab */}
-                <TabsContent value="template" className="space-y-6">
+                <TabsContent value="appearance" className="space-y-6">
+                  {/* Template Selection */}
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Escolha o Estilo do Widget</CardTitle>
-                      <CardDescription>
-                        Selecione como o chat aparecerá no site
-                      </CardDescription>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">Estilo do Chat</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-3">
                         {TEMPLATE_OPTIONS.map((template) => (
                           <div
                             key={template.id}
                             onClick={() => updateFormData('widget_template', template.id)}
-                            className={`cursor-pointer rounded-lg border-2 p-4 transition-all hover:shadow-md ${
+                            className={`cursor-pointer rounded-lg border-2 p-3 transition-all hover:shadow-md ${
                               formData.widget_template === template.id
-                                ? 'border-primary bg-primary/5 shadow-md'
+                                ? 'border-primary bg-primary/5'
                                 : 'border-border hover:border-primary/50'
                             }`}
                           >
-                            <div className="flex flex-col items-center text-center gap-2">
-                              <div className={`p-3 rounded-full ${
+                            <div className="flex items-center gap-3">
+                              <div className={`p-2 rounded-full ${
                                 formData.widget_template === template.id
                                   ? 'bg-primary text-primary-foreground'
                                   : 'bg-muted text-muted-foreground'
                               }`}>
                                 {template.icon}
                               </div>
-                              <h3 className="font-semibold">{template.name}</h3>
-                              <p className="text-xs text-muted-foreground">{template.description}</p>
+                              <div>
+                                <h3 className="font-medium text-sm">{template.name}</h3>
+                                <p className="text-xs text-muted-foreground">{template.description}</p>
+                              </div>
                             </div>
                           </div>
                         ))}
                       </div>
-                    </CardContent>
-                  </Card>
 
-                  {/* Conditional fields based on template */}
-                  {formData.widget_template === 'bubble' && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Configurar Balão de Mensagem</CardTitle>
-                        <CardDescription>
-                          Configure a mensagem que aparece no balão acima do botão
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div>
+                      {/* Inline template options */}
+                      {formData.widget_template === 'bubble' && (
+                        <div className="mt-4 pt-4 border-t">
                           <Label htmlFor="bubble_message">Mensagem do Balão</Label>
                           <Input
                             id="bubble_message"
                             value={formData.bubble_message}
                             onChange={(e) => updateFormData('bubble_message', e.target.value)}
                             placeholder="Oi! Como posso te ajudar?"
+                            className="mt-1"
                           />
                         </div>
-                      </CardContent>
-                    </Card>
-                  )}
+                      )}
 
-                  {formData.widget_template === 'agent_card' && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Configurar Card do Agente</CardTitle>
-                        <CardDescription>
-                          Configure as informações e botões de ação do card
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id="show_status_indicator"
-                            checked={formData.show_status_indicator}
-                            onChange={(e) => updateFormData('show_status_indicator', e.target.checked)}
-                            className="rounded border-gray-300"
-                          />
-                          <Label htmlFor="show_status_indicator">Mostrar indicador de status</Label>
-                        </div>
-
-                        {formData.show_status_indicator && (
-                          <div>
-                            <Label htmlFor="status_text">Texto do Status</Label>
-                            <Input
-                              id="status_text"
-                              value={formData.status_text}
-                              onChange={(e) => updateFormData('status_text', e.target.value)}
-                              placeholder="Online agora"
+                      {formData.widget_template === 'agent_card' && (
+                        <div className="mt-4 pt-4 border-t space-y-4">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="show_status_indicator"
+                              checked={formData.show_status_indicator}
+                              onChange={(e) => updateFormData('show_status_indicator', e.target.checked)}
+                              className="rounded border-gray-300"
                             />
+                            <Label htmlFor="show_status_indicator">Mostrar status online</Label>
                           </div>
-                        )}
 
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label>Botões de Ação</Label>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={addActionButton}
-                            >
-                              <Plus className="h-4 w-4 mr-1" />
-                              Adicionar Botão
-                            </Button>
-                          </div>
-                          
-                          {formData.action_buttons.length === 0 ? (
-                            <p className="text-sm text-muted-foreground italic">
-                              Nenhum botão de ação configurado. Clique em "Adicionar Botão" para criar.
-                            </p>
-                          ) : (
-                            <div className="space-y-3">
-                              {formData.action_buttons.map((btn, index) => (
-                                <div key={index} className="flex gap-2 items-start p-3 bg-muted/50 rounded-lg">
-                                  <div className="flex-1 space-y-2">
-                                    <Input
-                                      value={btn.label}
-                                      onChange={(e) => updateActionButton(index, 'label', e.target.value)}
-                                      placeholder="Texto do botão (ex: Agendar Demo)"
-                                    />
-                                    <Input
-                                      value={btn.message}
-                                      onChange={(e) => updateActionButton(index, 'message', e.target.value)}
-                                      placeholder="Mensagem enviada ao clicar (ex: Quero agendar uma demonstração)"
-                                    />
-                                  </div>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removeActionButton(index)}
-                                    className="text-destructive hover:text-destructive"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              ))}
+                          {formData.show_status_indicator && (
+                            <div>
+                              <Label htmlFor="status_text">Texto do Status</Label>
+                              <Input
+                                id="status_text"
+                                value={formData.status_text}
+                                onChange={(e) => updateFormData('status_text', e.target.value)}
+                                placeholder="Online agora"
+                                className="mt-1"
+                              />
                             </div>
                           )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
 
-                  {formData.widget_template === 'quick_questions' && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Configurar Perguntas Rápidas</CardTitle>
-                        <CardDescription>
-                          Configure as perguntas que aparecem em balões clicáveis
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label>Botões de Ação</Label>
+                              <Button type="button" variant="outline" size="sm" onClick={addActionButton}>
+                                <Plus className="h-4 w-4 mr-1" />
+                                Adicionar
+                              </Button>
+                            </div>
+                            
+                            {formData.action_buttons.length === 0 ? (
+                              <p className="text-sm text-muted-foreground italic">
+                                Clique em "Adicionar" para criar botões.
+                              </p>
+                            ) : (
+                              <div className="space-y-2">
+                                {formData.action_buttons.map((btn, index) => (
+                                  <div key={index} className="flex gap-2 items-start p-2 bg-muted/50 rounded-lg">
+                                    <div className="flex-1 space-y-1">
+                                      <Input
+                                        value={btn.label}
+                                        onChange={(e) => updateActionButton(index, 'label', e.target.value)}
+                                        placeholder="Texto do botão"
+                                        className="h-8 text-sm"
+                                      />
+                                      <Input
+                                        value={btn.message}
+                                        onChange={(e) => updateActionButton(index, 'message', e.target.value)}
+                                        placeholder="Mensagem ao clicar"
+                                        className="h-8 text-sm"
+                                      />
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => removeActionButton(index)}
+                                      className="h-8 w-8 text-destructive hover:text-destructive"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {formData.widget_template === 'quick_questions' && (
+                        <div className="mt-4 pt-4 border-t space-y-2">
                           <div className="flex items-center justify-between">
-                            <Label>Perguntas</Label>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={addQuickQuestion}
-                            >
+                            <Label>Perguntas Rápidas</Label>
+                            <Button type="button" variant="outline" size="sm" onClick={addQuickQuestion}>
                               <Plus className="h-4 w-4 mr-1" />
-                              Adicionar Pergunta
+                              Adicionar
                             </Button>
                           </div>
                           
                           {formData.quick_questions.length === 0 ? (
                             <p className="text-sm text-muted-foreground italic">
-                              Nenhuma pergunta configurada. Clique em "Adicionar Pergunta" para criar.
+                              Clique em "Adicionar" para criar perguntas.
                             </p>
                           ) : (
                             <div className="space-y-2">
@@ -550,15 +497,15 @@ const WidgetCustomization = () => {
                                   <Input
                                     value={question}
                                     onChange={(e) => updateQuickQuestion(index, e.target.value)}
-                                    placeholder={`Pergunta ${index + 1} (ex: O que é o Clonefy?)`}
-                                    className="flex-1"
+                                    placeholder={`Pergunta ${index + 1}`}
+                                    className="flex-1 h-8 text-sm"
                                   />
                                   <Button
                                     type="button"
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => removeQuickQuestion(index)}
-                                    className="text-destructive hover:text-destructive"
+                                    className="h-8 w-8 text-destructive hover:text-destructive"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
@@ -567,12 +514,9 @@ const WidgetCustomization = () => {
                             </div>
                           )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="appearance" className="space-y-6">
+                      )}
+                    </CardContent>
+                  </Card>
                   <Card>
                     <CardHeader>
                       <CardTitle>Informações Básicas</CardTitle>
@@ -750,11 +694,9 @@ const WidgetCustomization = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="relative overflow-visible min-h-[600px]">
-                    <div key={previewKey}>
-                      <OptimizedWidgetPreview 
-                        customization={formData}
-                      />
-                    </div>
+                    <OptimizedWidgetPreview 
+                      customization={debouncedFormData}
+                    />
                   </div>
                 </CardContent>
               </Card>
