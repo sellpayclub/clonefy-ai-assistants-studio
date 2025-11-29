@@ -179,9 +179,9 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
     return (
       <div className="relative bg-gray-100 dark:bg-gray-800 rounded-lg p-8 min-h-[400px] flex items-center justify-center">
         <div className="text-center">
-          <div className="text-gray-400 text-lg mb-2">Widget Inativo</div>
+          <div className="text-gray-400 text-lg mb-2">Chat Inativo</div>
           <div className="text-gray-500 text-sm">
-            O widget não será exibido quando estiver inativo
+            O chat não será exibido quando estiver inativo
           </div>
         </div>
       </div>
@@ -445,7 +445,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
         </div>
         
         <div className="absolute top-2 left-2 right-2 pointer-events-none">
-          <div className="text-xs text-gray-400 text-center">Preview do Widget - Template: {customization.widget_template || 'classic'}</div>
+          <div className="text-xs text-gray-400 text-center">Preview do Chat - Template: {customization.widget_template || 'classic'}</div>
         </div>
 
         {/* Render template-specific preview */}

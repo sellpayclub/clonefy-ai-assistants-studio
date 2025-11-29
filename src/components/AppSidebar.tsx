@@ -30,8 +30,8 @@ const menuItems = [
   { title: "sidebar.agents.title", url: "/assistants", icon: Bot, description: "sidebar.agents.description" },
   { title: "sidebar.whatsapp.title", url: "/whatsapp", icon: Smartphone, description: "sidebar.whatsapp.description" },
   { title: "sidebar.conversations.title", url: "/conversations", icon: MessageSquare, description: "sidebar.conversations.description" },
-  { title: "Widget Customization", url: "/widget-customization", icon: Palette, description: "Personalize seu widget de chat" },
-  { title: "Widget Analytics", url: "/widget-analytics", icon: BarChart3, description: "Analise o desempenho do widget" },
+  { title: "Chat Flutuante", url: "/widget-customization", icon: Palette, description: "Personalize o chat para seu site" },
+  { title: "Analytics do Chat", url: "/widget-analytics", icon: BarChart3, description: "Analise o desempenho do chat" },
   { title: "sidebar.admin.title", url: "/admin", icon: Settings, description: "sidebar.admin.description" },
 ];
 

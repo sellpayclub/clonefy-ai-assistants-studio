@@ -315,10 +315,10 @@ const WidgetCustomization = () => {
             <SidebarTrigger />
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                Personalizar Widget de Chat
+                Chat Flutuante para Site
               </h1>
               <p className="text-muted-foreground text-sm md:text-base">
-                Customize a aparência do seu widget de chat flutuante
+                Personalize o chat que aparecerá no seu site e gere o código para incorporar
               </p>
             </div>
           </div>
@@ -377,7 +377,7 @@ const WidgetCustomization = () => {
                     <CardHeader>
                       <CardTitle>Escolha o Estilo do Widget</CardTitle>
                       <CardDescription>
-                        Selecione como o widget aparecerá no site dos seus clientes
+                        Selecione como o chat aparecerá no site
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -678,7 +678,7 @@ const WidgetCustomization = () => {
                           onChange={(e) => updateFormData('is_active', e.target.checked)}
                           className="rounded border-gray-300"
                         />
-                        <Label htmlFor="is_active">Widget Ativo</Label>
+                        <Label htmlFor="is_active">Chat Ativo</Label>
                         {formData.is_active ? (
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             Ativo
@@ -742,10 +742,10 @@ const WidgetCustomization = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Eye className="h-5 w-5" />
-                    Preview do Widget
+                    Preview do Chat
                   </CardTitle>
                   <CardDescription>
-                    Veja como seu widget aparecerá no site
+                    Veja como o chat aparecerá no seu site
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
