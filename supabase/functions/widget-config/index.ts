@@ -64,7 +64,14 @@ serve(async (req) => {
       secondary_color: '#f8f9fa',
       text_color: '#333333',
       button_position: 'right',
-      is_active: true
+      is_active: true,
+      // New template fields
+      widget_template: 'classic',
+      bubble_message: 'Oi! Como posso te ajudar?',
+      quick_questions: [],
+      action_buttons: [],
+      show_status_indicator: true,
+      status_text: 'Online agora'
     };
 
     const finalConfig = config ? {
@@ -76,7 +83,14 @@ serve(async (req) => {
       secondary_color: config.secondary_color || defaultConfig.secondary_color,
       text_color: config.text_color || defaultConfig.text_color,
       button_position: config.button_position || defaultConfig.button_position,
-      is_active: config.is_active !== false
+      is_active: config.is_active !== false,
+      // New template fields
+      widget_template: config.widget_template || defaultConfig.widget_template,
+      bubble_message: config.bubble_message || defaultConfig.bubble_message,
+      quick_questions: config.quick_questions || defaultConfig.quick_questions,
+      action_buttons: config.action_buttons || defaultConfig.action_buttons,
+      show_status_indicator: config.show_status_indicator !== false,
+      status_text: config.status_text || defaultConfig.status_text
     } : defaultConfig;
 
     return new Response(

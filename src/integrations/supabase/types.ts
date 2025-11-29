@@ -1612,52 +1612,70 @@ export type Database = {
       }
       widget_customizations: {
         Row: {
+          action_buttons: Json | null
           assistant_id: string
           avatar_url: string | null
+          bubble_message: string | null
           button_icon_url: string | null
           button_position: string
           created_at: string
           id: string
           is_active: boolean
           primary_color: string
+          quick_questions: Json | null
           secondary_color: string
+          show_status_indicator: boolean | null
+          status_text: string | null
           text_color: string
           updated_at: string
           user_id: string
           welcome_message: string | null
           widget_name: string
+          widget_template: string | null
         }
         Insert: {
+          action_buttons?: Json | null
           assistant_id: string
           avatar_url?: string | null
+          bubble_message?: string | null
           button_icon_url?: string | null
           button_position?: string
           created_at?: string
           id?: string
           is_active?: boolean
           primary_color?: string
+          quick_questions?: Json | null
           secondary_color?: string
+          show_status_indicator?: boolean | null
+          status_text?: string | null
           text_color?: string
           updated_at?: string
           user_id: string
           welcome_message?: string | null
           widget_name?: string
+          widget_template?: string | null
         }
         Update: {
+          action_buttons?: Json | null
           assistant_id?: string
           avatar_url?: string | null
+          bubble_message?: string | null
           button_icon_url?: string | null
           button_position?: string
           created_at?: string
           id?: string
           is_active?: boolean
           primary_color?: string
+          quick_questions?: Json | null
           secondary_color?: string
+          show_status_indicator?: boolean | null
+          status_text?: string | null
           text_color?: string
           updated_at?: string
           user_id?: string
           welcome_message?: string | null
           widget_name?: string
+          widget_template?: string | null
         }
         Relationships: []
       }

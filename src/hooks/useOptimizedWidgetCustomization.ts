@@ -1,7 +1,14 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface WidgetCustomization {
+export interface ActionButton {
+  label: string;
+  message: string;
+}
+
+export type WidgetTemplate = 'classic' | 'bubble' | 'agent_card' | 'quick_questions';
+
+export interface WidgetCustomization {
   id?: string;
   widget_name: string;
   avatar_url: string;
@@ -12,6 +19,13 @@ interface WidgetCustomization {
   text_color: string;
   button_position: 'left' | 'right';
   is_active: boolean;
+  // New template fields
+  widget_template: WidgetTemplate;
+  bubble_message: string;
+  quick_questions: string[];
+  action_buttons: ActionButton[];
+  show_status_indicator: boolean;
+  status_text: string;
 }
 
 // Cache local para evitar requests desnecessários
@@ -61,9 +75,16 @@ export const useOptimizedWidgetCustomization = (assistantId: string) => {
       if (error) throw error;
       
       if (data) {
-        const customizationData = {
+        const customizationData: WidgetCustomization = {
           ...data,
-          button_position: (data.button_position as 'left' | 'right') || 'right'
+          button_position: (data.button_position as 'left' | 'right') || 'right',
+          // Parse new template fields
+          widget_template: (data.widget_template as WidgetTemplate) || 'classic',
+          bubble_message: data.bubble_message || 'Oi! Como posso te ajudar?',
+          quick_questions: Array.isArray(data.quick_questions) ? data.quick_questions : [],
+          action_buttons: Array.isArray(data.action_buttons) ? data.action_buttons : [],
+          show_status_indicator: data.show_status_indicator !== false,
+          status_text: data.status_text || 'Online agora'
         };
         
         console.log('✅ Personalização carregada do banco:', customizationData);
@@ -113,9 +134,16 @@ export const useOptimizedWidgetCustomization = (assistantId: string) => {
       if (error) throw error;
       
       if (result) {
-        const savedData = {
+        const savedData: WidgetCustomization = {
           ...result,
-          button_position: (result.button_position as 'left' | 'right') || 'right'
+          button_position: (result.button_position as 'left' | 'right') || 'right',
+          // Parse new template fields
+          widget_template: (result.widget_template as WidgetTemplate) || 'classic',
+          bubble_message: result.bubble_message || 'Oi! Como posso te ajudar?',
+          quick_questions: Array.isArray(result.quick_questions) ? result.quick_questions : [],
+          action_buttons: Array.isArray(result.action_buttons) ? result.action_buttons : [],
+          show_status_indicator: result.show_status_indicator !== false,
+          status_text: result.status_text || 'Online agora'
         };
         
         // Atualizar cache imediatamente

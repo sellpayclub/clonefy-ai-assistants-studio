@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { MessageCircle, X, Send } from 'lucide-react';
+import { MessageCircle, X, Send, Search } from 'lucide-react';
 import TypingIndicator from '../TypingIndicator';
+import { WidgetTemplate, ActionButton } from '@/hooks/useOptimizedWidgetCustomization';
 
 interface WidgetPreviewProps {
   customization: {
@@ -13,6 +14,13 @@ interface WidgetPreviewProps {
     text_color: string;
     button_position: 'left' | 'right';
     is_active: boolean;
+    // New template fields
+    widget_template: WidgetTemplate;
+    bubble_message: string;
+    quick_questions: string[];
+    action_buttons: ActionButton[];
+    show_status_indicator: boolean;
+    status_text: string;
   };
 }
 
@@ -34,7 +42,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
   useEffect(() => {
     setHeaderKey(prev => prev + 1);
     setForceRender(prev => prev + 1);
-  }, [customization.widget_name, customization.avatar_url, customization.primary_color, customization.secondary_color]);
+  }, [customization.widget_name, customization.avatar_url, customization.primary_color, customization.secondary_color, customization.widget_template, customization.bubble_message, customization.quick_questions, customization.action_buttons]);
 
   // Forçar re-render do chat quando customization mudar (mesmo com chat aberto)
   useEffect(() => {
@@ -180,6 +188,251 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
     );
   }
 
+  // Render the template-specific preview elements (before the chat opens)
+  const renderTemplatePreview = () => {
+    const template = customization.widget_template || 'classic';
+    const position = customization.button_position;
+    const positionClass = position === 'left' ? 'left-4' : 'right-4';
+    
+    switch (template) {
+      case 'bubble':
+        return (
+          <>
+            {/* Bubble Message */}
+            {!isOpen && (
+              <div 
+                className={`absolute ${position === 'left' ? 'left-4' : 'right-4'} bottom-20 max-w-[200px] z-10`}
+              >
+                <div 
+                  className="bg-white dark:bg-gray-800 rounded-2xl px-4 py-3 shadow-lg border relative"
+                  style={{ borderColor: `${customization.primary_color}30` }}
+                >
+                  <p className="text-sm" style={{ color: customization.text_color }}>
+                    {customization.bubble_message || 'Oi! Como posso te ajudar?'}
+                  </p>
+                  {/* Close button */}
+                  <button className="absolute -top-2 -right-2 w-5 h-5 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-xs">
+                    <X size={10} />
+                  </button>
+                  {/* Arrow pointing to button */}
+                  <div 
+                    className={`absolute -bottom-2 ${position === 'left' ? 'left-4' : 'right-4'} w-4 h-4 bg-white dark:bg-gray-800 rotate-45 border-r border-b`}
+                    style={{ borderColor: `${customization.primary_color}30` }}
+                  />
+                </div>
+              </div>
+            )}
+            {/* Button */}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className={`absolute ${positionClass} bottom-4 w-12 h-12 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 z-10`}
+              style={styles.button}
+              aria-label={isOpen ? "Fechar chat" : "Abrir chat"}
+            >
+              {isOpen ? (
+                <X size={18} />
+              ) : customization.button_icon_url ? (
+                <img src={customization.button_icon_url} alt="Chat" className="w-5 h-5 object-cover rounded" loading="lazy" />
+              ) : (
+                <MessageCircle size={18} />
+              )}
+            </button>
+          </>
+        );
+
+      case 'agent_card':
+        return (
+          <>
+            {/* Agent Card */}
+            {!isOpen && (
+              <div 
+                className={`absolute ${position === 'left' ? 'left-4' : 'right-4'} bottom-20 w-64 z-10`}
+              >
+                <div 
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border overflow-hidden"
+                  style={{ borderColor: `${customization.primary_color}30` }}
+                >
+                  {/* Header with avatar */}
+                  <div 
+                    className="p-4 flex items-center gap-3"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${customization.primary_color}, ${customization.primary_color}dd)` 
+                    }}
+                  >
+                    {customization.avatar_url ? (
+                      <img 
+                        src={customization.avatar_url} 
+                        alt={customization.widget_name}
+                        className="w-12 h-12 rounded-full object-cover border-2"
+                        style={{ borderColor: 'rgba(255,255,255,0.3)' }}
+                      />
+                    ) : (
+                      <div 
+                        className="w-12 h-12 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+                      >
+                        <MessageCircle size={24} style={{ color: customization.secondary_color }} />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <p className="font-semibold" style={{ color: customization.secondary_color }}>
+                        {customization.widget_name || 'Assistente Virtual'}
+                      </p>
+                      {customization.show_status_indicator && (
+                        <p className="text-xs flex items-center gap-1" style={{ color: customization.secondary_color, opacity: 0.9 }}>
+                          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                          {customization.status_text || 'Online agora'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-4 space-y-3">
+                    <p className="text-sm" style={{ color: customization.text_color }}>
+                      {customization.welcome_message || 'Como posso ajudar você hoje?'}
+                    </p>
+
+                    {/* Search input (decorative) */}
+                    <div 
+                      className="flex items-center gap-2 px-3 py-2 rounded-full border cursor-pointer hover:border-gray-400 transition-colors"
+                      style={{ borderColor: `${customization.primary_color}40` }}
+                      onClick={() => setIsOpen(true)}
+                    >
+                      <Search size={16} className="text-gray-400" />
+                      <span className="text-sm text-gray-400">Pergunte algo...</span>
+                    </div>
+
+                    {/* Action buttons */}
+                    {customization.action_buttons && customization.action_buttons.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {customization.action_buttons.slice(0, 3).map((btn, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setIsOpen(true)}
+                            className="px-3 py-1.5 text-xs rounded-full transition-colors"
+                            style={{ 
+                              backgroundColor: customization.primary_color,
+                              color: customization.secondary_color 
+                            }}
+                          >
+                            {btn.label || `Botão ${index + 1}`}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* Button */}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className={`absolute ${positionClass} bottom-4 w-12 h-12 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 z-10`}
+              style={styles.button}
+              aria-label={isOpen ? "Fechar chat" : "Abrir chat"}
+            >
+              {isOpen ? (
+                <X size={18} />
+              ) : customization.button_icon_url ? (
+                <img src={customization.button_icon_url} alt="Chat" className="w-5 h-5 object-cover rounded" loading="lazy" />
+              ) : (
+                <MessageCircle size={18} />
+              )}
+            </button>
+          </>
+        );
+
+      case 'quick_questions':
+        return (
+          <>
+            {/* Quick Questions */}
+            {!isOpen && customization.quick_questions && customization.quick_questions.length > 0 && (
+              <div 
+                className={`absolute ${position === 'left' ? 'left-4' : 'right-4'} bottom-20 max-w-[220px] z-10 space-y-2`}
+              >
+                {customization.quick_questions.slice(0, 4).map((question, index) => (
+                  question && (
+                    <button
+                      key={index}
+                      onClick={() => setIsOpen(true)}
+                      className="block w-full text-left bg-white dark:bg-gray-800 rounded-2xl px-4 py-2.5 shadow-lg border text-sm hover:shadow-xl transition-all hover:scale-[1.02]"
+                      style={{ 
+                        borderColor: `${customization.primary_color}30`,
+                        color: customization.text_color
+                      }}
+                    >
+                      {question}
+                    </button>
+                  )
+                ))}
+              </div>
+            )}
+            {/* Button with notification badge */}
+            <div className={`absolute ${positionClass} bottom-4 z-10`}>
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-12 h-12 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 relative"
+                style={styles.button}
+                aria-label={isOpen ? "Fechar chat" : "Abrir chat"}
+              >
+                {isOpen ? (
+                  <X size={18} />
+                ) : customization.button_icon_url ? (
+                  <img src={customization.button_icon_url} alt="Chat" className="w-5 h-5 object-cover rounded" loading="lazy" />
+                ) : (
+                  <MessageCircle size={18} />
+                )}
+              </button>
+              {/* Notification badge */}
+              {!isOpen && customization.quick_questions && customization.quick_questions.length > 0 && (
+                <span 
+                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
+                  style={{ backgroundColor: '#ef4444', color: 'white' }}
+                >
+                  {customization.quick_questions.filter(q => q).length}
+                </span>
+              )}
+            </div>
+          </>
+        );
+
+      case 'classic':
+      default:
+        return (
+          <>
+            {/* Dica visual quando chat está fechado */}
+            {!isOpen && (
+              <div className={`absolute ${position === 'left' ? 'left-20' : 'right-20'} bottom-8 bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs shadow-lg animate-pulse z-10`}>
+                👆 Clique para testar o chat
+                <div className={`absolute top-1/2 -translate-y-1/2 ${position === 'left' ? '-left-1' : '-right-1'} w-2 h-2 bg-primary rotate-45`}></div>
+              </div>
+            )}
+            {/* Chat Button */}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className={`absolute ${positionClass} bottom-4 w-12 h-12 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 z-10`}
+              style={styles.button}
+              aria-label={isOpen ? "Fechar chat" : "Abrir chat"}
+            >
+              {isOpen ? (
+                <X size={18} />
+              ) : customization.button_icon_url ? (
+                <img 
+                  src={customization.button_icon_url} 
+                  alt="Chat" 
+                  className="w-5 h-5 object-cover rounded"
+                  loading="lazy"
+                />
+              ) : (
+                <MessageCircle size={18} />
+              )}
+            </button>
+          </>
+        );
+    }
+  };
+
   return (
     <div key={`widget-${forceRender}`} className="relative bg-gray-100 dark:bg-gray-800 rounded-lg p-4 min-h-[600px] overflow-visible">
       {/* Simulação de uma página web */}
@@ -192,37 +445,11 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
         </div>
         
         <div className="absolute top-2 left-2 right-2 pointer-events-none">
-          <div className="text-xs text-gray-400 text-center">Preview do Widget</div>
+          <div className="text-xs text-gray-400 text-center">Preview do Widget - Template: {customization.widget_template || 'classic'}</div>
         </div>
 
-        {/* Dica visual quando chat está fechado */}
-        {!isOpen && (
-          <div className={`absolute ${customization.button_position === 'left' ? 'left-20' : 'right-20'} bottom-8 bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs shadow-lg animate-pulse z-10`}>
-            👆 Clique para testar o chat
-            <div className={`absolute top-1/2 -translate-y-1/2 ${customization.button_position === 'left' ? '-left-1' : '-right-1'} w-2 h-2 bg-primary rotate-45`}></div>
-          </div>
-        )}
-
-        {/* Chat Button */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={`absolute ${customization.button_position === 'left' ? 'left-4' : 'right-4'} bottom-4 w-12 h-12 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 z-10`}
-          style={styles.button}
-          aria-label={isOpen ? "Fechar chat" : "Abrir chat"}
-        >
-          {isOpen ? (
-            <X size={18} />
-          ) : customization.button_icon_url ? (
-            <img 
-              src={customization.button_icon_url} 
-              alt="Chat" 
-              className="w-5 h-5 object-cover rounded"
-              loading="lazy"
-            />
-          ) : (
-            <MessageCircle size={18} />
-          )}
-        </button>
+        {/* Render template-specific preview */}
+        {renderTemplatePreview()}
       </div>
 
       {/* Chat Window - FORA DO CONTAINER DA PÁGINA SIMULADA */}
@@ -286,16 +513,18 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
               >
                 {customization.widget_name || 'Assistente Virtual'}
               </div>
-              <div 
-                className="text-xs flex items-center gap-1"
-                style={{ 
-                  color: customization.secondary_color,
-                  opacity: 0.9
-                }}
-              >
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                Online agora
-              </div>
+              {customization.show_status_indicator && (
+                <div 
+                  className="text-xs flex items-center gap-1"
+                  style={{ 
+                    color: customization.secondary_color,
+                    opacity: 0.9
+                  }}
+                >
+                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                  {customization.status_text || 'Online agora'}
+                </div>
+              )}
             </div>
           </div>
 

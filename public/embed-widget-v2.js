@@ -23,6 +23,8 @@
     conversationId: null,
     iframe: null,
     button: null,
+    templateContainer: null,
+    pendingMessage: null, // Message to send when chat opens
 
     async init() {
       try {
@@ -35,8 +37,7 @@
         // Criar elementos se a configuração estiver ativa
         if (this.config && this.config.is_active) {
           this.createStyles();
-          this.createButton();
-          this.createIframe();
+          this.createElements();
           this.attachEvents();
           
           // Registrar início de sessão
@@ -82,24 +83,34 @@
           secondary_color: '#f8f9fa',
           text_color: '#333333',
           button_position: 'right',
-          is_active: true
+          is_active: true,
+          widget_template: 'classic',
+          bubble_message: 'Oi! Como posso te ajudar?',
+          quick_questions: [],
+          action_buttons: [],
+          show_status_indicator: true,
+          status_text: 'Online agora'
         };
       }
     },
 
     createStyles() {
+      const position = this.config.button_position || 'right';
+      const oppositePosition = position === 'right' ? 'left' : 'right';
+      
       const styles = `
+        /* Base Button Styles */
         .clonefy-widget-button {
           position: fixed !important;
           bottom: 24px !important;
-          ${this.config.button_position}: 24px !important;
+          ${position}: 24px !important;
           width: 60px !important;
           height: 60px !important;
           border-radius: 50% !important;
           border: none !important;
           cursor: pointer !important;
           box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-          z-index: 2147483647 !important;
+          z-index: 2147483645 !important;
           background: ${this.config.primary_color} !important;
           color: ${this.config.secondary_color} !important;
           display: flex !important;
@@ -107,21 +118,278 @@
           justify-content: center !important;
           transition: all 0.3s ease !important;
           font-size: 24px !important;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         }
         
         .clonefy-widget-button:hover {
           transform: scale(1.1) !important;
           box-shadow: 0 6px 16px rgba(0,0,0,0.2) !important;
         }
-        
+
+        .clonefy-widget-button img {
+          width: 32px !important;
+          height: 32px !important;
+          object-fit: cover !important;
+          border-radius: 4px !important;
+        }
+
+        /* Notification Badge */
+        .clonefy-widget-badge {
+          position: absolute !important;
+          top: -4px !important;
+          right: -4px !important;
+          width: 22px !important;
+          height: 22px !important;
+          border-radius: 50% !important;
+          background: #ef4444 !important;
+          color: white !important;
+          font-size: 12px !important;
+          font-weight: bold !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          border: 2px solid white !important;
+        }
+
+        /* Template Container */
+        .clonefy-template-container {
+          position: fixed !important;
+          bottom: 100px !important;
+          ${position}: 24px !important;
+          z-index: 2147483644 !important;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+          transition: all 0.3s ease !important;
+        }
+
+        .clonefy-template-container.hidden {
+          opacity: 0 !important;
+          transform: translateY(10px) !important;
+          pointer-events: none !important;
+        }
+
+        /* Bubble Template */
+        .clonefy-bubble {
+          max-width: 280px !important;
+          background: white !important;
+          border-radius: 16px !important;
+          padding: 16px !important;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+          border: 1px solid rgba(0,0,0,0.08) !important;
+          position: relative !important;
+        }
+
+        .clonefy-bubble::after {
+          content: '' !important;
+          position: absolute !important;
+          bottom: -8px !important;
+          ${position}: 20px !important;
+          width: 16px !important;
+          height: 16px !important;
+          background: white !important;
+          transform: rotate(45deg) !important;
+          border-right: 1px solid rgba(0,0,0,0.08) !important;
+          border-bottom: 1px solid rgba(0,0,0,0.08) !important;
+        }
+
+        .clonefy-bubble-text {
+          color: ${this.config.text_color} !important;
+          font-size: 14px !important;
+          line-height: 1.4 !important;
+          margin: 0 !important;
+        }
+
+        .clonefy-bubble-close {
+          position: absolute !important;
+          top: -8px !important;
+          ${oppositePosition}: -8px !important;
+          width: 24px !important;
+          height: 24px !important;
+          border-radius: 50% !important;
+          background: #f3f4f6 !important;
+          border: none !important;
+          cursor: pointer !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          font-size: 12px !important;
+          color: #6b7280 !important;
+          transition: all 0.2s ease !important;
+        }
+
+        .clonefy-bubble-close:hover {
+          background: #e5e7eb !important;
+          color: #374151 !important;
+        }
+
+        /* Agent Card Template */
+        .clonefy-agent-card {
+          width: 300px !important;
+          background: white !important;
+          border-radius: 16px !important;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.15) !important;
+          overflow: hidden !important;
+          border: 1px solid rgba(0,0,0,0.08) !important;
+        }
+
+        .clonefy-agent-card-header {
+          padding: 16px !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 12px !important;
+          background: linear-gradient(135deg, ${this.config.primary_color}, ${this.config.primary_color}dd) !important;
+        }
+
+        .clonefy-agent-card-avatar {
+          width: 48px !important;
+          height: 48px !important;
+          border-radius: 50% !important;
+          object-fit: cover !important;
+          border: 2px solid rgba(255,255,255,0.3) !important;
+        }
+
+        .clonefy-agent-card-avatar-placeholder {
+          width: 48px !important;
+          height: 48px !important;
+          border-radius: 50% !important;
+          background: rgba(255,255,255,0.2) !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          color: ${this.config.secondary_color} !important;
+          font-size: 24px !important;
+        }
+
+        .clonefy-agent-card-info {
+          flex: 1 !important;
+        }
+
+        .clonefy-agent-card-name {
+          color: ${this.config.secondary_color} !important;
+          font-weight: 600 !important;
+          font-size: 16px !important;
+          margin: 0 0 4px 0 !important;
+        }
+
+        .clonefy-agent-card-status {
+          color: ${this.config.secondary_color} !important;
+          font-size: 12px !important;
+          opacity: 0.9 !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+          margin: 0 !important;
+        }
+
+        .clonefy-status-dot {
+          width: 8px !important;
+          height: 8px !important;
+          border-radius: 50% !important;
+          background: #22c55e !important;
+          animation: clonefy-pulse 2s infinite !important;
+        }
+
+        @keyframes clonefy-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+
+        .clonefy-agent-card-body {
+          padding: 16px !important;
+        }
+
+        .clonefy-agent-card-message {
+          color: ${this.config.text_color} !important;
+          font-size: 14px !important;
+          line-height: 1.4 !important;
+          margin: 0 0 12px 0 !important;
+        }
+
+        .clonefy-agent-card-search {
+          display: flex !important;
+          align-items: center !important;
+          gap: 8px !important;
+          padding: 10px 14px !important;
+          border: 1px solid #e5e7eb !important;
+          border-radius: 24px !important;
+          cursor: pointer !important;
+          transition: all 0.2s ease !important;
+          margin-bottom: 12px !important;
+        }
+
+        .clonefy-agent-card-search:hover {
+          border-color: ${this.config.primary_color}80 !important;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+        }
+
+        .clonefy-agent-card-search-icon {
+          color: #9ca3af !important;
+          font-size: 16px !important;
+        }
+
+        .clonefy-agent-card-search-text {
+          color: #9ca3af !important;
+          font-size: 14px !important;
+        }
+
+        .clonefy-agent-card-buttons {
+          display: flex !important;
+          flex-wrap: wrap !important;
+          gap: 8px !important;
+        }
+
+        .clonefy-agent-card-btn {
+          padding: 8px 14px !important;
+          border-radius: 20px !important;
+          border: none !important;
+          cursor: pointer !important;
+          font-size: 13px !important;
+          font-weight: 500 !important;
+          transition: all 0.2s ease !important;
+          background: ${this.config.primary_color} !important;
+          color: ${this.config.secondary_color} !important;
+        }
+
+        .clonefy-agent-card-btn:hover {
+          opacity: 0.9 !important;
+          transform: translateY(-1px) !important;
+        }
+
+        /* Quick Questions Template */
+        .clonefy-quick-questions {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 8px !important;
+          max-width: 280px !important;
+        }
+
+        .clonefy-quick-question {
+          background: white !important;
+          border-radius: 20px !important;
+          padding: 12px 16px !important;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.1) !important;
+          border: 1px solid rgba(0,0,0,0.08) !important;
+          cursor: pointer !important;
+          transition: all 0.2s ease !important;
+          font-size: 14px !important;
+          color: ${this.config.text_color} !important;
+          text-align: left !important;
+        }
+
+        .clonefy-quick-question:hover {
+          transform: translateX(${position === 'right' ? '-4px' : '4px'}) !important;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
+          border-color: ${this.config.primary_color}40 !important;
+        }
+
+        /* Iframe Styles */
         .clonefy-widget-iframe {
           position: fixed !important;
-          bottom: 90px !important;
-          ${this.config.button_position}: 24px !important;
+          bottom: 100px !important;
+          ${position}: 24px !important;
           width: 380px !important;
           height: 600px !important;
           border: none !important;
-          border-radius: 12px !important;
+          border-radius: 16px !important;
           box-shadow: 0 8px 32px rgba(0,0,0,0.2) !important;
           z-index: 2147483646 !important;
           background: white !important;
@@ -149,28 +417,215 @@
             border-radius: 0 !important;
             z-index: 2147483647 !important;
           }
+
+          .clonefy-template-container {
+            ${position}: 16px !important;
+            bottom: 90px !important;
+            max-width: calc(100vw - 100px) !important;
+          }
+
+          .clonefy-agent-card {
+            width: calc(100vw - 100px) !important;
+            max-width: 300px !important;
+          }
         }
       `;
 
       const styleSheet = document.createElement('style');
+      styleSheet.id = 'clonefy-widget-styles';
       styleSheet.textContent = styles;
       document.head.appendChild(styleSheet);
     },
 
+    createElements() {
+      // Create button
+      this.createButton();
+      
+      // Create template-specific elements
+      this.createTemplateElements();
+      
+      // Create iframe
+      this.createIframe();
+    },
+
     createButton() {
+      const buttonContainer = document.createElement('div');
+      buttonContainer.style.cssText = `position: fixed !important; bottom: 24px !important; ${this.config.button_position}: 24px !important; z-index: 2147483645 !important;`;
+      
       this.button = document.createElement('button');
       this.button.className = 'clonefy-widget-button';
       this.button.setAttribute('aria-label', 'Abrir chat');
       this.button.title = `Chat com ${this.config.widget_name}`;
       
       // Definir conteúdo do botão
-      if (this.config.button_icon_url) {
-        this.button.innerHTML = `<img src="${this.config.button_icon_url}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 4px;" alt="Chat">`;
+      this.updateButtonIcon(false);
+      
+      // Add notification badge for quick_questions template
+      if (this.config.widget_template === 'quick_questions' && 
+          this.config.quick_questions && 
+          this.config.quick_questions.filter(q => q).length > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'clonefy-widget-badge';
+        badge.textContent = this.config.quick_questions.filter(q => q).length;
+        this.button.appendChild(badge);
+      }
+      
+      buttonContainer.appendChild(this.button);
+      document.body.appendChild(buttonContainer);
+    },
+
+    updateButtonIcon(isOpen) {
+      if (isOpen) {
+        this.button.innerHTML = '✕';
+      } else if (this.config.button_icon_url) {
+        this.button.innerHTML = `<img src="${this.config.button_icon_url}" alt="Chat">`;
       } else {
         this.button.innerHTML = '💬';
       }
       
-      document.body.appendChild(this.button);
+      // Re-add badge if needed
+      if (!isOpen && 
+          this.config.widget_template === 'quick_questions' && 
+          this.config.quick_questions && 
+          this.config.quick_questions.filter(q => q).length > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'clonefy-widget-badge';
+        badge.textContent = this.config.quick_questions.filter(q => q).length;
+        this.button.appendChild(badge);
+      }
+    },
+
+    createTemplateElements() {
+      const template = this.config.widget_template || 'classic';
+      
+      // Don't create template elements for classic
+      if (template === 'classic') return;
+      
+      this.templateContainer = document.createElement('div');
+      this.templateContainer.className = 'clonefy-template-container';
+      
+      switch (template) {
+        case 'bubble':
+          this.createBubbleTemplate();
+          break;
+        case 'agent_card':
+          this.createAgentCardTemplate();
+          break;
+        case 'quick_questions':
+          this.createQuickQuestionsTemplate();
+          break;
+      }
+      
+      document.body.appendChild(this.templateContainer);
+    },
+
+    createBubbleTemplate() {
+      const bubble = document.createElement('div');
+      bubble.className = 'clonefy-bubble';
+      bubble.innerHTML = `
+        <button class="clonefy-bubble-close" aria-label="Fechar">✕</button>
+        <p class="clonefy-bubble-text">${this.config.bubble_message || 'Oi! Como posso te ajudar?'}</p>
+      `;
+      
+      // Close button handler
+      bubble.querySelector('.clonefy-bubble-close').addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.templateContainer.classList.add('hidden');
+      });
+      
+      // Click to open chat
+      bubble.addEventListener('click', () => {
+        this.open();
+      });
+      
+      this.templateContainer.appendChild(bubble);
+    },
+
+    createAgentCardTemplate() {
+      const card = document.createElement('div');
+      card.className = 'clonefy-agent-card';
+      
+      const avatarHtml = this.config.avatar_url 
+        ? `<img src="${this.config.avatar_url}" alt="${this.config.widget_name}" class="clonefy-agent-card-avatar">`
+        : `<div class="clonefy-agent-card-avatar-placeholder">💬</div>`;
+      
+      const statusHtml = this.config.show_status_indicator 
+        ? `<p class="clonefy-agent-card-status">
+            <span class="clonefy-status-dot"></span>
+            ${this.config.status_text || 'Online agora'}
+          </p>`
+        : '';
+      
+      let buttonsHtml = '';
+      if (this.config.action_buttons && this.config.action_buttons.length > 0) {
+        buttonsHtml = `
+          <div class="clonefy-agent-card-buttons">
+            ${this.config.action_buttons.slice(0, 3).map((btn, index) => 
+              `<button class="clonefy-agent-card-btn" data-message="${btn.message || ''}" data-index="${index}">
+                ${btn.label || 'Botão'}
+              </button>`
+            ).join('')}
+          </div>
+        `;
+      }
+      
+      card.innerHTML = `
+        <div class="clonefy-agent-card-header">
+          ${avatarHtml}
+          <div class="clonefy-agent-card-info">
+            <p class="clonefy-agent-card-name">${this.config.widget_name || 'Assistente Virtual'}</p>
+            ${statusHtml}
+          </div>
+        </div>
+        <div class="clonefy-agent-card-body">
+          <p class="clonefy-agent-card-message">${this.config.welcome_message || 'Como posso ajudar você hoje?'}</p>
+          <div class="clonefy-agent-card-search">
+            <span class="clonefy-agent-card-search-icon">🔍</span>
+            <span class="clonefy-agent-card-search-text">Pergunte algo...</span>
+          </div>
+          ${buttonsHtml}
+        </div>
+      `;
+      
+      // Search bar click handler
+      card.querySelector('.clonefy-agent-card-search').addEventListener('click', () => {
+        this.open();
+      });
+      
+      // Action buttons click handlers
+      card.querySelectorAll('.clonefy-agent-card-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const message = e.target.dataset.message;
+          if (message) {
+            this.pendingMessage = message;
+          }
+          this.open();
+        });
+      });
+      
+      this.templateContainer.appendChild(card);
+    },
+
+    createQuickQuestionsTemplate() {
+      const questionsContainer = document.createElement('div');
+      questionsContainer.className = 'clonefy-quick-questions';
+      
+      const questions = this.config.quick_questions || [];
+      questions.filter(q => q).slice(0, 4).forEach((question, index) => {
+        const questionBtn = document.createElement('button');
+        questionBtn.className = 'clonefy-quick-question';
+        questionBtn.textContent = question;
+        questionBtn.dataset.message = question;
+        
+        questionBtn.addEventListener('click', () => {
+          this.pendingMessage = question;
+          this.open();
+        });
+        
+        questionsContainer.appendChild(questionBtn);
+      });
+      
+      this.templateContainer.appendChild(questionsContainer);
     },
 
     createIframe() {
@@ -204,6 +659,7 @@
         if (this.isOpen && 
             !this.iframe.contains(e.target) && 
             !this.button.contains(e.target) &&
+            (!this.templateContainer || !this.templateContainer.contains(e.target)) &&
             window.innerWidth > 768) {
           this.close();
         }
@@ -225,6 +681,13 @@
             break;
           case 'clonefy:close_widget':
             this.close();
+            break;
+          case 'clonefy:ready':
+            // Iframe is ready, send pending message if any
+            if (this.pendingMessage) {
+              this.sendMessageToChat(this.pendingMessage);
+              this.pendingMessage = null;
+            }
             break;
         }
       });
@@ -250,8 +713,13 @@
       
       this.isOpen = true;
       this.iframe.classList.add('open');
-      this.button.innerHTML = '✕';
+      this.updateButtonIcon(true);
       this.button.setAttribute('aria-label', 'Fechar chat');
+      
+      // Hide template container
+      if (this.templateContainer) {
+        this.templateContainer.classList.add('hidden');
+      }
       
       // Enviar configuração para o iframe quando abrir
       setTimeout(() => {
@@ -263,6 +731,14 @@
             assistantId: this.assistantId
           }
         }, baseUrl);
+        
+        // Send pending message if any
+        if (this.pendingMessage) {
+          setTimeout(() => {
+            this.sendMessageToChat(this.pendingMessage);
+            this.pendingMessage = null;
+          }, 500);
+        }
       }, 100);
     },
 
@@ -271,14 +747,24 @@
       
       this.isOpen = false;
       this.iframe.classList.remove('open');
-      
-      // Restaurar ícone do botão
-      if (this.config.button_icon_url) {
-        this.button.innerHTML = `<img src="${this.config.button_icon_url}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 4px;" alt="Chat">`;
-      } else {
-        this.button.innerHTML = '💬';
-      }
+      this.updateButtonIcon(false);
       this.button.setAttribute('aria-label', 'Abrir chat');
+      
+      // Show template container
+      if (this.templateContainer) {
+        this.templateContainer.classList.remove('hidden');
+      }
+    },
+
+    sendMessageToChat(message) {
+      if (this.iframe && this.iframe.contentWindow) {
+        this.iframe.contentWindow.postMessage({
+          type: 'clonefy:send_message',
+          data: {
+            message: message
+          }
+        }, baseUrl);
+      }
     },
 
     async trackEvent(action, data = {}) {
