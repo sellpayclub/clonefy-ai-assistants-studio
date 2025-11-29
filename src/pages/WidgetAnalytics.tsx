@@ -298,6 +298,36 @@ const WidgetAnalytics = () => {
               </Card>
             </div>
 
+            {/* Mensagem quando não há dados */}
+            {analytics.length === 0 && !loading && (
+              <Card className="mb-6 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
+                      <Calendar className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-1">
+                        Nenhum dado de analytics ainda
+                      </h3>
+                      <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+                        Os dados aparecem automaticamente quando visitantes usam o chat no seu site.
+                      </p>
+                      <div className="text-sm text-amber-600 dark:text-amber-400 space-y-1">
+                        <p><strong>Para começar a coletar dados:</strong></p>
+                        <ol className="list-decimal list-inside space-y-1 ml-2">
+                          <li>Vá em "Chat Flutuante" e personalize seu widget</li>
+                          <li>Copie o código de incorporação</li>
+                          <li>Cole no seu site antes da tag &lt;/body&gt;</li>
+                          <li>Quando visitantes usarem o chat, os dados aparecerão aqui</li>
+                        </ol>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Dashboard de Analytics */}
             <AnalyticsDashboard 
               analytics={analytics}

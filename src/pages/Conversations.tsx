@@ -342,6 +342,44 @@ const Conversations = memo(() => {
     }
   }, [deleteOptimizedConversation, selectedConversation, loadConversations, toast]);
 
+  // Apagar todas as conversas
+  const deleteAllConversations = useCallback(async () => {
+    if (conversations.length === 0) {
+      toast({
+        title: "Aviso",
+        description: "Não há conversas para apagar",
+      });
+      return;
+    }
+
+    if (!confirm(`Tem certeza que deseja apagar TODAS as ${conversations.length} conversas? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    try {
+      // Apagar todas as conversas uma por uma
+      for (const conversation of conversations) {
+        await deleteOptimizedConversation(conversation.id);
+      }
+      
+      setSelectedConversation(null);
+      setMessages([]);
+      await loadConversations();
+      
+      toast({
+        title: "Sucesso",
+        description: "Todas as conversas foram apagadas",
+      });
+    } catch (error: any) {
+      console.error('Error deleting all conversations:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: error.message || "Falha ao apagar conversas",
+      });
+    }
+  }, [conversations, deleteOptimizedConversation, loadConversations, toast]);
+
   // Componentes memoizados
   const ConversationsList = useMemo(() => (
     <div className="space-y-2">
@@ -455,6 +493,17 @@ const Conversations = memo(() => {
                     </>
                   )}
                 </Button>
+
+                {conversations.length > 0 && (
+                  <Button 
+                    onClick={deleteAllConversations}
+                    variant="outline"
+                    className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Apagar Todas ({conversations.length})
+                  </Button>
+                )}
               </div>
               
               <ScrollArea className="flex-1 p-4">

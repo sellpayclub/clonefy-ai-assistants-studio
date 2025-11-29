@@ -636,23 +636,93 @@ const WidgetCustomization = () => {
                     </CardContent>
                   </Card>
 
+                  {/* Link Direto para Testar */}
+                  <Card className="border-primary/50 bg-primary/5">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <MessageCircle className="h-5 w-5 text-primary" />
+                        Link Direto para Testar
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        Use este link para testar o chat ou compartilhar com sua equipe:
+                      </p>
+                      <div className="flex gap-2">
+                        <Input 
+                          value={`${window.location.origin}/embed-chat/${selectedAssistant}`}
+                          readOnly
+                          className="flex-1 text-sm font-mono"
+                        />
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/embed-chat/${selectedAssistant}`);
+                            toast({ title: 'Link copiado!' });
+                          }}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          onClick={() => window.open(`/embed-chat/${selectedAssistant}`, '_blank')}
+                        >
+                          Abrir Chat
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Código para Incorporar */}
                   <Card>
                     <CardHeader>
-                      <CardTitle>Código para Incorporar</CardTitle>
+                      <CardTitle>Código para Incorporar no Site</CardTitle>
                       <CardDescription>
-                        Cole este código no seu site para exibir o widget
+                        Siga os passos abaixo para adicionar o chat ao seu site
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
+                      {/* Passo a passo */}
+                      <div className="space-y-3">
+                        <div className="flex gap-3">
+                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">1</div>
+                          <div>
+                            <p className="font-medium text-sm">Copie o código abaixo</p>
+                            <p className="text-xs text-muted-foreground">Clique no botão "Copiar Código"</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">2</div>
+                          <div>
+                            <p className="font-medium text-sm">Cole antes do &lt;/body&gt; do seu site</p>
+                            <p className="text-xs text-muted-foreground">Adicione em todas as páginas onde quer o chat</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">3</div>
+                          <div>
+                            <p className="font-medium text-sm">Pronto! O chat aparecerá automaticamente</p>
+                            <p className="text-xs text-muted-foreground">O botão flutuante aparece no canto da tela</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Código */}
                       <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
                         <pre className="text-sm overflow-x-auto">
                           <code>{generateEmbedCode()}</code>
                         </pre>
                       </div>
-                      <Button onClick={copyEmbedCode} className="mt-2" variant="outline">
+                      <Button onClick={copyEmbedCode} className="w-full" variant="outline">
                         <Copy className="h-4 w-4 mr-2" />
                         Copiar Código
                       </Button>
+
+                      {/* Dica extra */}
+                      <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                        <p className="text-xs text-blue-800 dark:text-blue-200">
+                          <strong>Dica:</strong> Se usa WordPress, Wix ou outra plataforma, procure a opção "Código personalizado" ou "HTML/JavaScript" nas configurações do site.
+                        </p>
+                      </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
