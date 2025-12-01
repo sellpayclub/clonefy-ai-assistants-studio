@@ -3,13 +3,13 @@ import React, { useEffect } from 'react';
 const SupportChatWidget = () => {
   useEffect(() => {
     const assistantId = '7a218984-6ada-4581-b1b6-2119b4771260';
-    const scriptUrl = 'https://a0c3b91a-bd8d-43da-8eb4-b0812f93c2bf.lovableproject.com/embed-widget-v2.js';
-    
+    const scriptUrl = 'https://clonefy.app/embed-widget-v2.js';
+
     // Verifica se o script já foi carregado para evitar duplicatas
     // Verifica tanto por URL quanto por data-assistant-id
-    const existingScript = document.querySelector(`script[data-assistant-id="${assistantId}"]`) || 
-                          document.querySelector(`script[src="${scriptUrl}"]`);
-    
+    const existingScript = document.querySelector(`script[data-assistant-id="${assistantId}"]`) ||
+      document.querySelector(`script[src="${scriptUrl}"]`);
+
     if (existingScript) {
       return;
     }
