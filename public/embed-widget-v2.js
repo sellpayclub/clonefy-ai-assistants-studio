@@ -42,8 +42,16 @@
           
           console.log('CLONEFY: Widget inicializado com sucesso', {
             template: this.config.widget_template,
-            assistantId: this.assistantId
+            assistantId: this.assistantId,
+            hasTemplateContainer: !!this.templateContainer,
+            templateContainerVisible: this.templateContainer ? !this.templateContainer.classList.contains('hidden') : false
           });
+          
+          // Garantir que o template container seja criado se necessário
+          if (this.config.widget_template && this.config.widget_template !== 'classic' && !this.templateContainer) {
+            console.log('CLONEFY: Recriando template container após inicialização');
+            this.createTemplateElements();
+          }
           
           // Registrar início de sessão
           await this.trackEvent('start_session');
@@ -80,6 +88,13 @@
           const oldTemplate = this.config?.widget_template;
           this.config = data.config;
           
+          console.log('CLONEFY: Configuração carregada:', {
+            template: this.config.widget_template,
+            is_active: this.config.is_active,
+            widget_name: this.config.widget_name,
+            hasTemplateContainer: !!this.templateContainer
+          });
+          
           // Se o template mudou, recriar elementos
           if (oldTemplate && oldTemplate !== this.config.widget_template) {
             console.log('CLONEFY: Template mudou, recriando elementos...', {
@@ -95,13 +110,11 @@
             
             // Recriar elementos com novo template
             this.createTemplateElements();
+          } else if (!oldTemplate && this.config.widget_template && this.config.widget_template !== 'classic') {
+            // Se é a primeira vez carregando e o template não é classic, criar elementos
+            console.log('CLONEFY: Primeira inicialização com template personalizado:', this.config.widget_template);
+            this.createTemplateElements();
           }
-          
-          console.log('CLONEFY: Configuração carregada:', {
-            template: this.config.widget_template,
-            is_active: this.config.is_active,
-            widget_name: this.config.widget_name
-          });
         } else {
           throw new Error(data.error || 'Erro ao carregar configuração');
         }
@@ -475,8 +488,12 @@
       // Create button
       this.createButton();
       
-      // Create template-specific elements
-      this.createTemplateElements();
+      // Create template-specific elements (only if config is loaded)
+      if (this.config) {
+        this.createTemplateElements();
+      } else {
+        console.warn('CLONEFY: Config não carregada ao criar elementos');
+      }
       
       // Create iframe
       this.createIframe();
@@ -530,10 +547,26 @@
     },
 
     createTemplateElements() {
+      if (!this.config) {
+        console.warn('CLONEFY: Tentando criar template sem configuração carregada');
+        return;
+      }
+      
       const template = this.config.widget_template || 'classic';
       
+      console.log('CLONEFY: Criando elementos do template:', template);
+      
       // Don't create template elements for classic
-      if (template === 'classic') return;
+      if (template === 'classic') {
+        console.log('CLONEFY: Template é classic, não criando elementos de template');
+        return;
+      }
+      
+      // Se já existe um container, remover antes de criar novo
+      if (this.templateContainer) {
+        this.templateContainer.remove();
+        this.templateContainer = null;
+      }
       
       this.templateContainer = document.createElement('div');
       this.templateContainer.className = 'clonefy-template-container';
@@ -548,9 +581,17 @@
         case 'quick_questions':
           this.createQuickQuestionsTemplate();
           break;
+        default:
+          console.warn('CLONEFY: Template desconhecido:', template);
+          return;
       }
       
-      document.body.appendChild(this.templateContainer);
+      if (this.templateContainer && this.templateContainer.children.length > 0) {
+        document.body.appendChild(this.templateContainer);
+        console.log('CLONEFY: Template container criado e adicionado ao DOM:', template);
+      } else {
+        console.error('CLONEFY: Falha ao criar template container');
+      }
     },
 
     createBubbleTemplate() {

@@ -84,8 +84,10 @@ serve(async (req) => {
       text_color: config.text_color || defaultConfig.text_color,
       button_position: config.button_position || defaultConfig.button_position,
       is_active: config.is_active !== false,
-      // New template fields
-      widget_template: config.widget_template || defaultConfig.widget_template,
+      // New template fields - usar valor do banco se existir, senão usar default
+      widget_template: (config.widget_template !== null && config.widget_template !== undefined) 
+        ? config.widget_template 
+        : defaultConfig.widget_template,
       bubble_message: config.bubble_message || defaultConfig.bubble_message,
       quick_questions: config.quick_questions || defaultConfig.quick_questions,
       action_buttons: config.action_buttons || defaultConfig.action_buttons,

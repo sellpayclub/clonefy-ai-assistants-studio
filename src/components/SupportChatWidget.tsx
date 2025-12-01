@@ -2,23 +2,30 @@ import React, { useEffect } from 'react';
 
 const SupportChatWidget = () => {
   useEffect(() => {
+    const assistantId = '7a218984-6ada-4581-b1b6-2119b4771260';
+    const scriptUrl = `${window.location.origin}/embed-widget-v2.js`;
+    
     // Verifica se o script já foi carregado para evitar duplicatas
-    if (document.querySelector('script[src="https://clonefy.app/embed-widget-v2.js"]')) {
+    // Verifica tanto por URL quanto por data-assistant-id
+    const existingScript = document.querySelector(`script[data-assistant-id="${assistantId}"]`) || 
+                          document.querySelector(`script[src="${scriptUrl}"]`);
+    
+    if (existingScript) {
       return;
     }
 
-    // Cria e carrega o script do widget Clonefy
+    // Cria e carrega o script do widget Clonefy do domínio local
     const script = document.createElement('script');
-    script.src = 'https://clonefy.app/embed-widget-v2.js';
-    script.dataset.assistantId = '7a218984-6ada-4581-b1b6-2119b4771260';
+    script.src = scriptUrl;
+    script.dataset.assistantId = assistantId;
     script.async = true;
     document.head.appendChild(script);
 
     // Cleanup: remove o script quando o componente for desmontado
     return () => {
-      const existingScript = document.querySelector('script[src="https://clonefy.app/embed-widget-v2.js"]');
-      if (existingScript) {
-        existingScript.remove();
+      const scriptToRemove = document.querySelector(`script[data-assistant-id="${assistantId}"]`);
+      if (scriptToRemove) {
+        scriptToRemove.remove();
       }
     };
   }, []);
