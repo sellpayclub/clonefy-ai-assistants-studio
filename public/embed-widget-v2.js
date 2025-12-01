@@ -578,7 +578,12 @@
       
       const template = this.config.widget_template || 'classic';
       
-      console.log('CLONEFY: Criando elementos do template:', template);
+      console.log('CLONEFY: Criando elementos do template:', {
+        template: template,
+        template_type: typeof template,
+        config_widget_template: this.config.widget_template,
+        full_config: JSON.stringify(this.config)
+      });
       
       // Don't create template elements for classic
       if (template === 'classic') {
@@ -588,22 +593,31 @@
       
       // Se já existe um container, remover antes de criar novo
       if (this.templateContainer) {
+        console.log('CLONEFY: Removendo template container existente');
         this.templateContainer.remove();
         this.templateContainer = null;
       }
       
       this.templateContainer = document.createElement('div');
       this.templateContainer.className = 'clonefy-template-container';
+      console.log('CLONEFY: Template container criado:', this.templateContainer);
       
+      let templateCreated = false;
       switch (template) {
         case 'bubble':
+          console.log('CLONEFY: Criando template bubble');
           this.createBubbleTemplate();
+          templateCreated = true;
           break;
         case 'agent_card':
+          console.log('CLONEFY: Criando template agent_card');
           this.createAgentCardTemplate();
+          templateCreated = true;
           break;
         case 'quick_questions':
+          console.log('CLONEFY: Criando template quick_questions');
           this.createQuickQuestionsTemplate();
+          templateCreated = true;
           break;
         default:
           console.warn('CLONEFY: Template desconhecido:', template);
@@ -612,9 +626,19 @@
       
       if (this.templateContainer && this.templateContainer.children.length > 0) {
         document.body.appendChild(this.templateContainer);
-        console.log('CLONEFY: Template container criado e adicionado ao DOM:', template);
+        console.log('CLONEFY: Template container criado e adicionado ao DOM:', {
+          template: template,
+          children_count: this.templateContainer.children.length,
+          is_visible: !this.templateContainer.classList.contains('hidden'),
+          computed_style: window.getComputedStyle(this.templateContainer).display,
+          z_index: window.getComputedStyle(this.templateContainer).zIndex
+        });
       } else {
-        console.error('CLONEFY: Falha ao criar template container');
+        console.error('CLONEFY: Falha ao criar template container:', {
+          hasContainer: !!this.templateContainer,
+          children_count: this.templateContainer?.children.length || 0,
+          template: template
+        });
       }
     },
 
@@ -641,6 +665,14 @@
     },
 
     createAgentCardTemplate() {
+      console.log('CLONEFY: createAgentCardTemplate chamado', {
+        config: this.config,
+        widget_name: this.config.widget_name,
+        avatar_url: this.config.avatar_url,
+        show_status_indicator: this.config.show_status_indicator,
+        action_buttons: this.config.action_buttons
+      });
+      
       const card = document.createElement('div');
       card.className = 'clonefy-agent-card';
       
@@ -686,10 +718,20 @@
         </div>
       `;
       
-      // Search bar click handler
-      card.querySelector('.clonefy-agent-card-search').addEventListener('click', () => {
-        this.open();
+      console.log('CLONEFY: Card HTML criado:', {
+        card_html_length: card.innerHTML.length,
+        has_header: card.querySelector('.clonefy-agent-card-header') !== null,
+        has_body: card.querySelector('.clonefy-agent-card-body') !== null,
+        has_search: card.querySelector('.clonefy-agent-card-search') !== null
       });
+      
+      // Search bar click handler
+      const searchElement = card.querySelector('.clonefy-agent-card-search');
+      if (searchElement) {
+        searchElement.addEventListener('click', () => {
+          this.open();
+        });
+      }
       
       // Action buttons click handlers
       card.querySelectorAll('.clonefy-agent-card-btn').forEach(btn => {
@@ -703,6 +745,10 @@
       });
       
       this.templateContainer.appendChild(card);
+      console.log('CLONEFY: Card adicionado ao template container:', {
+        template_container_children: this.templateContainer.children.length,
+        card_in_dom: document.body.contains(card)
+      });
     },
 
     createQuickQuestionsTemplate() {

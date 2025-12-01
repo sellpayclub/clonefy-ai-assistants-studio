@@ -239,12 +239,20 @@ const WidgetCustomization = () => {
     }
 
     try {
-      console.log('💾 Salvando personalização:', formData);
+      console.log('💾 Salvando personalização:', {
+        ...formData,
+        widget_template: formData.widget_template,
+        widget_template_type: typeof formData.widget_template
+      });
       
       const result = await saveCustomization(formData);
       
       if (result) {
-        console.log('✅ Personalização salva com sucesso:', result);
+        console.log('✅ Personalização salva com sucesso:', {
+          ...result,
+          widget_template_saved: result.widget_template,
+          widget_template_type: typeof result.widget_template
+        });
         
         // Forçar reload dos dados para garantir sincronização
         await loadCustomization();
