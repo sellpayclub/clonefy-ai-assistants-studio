@@ -3,7 +3,7 @@
 
 -- Add widget_template column with check constraint
 ALTER TABLE public.widget_customizations 
-ADD COLUMN IF NOT EXISTS widget_template TEXT DEFAULT 'classic' 
+ADD COLUMN IF NOT EXISTS widget_template TEXT DEFAULT 'agent_card' 
 CHECK (widget_template IN ('classic', 'bubble', 'agent_card', 'quick_questions'));
 
 -- Add bubble_message for the bubble template
