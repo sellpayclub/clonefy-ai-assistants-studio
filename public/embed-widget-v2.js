@@ -1,10 +1,10 @@
-(function() {
+(function () {
   'use strict';
 
   // Obter assistant ID do script atual
   const currentScript = document.currentScript || document.querySelector('script[data-assistant-id]');
   const assistantId = currentScript ? currentScript.dataset.assistantId : null;
-  
+
   if (!assistantId) {
     console.error('CLONEFY: Assistant ID não encontrado. Adicione data-assistant-id ao script.');
     return;
@@ -15,7 +15,7 @@
   // Isso permite que o script seja carregado de qualquer domínio (CDN, etc)
   const baseUrl = window.location.origin;
   const apiUrl = `${baseUrl}/supabase/functions/v1`;
-  
+
   console.log('CLONEFY: Inicializando widget', {
     assistantId: assistantId,
     baseUrl: baseUrl,
@@ -23,7 +23,7 @@
     scriptOrigin: currentScript ? new URL(currentScript.src).origin : 'unknown',
     pageOrigin: window.location.origin
   });
-  
+
   // Widget object
   const clonefyWidget = {
     assistantId: assistantId,
@@ -40,16 +40,16 @@
       try {
         // Gerar session ID único
         this.sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        
+
         // Carregar configuração do widget (sempre forçar refresh na inicialização)
         await this.loadConfig(true);
-        
+
         // Criar elementos se a configuração estiver ativa
         if (this.config && this.config.is_active) {
           this.createStyles();
           this.createElements();
           this.attachEvents();
-          
+
           console.log('CLONEFY: Widget inicializado com sucesso', {
             template: this.config.widget_template,
             assistantId: this.assistantId,
@@ -57,14 +57,14 @@
             templateContainerVisible: this.templateContainer ? !this.templateContainer.classList.contains('hidden') : false,
             config: JSON.stringify(this.config)
           });
-          
+
           // FORÇAR criação do template se necessário - usar múltiplos timeouts para garantir
           const ensureTemplateCreated = () => {
             if (this.config && this.config.widget_template && this.config.widget_template !== 'classic') {
               if (!this.templateContainer || this.templateContainer.children.length === 0) {
                 console.log('CLONEFY: [FORÇAR] Criando template container - template:', this.config.widget_template);
                 this.createTemplateElements();
-                
+
                 // Verificar novamente após criar
                 setTimeout(() => {
                   if (this.templateContainer && this.templateContainer.children.length > 0) {
@@ -82,12 +82,12 @@
               console.log('CLONEFY: Template é classic ou não definido:', this.config?.widget_template);
             }
           };
-          
+
           // Tentar múltiplas vezes para garantir
           setTimeout(ensureTemplateCreated, 50);
           setTimeout(ensureTemplateCreated, 200);
           setTimeout(ensureTemplateCreated, 500);
-          
+
           // Registrar início de sessão
           await this.trackEvent('start_session');
         } else {
@@ -121,31 +121,41 @@
         }
 
         const data = await response.json();
-        
+
+        console.log('=== CLONEFY: API RESPONSE ===');
+        console.log('Success:', data.success);
+        console.log('Full Config:', JSON.stringify(data.config, null, 2));
+        console.log('============================');
+
         if (data.success) {
           const oldTemplate = this.config?.widget_template;
           this.config = data.config;
-          
-          console.log('CLONEFY: Configuração carregada:', {
-            template: this.config.widget_template,
-            is_active: this.config.is_active,
-            widget_name: this.config.widget_name,
-            hasTemplateContainer: !!this.templateContainer
-          });
-          
+
+          console.log('=== CLONEFY: TEMPLATE DETECTION ===');
+          console.log('Widget Template:', this.config.widget_template);
+          console.log('Template Type:', typeof this.config.widget_template);
+          console.log('Is Classic?:', this.config.widget_template === 'classic');
+          console.log('Is Active?:', this.config.is_active);
+          console.log('Widget Name:', this.config.widget_name);
+          console.log('Has Template Container?:', !!this.templateContainer);
+          console.log('Bubble Message:', this.config.bubble_message);
+          console.log('Action Buttons:', this.config.action_buttons);
+          console.log('Quick Questions:', this.config.quick_questions);
+          console.log('==================================');
+
           // Se o template mudou, recriar elementos
           if (oldTemplate && oldTemplate !== this.config.widget_template) {
             console.log('CLONEFY: Template mudou, recriando elementos...', {
               old: oldTemplate,
               new: this.config.widget_template
             });
-            
+
             // Remover elementos antigos
             if (this.templateContainer) {
               this.templateContainer.remove();
               this.templateContainer = null;
             }
-            
+
             // Recriar elementos com novo template
             this.createTemplateElements();
           } else if (!oldTemplate && this.config.widget_template && this.config.widget_template !== 'classic') {
@@ -191,7 +201,7 @@
     createStyles() {
       const position = this.config.button_position || 'right';
       const oppositePosition = position === 'right' ? 'left' : 'right';
-      
+
       const styles = `
         /* Base Button Styles */
         .clonefy-widget-button {
@@ -538,7 +548,7 @@
     createElements() {
       // Create button
       this.createButton();
-      
+
       // Create template-specific elements (only if config is loaded)
       if (this.config) {
         console.log('CLONEFY: createElements chamado, criando template:', this.config.widget_template);
@@ -546,7 +556,7 @@
       } else {
         console.warn('CLONEFY: Config não carregada ao criar elementos - será criado depois');
       }
-      
+
       // Create iframe
       this.createIframe();
     },
@@ -554,25 +564,25 @@
     createButton() {
       const buttonContainer = document.createElement('div');
       buttonContainer.style.cssText = `position: fixed !important; bottom: 24px !important; ${this.config.button_position}: 24px !important; z-index: 2147483645 !important;`;
-      
+
       this.button = document.createElement('button');
       this.button.className = 'clonefy-widget-button';
       this.button.setAttribute('aria-label', 'Abrir chat');
       this.button.title = `Chat com ${this.config.widget_name}`;
-      
+
       // Definir conteúdo do botão
       this.updateButtonIcon(false);
-      
+
       // Add notification badge for quick_questions template
-      if (this.config.widget_template === 'quick_questions' && 
-          this.config.quick_questions && 
-          this.config.quick_questions.filter(q => q).length > 0) {
+      if (this.config.widget_template === 'quick_questions' &&
+        this.config.quick_questions &&
+        this.config.quick_questions.filter(q => q).length > 0) {
         const badge = document.createElement('span');
         badge.className = 'clonefy-widget-badge';
         badge.textContent = this.config.quick_questions.filter(q => q).length;
         this.button.appendChild(badge);
       }
-      
+
       buttonContainer.appendChild(this.button);
       document.body.appendChild(buttonContainer);
     },
@@ -585,12 +595,12 @@
       } else {
         this.button.innerHTML = '💬';
       }
-      
+
       // Re-add badge if needed
-      if (!isOpen && 
-          this.config.widget_template === 'quick_questions' && 
-          this.config.quick_questions && 
-          this.config.quick_questions.filter(q => q).length > 0) {
+      if (!isOpen &&
+        this.config.widget_template === 'quick_questions' &&
+        this.config.quick_questions &&
+        this.config.quick_questions.filter(q => q).length > 0) {
         const badge = document.createElement('span');
         badge.className = 'clonefy-widget-badge';
         badge.textContent = this.config.quick_questions.filter(q => q).length;
@@ -603,33 +613,33 @@
         console.warn('CLONEFY: Tentando criar template sem configuração carregada');
         return;
       }
-      
+
       const template = this.config.widget_template || 'classic';
-      
+
       console.log('CLONEFY: Criando elementos do template:', {
         template: template,
         template_type: typeof template,
         config_widget_template: this.config.widget_template,
         full_config: JSON.stringify(this.config)
       });
-      
+
       // Don't create template elements for classic
       if (template === 'classic') {
         console.log('CLONEFY: Template é classic, não criando elementos de template');
         return;
       }
-      
+
       // Se já existe um container, remover antes de criar novo
       if (this.templateContainer) {
         console.log('CLONEFY: Removendo template container existente');
         this.templateContainer.remove();
         this.templateContainer = null;
       }
-      
+
       this.templateContainer = document.createElement('div');
       this.templateContainer.className = 'clonefy-template-container';
       console.log('CLONEFY: Template container criado:', this.templateContainer);
-      
+
       let templateCreated = false;
       switch (template) {
         case 'bubble':
@@ -651,7 +661,7 @@
           console.warn('CLONEFY: Template desconhecido:', template);
           return;
       }
-      
+
       if (this.templateContainer && this.templateContainer.children.length > 0) {
         document.body.appendChild(this.templateContainer);
         console.log('CLONEFY: Template container criado e adicionado ao DOM:', {
@@ -677,18 +687,18 @@
         <button class="clonefy-bubble-close" aria-label="Fechar">✕</button>
         <p class="clonefy-bubble-text">${this.config.bubble_message || 'Oi! Como posso te ajudar?'}</p>
       `;
-      
+
       // Close button handler
       bubble.querySelector('.clonefy-bubble-close').addEventListener('click', (e) => {
         e.stopPropagation();
         this.templateContainer.classList.add('hidden');
       });
-      
+
       // Click to open chat
       bubble.addEventListener('click', () => {
         this.open();
       });
-      
+
       this.templateContainer.appendChild(bubble);
     },
 
@@ -700,34 +710,34 @@
         show_status_indicator: this.config.show_status_indicator,
         action_buttons: this.config.action_buttons
       });
-      
+
       const card = document.createElement('div');
       card.className = 'clonefy-agent-card';
-      
-      const avatarHtml = this.config.avatar_url 
+
+      const avatarHtml = this.config.avatar_url
         ? `<img src="${this.config.avatar_url}" alt="${this.config.widget_name}" class="clonefy-agent-card-avatar">`
         : `<div class="clonefy-agent-card-avatar-placeholder">💬</div>`;
-      
-      const statusHtml = this.config.show_status_indicator 
+
+      const statusHtml = this.config.show_status_indicator
         ? `<p class="clonefy-agent-card-status">
             <span class="clonefy-status-dot"></span>
             ${this.config.status_text || 'Online agora'}
           </p>`
         : '';
-      
+
       let buttonsHtml = '';
       if (this.config.action_buttons && this.config.action_buttons.length > 0) {
         buttonsHtml = `
           <div class="clonefy-agent-card-buttons">
-            ${this.config.action_buttons.slice(0, 3).map((btn, index) => 
-              `<button class="clonefy-agent-card-btn" data-message="${btn.message || ''}" data-index="${index}">
+            ${this.config.action_buttons.slice(0, 3).map((btn, index) =>
+          `<button class="clonefy-agent-card-btn" data-message="${btn.message || ''}" data-index="${index}">
                 ${btn.label || 'Botão'}
               </button>`
-            ).join('')}
+        ).join('')}
           </div>
         `;
       }
-      
+
       card.innerHTML = `
         <div class="clonefy-agent-card-header">
           ${avatarHtml}
@@ -745,14 +755,14 @@
           ${buttonsHtml}
         </div>
       `;
-      
+
       console.log('CLONEFY: Card HTML criado:', {
         card_html_length: card.innerHTML.length,
         has_header: card.querySelector('.clonefy-agent-card-header') !== null,
         has_body: card.querySelector('.clonefy-agent-card-body') !== null,
         has_search: card.querySelector('.clonefy-agent-card-search') !== null
       });
-      
+
       // Search bar click handler
       const searchElement = card.querySelector('.clonefy-agent-card-search');
       if (searchElement) {
@@ -760,7 +770,7 @@
           this.open();
         });
       }
-      
+
       // Action buttons click handlers
       card.querySelectorAll('.clonefy-agent-card-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -771,7 +781,7 @@
           this.open();
         });
       });
-      
+
       this.templateContainer.appendChild(card);
       console.log('CLONEFY: Card adicionado ao template container:', {
         template_container_children: this.templateContainer.children.length,
@@ -782,22 +792,22 @@
     createQuickQuestionsTemplate() {
       const questionsContainer = document.createElement('div');
       questionsContainer.className = 'clonefy-quick-questions';
-      
+
       const questions = this.config.quick_questions || [];
       questions.filter(q => q).slice(0, 4).forEach((question, index) => {
         const questionBtn = document.createElement('button');
         questionBtn.className = 'clonefy-quick-question';
         questionBtn.textContent = question;
         questionBtn.dataset.message = question;
-        
+
         questionBtn.addEventListener('click', () => {
           this.pendingMessage = question;
           this.open();
         });
-        
+
         questionsContainer.appendChild(questionBtn);
       });
-      
+
       this.templateContainer.appendChild(questionsContainer);
     },
 
@@ -810,7 +820,7 @@
       this.iframe.title = `Chat com ${this.config.widget_name}`;
       this.iframe.allow = 'microphone; camera';
       this.iframe.loading = 'lazy';
-      
+
       document.body.appendChild(this.iframe);
     },
 
@@ -831,11 +841,11 @@
 
       // Evento para fechar clicando fora (apenas desktop)
       document.addEventListener('click', (e) => {
-        if (this.isOpen && 
-            !this.iframe.contains(e.target) && 
-            !this.button.contains(e.target) &&
-            (!this.templateContainer || !this.templateContainer.contains(e.target)) &&
-            window.innerWidth > 768) {
+        if (this.isOpen &&
+          !this.iframe.contains(e.target) &&
+          !this.button.contains(e.target) &&
+          (!this.templateContainer || !this.templateContainer.contains(e.target)) &&
+          window.innerWidth > 768) {
           this.close();
         }
       });
@@ -845,7 +855,7 @@
         if (event.origin !== baseUrl) return;
 
         const { type, data } = event.data;
-        
+
         switch (type) {
           case 'clonefy:conversation_started':
             this.conversationId = data.conversationId;
@@ -885,29 +895,29 @@
 
     async open() {
       if (!this.iframe) return;
-      
+
       // Recarregar configuração ao abrir para garantir atualizações automáticas
       await this.loadConfig(true);
-      
+
       // Recriar template se necessário (pode ter mudado)
       if (this.config.widget_template !== 'classic' && !this.templateContainer) {
         this.createTemplateElements();
       }
-      
+
       // Atualizar iframe src com cache busting para forçar recarregamento com nova config
       const cacheBuster = `?v=${Date.now()}`;
       this.iframe.src = `${baseUrl}/embed-chat/${this.assistantId}${cacheBuster}`;
-      
+
       this.isOpen = true;
       this.iframe.classList.add('open');
       this.updateButtonIcon(true);
       this.button.setAttribute('aria-label', 'Fechar chat');
-      
+
       // Hide template container
       if (this.templateContainer) {
         this.templateContainer.classList.add('hidden');
       }
-      
+
       // Enviar configuração para o iframe quando abrir
       setTimeout(() => {
         this.iframe.contentWindow?.postMessage({
@@ -918,7 +928,7 @@
             assistantId: this.assistantId
           }
         }, baseUrl);
-        
+
         // Send pending message if any
         if (this.pendingMessage) {
           setTimeout(() => {
@@ -931,12 +941,12 @@
 
     close() {
       if (!this.iframe) return;
-      
+
       this.isOpen = false;
       this.iframe.classList.remove('open');
       this.updateButtonIcon(false);
       this.button.setAttribute('aria-label', 'Abrir chat');
-      
+
       // Show template container
       if (this.templateContainer) {
         this.templateContainer.classList.remove('hidden');

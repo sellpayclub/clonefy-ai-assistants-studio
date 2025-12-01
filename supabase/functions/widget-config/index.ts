@@ -18,9 +18,9 @@ serve(async (req) => {
     if (!assistantId) {
       return new Response(
         JSON.stringify({ error: 'Assistant ID é obrigatório' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -74,6 +74,11 @@ serve(async (req) => {
       status_text: 'Online agora'
     };
 
+    // Validar templates válidos
+    const validTemplates = ['classic', 'bubble', 'agent_card', 'quick_questions'];
+    const isValidTemplate = (template: any) =>
+      template && typeof template === 'string' && validTemplates.includes(template);
+
     const finalConfig = config ? {
       widget_name: config.widget_name || defaultConfig.widget_name,
       avatar_url: config.avatar_url || defaultConfig.avatar_url,
@@ -84,9 +89,9 @@ serve(async (req) => {
       text_color: config.text_color || defaultConfig.text_color,
       button_position: config.button_position || defaultConfig.button_position,
       is_active: config.is_active !== false,
-      // New template fields - usar valor do banco se existir, senão usar default
-      widget_template: (config.widget_template !== null && config.widget_template !== undefined && config.widget_template !== '') 
-        ? config.widget_template 
+      // New template fields - usar valor do banco se for válido, senão usar default
+      widget_template: isValidTemplate(config.widget_template)
+        ? config.widget_template
         : defaultConfig.widget_template,
       bubble_message: config.bubble_message || defaultConfig.bubble_message,
       quick_questions: config.quick_questions || defaultConfig.quick_questions,
@@ -95,13 +100,17 @@ serve(async (req) => {
       status_text: config.status_text || defaultConfig.status_text
     } : defaultConfig;
 
-    // Log para debug
-    console.log('Widget Config Response:', {
-      hasConfig: !!config,
-      widget_template_from_db: config?.widget_template,
-      widget_template_final: finalConfig.widget_template,
-      assistantId: assistantId
-    });
+    // Log detalhado para debug
+    console.log('=== WIDGET CONFIG DEBUG ===');
+    console.log('Assistant ID:', assistantId);
+    console.log('Config exists in DB:', !!config);
+    console.log('Widget Template from DB:', config?.widget_template, '(type:', typeof config?.widget_template, ')');
+    console.log('Is Valid Template:', isValidTemplate(config?.widget_template));
+    console.log('Final Widget Template:', finalConfig.widget_template);
+    console.log('Bubble Message:', finalConfig.bubble_message);
+    console.log('Action Buttons:', finalConfig.action_buttons);
+    console.log('Quick Questions:', finalConfig.quick_questions);
+    console.log('==========================');
 
     return new Response(
       JSON.stringify({
@@ -114,27 +123,27 @@ serve(async (req) => {
         // Incluir timestamp para cache busting
         timestamp: Date.now()
       }),
-      { 
-        headers: { 
-          ...corsHeaders, 
+      {
+        headers: {
+          ...corsHeaders,
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
           'Expires': '0'
-        } 
+        }
       }
     );
 
   } catch (error) {
     console.error('Erro na função widget-config:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Erro interno do servidor',
         details: error instanceof Error ? error.message : 'Unknown error'
       }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

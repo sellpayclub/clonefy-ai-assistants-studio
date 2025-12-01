@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Widget Clonefy - Estilos</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .instructions {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+        .instructions ol {
+            margin: 10px 0 0 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .alert strong {
+            color: #856404;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .content {
+            line-height: 1.8;
+            color: #555;
+            margin: 20px 0;
+        }
+        .debug-info {
+            background: #263238;
+            color: #aed581;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+        .debug-info h3 {
+            color: #fff;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Página de Teste - Widget Clonefy</h1>
+        <p class="subtitle">Use esta página para testar os diferentes estilos do chat</p>
+        
+        <div class="instructions">
+            <h3>📋 Como Testar:</h3>
+            <ol>
+                <li>Abra o <strong>Console do Navegador</strong> (F12 ou Cmd+Option+I)</li>
+                <li>Procure por mensagens que começam com <code>CLONEFY:</code> ou <code>===</code></li>
+                <li>Verifique qual <strong>widget_template</strong> está sendo carregado</li>
+                <li>Confirme se o estilo visual corresponde ao template configurado</li>
+                <li>Se aparecer apenas o botão flutuante, mas o template configurado é outro, temos um problema!</li>
+            </ol>
+        </div>
+
+        <div class="alert">
+            <strong>⚠️ IMPORTANTE:</strong> Substitua <code>SEU_ASSISTANT_ID_AQUI</code> no código abaixo pelo ID real do seu assistente antes de usar este arquivo!
+        </div>
+
+        <div class="debug-info">
+            <h3>🔍 O que verificar no Console:</h3>
+            <pre>
+✅ CORRETO - Se você configurou "Card do Agente":
+=== CLONEFY: TEMPLATE DETECTION ===
+Widget Template: agent_card
+Is Classic?: false
+====================================
+
+❌ INCORRETO - Se você configurou "Card do Agente" mas aparece:
+=== CLONEFY: TEMPLATE DETECTION ===
+Widget Template: classic
+Is Classic?: true
+====================================
+            </pre>
+        </div>
+
+        <div class="content">
+            <h2>Conteúdo da Página de Teste</h2>
+            <p>Esta é uma página de teste simples para verificar se o widget está funcionando corretamente. O chat deve aparecer no canto inferior direito (ou esquerdo, dependendo da sua configuração).</p>
+            
+            <p><strong>Estilos Disponíveis:</strong></p>
+            <ul>
+                <li><strong>Clássico:</strong> Apenas o botão flutuante no canto da tela</li>
+                <li><strong>Balão de Mensagem:</strong> Botão + balão com mensagem de boas-vindas</li>
+                <li><strong>Card do Agente:</strong> Card expandido com foto, nome, status e botões de ação</li>
+                <li><strong>Perguntas Rápidas:</strong> Balões com perguntas pré-definidas clicáveis</li>
+            </ul>
+
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
+            
+            <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        </div>
+    </div>
+
+    <!-- Clonefy Chat Widget -->
+    <script>
+      (function() {
+        var script = document.createElement('script');
+        script.src = 'http://localhost:5173/embed-widget-v2.js'; // Use localhost para desenvolvimento
+        script.dataset.assistantId = 'SEU_ASSISTANT_ID_AQUI'; // ⚠️ SUBSTITUA PELO ID REAL
+        script.async = true;
+        document.head.appendChild(script);
+      })();
+    </script>
+</body>
+</html>
