@@ -188,7 +188,7 @@
           text_color: '#333333',
           button_position: 'right',
           is_active: true,
-          widget_template: 'classic',
+          widget_template: 'agent_card', // PADRÃO: Card do Agente
           bubble_message: 'Oi! Como posso te ajudar?',
           quick_questions: [],
           action_buttons: [],

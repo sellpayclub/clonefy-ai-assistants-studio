@@ -65,8 +65,8 @@ serve(async (req) => {
       text_color: '#333333',
       button_position: 'right',
       is_active: true,
-      // New template fields
-      widget_template: 'classic',
+      // PADRÃO ALTERADO: agent_card ao invés de classic
+      widget_template: 'agent_card',
       bubble_message: 'Oi! Como posso te ajudar?',
       quick_questions: [],
       action_buttons: [],
