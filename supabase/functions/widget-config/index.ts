@@ -85,7 +85,7 @@ serve(async (req) => {
       button_position: config.button_position || defaultConfig.button_position,
       is_active: config.is_active !== false,
       // New template fields - usar valor do banco se existir, senão usar default
-      widget_template: (config.widget_template !== null && config.widget_template !== undefined) 
+      widget_template: (config.widget_template !== null && config.widget_template !== undefined && config.widget_template !== '') 
         ? config.widget_template 
         : defaultConfig.widget_template,
       bubble_message: config.bubble_message || defaultConfig.bubble_message,
@@ -94,6 +94,14 @@ serve(async (req) => {
       show_status_indicator: config.show_status_indicator !== false,
       status_text: config.status_text || defaultConfig.status_text
     } : defaultConfig;
+
+    // Log para debug
+    console.log('Widget Config Response:', {
+      hasConfig: !!config,
+      widget_template_from_db: config?.widget_template,
+      widget_template_final: finalConfig.widget_template,
+      assistantId: assistantId
+    });
 
     return new Response(
       JSON.stringify({
