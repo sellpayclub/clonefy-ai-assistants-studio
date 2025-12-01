@@ -11,8 +11,18 @@
   }
 
   // Configuração base
-  const baseUrl = currentScript ? new URL(currentScript.src).origin : window.location.origin;
+  // Sempre usar o domínio da página atual para buscar configuração e iframe
+  // Isso permite que o script seja carregado de qualquer domínio (CDN, etc)
+  const baseUrl = window.location.origin;
   const apiUrl = `${baseUrl}/supabase/functions/v1`;
+  
+  console.log('CLONEFY: Inicializando widget', {
+    assistantId: assistantId,
+    baseUrl: baseUrl,
+    apiUrl: apiUrl,
+    scriptOrigin: currentScript ? new URL(currentScript.src).origin : 'unknown',
+    pageOrigin: window.location.origin
+  });
   
   // Widget object
   const clonefyWidget = {
