@@ -54,7 +54,7 @@ const WidgetCustomization = () => {
   const [selectedAssistant, setSelectedAssistant] = useState<string>('');
   const [assistants, setAssistants] = useState<any[]>([]);
   const { toast } = useToast();
-  
+
   const {
     customization,
     loading,
@@ -73,15 +73,15 @@ const WidgetCustomization = () => {
     text_color: '#333333',
     button_position: 'right' as 'left' | 'right',
     is_active: true,
-    // New template fields
-    widget_template: 'classic' as WidgetTemplate,
+    // PADRÃO: Card do Agente
+    widget_template: 'agent_card' as WidgetTemplate,
     bubble_message: 'Oi! Como posso te ajudar?',
     quick_questions: [] as string[],
     action_buttons: [] as ActionButton[],
     show_status_indicator: true,
     status_text: 'Online agora'
   });
-  
+
   // Debounce formData para o preview (evita re-render a cada keystroke)
   const debouncedFormData = useDebounce(formData, 300);
 
@@ -123,7 +123,7 @@ const WidgetCustomization = () => {
   const updateActionButton = useCallback((index: number, field: 'label' | 'message', value: string) => {
     setFormData(prev => ({
       ...prev,
-      action_buttons: prev.action_buttons.map((btn, i) => 
+      action_buttons: prev.action_buttons.map((btn, i) =>
         i === index ? { ...btn, [field]: value } : btn
       )
     }));
@@ -166,15 +166,15 @@ const WidgetCustomization = () => {
         show_status_indicator: customization.show_status_indicator !== false,
         status_text: customization.status_text || 'Online agora'
       };
-      
+
       console.log('🔄 Atualizando formData do banco de dados:', {
         assistantId: selectedAssistant,
         loaded: customization,
         newFormData
       });
-      
+
       setFormData(newFormData);
-      
+
       console.log('✅ FormData sincronizado com sucesso');
     } else {
       console.log('⚠️ Nenhuma personalização encontrada, usando valores padrão');
@@ -189,8 +189,8 @@ const WidgetCustomization = () => {
         text_color: '#333333',
         button_position: 'right' as 'left' | 'right',
         is_active: true,
-        // New template fields with defaults
-        widget_template: 'classic' as WidgetTemplate,
+        // PADRÃO: Card do Agente
+        widget_template: 'agent_card' as WidgetTemplate,
         bubble_message: 'Oi! Como posso te ajudar?',
         quick_questions: [],
         action_buttons: [],
@@ -204,10 +204,10 @@ const WidgetCustomization = () => {
   useEffect(() => {
     if (selectedAssistant) {
       console.log('🔄 Mudando para assistente:', selectedAssistant);
-      
+
       // Limpar cache do assistente anterior
       clearCache();
-      
+
       // Carregar personalização do novo assistente
       loadCustomization();
     }
@@ -244,19 +244,19 @@ const WidgetCustomization = () => {
         widget_template: formData.widget_template,
         widget_template_type: typeof formData.widget_template
       });
-      
+
       const result = await saveCustomization(formData);
-      
+
       if (result) {
         console.log('✅ Personalização salva com sucesso:', {
           ...result,
           widget_template_saved: result.widget_template,
           widget_template_type: typeof result.widget_template
         });
-        
+
         // Forçar reload dos dados para garantir sincronização
         await loadCustomization();
-        
+
         toast({
           title: 'Sucesso!',
           description: 'Personalização salva e ativa no widget',
@@ -276,7 +276,7 @@ const WidgetCustomization = () => {
 
   const generateEmbedCode = () => {
     if (!selectedAssistant) return '';
-    
+
     const baseUrl = window.location.origin;
     return `<!-- Clonefy Chat Widget -->
 <script>
@@ -303,7 +303,7 @@ const WidgetCustomization = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        
+
         <main className="flex-1 p-3 sm:p-4 md:p-6">
           <div className="flex items-center gap-4 mb-6">
             <SidebarTrigger />
@@ -345,446 +345,444 @@ const WidgetCustomization = () => {
               </CardContent>
             </Card>
 
-        {selectedAssistant && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Configurações */}
-            <div className="space-y-6">
-              <Tabs defaultValue="appearance" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="appearance">
-                    <Palette className="h-4 w-4 mr-2" />
-                    Aparência
-                  </TabsTrigger>
-                  <TabsTrigger value="behavior">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Configurações
-                  </TabsTrigger>
-                </TabsList>
+            {selectedAssistant && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Configurações */}
+                <div className="space-y-6">
+                  <Tabs defaultValue="appearance" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="appearance">
+                        <Palette className="h-4 w-4 mr-2" />
+                        Aparência
+                      </TabsTrigger>
+                      <TabsTrigger value="behavior">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Configurações
+                      </TabsTrigger>
+                    </TabsList>
 
-                <TabsContent value="appearance" className="space-y-6">
-                  {/* Template Selection */}
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base">Estilo do Chat</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-3">
-                        {TEMPLATE_OPTIONS.map((template) => (
-                          <div
-                            key={template.id}
-                            onClick={() => updateFormData('widget_template', template.id)}
-                            className={`cursor-pointer rounded-lg border-2 p-3 transition-all hover:shadow-md ${
-                              formData.widget_template === template.id
-                                ? 'border-primary bg-primary/5'
-                                : 'border-border hover:border-primary/50'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-full ${
-                                formData.widget_template === template.id
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-muted text-muted-foreground'
-                              }`}>
-                                {template.icon}
+                    <TabsContent value="appearance" className="space-y-6">
+                      {/* Template Selection */}
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base">Estilo do Chat</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 gap-3">
+                            {TEMPLATE_OPTIONS.map((template) => (
+                              <div
+                                key={template.id}
+                                onClick={() => updateFormData('widget_template', template.id)}
+                                className={`cursor-pointer rounded-lg border-2 p-3 transition-all hover:shadow-md ${formData.widget_template === template.id
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-border hover:border-primary/50'
+                                  }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className={`p-2 rounded-full ${formData.widget_template === template.id
+                                      ? 'bg-primary text-primary-foreground'
+                                      : 'bg-muted text-muted-foreground'
+                                    }`}>
+                                    {template.icon}
+                                  </div>
+                                  <div>
+                                    <h3 className="font-medium text-sm">{template.name}</h3>
+                                    <p className="text-xs text-muted-foreground">{template.description}</p>
+                                  </div>
+                                </div>
                               </div>
-                              <div>
-                                <h3 className="font-medium text-sm">{template.name}</h3>
-                                <p className="text-xs text-muted-foreground">{template.description}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Inline template options */}
-                      {formData.widget_template === 'bubble' && (
-                        <div className="mt-4 pt-4 border-t">
-                          <Label htmlFor="bubble_message">Mensagem do Balão</Label>
-                          <Input
-                            id="bubble_message"
-                            value={formData.bubble_message}
-                            onChange={(e) => updateFormData('bubble_message', e.target.value)}
-                            placeholder="Oi! Como posso te ajudar?"
-                            className="mt-1"
-                          />
-                        </div>
-                      )}
-
-                      {formData.widget_template === 'agent_card' && (
-                        <div className="mt-4 pt-4 border-t space-y-4">
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              id="show_status_indicator"
-                              checked={formData.show_status_indicator}
-                              onChange={(e) => updateFormData('show_status_indicator', e.target.checked)}
-                              className="rounded border-gray-300"
-                            />
-                            <Label htmlFor="show_status_indicator">Mostrar status online</Label>
+                            ))}
                           </div>
 
-                          {formData.show_status_indicator && (
-                            <div>
-                              <Label htmlFor="status_text">Texto do Status</Label>
+                          {/* Inline template options */}
+                          {formData.widget_template === 'bubble' && (
+                            <div className="mt-4 pt-4 border-t">
+                              <Label htmlFor="bubble_message">Mensagem do Balão</Label>
                               <Input
-                                id="status_text"
-                                value={formData.status_text}
-                                onChange={(e) => updateFormData('status_text', e.target.value)}
-                                placeholder="Online agora"
+                                id="bubble_message"
+                                value={formData.bubble_message}
+                                onChange={(e) => updateFormData('bubble_message', e.target.value)}
+                                placeholder="Oi! Como posso te ajudar?"
                                 className="mt-1"
                               />
                             </div>
                           )}
 
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Label>Botões de Ação</Label>
-                              <Button type="button" variant="outline" size="sm" onClick={addActionButton}>
-                                <Plus className="h-4 w-4 mr-1" />
-                                Adicionar
-                              </Button>
-                            </div>
-                            
-                            {formData.action_buttons.length === 0 ? (
-                              <p className="text-sm text-muted-foreground italic">
-                                Clique em "Adicionar" para criar botões.
-                              </p>
-                            ) : (
-                              <div className="space-y-2">
-                                {formData.action_buttons.map((btn, index) => (
-                                  <div key={index} className="flex gap-2 items-start p-2 bg-muted/50 rounded-lg">
-                                    <div className="flex-1 space-y-1">
-                                      <Input
-                                        value={btn.label}
-                                        onChange={(e) => updateActionButton(index, 'label', e.target.value)}
-                                        placeholder="Texto do botão"
-                                        className="h-8 text-sm"
-                                      />
-                                      <Input
-                                        value={btn.message}
-                                        onChange={(e) => updateActionButton(index, 'message', e.target.value)}
-                                        placeholder="Mensagem ao clicar"
-                                        className="h-8 text-sm"
-                                      />
-                                    </div>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => removeActionButton(index)}
-                                      className="h-8 w-8 text-destructive hover:text-destructive"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                ))}
+                          {formData.widget_template === 'agent_card' && (
+                            <div className="mt-4 pt-4 border-t space-y-4">
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  id="show_status_indicator"
+                                  checked={formData.show_status_indicator}
+                                  onChange={(e) => updateFormData('show_status_indicator', e.target.checked)}
+                                  className="rounded border-gray-300"
+                                />
+                                <Label htmlFor="show_status_indicator">Mostrar status online</Label>
                               </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
 
-                      {formData.widget_template === 'quick_questions' && (
-                        <div className="mt-4 pt-4 border-t space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label>Perguntas Rápidas</Label>
-                            <Button type="button" variant="outline" size="sm" onClick={addQuickQuestion}>
-                              <Plus className="h-4 w-4 mr-1" />
-                              Adicionar
-                            </Button>
-                          </div>
-                          
-                          {formData.quick_questions.length === 0 ? (
-                            <p className="text-sm text-muted-foreground italic">
-                              Clique em "Adicionar" para criar perguntas.
-                            </p>
-                          ) : (
-                            <div className="space-y-2">
-                              {formData.quick_questions.map((question, index) => (
-                                <div key={index} className="flex gap-2 items-center">
+                              {formData.show_status_indicator && (
+                                <div>
+                                  <Label htmlFor="status_text">Texto do Status</Label>
                                   <Input
-                                    value={question}
-                                    onChange={(e) => updateQuickQuestion(index, e.target.value)}
-                                    placeholder={`Pergunta ${index + 1}`}
-                                    className="flex-1 h-8 text-sm"
+                                    id="status_text"
+                                    value={formData.status_text}
+                                    onChange={(e) => updateFormData('status_text', e.target.value)}
+                                    placeholder="Online agora"
+                                    className="mt-1"
                                   />
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removeQuickQuestion(index)}
-                                    className="h-8 w-8 text-destructive hover:text-destructive"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
+                                </div>
+                              )}
+
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <Label>Botões de Ação</Label>
+                                  <Button type="button" variant="outline" size="sm" onClick={addActionButton}>
+                                    <Plus className="h-4 w-4 mr-1" />
+                                    Adicionar
                                   </Button>
                                 </div>
-                              ))}
+
+                                {formData.action_buttons.length === 0 ? (
+                                  <p className="text-sm text-muted-foreground italic">
+                                    Clique em "Adicionar" para criar botões.
+                                  </p>
+                                ) : (
+                                  <div className="space-y-2">
+                                    {formData.action_buttons.map((btn, index) => (
+                                      <div key={index} className="flex gap-2 items-start p-2 bg-muted/50 rounded-lg">
+                                        <div className="flex-1 space-y-1">
+                                          <Input
+                                            value={btn.label}
+                                            onChange={(e) => updateActionButton(index, 'label', e.target.value)}
+                                            placeholder="Texto do botão"
+                                            className="h-8 text-sm"
+                                          />
+                                          <Input
+                                            value={btn.message}
+                                            onChange={(e) => updateActionButton(index, 'message', e.target.value)}
+                                            placeholder="Mensagem ao clicar"
+                                            className="h-8 text-sm"
+                                          />
+                                        </div>
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => removeActionButton(index)}
+                                          className="h-8 w-8 text-destructive hover:text-destructive"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
-                        </div>
+
+                          {formData.widget_template === 'quick_questions' && (
+                            <div className="mt-4 pt-4 border-t space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Label>Perguntas Rápidas</Label>
+                                <Button type="button" variant="outline" size="sm" onClick={addQuickQuestion}>
+                                  <Plus className="h-4 w-4 mr-1" />
+                                  Adicionar
+                                </Button>
+                              </div>
+
+                              {formData.quick_questions.length === 0 ? (
+                                <p className="text-sm text-muted-foreground italic">
+                                  Clique em "Adicionar" para criar perguntas.
+                                </p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {formData.quick_questions.map((question, index) => (
+                                    <div key={index} className="flex gap-2 items-center">
+                                      <Input
+                                        value={question}
+                                        onChange={(e) => updateQuickQuestion(index, e.target.value)}
+                                        placeholder={`Pergunta ${index + 1}`}
+                                        className="flex-1 h-8 text-sm"
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => removeQuickQuestion(index)}
+                                        className="h-8 w-8 text-destructive hover:text-destructive"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Informações Básicas</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div>
+                            <Label htmlFor="widget_name">Nome do Assistente</Label>
+                            <Input
+                              id="widget_name"
+                              value={formData.widget_name}
+                              onChange={(e) => updateFormData('widget_name', e.target.value)}
+                              placeholder="Nome que aparece no chat"
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="welcome_message">Mensagem de Boas-vindas</Label>
+                            <Textarea
+                              id="welcome_message"
+                              value={formData.welcome_message}
+                              onChange={(e) => updateFormData('welcome_message', e.target.value)}
+                              placeholder="Primeira mensagem que o usuário vê"
+                              rows={3}
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Imagens</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <ImageUpload
+                            label="Avatar do Assistente"
+                            value={formData.avatar_url}
+                            onChange={(url) => updateFormData('avatar_url', url)}
+                            bucket="assistant-media"
+                          />
+
+                          <ImageUpload
+                            label="Ícone do Botão Flutuante"
+                            value={formData.button_icon_url}
+                            onChange={(url) => updateFormData('button_icon_url', url)}
+                            bucket="assistant-media"
+                          />
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Cores</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <ColorPicker
+                            label="Cor Principal"
+                            value={formData.primary_color}
+                            onChange={(color) => updateFormData('primary_color', color)}
+                          />
+
+                          <ColorPicker
+                            label="Cor Secundária (Fundo)"
+                            value={formData.secondary_color}
+                            onChange={(color) => updateFormData('secondary_color', color)}
+                          />
+
+                          <ColorPicker
+                            label="Cor do Texto"
+                            value={formData.text_color}
+                            onChange={(color) => updateFormData('text_color', color)}
+                          />
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+
+                    <TabsContent value="behavior" className="space-y-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Posicionamento</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div>
+                            <Label>Posição do Botão</Label>
+                            <Select
+                              value={formData.button_position}
+                              onValueChange={(value: 'left' | 'right') => updateFormData('button_position', value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="right">Direita</SelectItem>
+                                <SelectItem value="left">Esquerda</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="is_active"
+                              checked={formData.is_active}
+                              onChange={(e) => updateFormData('is_active', e.target.checked)}
+                              className="rounded border-gray-300"
+                            />
+                            <Label htmlFor="is_active">Chat Ativo</Label>
+                            {formData.is_active ? (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Ativo
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                Inativo
+                              </span>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Link Direto para Testar */}
+                      <Card className="border-primary/50 bg-primary/5">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <MessageCircle className="h-5 w-5 text-primary" />
+                            Link Direto para Testar
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <p className="text-sm text-muted-foreground">
+                            Use este link para testar o chat ou compartilhar com sua equipe:
+                          </p>
+                          <div className="flex gap-2">
+                            <Input
+                              value={`${window.location.origin}/embed-chat/${selectedAssistant}`}
+                              readOnly
+                              className="flex-1 text-sm font-mono"
+                            />
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`${window.location.origin}/embed-chat/${selectedAssistant}`);
+                                toast({ title: 'Link copiado!' });
+                              }}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => window.open(`/embed-chat/${selectedAssistant}`, '_blank')}
+                            >
+                              Abrir Chat
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Código para Incorporar */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Código para Incorporar no Site</CardTitle>
+                          <CardDescription>
+                            Siga os passos abaixo para adicionar o chat ao seu site
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {/* Passo a passo */}
+                          <div className="space-y-3">
+                            <div className="flex gap-3">
+                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">1</div>
+                              <div>
+                                <p className="font-medium text-sm">Copie o código abaixo</p>
+                                <p className="text-xs text-muted-foreground">Clique no botão "Copiar Código"</p>
+                              </div>
+                            </div>
+                            <div className="flex gap-3">
+                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">2</div>
+                              <div>
+                                <p className="font-medium text-sm">Cole antes do &lt;/body&gt; do seu site</p>
+                                <p className="text-xs text-muted-foreground">Adicione em todas as páginas onde quer o chat</p>
+                              </div>
+                            </div>
+                            <div className="flex gap-3">
+                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">3</div>
+                              <div>
+                                <p className="font-medium text-sm">Pronto! O chat aparecerá automaticamente</p>
+                                <p className="text-xs text-muted-foreground">O botão flutuante aparece no canto da tela</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Código */}
+                          <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+                            <pre className="text-sm overflow-x-auto">
+                              <code>{generateEmbedCode()}</code>
+                            </pre>
+                          </div>
+                          <Button onClick={copyEmbedCode} className="w-full" variant="outline">
+                            <Copy className="h-4 w-4 mr-2" />
+                            Copiar Código
+                          </Button>
+
+                          {/* Dica extra */}
+                          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                            <p className="text-xs text-blue-800 dark:text-blue-200">
+                              <strong>Dica:</strong> Se usa WordPress, Wix ou outra plataforma, procure a opção "Código personalizado" ou "HTML/JavaScript" nas configurações do site.
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  </Tabs>
+
+                  <div className="flex gap-2">
+                    <Button onClick={handleSave} disabled={loading} className="flex-1">
+                      {loading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Salvando...
+                        </>
+                      ) : (
+                        'Salvar Personalização'
                       )}
-                    </CardContent>
-                  </Card>
+                    </Button>
+                    <Button variant="outline" onClick={() => window.open(`/embed-chat?assistant=${selectedAssistant}`, '_blank')}>
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Testar Chat
+                    </Button>
+                    <Button variant="outline" onClick={() => window.open(`/widget-analytics?assistant=${selectedAssistant}`, '_blank')}>
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      Analytics
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Preview */}
+                <div className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Informações Básicas</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <Label htmlFor="widget_name">Nome do Assistente</Label>
-                        <Input
-                          id="widget_name"
-                          value={formData.widget_name}
-                          onChange={(e) => updateFormData('widget_name', e.target.value)}
-                          placeholder="Nome que aparece no chat"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="welcome_message">Mensagem de Boas-vindas</Label>
-                        <Textarea
-                          id="welcome_message"
-                          value={formData.welcome_message}
-                          onChange={(e) => updateFormData('welcome_message', e.target.value)}
-                          placeholder="Primeira mensagem que o usuário vê"
-                          rows={3}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Imagens</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <ImageUpload
-                        label="Avatar do Assistente"
-                        value={formData.avatar_url}
-                        onChange={(url) => updateFormData('avatar_url', url)}
-                        bucket="assistant-media"
-                      />
-
-                      <ImageUpload
-                        label="Ícone do Botão Flutuante"
-                        value={formData.button_icon_url}
-                        onChange={(url) => updateFormData('button_icon_url', url)}
-                        bucket="assistant-media"
-                      />
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Cores</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <ColorPicker
-                        label="Cor Principal"
-                        value={formData.primary_color}
-                        onChange={(color) => updateFormData('primary_color', color)}
-                      />
-
-                      <ColorPicker
-                        label="Cor Secundária (Fundo)"
-                        value={formData.secondary_color}
-                        onChange={(color) => updateFormData('secondary_color', color)}
-                      />
-
-                      <ColorPicker
-                        label="Cor do Texto"
-                        value={formData.text_color}
-                        onChange={(color) => updateFormData('text_color', color)}
-                      />
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="behavior" className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Posicionamento</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <Label>Posição do Botão</Label>
-                        <Select 
-                          value={formData.button_position} 
-                          onValueChange={(value: 'left' | 'right') => updateFormData('button_position', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="right">Direita</SelectItem>
-                            <SelectItem value="left">Esquerda</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id="is_active"
-                          checked={formData.is_active}
-                          onChange={(e) => updateFormData('is_active', e.target.checked)}
-                          className="rounded border-gray-300"
-                        />
-                        <Label htmlFor="is_active">Chat Ativo</Label>
-                        {formData.is_active ? (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Ativo
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            Inativo
-                          </span>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Link Direto para Testar */}
-                  <Card className="border-primary/50 bg-primary/5">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <MessageCircle className="h-5 w-5 text-primary" />
-                        Link Direto para Testar
+                      <CardTitle className="flex items-center gap-2">
+                        <Eye className="h-5 w-5" />
+                        Preview do Chat
                       </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <p className="text-sm text-muted-foreground">
-                        Use este link para testar o chat ou compartilhar com sua equipe:
-                      </p>
-                      <div className="flex gap-2">
-                        <Input 
-                          value={`${window.location.origin}/embed-chat/${selectedAssistant}`}
-                          readOnly
-                          className="flex-1 text-sm font-mono"
-                        />
-                        <Button 
-                          variant="outline" 
-                          onClick={() => {
-                            navigator.clipboard.writeText(`${window.location.origin}/embed-chat/${selectedAssistant}`);
-                            toast({ title: 'Link copiado!' });
-                          }}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          onClick={() => window.open(`/embed-chat/${selectedAssistant}`, '_blank')}
-                        >
-                          Abrir Chat
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Código para Incorporar */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Código para Incorporar no Site</CardTitle>
                       <CardDescription>
-                        Siga os passos abaixo para adicionar o chat ao seu site
+                        Veja como o chat aparecerá no seu site
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Passo a passo */}
-                      <div className="space-y-3">
-                        <div className="flex gap-3">
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">1</div>
-                          <div>
-                            <p className="font-medium text-sm">Copie o código abaixo</p>
-                            <p className="text-xs text-muted-foreground">Clique no botão "Copiar Código"</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-3">
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">2</div>
-                          <div>
-                            <p className="font-medium text-sm">Cole antes do &lt;/body&gt; do seu site</p>
-                            <p className="text-xs text-muted-foreground">Adicione em todas as páginas onde quer o chat</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-3">
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">3</div>
-                          <div>
-                            <p className="font-medium text-sm">Pronto! O chat aparecerá automaticamente</p>
-                            <p className="text-xs text-muted-foreground">O botão flutuante aparece no canto da tela</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Código */}
-                      <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
-                        <pre className="text-sm overflow-x-auto">
-                          <code>{generateEmbedCode()}</code>
-                        </pre>
-                      </div>
-                      <Button onClick={copyEmbedCode} className="w-full" variant="outline">
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copiar Código
-                      </Button>
-
-                      {/* Dica extra */}
-                      <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                        <p className="text-xs text-blue-800 dark:text-blue-200">
-                          <strong>Dica:</strong> Se usa WordPress, Wix ou outra plataforma, procure a opção "Código personalizado" ou "HTML/JavaScript" nas configurações do site.
-                        </p>
+                    <CardContent>
+                      <div className="relative overflow-visible min-h-[600px]">
+                        <OptimizedWidgetPreview
+                          customization={debouncedFormData}
+                        />
                       </div>
                     </CardContent>
                   </Card>
-                </TabsContent>
-              </Tabs>
-
-              <div className="flex gap-2">
-                <Button onClick={handleSave} disabled={loading} className="flex-1">
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Salvando...
-                    </>
-                  ) : (
-                    'Salvar Personalização'
-                  )}
-                </Button>
-                <Button variant="outline" onClick={() => window.open(`/embed-chat?assistant=${selectedAssistant}`, '_blank')}>
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Testar Chat
-                </Button>
-                <Button variant="outline" onClick={() => window.open(`/widget-analytics?assistant=${selectedAssistant}`, '_blank')}>
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Analytics
-                </Button>
+                </div>
               </div>
-            </div>
-
-            {/* Preview */}
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Eye className="h-5 w-5" />
-                    Preview do Chat
-                  </CardTitle>
-                  <CardDescription>
-                    Veja como o chat aparecerá no seu site
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="relative overflow-visible min-h-[600px]">
-                    <OptimizedWidgetPreview 
-                      customization={debouncedFormData}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            )}
           </div>
-        )}
+        </main>
       </div>
-    </main>
-  </div>
-</SidebarProvider>
+    </SidebarProvider>
   );
 };
 
