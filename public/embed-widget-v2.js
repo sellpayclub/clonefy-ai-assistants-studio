@@ -58,26 +58,43 @@
             config: JSON.stringify(this.config)
           });
           
-          // Garantir que o template container seja criado se necessário
-          // Usar setTimeout para garantir que o DOM esteja totalmente pronto
-          setTimeout(() => {
-            if (this.config.widget_template && this.config.widget_template !== 'classic') {
-              if (!this.templateContainer) {
-                console.log('CLONEFY: Recriando template container após inicialização - template:', this.config.widget_template);
+          // FORÇAR criação do template se necessário - usar múltiplos timeouts para garantir
+          const ensureTemplateCreated = () => {
+            if (this.config && this.config.widget_template && this.config.widget_template !== 'classic') {
+              if (!this.templateContainer || this.templateContainer.children.length === 0) {
+                console.log('CLONEFY: [FORÇAR] Criando template container - template:', this.config.widget_template);
                 this.createTemplateElements();
+                
+                // Verificar novamente após criar
+                setTimeout(() => {
+                  if (this.templateContainer && this.templateContainer.children.length > 0) {
+                    console.log('CLONEFY: [SUCESSO] Template container criado e visível');
+                    this.templateContainer.classList.remove('hidden');
+                  } else {
+                    console.error('CLONEFY: [ERRO] Template container não foi criado corretamente');
+                  }
+                }, 200);
               } else {
                 console.log('CLONEFY: Template container já existe, garantindo visibilidade');
                 this.templateContainer.classList.remove('hidden');
               }
             } else {
-              console.log('CLONEFY: Template é classic ou não definido, não criando container');
+              console.log('CLONEFY: Template é classic ou não definido:', this.config?.widget_template);
             }
-          }, 100);
+          };
+          
+          // Tentar múltiplas vezes para garantir
+          setTimeout(ensureTemplateCreated, 50);
+          setTimeout(ensureTemplateCreated, 200);
+          setTimeout(ensureTemplateCreated, 500);
           
           // Registrar início de sessão
           await this.trackEvent('start_session');
         } else {
-          console.warn('CLONEFY: Widget desativado ou configuração inválida');
+          console.warn('CLONEFY: Widget desativado ou configuração inválida', {
+            hasConfig: !!this.config,
+            is_active: this.config?.is_active
+          });
         }
       } catch (error) {
         console.error('CLONEFY: Erro ao inicializar widget:', error);
@@ -524,9 +541,10 @@
       
       // Create template-specific elements (only if config is loaded)
       if (this.config) {
+        console.log('CLONEFY: createElements chamado, criando template:', this.config.widget_template);
         this.createTemplateElements();
       } else {
-        console.warn('CLONEFY: Config não carregada ao criar elementos');
+        console.warn('CLONEFY: Config não carregada ao criar elementos - será criado depois');
       }
       
       // Create iframe
