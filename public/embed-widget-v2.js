@@ -31,8 +31,8 @@
         // Gerar session ID único
         this.sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         
-        // Carregar configuração do widget
-        await this.loadConfig();
+        // Carregar configuração do widget (sempre forçar refresh na inicialização)
+        await this.loadConfig(true);
         
         // Criar elementos se a configuração estiver ativa
         if (this.config && this.config.is_active) {
@@ -40,8 +40,15 @@
           this.createElements();
           this.attachEvents();
           
+          console.log('CLONEFY: Widget inicializado com sucesso', {
+            template: this.config.widget_template,
+            assistantId: this.assistantId
+          });
+          
           // Registrar início de sessão
           await this.trackEvent('start_session');
+        } else {
+          console.warn('CLONEFY: Widget desativado ou configuração inválida');
         }
       } catch (error) {
         console.error('CLONEFY: Erro ao inicializar widget:', error);
@@ -70,7 +77,31 @@
         const data = await response.json();
         
         if (data.success) {
+          const oldTemplate = this.config?.widget_template;
           this.config = data.config;
+          
+          // Se o template mudou, recriar elementos
+          if (oldTemplate && oldTemplate !== this.config.widget_template) {
+            console.log('CLONEFY: Template mudou, recriando elementos...', {
+              old: oldTemplate,
+              new: this.config.widget_template
+            });
+            
+            // Remover elementos antigos
+            if (this.templateContainer) {
+              this.templateContainer.remove();
+              this.templateContainer = null;
+            }
+            
+            // Recriar elementos com novo template
+            this.createTemplateElements();
+          }
+          
+          console.log('CLONEFY: Configuração carregada:', {
+            template: this.config.widget_template,
+            is_active: this.config.is_active,
+            widget_name: this.config.widget_name
+          });
         } else {
           throw new Error(data.error || 'Erro ao carregar configuração');
         }
@@ -718,6 +749,11 @@
       
       // Recarregar configuração ao abrir para garantir atualizações automáticas
       await this.loadConfig(true);
+      
+      // Recriar template se necessário (pode ter mudado)
+      if (this.config.widget_template !== 'classic' && !this.templateContainer) {
+        this.createTemplateElements();
+      }
       
       // Atualizar iframe src com cache busting para forçar recarregamento com nova config
       const cacheBuster = `?v=${Date.now()}`;

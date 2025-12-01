@@ -904,57 +904,9 @@ const Assistants = () => {
                           
                           const code = `<!-- Chat Flutuante CLONEFY -->
 <!-- IMPORTANTE: Este código carrega o chat dinamicamente. 
-     As atualizações do agente (instruções, customização, etc.) aparecem automaticamente
+     As atualizações do agente (instruções, customização, templates, etc.) aparecem automaticamente
      sem precisar atualizar este código no seu site. -->
-<script>
-  (function(){
-    var w=window,d=document;
-    var chatWidget = {
-      agentId: '${selectedAgentForEmbed.id}',
-      agentName: '${selectedAgentForEmbed.name}',
-      baseUrl: '${baseUrl}',
-      init: function() {
-        var iframe = d.createElement('iframe');
-        // Adicionar timestamp para evitar cache e garantir atualizações automáticas
-        var cacheBuster = '?v=' + Date.now();
-        iframe.src = this.baseUrl + '/embed/chat/' + this.agentId + cacheBuster;
-        iframe.id = 'clonefy-chat-widget';
-        iframe.style.cssText = 'position:fixed;bottom:90px;right:20px;width:420px;height:650px;border:none;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.15);z-index:999999;display:none;background:white;';
-        
-        // Responsividade melhorada
-        if(window.innerWidth <= 480) {
-          iframe.style.cssText = 'position:fixed;bottom:80px;left:10px;right:10px;top:80px;width:auto;height:auto;border:none;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,0.15);z-index:999999;display:none;background:white;';
-        } else if(window.innerWidth <= 768) {
-          iframe.style.cssText = 'position:fixed;bottom:85px;right:15px;width:380px;height:600px;border:none;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.15);z-index:999999;display:none;background:white;';
-        }
-        
-        // Botão do chat
-        var btn = d.createElement('button');
-        btn.innerHTML = '💬';
-        btn.style.cssText = 'position:fixed;bottom:20px;right:20px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#007bff,#0056b3);color:white;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(0,123,255,0.3);z-index:999998;font-size:24px;transition:all 0.3s ease;';
-        
-        btn.onclick = function(){
-          if(iframe.style.display === 'none') {
-            iframe.style.display = 'block';
-            btn.innerHTML = '✕';
-          } else {
-            iframe.style.display = 'none';
-            btn.innerHTML = '💬';
-          }
-        };
-        
-        d.body.appendChild(iframe);
-        d.body.appendChild(btn);
-      }
-    };
-    
-    if(d.readyState === 'loading') {
-      d.addEventListener('DOMContentLoaded', function(){ chatWidget.init(); });
-    } else {
-      chatWidget.init();
-    }
-  })();
-</script>`;
+<script src="${baseUrl}/embed-widget-v2.js" data-assistant-id="${selectedAgentForEmbed.id}"></script>`;
                           
                           navigator.clipboard.writeText(code);
                           toast({
@@ -974,17 +926,10 @@ const Assistants = () => {
                             ? window.location.origin 
                             : 'https://clonefy.app';
                           return `<!-- Chat Flutuante CLONEFY -->
-<script>
-  (function(){
-    var chatWidget = {
-      agentId: '${selectedAgentForEmbed.id}',
-      agentName: '${selectedAgentForEmbed.name}',
-      baseUrl: '${exampleBaseUrl}',
-      // Código do chat flutuante...
-    };
-    // Inicialização automática...
-  })();
-</script>`;
+<!-- IMPORTANTE: Este código carrega o chat dinamicamente. 
+     As atualizações do agente (instruções, customização, templates, etc.) aparecem automaticamente
+     sem precisar atualizar este código no seu site. -->
+<script src="${exampleBaseUrl}/embed-widget-v2.js" data-assistant-id="${selectedAgentForEmbed.id}"></script>`;
                         })()}
                       </code>
                     </div>
