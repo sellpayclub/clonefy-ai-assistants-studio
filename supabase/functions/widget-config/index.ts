@@ -100,10 +100,18 @@ serve(async (req) => {
         assistant: {
           name: assistant?.name || 'Assistente Virtual',
           description: assistant?.description || ''
-        }
+        },
+        // Incluir timestamp para cache busting
+        timestamp: Date.now()
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        } 
       }
     );
 

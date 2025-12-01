@@ -48,12 +48,15 @@
       }
     },
 
-    async loadConfig() {
+    async loadConfig(forceRefresh = false) {
       try {
-        const response = await fetch(`${apiUrl}/widget-config`, {
+        // Adicionar cache busting para garantir atualizações
+        const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
+        const response = await fetch(`${apiUrl}/widget-config${cacheBuster}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache'
           },
           body: JSON.stringify({
             assistantId: this.assistantId
@@ -631,7 +634,9 @@
     createIframe() {
       this.iframe = document.createElement('iframe');
       this.iframe.className = 'clonefy-widget-iframe';
-      this.iframe.src = `${baseUrl}/embed-chat/${this.assistantId}`;
+      // Adicionar cache busting para garantir atualizações automáticas
+      const cacheBuster = `?v=${Date.now()}`;
+      this.iframe.src = `${baseUrl}/embed-chat/${this.assistantId}${cacheBuster}`;
       this.iframe.title = `Chat com ${this.config.widget_name}`;
       this.iframe.allow = 'microphone; camera';
       this.iframe.loading = 'lazy';
@@ -708,8 +713,15 @@
       }
     },
 
-    open() {
+    async open() {
       if (!this.iframe) return;
+      
+      // Recarregar configuração ao abrir para garantir atualizações automáticas
+      await this.loadConfig(true);
+      
+      // Atualizar iframe src com cache busting para forçar recarregamento com nova config
+      const cacheBuster = `?v=${Date.now()}`;
+      this.iframe.src = `${baseUrl}/embed-chat/${this.assistantId}${cacheBuster}`;
       
       this.isOpen = true;
       this.iframe.classList.add('open');

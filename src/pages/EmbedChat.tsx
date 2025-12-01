@@ -166,10 +166,10 @@ const EmbedChat = () => {
 
     // Notificar widget pai sobre nova mensagem do usuário
     if (window.parent && window.parent !== window) {
-      window.parent.postMessage({
-        type: 'clonefy:message_sent',
-        data: { messageType: 'user' }
-      }, '*');
+    window.parent.postMessage({
+      type: 'clonefy:message_sent',
+      data: { messageType: 'user' }
+    }, '*');
     }
 
     try {
@@ -205,21 +205,21 @@ const EmbedChat = () => {
         
         // Notificar widget pai sobre nova mensagem do assistente
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage({
-            type: 'clonefy:message_sent',
-            data: { messageType: 'assistant' }
-          }, '*');
+        window.parent.postMessage({
+          type: 'clonefy:message_sent',
+          data: { messageType: 'assistant' }
+        }, '*');
         }
         
         if (data.conversationId && !conversationId) {
           setConversationId(data.conversationId);
           // Notificar widget pai sobre nova conversa
           if (window.parent && window.parent !== window) {
-            window.parent.postMessage({
-              type: 'clonefy:conversation_started',
-              data: { conversationId: data.conversationId }
-            }, '*');
-          }
+          window.parent.postMessage({
+            type: 'clonefy:conversation_started',
+            data: { conversationId: data.conversationId }
+          }, '*');
+        }
         }
       } else {
         throw new Error('Resposta inválida do servidor');
@@ -323,10 +323,10 @@ const EmbedChat = () => {
             size="sm"
             onClick={() => {
               if (window.parent && window.parent !== window) {
-                window.parent.postMessage({
-                  type: 'clonefy:close_widget',
-                  data: {}
-                }, '*');
+              window.parent.postMessage({
+                type: 'clonefy:close_widget',
+                data: {}
+              }, '*');
               } else {
                 // Se não estiver em iframe, apenas recarrega a página
                 window.location.href = '/';

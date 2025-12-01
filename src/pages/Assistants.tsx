@@ -903,6 +903,9 @@ const Assistants = () => {
                             : 'https://clonefy.app'; // Domínio customizado CLONEFY
                           
                           const code = `<!-- Chat Flutuante CLONEFY -->
+<!-- IMPORTANTE: Este código carrega o chat dinamicamente. 
+     As atualizações do agente (instruções, customização, etc.) aparecem automaticamente
+     sem precisar atualizar este código no seu site. -->
 <script>
   (function(){
     var w=window,d=document;
@@ -912,7 +915,9 @@ const Assistants = () => {
       baseUrl: '${baseUrl}',
       init: function() {
         var iframe = d.createElement('iframe');
-        iframe.src = this.baseUrl + '/embed/chat/' + this.agentId;
+        // Adicionar timestamp para evitar cache e garantir atualizações automáticas
+        var cacheBuster = '?v=' + Date.now();
+        iframe.src = this.baseUrl + '/embed/chat/' + this.agentId + cacheBuster;
         iframe.id = 'clonefy-chat-widget';
         iframe.style.cssText = 'position:fixed;bottom:90px;right:20px;width:420px;height:650px;border:none;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.15);z-index:999999;display:none;background:white;';
         
@@ -1015,6 +1020,16 @@ const Assistants = () => {
                           <strong>Visitantes clicam e conversam</strong> com sua IA automaticamente!
                         </div>
                       </div>
+                    </div>
+                    <div className="mt-4 p-3 bg-green-50 dark:bg-green-950/50 rounded-lg border border-green-200 dark:border-green-800">
+                      <p className="text-xs text-green-800 dark:text-green-200 font-medium mb-1">
+                        ✨ Atualizações Automáticas
+                      </p>
+                      <p className="text-xs text-green-700 dark:text-green-300">
+                        <strong>Importante:</strong> Quando você atualizar as instruções, customização ou base de conhecimento do agente, 
+                        as mudanças aparecerão automaticamente no chat do site do cliente. 
+                        <strong> Não é necessário copiar o código novamente!</strong> O chat carrega as informações dinamicamente.
+                      </p>
                     </div>
                   </div>
 
