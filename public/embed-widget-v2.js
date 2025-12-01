@@ -462,6 +462,31 @@
           transform: translateY(-1px) !important;
         }
 
+        /* Botão fechar do Agent Card */
+        .clonefy-agent-card-close {
+          position: absolute !important;
+          top: 8px !important;
+          right: 8px !important;
+          width: 28px !important;
+          height: 28px !important;
+          border-radius: 50% !important;
+          background: rgba(255,255,255,0.2) !important;
+          border: none !important;
+          cursor: pointer !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          font-size: 16px !important;
+          color: rgba(255,255,255,0.9) !important;
+          transition: all 0.2s ease !important;
+          z-index: 10 !important;
+        }
+
+        .clonefy-agent-card-close:hover {
+          background: rgba(255,255,255,0.3) !important;
+          transform: scale(1.1) !important;
+        }
+
         /* Quick Questions Template */
         .clonefy-quick-questions {
           display: flex !important;
@@ -739,6 +764,7 @@
       }
 
       card.innerHTML = `
+        <button class="clonefy-agent-card-close" aria-label="Fechar">✕</button>
         <div class="clonefy-agent-card-header">
           ${avatarHtml}
           <div class="clonefy-agent-card-info">
@@ -762,6 +788,15 @@
         has_body: card.querySelector('.clonefy-agent-card-body') !== null,
         has_search: card.querySelector('.clonefy-agent-card-search') !== null
       });
+
+      // Close button handler
+      const closeBtn = card.querySelector('.clonefy-agent-card-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.templateContainer.classList.add('hidden');
+        });
+      }
 
       // Search bar click handler
       const searchElement = card.querySelector('.clonefy-agent-card-search');
