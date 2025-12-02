@@ -52,8 +52,8 @@ export const useWidgetCustomization = (assistantId: string) => {
           // Parse new template fields
           widget_template: (data.widget_template as WidgetTemplate) || 'classic',
           bubble_message: data.bubble_message || 'Oi! Como posso te ajudar?',
-          quick_questions: Array.isArray(data.quick_questions) ? data.quick_questions : [],
-          action_buttons: Array.isArray(data.action_buttons) ? data.action_buttons : [],
+          quick_questions: Array.isArray(data.quick_questions) ? (data.quick_questions as unknown as string[]) : [],
+          action_buttons: Array.isArray(data.action_buttons) ? (data.action_buttons as unknown as ActionButton[]) : [],
           show_status_indicator: data.show_status_indicator !== false,
           status_text: data.status_text || 'Online agora'
         });
@@ -76,6 +76,8 @@ export const useWidgetCustomization = (assistantId: string) => {
 
       const customizationData = {
         ...data,
+        quick_questions: data.quick_questions as unknown as any,
+        action_buttons: data.action_buttons as unknown as any,
         user_id: session.session.user.id,
         assistant_id: assistantId
       };
@@ -97,8 +99,8 @@ export const useWidgetCustomization = (assistantId: string) => {
           // Parse new template fields
           widget_template: (result.widget_template as WidgetTemplate) || 'classic',
           bubble_message: result.bubble_message || 'Oi! Como posso te ajudar?',
-          quick_questions: Array.isArray(result.quick_questions) ? result.quick_questions : [],
-          action_buttons: Array.isArray(result.action_buttons) ? result.action_buttons : [],
+          quick_questions: Array.isArray(result.quick_questions) ? (result.quick_questions as unknown as string[]) : [],
+          action_buttons: Array.isArray(result.action_buttons) ? (result.action_buttons as unknown as ActionButton[]) : [],
           show_status_indicator: result.show_status_indicator !== false,
           status_text: result.status_text || 'Online agora'
         });
