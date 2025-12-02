@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Widget Clonefy</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .info-box {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .debug-log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .debug-log div {
+            margin: 5px 0;
+        }
+        button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0052a3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste do Widget Clonefy</h1>
+    
+    <div class="info-box">
+        <h2>Informações do Teste</h2>
+        <p><strong>Assistant ID:</strong> <code>44278fa6-9bd8-4958-9c6e-c3e8f478dfac</code></p>
+        <p><strong>Widget Script:</strong> embed-widget-v2.js</p>
+        <p>Este é um ambiente de teste para verificar se a personalização do widget está funcionando corretamente.</p>
+    </div>
+
+    <div>
+        <button onclick="reloadWidget()">🔄 Recarregar Widget</button>
+        <button onclick="clearLogs()">🗑️ Limpar Logs</button>
+        <button onclick="checkConfig()">🔍 Verificar Config</button>
+    </div>
+
+    <div class="debug-log" id="debugLog">
+        <div>📋 Console de Debug - Aguardando logs...</div>
+    </div>
+
+    <script>
+        // Interceptar console.log para mostrar no debug log
+        const debugLog = document.getElementById('debugLog');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        function addLog(type, ...args) {
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            const div = document.createElement('div');
+            const timestamp = new Date().toLocaleTimeString();
+            div.innerHTML = `<strong>[${timestamp}] ${type}:</strong> ${message}`;
+            debugLog.appendChild(div);
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addLog('LOG', ...args);
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLog('ERROR', ...args);
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addLog('WARN', ...args);
+        };
+
+        function clearLogs() {
+            debugLog.innerHTML = '<div>📋 Console de Debug - Logs limpos</div>';
+        }
+
+        function reloadWidget() {
+            console.log('🔄 Recarregando página para atualizar widget...');
+            window.location.reload();
+        }
+
+        async function checkConfig() {
+            console.log('🔍 Verificando configuração do widget...');
+            try {
+                const response = await fetch(`${window.location.origin}/supabase/functions/v1/widget-config?t=${Date.now()}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        assistantId: '44278fa6-9bd8-4958-9c6e-c3e8f478dfac'
+                    })
+                });
+
+                const data = await response.json();
+                console.log('✅ Configuração recebida:', data);
+                
+                if (data.success && data.config) {
+                    console.log('📝 Template:', data.config.widget_template);
+                    console.log('📝 Nome:', data.config.widget_name);
+                    console.log('📝 Avatar:', data.config.avatar_url);
+                    console.log('📝 Botões de Ação:', data.config.action_buttons);
+                    console.log('📝 Status:', data.config.show_status_indicator);
+                }
+            } catch (error) {
+                console.error('❌ Erro ao verificar config:', error);
+            }
+        }
+
+        // Carregar widget
+        console.log('🚀 Iniciando carregamento do widget...');
+    </script>
+
+    <!-- Clonefy Chat Widget -->
+    <script>
+      (function() {
+        var script = document.createElement('script');
+        script.src = 'https://clonefy.app/embed-widget-v2.js';
+        script.dataset.assistantId = '44278fa6-9bd8-4958-9c6e-c3e8f478dfac';
+        script.async = true;
+        document.head.appendChild(script);
+      })();
+    </script>
+</body>
+</html>

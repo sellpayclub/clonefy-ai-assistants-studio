@@ -62,7 +62,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
       'Claro! Ficarei feliz em esclarecer suas dúvidas.',
       'Excelente pergunta! Deixe-me explicar isso para você.',
     ];
-    
+
     return responses[Math.floor(Math.random() * responses.length)];
   }, []);
 
@@ -71,12 +71,12 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
     if (!message.trim()) return;
 
     const userMessage = message.trim();
-    
+
     // Limpar timeout anterior se existir
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    
+
     // Adicionar mensagem do usuário
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setMessage('');
@@ -113,18 +113,18 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
   useEffect(() => {
     setMessages(prev => {
       // Se não há mensagens ou se ainda está com as mensagens padrão, resetar
-      if (prev.length === 0 || 
-          (prev.length === 3 && 
-           prev[0].content === 'Olá! Como posso ajudar você hoje?' &&
-           prev[1].content === 'Gostaria de saber mais sobre os serviços.')) {
-        
+      if (prev.length === 0 ||
+        (prev.length === 3 &&
+          prev[0].content === 'Olá! Como posso ajudar você hoje?' &&
+          prev[1].content === 'Gostaria de saber mais sobre os serviços.')) {
+
         return [
           { role: 'bot', content: customization.welcome_message || 'Olá! Como posso ajudar você hoje?' },
           { role: 'user', content: 'Gostaria de saber mais sobre os serviços.' },
           { role: 'bot', content: 'Claro! Ficarei feliz em explicar nossos serviços. O que especificamente você gostaria de saber?' }
         ];
       }
-      
+
       // Se já houver interação do usuário, apenas atualizar a primeira mensagem se necessário
       if (prev.length > 0 && prev[0].role === 'bot') {
         const newWelcomeMessage = customization.welcome_message || 'Olá! Como posso ajudar você hoje?';
@@ -135,7 +135,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
           ];
         }
       }
-      
+
       return prev;
     });
   }, [customization.welcome_message]);
@@ -190,20 +190,20 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
 
   // Render the template-specific preview elements (before the chat opens)
   const renderTemplatePreview = () => {
-    const template = customization.widget_template || 'classic';
+    const template = customization.widget_template || 'agent_card';
     const position = customization.button_position;
     const positionClass = position === 'left' ? 'left-4' : 'right-4';
-    
+
     switch (template) {
       case 'bubble':
         return (
           <>
             {/* Bubble Message */}
             {!isOpen && (
-              <div 
+              <div
                 className={`absolute ${position === 'left' ? 'left-4' : 'right-4'} bottom-20 max-w-[200px] z-10`}
               >
-                <div 
+                <div
                   className="bg-white dark:bg-gray-800 rounded-2xl px-4 py-3 shadow-lg border relative"
                   style={{ borderColor: `${customization.primary_color}30` }}
                 >
@@ -215,7 +215,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                     <X size={10} />
                   </button>
                   {/* Arrow pointing to button */}
-                  <div 
+                  <div
                     className={`absolute -bottom-2 ${position === 'left' ? 'left-4' : 'right-4'} w-4 h-4 bg-white dark:bg-gray-800 rotate-45 border-r border-b`}
                     style={{ borderColor: `${customization.primary_color}30` }}
                   />
@@ -245,29 +245,29 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
           <>
             {/* Agent Card */}
             {!isOpen && (
-              <div 
+              <div
                 className={`absolute ${position === 'left' ? 'left-4' : 'right-4'} bottom-20 w-64 z-10`}
               >
-                <div 
+                <div
                   className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border overflow-hidden"
                   style={{ borderColor: `${customization.primary_color}30` }}
                 >
                   {/* Header with avatar */}
-                  <div 
+                  <div
                     className="p-4 flex items-center gap-3"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${customization.primary_color}, ${customization.primary_color}dd)` 
+                    style={{
+                      background: `linear-gradient(135deg, ${customization.primary_color}, ${customization.primary_color}dd)`
                     }}
                   >
                     {customization.avatar_url ? (
-                      <img 
-                        src={customization.avatar_url} 
+                      <img
+                        src={customization.avatar_url}
                         alt={customization.widget_name}
                         className="w-12 h-12 rounded-full object-cover border-2"
                         style={{ borderColor: 'rgba(255,255,255,0.3)' }}
                       />
                     ) : (
-                      <div 
+                      <div
                         className="w-12 h-12 rounded-full flex items-center justify-center"
                         style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
                       >
@@ -294,7 +294,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                     </p>
 
                     {/* Search input (decorative) */}
-                    <div 
+                    <div
                       className="flex items-center gap-2 px-3 py-2 rounded-full border cursor-pointer hover:border-gray-400 transition-colors"
                       style={{ borderColor: `${customization.primary_color}40` }}
                       onClick={() => setIsOpen(true)}
@@ -311,9 +311,9 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                             key={index}
                             onClick={() => setIsOpen(true)}
                             className="px-3 py-1.5 text-xs rounded-full transition-colors"
-                            style={{ 
+                            style={{
                               backgroundColor: customization.primary_color,
-                              color: customization.secondary_color 
+                              color: customization.secondary_color
                             }}
                           >
                             {btn.label || `Botão ${index + 1}`}
@@ -348,7 +348,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
           <>
             {/* Quick Questions */}
             {!isOpen && customization.quick_questions && customization.quick_questions.length > 0 && (
-              <div 
+              <div
                 className={`absolute ${position === 'left' ? 'left-4' : 'right-4'} bottom-20 max-w-[220px] z-10 space-y-2`}
               >
                 {customization.quick_questions.slice(0, 4).map((question, index) => (
@@ -357,7 +357,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                       key={index}
                       onClick={() => setIsOpen(true)}
                       className="block w-full text-left bg-white dark:bg-gray-800 rounded-2xl px-4 py-2.5 shadow-lg border text-sm hover:shadow-xl transition-all hover:scale-[1.02]"
-                      style={{ 
+                      style={{
                         borderColor: `${customization.primary_color}30`,
                         color: customization.text_color
                       }}
@@ -386,7 +386,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
               </button>
               {/* Notification badge */}
               {!isOpen && customization.quick_questions && customization.quick_questions.length > 0 && (
-                <span 
+                <span
                   className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
                   style={{ backgroundColor: '#ef4444', color: 'white' }}
                 >
@@ -418,9 +418,9 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
               {isOpen ? (
                 <X size={18} />
               ) : customization.button_icon_url ? (
-                <img 
-                  src={customization.button_icon_url} 
-                  alt="Chat" 
+                <img
+                  src={customization.button_icon_url}
+                  alt="Chat"
                   className="w-5 h-5 object-cover rounded"
                   loading="lazy"
                 />
@@ -443,9 +443,9 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
           <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6 animate-pulse"></div>
           <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3 animate-pulse"></div>
         </div>
-        
+
         <div className="absolute top-2 left-2 right-2 pointer-events-none">
-          <div className="text-xs text-gray-400 text-center">Preview do Chat - Template: {customization.widget_template || 'classic'}</div>
+          <div className="text-xs text-gray-400 text-center">Preview do Chat - Template: {customization.widget_template || 'agent_card'}</div>
         </div>
 
         {/* Render template-specific preview */}
@@ -460,7 +460,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
           style={styles.chat}
         >
           {/* Header */}
-          <div 
+          <div
             key={`header-${headerKey}`}
             className="p-4 flex items-center gap-3 relative"
             style={{
@@ -472,11 +472,11 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
           >
             {/* Avatar */}
             <div className="flex-shrink-0">
-              <img 
-                src={customization.avatar_url || ''} 
+              <img
+                src={customization.avatar_url || ''}
                 alt={customization.widget_name || 'Avatar'}
                 className="w-10 h-10 rounded-full object-cover border-2 shadow-sm"
-                style={{ 
+                style={{
                   borderColor: customization.secondary_color + '60',
                   display: customization.avatar_url && customization.avatar_url.trim() !== '' ? 'block' : 'none'
                 }}
@@ -487,11 +487,11 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                   if (fallback) fallback.style.display = 'flex';
                 }}
               />
-              
+
               {/* Fallback avatar */}
-              <div 
+              <div
                 className="w-10 h-10 rounded-full flex items-center justify-center border-2 shadow-sm"
-                style={{ 
+                style={{
                   backgroundColor: customization.secondary_color + '20',
                   borderColor: customization.secondary_color + '60',
                   display: !customization.avatar_url || customization.avatar_url.trim() === '' ? 'flex' : 'none'
@@ -503,9 +503,9 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
 
             {/* Nome e Status */}
             <div className="flex-1 min-w-0 space-y-1">
-              <div 
+              <div
                 className="font-bold text-base truncate leading-tight"
-                style={{ 
+                style={{
                   color: customization.secondary_color,
                   textShadow: '0 1px 2px rgba(0,0,0,0.2)',
                   filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.5))'
@@ -514,9 +514,9 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                 {customization.widget_name || 'Assistente Virtual'}
               </div>
               {customization.show_status_indicator && (
-                <div 
+                <div
                   className="text-xs flex items-center gap-1"
-                  style={{ 
+                  style={{
                     color: customization.secondary_color,
                     opacity: 0.9
                   }}
@@ -535,8 +535,8 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                 {msg.role === 'bot' && (
                   <div className="flex-shrink-0">
                     {customization.avatar_url && customization.avatar_url.trim() !== '' ? (
-                      <img 
-                        src={customization.avatar_url} 
+                      <img
+                        src={customization.avatar_url}
                         alt={customization.widget_name || 'Avatar'}
                         className="w-6 h-6 rounded-full object-cover mt-1"
                         loading="lazy"
@@ -549,9 +549,9 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                         }}
                       />
                     ) : null}
-                    
+
                     {/* Fallback avatar para mensagens */}
-                    <div 
+                    <div
                       className={`w-6 h-6 rounded-full flex items-center justify-center mt-1 ${customization.avatar_url && customization.avatar_url.trim() !== '' ? 'hidden' : 'flex'}`}
                       style={{ backgroundColor: `${customization.primary_color}20` }}
                     >
@@ -559,7 +559,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                     </div>
                   </div>
                 )}
-                <div 
+                <div
                   className="max-w-xs px-3 py-2 rounded-lg text-sm"
                   style={msg.role === 'user' ? styles.userMessage : styles.botMessage}
                 >
@@ -567,13 +567,13 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                 </div>
               </div>
             ))}
-            
+
             {/* Typing Indicator */}
             {isTyping && (
               <div className="flex items-start gap-2">
                 {customization.avatar_url && customization.avatar_url.trim() !== '' ? (
-                  <img 
-                    src={customization.avatar_url} 
+                  <img
+                    src={customization.avatar_url}
                     alt={customization.widget_name || 'Avatar'}
                     className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-1"
                     loading="lazy"
@@ -584,15 +584,15 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                     }}
                   />
                 ) : null}
-                
+
                 {/* Fallback avatar para typing indicator */}
-                <div 
+                <div
                   className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${customization.avatar_url && customization.avatar_url.trim() !== '' ? 'hidden' : 'flex'}`}
                   style={{ backgroundColor: `${customization.primary_color}20` }}
                 >
                   <MessageCircle className="h-3 w-3" style={{ color: customization.primary_color }} />
                 </div>
-                
+
                 <div className="flex space-x-1 items-center px-3 py-2 rounded-lg" style={styles.botMessage}>
                   <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '0ms' }}></div>
                   <div className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: '150ms' }}></div>
@@ -600,31 +600,31 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                 </div>
               </div>
             )}
-            
+
             {/* Elemento para scroll automático */}
             <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}
           <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="text-xs text-center text-muted-foreground mb-2" id="chat-input-help">
-                  💬 Preview Interativo - Digite para testar
-                </div>
+            <div className="text-xs text-center text-muted-foreground mb-2" id="chat-input-help">
+              💬 Preview Interativo - Digite para testar
+            </div>
             <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Digite sua mensagem de teste..."
-                    className="flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
-                    style={{
-                      borderColor: `${customization.primary_color}40`
-                    }}
-                    disabled={isTyping}
-                    aria-label="Campo de mensagem para testar o chat"
-                    aria-describedby="chat-input-help"
-                  />
+              <input
+                type="text"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Digite sua mensagem de teste..."
+                className="flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                style={{
+                  borderColor: `${customization.primary_color}40`
+                }}
+                disabled={isTyping}
+                aria-label="Campo de mensagem para testar o chat"
+                aria-describedby="chat-input-help"
+              />
               <button
                 onClick={handleSendMessage}
                 disabled={!message.trim() || isTyping}
@@ -635,7 +635,7 @@ const OptimizedWidgetPreview: React.FC<WidgetPreviewProps> = ({ customization })
                 <Send size={16} />
               </button>
             </div>
-           </div>
+          </div>
         </div>
       )}
     </div>

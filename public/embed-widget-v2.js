@@ -109,13 +109,23 @@
 
     async loadConfig(forceRefresh = false) {
       try {
-        // Adicionar cache busting para garantir atualizações
-        const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
-        const response = await fetch(`${apiUrl}/widget-config${cacheBuster}`, {
+        // SEMPRE usar cache busting agressivo para garantir atualizações
+        const cacheBuster = `?t=${Date.now()}&r=${Math.random()}`;
+        const configUrl = `${apiUrl}/widget-config${cacheBuster}`;
+
+        console.log('🔄 CLONEFY: Carregando configuração...', {
+          url: configUrl,
+          assistantId: this.assistantId,
+          forceRefresh
+        });
+
+        const response = await fetch(configUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache'
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
           },
           body: JSON.stringify({
             assistantId: this.assistantId
@@ -131,6 +141,10 @@
         console.log('=== CLONEFY: API RESPONSE ===');
         console.log('Success:', data.success);
         console.log('Full Config:', JSON.stringify(data.config, null, 2));
+        console.log('Response Headers:', {
+          'cache-control': response.headers.get('cache-control'),
+          'content-type': response.headers.get('content-type')
+        });
         console.log('============================');
 
         if (data.success) {
@@ -143,15 +157,18 @@
           console.log('Is Classic?:', this.config.widget_template === 'classic');
           console.log('Is Active?:', this.config.is_active);
           console.log('Widget Name:', this.config.widget_name);
+          console.log('Avatar URL:', this.config.avatar_url);
           console.log('Has Template Container?:', !!this.templateContainer);
           console.log('Bubble Message:', this.config.bubble_message);
           console.log('Action Buttons:', this.config.action_buttons);
           console.log('Quick Questions:', this.config.quick_questions);
+          console.log('Show Status:', this.config.show_status_indicator);
+          console.log('Status Text:', this.config.status_text);
           console.log('==================================');
 
           // Se o template mudou, recriar elementos
           if (oldTemplate && oldTemplate !== this.config.widget_template) {
-            console.log('CLONEFY: Template mudou, recriando elementos...', {
+            console.log('🔄 CLONEFY: Template mudou, recriando elementos...', {
               old: oldTemplate,
               new: this.config.widget_template
             });
@@ -164,18 +181,55 @@
 
             // Recriar elementos com novo template
             this.createTemplateElements();
+
+            // Forçar visibilidade após recriar
+            setTimeout(() => {
+              if (this.templateContainer && this.config.widget_template !== 'classic') {
+                this.templateContainer.classList.remove('hidden');
+                console.log('✅ CLONEFY: Template recriado e visível');
+              }
+            }, 100);
           } else if (!oldTemplate && this.config.widget_template && this.config.widget_template !== 'classic') {
             // Se é a primeira vez carregando e o template não é classic, criar elementos
-            console.log('CLONEFY: Primeira inicialização com template personalizado:', this.config.widget_template);
+            console.log('🆕 CLONEFY: Primeira inicialização com template personalizado:', this.config.widget_template);
             // Usar setTimeout para garantir que o DOM esteja pronto
             setTimeout(() => {
               this.createTemplateElements();
+              // Verificar e forçar visibilidade
+              setTimeout(() => {
+                if (this.templateContainer) {
+                  this.templateContainer.classList.remove('hidden');
+                  console.log('✅ CLONEFY: Template inicial criado e visível');
+                }
+              }, 100);
             }, 50);
           } else if (this.config.widget_template && this.config.widget_template !== 'classic' && !this.templateContainer) {
             // Fallback: se o template não é classic mas o container não existe, criar
-            console.log('CLONEFY: Template personalizado detectado mas container não existe, criando...', this.config.widget_template);
+            console.log('⚠️ CLONEFY: Template personalizado detectado mas container não existe, criando...', this.config.widget_template);
             setTimeout(() => {
               this.createTemplateElements();
+              // Verificar e forçar visibilidade
+              setTimeout(() => {
+                if (this.templateContainer) {
+                  this.templateContainer.classList.remove('hidden');
+                  console.log('✅ CLONEFY: Template fallback criado e visível');
+                }
+              }, 100);
+            }, 50);
+          } else if (this.config.widget_template && this.config.widget_template !== 'classic' && this.templateContainer) {
+            // Se já existe template container, apenas atualizar conteúdo
+            console.log('🔄 CLONEFY: Atualizando template existente:', this.config.widget_template);
+            // Remover e recriar para garantir atualização
+            this.templateContainer.remove();
+            this.templateContainer = null;
+            setTimeout(() => {
+              this.createTemplateElements();
+              setTimeout(() => {
+                if (this.templateContainer) {
+                  this.templateContainer.classList.remove('hidden');
+                  console.log('✅ CLONEFY: Template atualizado e visível');
+                }
+              }, 100);
             }, 50);
           }
         } else {
@@ -645,7 +699,7 @@
         return;
       }
 
-      const template = this.config.widget_template || 'classic';
+      const template = this.config.widget_template || 'agent_card';
 
       console.log('CLONEFY: Criando elementos do template:', {
         template: template,

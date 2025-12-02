@@ -159,7 +159,7 @@ const WidgetCustomization = () => {
         button_position: (customization.button_position as 'left' | 'right') || 'right',
         is_active: customization.is_active !== false,
         // New template fields
-        widget_template: customization.widget_template || 'classic' as WidgetTemplate,
+        widget_template: customization.widget_template || 'agent_card' as WidgetTemplate,
         bubble_message: customization.bubble_message || 'Oi! Como posso te ajudar?',
         quick_questions: customization.quick_questions || [],
         action_buttons: customization.action_buttons || [],
@@ -374,14 +374,14 @@ const WidgetCustomization = () => {
                                 key={template.id}
                                 onClick={() => updateFormData('widget_template', template.id)}
                                 className={`cursor-pointer rounded-lg border-2 p-3 transition-all hover:shadow-md ${formData.widget_template === template.id
-                                    ? 'border-primary bg-primary/5'
-                                    : 'border-border hover:border-primary/50'
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-primary/50'
                                   }`}
                               >
                                 <div className="flex items-center gap-3">
                                   <div className={`p-2 rounded-full ${formData.widget_template === template.id
-                                      ? 'bg-primary text-primary-foreground'
-                                      : 'bg-muted text-muted-foreground'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted text-muted-foreground'
                                     }`}>
                                     {template.icon}
                                   </div>

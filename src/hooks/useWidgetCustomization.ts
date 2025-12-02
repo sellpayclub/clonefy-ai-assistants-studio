@@ -44,13 +44,13 @@ export const useWidgetCustomization = (assistantId: string) => {
         .maybeSingle();
 
       if (error) throw error;
-      
+
       if (data) {
         setCustomization({
           ...data,
           button_position: (data.button_position as 'left' | 'right') || 'right',
           // Parse new template fields
-          widget_template: (data.widget_template as WidgetTemplate) || 'classic',
+          widget_template: (data.widget_template as WidgetTemplate) || 'agent_card',
           bubble_message: data.bubble_message || 'Oi! Como posso te ajudar?',
           quick_questions: Array.isArray(data.quick_questions) ? (data.quick_questions as unknown as string[]) : [],
           action_buttons: Array.isArray(data.action_buttons) ? (data.action_buttons as unknown as ActionButton[]) : [],
@@ -70,7 +70,7 @@ export const useWidgetCustomization = (assistantId: string) => {
 
     try {
       setLoading(true);
-      
+
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user?.id) throw new Error('Usuário não autenticado');
 
@@ -91,13 +91,13 @@ export const useWidgetCustomization = (assistantId: string) => {
         .single();
 
       if (error) throw error;
-      
+
       if (result) {
         setCustomization({
           ...result,
           button_position: (result.button_position as 'left' | 'right') || 'right',
           // Parse new template fields
-          widget_template: (result.widget_template as WidgetTemplate) || 'classic',
+          widget_template: (result.widget_template as WidgetTemplate) || 'agent_card',
           bubble_message: result.bubble_message || 'Oi! Como posso te ajudar?',
           quick_questions: Array.isArray(result.quick_questions) ? (result.quick_questions as unknown as string[]) : [],
           action_buttons: Array.isArray(result.action_buttons) ? (result.action_buttons as unknown as ActionButton[]) : [],
