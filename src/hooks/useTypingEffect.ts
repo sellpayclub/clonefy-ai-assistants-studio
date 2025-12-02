@@ -9,7 +9,7 @@ export const useTypingEffect = (
   text: string, 
   options: UseTypingEffectOptions = {}
 ) => {
-  const { speed = 50, startDelay = 100 } = options;
+  const { speed = 8, startDelay = 50 } = options; // Muito mais rápido!
   const [displayedText, setDisplayedText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>();
@@ -23,15 +23,19 @@ export const useTypingEffect = (
 
     if (!text) return;
 
+    // Para mensagens muito longas, mostrar mais caracteres por vez
+    const charsPerTick = text.length > 200 ? 3 : text.length > 100 ? 2 : 1;
+
     const typeText = () => {
       if (indexRef.current < text.length) {
-        setDisplayedText(text.slice(0, indexRef.current + 1));
-        indexRef.current++;
+        // Avançar múltiplos caracteres para mensagens longas
+        indexRef.current = Math.min(indexRef.current + charsPerTick, text.length);
+        setDisplayedText(text.slice(0, indexRef.current));
         
-        // Velocidade variável - mais lento em pontuação
+        // Pequena pausa em pontuação de fim de frase
         const currentChar = text[indexRef.current - 1];
-        const isSlowChar = ['.', '!', '?', ',', ';', ':'].includes(currentChar);
-        const delay = isSlowChar ? speed * 3 : speed;
+        const isPause = ['.', '!', '?'].includes(currentChar);
+        const delay = isPause ? speed * 2 : speed;
         
         timeoutRef.current = setTimeout(typeText, delay);
       } else {
@@ -39,7 +43,7 @@ export const useTypingEffect = (
       }
     };
 
-    // Delay inicial antes de começar a digitar
+    // Delay inicial mínimo
     timeoutRef.current = setTimeout(typeText, startDelay);
 
     return () => {

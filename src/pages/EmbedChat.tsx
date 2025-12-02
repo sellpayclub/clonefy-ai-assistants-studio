@@ -465,7 +465,7 @@ const EmbedChat = () => {
                   ) : (
                     <TypingMessage 
                       content={message.content}
-                      speed={30}
+                      speed={5}
                       className="text-sm"
                     />
                   )}

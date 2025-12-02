@@ -617,34 +617,64 @@
         @media (max-width: 768px) {
           .clonefy-widget-iframe {
             position: fixed !important;
-            top: 0 !important;
+            top: auto !important;
+            bottom: 0 !important;
             left: 0 !important;
             right: 0 !important;
-            bottom: 0 !important;
-            width: 100vw !important;
-            width: 100dvw !important;
-            height: 100vh !important;
-            height: 100dvh !important;
-            height: -webkit-fill-available !important;
-            max-height: 100vh !important;
-            max-height: 100dvh !important;
-            max-height: -webkit-fill-available !important;
-            border-radius: 0 !important;
+            width: 100% !important;
+            height: 85vh !important;
+            height: 85dvh !important;
+            max-height: calc(100vh - 60px) !important;
+            max-height: calc(100dvh - 60px) !important;
+            border-radius: 20px 20px 0 0 !important;
             z-index: 2147483647 !important;
-            transform: translateY(100%) translate3d(0,0,0) !important;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease !important;
+            transform: translateY(100%) !important;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
             overflow: hidden !important;
             overscroll-behavior: contain !important;
             -webkit-overflow-scrolling: touch !important;
-            touch-action: pan-y !important;
-            padding-top: env(safe-area-inset-top) !important;
-            padding-bottom: env(safe-area-inset-bottom) !important;
-            padding-left: env(safe-area-inset-left) !important;
-            padding-right: env(safe-area-inset-right) !important;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15) !important;
           }
 
           .clonefy-widget-iframe.open {
-            transform: translateY(0) translate3d(0,0,0) !important;
+            transform: translateY(0) !important;
+          }
+
+          /* Mobile close bar */
+          .clonefy-mobile-header {
+            display: flex !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            height: 44px !important;
+            background: linear-gradient(135deg, ${this.config.primary_color}, ${this.config.primary_color}dd) !important;
+            border-radius: 20px 20px 0 0 !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 0 16px !important;
+            z-index: 2147483648 !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+          }
+
+          .clonefy-mobile-header-title {
+            color: white !important;
+            font-weight: 600 !important;
+            font-size: 15px !important;
+          }
+
+          .clonefy-mobile-header-close {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 50% !important;
+            background: rgba(255,255,255,0.2) !important;
+            border: none !important;
+            color: white !important;
+            font-size: 18px !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
           }
 
           .clonefy-widget-button {
@@ -673,10 +703,35 @@
           .clonefy-quick-questions {
             max-width: calc(100vw - 90px) !important;
           }
+
+          /* Overlay escuro atrás do chat */
+          .clonefy-overlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: rgba(0,0,0,0.5) !important;
+            z-index: 2147483646 !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transition: opacity 0.3s ease, visibility 0.3s ease !important;
+          }
+
+          .clonefy-overlay.visible {
+            opacity: 1 !important;
+            visibility: visible !important;
+          }
         }
 
         /* Small mobile devices */
         @media (max-width: 380px) {
+          .clonefy-widget-iframe {
+            height: 90vh !important;
+            height: 90dvh !important;
+            max-height: calc(100vh - 40px) !important;
+          }
+
           .clonefy-widget-button {
             bottom: 12px !important;
             ${position}: 12px !important;
@@ -693,6 +748,16 @@
           .clonefy-agent-card {
             width: calc(100vw - 76px) !important;
             max-width: 260px !important;
+          }
+        }
+
+        /* Desktop - esconder elementos mobile */
+        @media (min-width: 769px) {
+          .clonefy-mobile-header {
+            display: none !important;
+          }
+          .clonefy-overlay {
+            display: none !important;
           }
         }
       `;
@@ -1028,6 +1093,12 @@
     },
 
     createIframe() {
+      // Criar overlay para mobile
+      this.overlay = document.createElement('div');
+      this.overlay.className = 'clonefy-overlay';
+      this.overlay.addEventListener('click', () => this.close());
+      document.body.appendChild(this.overlay);
+
       this.iframe = document.createElement('iframe');
       this.iframe.className = 'clonefy-widget-iframe';
       // Adicionar cache busting para garantir atualizações automáticas
@@ -1038,6 +1109,10 @@
       this.iframe.loading = 'lazy';
 
       document.body.appendChild(this.iframe);
+    },
+
+    isMobile() {
+      return window.innerWidth <= 768;
     },
 
     attachEvents() {
@@ -1120,6 +1195,13 @@
         this.createTemplateElements();
       }
 
+      // Mostrar overlay no mobile
+      if (this.isMobile() && this.overlay) {
+        this.overlay.classList.add('visible');
+        // Prevenir scroll do body no mobile
+        document.body.style.overflow = 'hidden';
+      }
+
       // Atualizar iframe src com cache busting para forçar recarregamento com nova config
       const cacheBuster = `?v=${Date.now()}`;
       this.iframe.src = `${baseUrl}/embed-chat/${this.assistantId}${cacheBuster}`;
@@ -1160,6 +1242,13 @@
 
       this.isOpen = false;
       this.iframe.classList.remove('open');
+
+      // Esconder overlay no mobile
+      if (this.overlay) {
+        this.overlay.classList.remove('visible');
+      }
+      // Restaurar scroll do body
+      document.body.style.overflow = '';
       this.updateButtonIcon(false);
       this.button.setAttribute('aria-label', 'Abrir chat');
 

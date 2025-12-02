@@ -55,13 +55,13 @@ const renderTextWithLinks = (text: string) => {
 const TypingMessage = memo(({ 
   content, 
   onTypingComplete, 
-  speed = 30,
+  speed = 5, // Muito mais rápido!
   className = "",
   children 
 }: TypingMessageProps) => {
   const { displayedText, isTypingComplete } = useTypingEffect(content, { 
     speed,
-    startDelay: 200 
+    startDelay: 30 // Início quase instantâneo
   });
 
   // Chamar callback quando terminar de digitar
