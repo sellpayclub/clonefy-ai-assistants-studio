@@ -10,18 +10,24 @@
     return;
   }
 
-  // Configuração base
-  // Sempre usar o domínio da página atual para buscar configuração e iframe
-  // Isso permite que o script seja carregado de qualquer domínio (CDN, etc)
-  const baseUrl = window.location.origin;
-  const apiUrl = `${baseUrl}/supabase/functions/v1`;
+  // Configuração base - URLs fixas do Supabase
+  // O Supabase URL é fixo e não depende do domínio onde o widget está embedado
+  const SUPABASE_PROJECT_ID = 'ekfkrwueqwpqakpsrsjt';
+  const apiUrl = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1`;
+  
+  // Base URL para o iframe (onde o app está hospedado)
+  // Detectar se estamos em desenvolvimento ou produção
+  const scriptSrc = currentScript ? currentScript.src : '';
+  const isClonefyApp = scriptSrc.includes('clonefy.app');
+  const baseUrl = isClonefyApp ? 'https://clonefy.app' : window.location.origin;
 
   console.log('CLONEFY: Inicializando widget', {
     assistantId: assistantId,
     baseUrl: baseUrl,
     apiUrl: apiUrl,
     scriptOrigin: currentScript ? new URL(currentScript.src).origin : 'unknown',
-    pageOrigin: window.location.origin
+    pageOrigin: window.location.origin,
+    isClonefyApp: isClonefyApp
   });
 
   // Widget object
