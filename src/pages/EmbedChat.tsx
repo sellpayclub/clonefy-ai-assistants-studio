@@ -1,10 +1,48 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Bot, User, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import TypingMessage from "@/components/TypingMessage";
+
+// Hook para calcular altura dinâmica da viewport (funciona com teclado virtual)
+const useViewportHeight = () => {
+  const [viewportHeight, setViewportHeight] = useState<string>('100vh');
+
+  useEffect(() => {
+    const updateHeight = () => {
+      // Usar visualViewport se disponível (melhor para mobile)
+      if (window.visualViewport) {
+        setViewportHeight(`${window.visualViewport.height}px`);
+      } else {
+        setViewportHeight(`${window.innerHeight}px`);
+      }
+    };
+
+    // Atualizar inicialmente
+    updateHeight();
+
+    // Escutar mudanças na viewport (teclado virtual)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateHeight);
+      window.visualViewport.addEventListener('scroll', updateHeight);
+    }
+    window.addEventListener('resize', updateHeight);
+    window.addEventListener('orientationchange', updateHeight);
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', updateHeight);
+        window.visualViewport.removeEventListener('scroll', updateHeight);
+      }
+      window.removeEventListener('resize', updateHeight);
+      window.removeEventListener('orientationchange', updateHeight);
+    };
+  }, []);
+
+  return viewportHeight;
+};
 
 interface Message {
   id: string;
@@ -41,10 +79,15 @@ const EmbedChat = () => {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const viewportHeight = useViewportHeight();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  };
+  const scrollToBottom = useCallback(() => {
+    // Usar requestAnimationFrame para melhor performance
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    });
+  }, []);
 
   useEffect(() => {
     // Scroll imediato para melhor UX
@@ -278,16 +321,35 @@ const EmbedChat = () => {
 
   return (
     <div 
-      className="min-h-screen flex items-center justify-center p-0 sm:p-4"
-      style={{ backgroundColor: '#f5f5f5' }}
+      className="flex items-center justify-center p-0 sm:p-4"
+      style={{ 
+        backgroundColor: '#f5f5f5',
+        height: viewportHeight,
+        minHeight: viewportHeight,
+        maxHeight: viewportHeight,
+        overflow: 'hidden',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        // Safe areas para iPhone
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
     >
       <div 
-        className="flex flex-col w-full h-screen sm:h-auto sm:min-h-[500px] sm:max-h-[90vh] sm:rounded-lg shadow-lg
-                        sm:max-w-[450px] 
+        className="flex flex-col w-full sm:rounded-lg shadow-lg
+                        sm:max-w-[450px] sm:min-h-[500px]
                         md:max-w-[500px] md:max-h-[700px]"
         style={{ 
           backgroundColor: '#ffffff',
-          border: `1px solid ${primaryColor}30`
+          border: `1px solid ${primaryColor}30`,
+          height: '100%',
+          maxHeight: '100%',
+          overflow: 'hidden',
         }}
       >
         {/* Header */}
@@ -344,11 +406,15 @@ const EmbedChat = () => {
 
         {/* Messages */}
         <div 
-          className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth min-h-0"
+          className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth"
           style={{ 
             backgroundColor: '#ffffff',
             overscrollBehavior: 'contain',
-            WebkitOverflowScrolling: 'touch'
+            WebkitOverflowScrolling: 'touch',
+            minHeight: 0,
+            flex: '1 1 auto',
+            touchAction: 'pan-y',
+            transform: 'translate3d(0,0,0)', // GPU acceleration
           }}
         >
           {messages.map((message) => (
@@ -457,24 +523,36 @@ const EmbedChat = () => {
 
         {/* Input */}
         <div 
-          className="p-3 sm:p-4 border-t flex-shrink-0"
+          className="p-3 sm:p-4 border-t"
           style={{ 
             backgroundColor: '#ffffff',
-            borderTop: `1px solid ${primaryColor}20`
+            borderTop: `1px solid ${primaryColor}20`,
+            flexShrink: 0,
+            // Safe area para iPhone (home indicator)
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
           }}
         >
           <div className="flex gap-2">
             <Input
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
+              onFocus={() => {
+                // Scroll para baixo quando o input recebe foco (mobile)
+                setTimeout(scrollToBottom, 300);
+              }}
               placeholder="Digite sua mensagem..."
               disabled={isLoading}
               className="flex-1 text-sm resize-none border-gray-300"
               style={{
                 backgroundColor: '#ffffff',
-                color: textColor
+                color: textColor,
+                fontSize: '16px', // Previne zoom no iOS
               }}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
             />
             <Button
               onClick={sendMessage}

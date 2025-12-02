@@ -122,11 +122,9 @@
         const response = await fetch(configUrl, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
+            'Content-Type': 'application/json'
           },
+          cache: 'no-store', // Usar opção fetch para cache em vez de headers
           body: JSON.stringify({
             assistantId: this.assistantId
           })
@@ -149,6 +147,7 @@
 
         if (data.success) {
           const oldTemplate = this.config?.widget_template;
+          const oldConfig = this.config ? { ...this.config } : null;
           this.config = data.config;
 
           console.log('=== CLONEFY: TEMPLATE DETECTION ===');
@@ -164,7 +163,21 @@
           console.log('Quick Questions:', this.config.quick_questions);
           console.log('Show Status:', this.config.show_status_indicator);
           console.log('Status Text:', this.config.status_text);
+          console.log('Primary Color:', this.config.primary_color);
+          console.log('Secondary Color:', this.config.secondary_color);
+          console.log('Text Color:', this.config.text_color);
           console.log('==================================');
+
+          // Se a configuração mudou (cores, textos), atualizar estilos
+          if (oldConfig && (
+            oldConfig.primary_color !== this.config.primary_color ||
+            oldConfig.secondary_color !== this.config.secondary_color ||
+            oldConfig.text_color !== this.config.text_color ||
+            oldConfig.button_position !== this.config.button_position
+          )) {
+            console.log('🎨 CLONEFY: Cores/posição mudaram, atualizando estilos...');
+            this.updateStyles();
+          }
 
           // Se o template mudou, recriar elementos
           if (oldTemplate && oldTemplate !== this.config.widget_template) {
@@ -587,14 +600,17 @@
           z-index: 2147483646 !important;
           background: white !important;
           opacity: 0 !important;
-          transform: scale(0.8) translateY(20px) !important;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          transform: scale(0.8) translateY(20px) translate3d(0,0,0) !important;
+          transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
           pointer-events: none !important;
+          will-change: transform, opacity !important;
+          -webkit-backface-visibility: hidden !important;
+          backface-visibility: hidden !important;
         }
         
         .clonefy-widget-iframe.open {
           opacity: 1 !important;
-          transform: scale(1) translateY(0) !important;
+          transform: scale(1) translateY(0) translate3d(0,0,0) !important;
           pointer-events: all !important;
         }
         
@@ -605,29 +621,104 @@
             left: 0 !important;
             right: 0 !important;
             bottom: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
+            width: 100vw !important;
+            width: 100dvw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            height: -webkit-fill-available !important;
+            max-height: 100vh !important;
+            max-height: 100dvh !important;
+            max-height: -webkit-fill-available !important;
             border-radius: 0 !important;
             z-index: 2147483647 !important;
+            transform: translateY(100%) translate3d(0,0,0) !important;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease !important;
+            overflow: hidden !important;
+            overscroll-behavior: contain !important;
+            -webkit-overflow-scrolling: touch !important;
+            touch-action: pan-y !important;
+            padding-top: env(safe-area-inset-top) !important;
+            padding-bottom: env(safe-area-inset-bottom) !important;
+            padding-left: env(safe-area-inset-left) !important;
+            padding-right: env(safe-area-inset-right) !important;
+          }
+
+          .clonefy-widget-iframe.open {
+            transform: translateY(0) translate3d(0,0,0) !important;
+          }
+
+          .clonefy-widget-button {
+            bottom: 16px !important;
+            ${position}: 16px !important;
+            width: 56px !important;
+            height: 56px !important;
           }
 
           .clonefy-template-container {
             ${position}: 16px !important;
-            bottom: 90px !important;
-            max-width: calc(100vw - 100px) !important;
+            bottom: 80px !important;
+            max-width: calc(100vw - 90px) !important;
+            transform: translate3d(0,0,0) !important;
           }
 
           .clonefy-agent-card {
-            width: calc(100vw - 100px) !important;
-            max-width: 300px !important;
+            width: calc(100vw - 90px) !important;
+            max-width: 280px !important;
+          }
+
+          .clonefy-bubble {
+            max-width: calc(100vw - 90px) !important;
+          }
+
+          .clonefy-quick-questions {
+            max-width: calc(100vw - 90px) !important;
+          }
+        }
+
+        /* Small mobile devices */
+        @media (max-width: 380px) {
+          .clonefy-widget-button {
+            bottom: 12px !important;
+            ${position}: 12px !important;
+            width: 52px !important;
+            height: 52px !important;
+          }
+
+          .clonefy-template-container {
+            ${position}: 12px !important;
+            bottom: 72px !important;
+            max-width: calc(100vw - 76px) !important;
+          }
+
+          .clonefy-agent-card {
+            width: calc(100vw - 76px) !important;
+            max-width: 260px !important;
           }
         }
       `;
+
+      // Remove old stylesheet if exists
+      const existingStyle = document.getElementById('clonefy-widget-styles');
+      if (existingStyle) {
+        existingStyle.remove();
+      }
 
       const styleSheet = document.createElement('style');
       styleSheet.id = 'clonefy-widget-styles';
       styleSheet.textContent = styles;
       document.head.appendChild(styleSheet);
+    },
+
+    // Update styles when config changes (for customization)
+    updateStyles() {
+      console.log('CLONEFY: Atualizando estilos com nova configuração');
+      this.createStyles();
+      
+      // Update button color inline
+      if (this.button) {
+        this.button.style.background = this.config.primary_color;
+        this.button.style.color = this.config.secondary_color;
+      }
     },
 
     createElements() {
@@ -647,13 +738,22 @@
     },
 
     createButton() {
+      const primaryColor = this.config.primary_color || '#0066cc';
+      const secondaryColor = this.config.secondary_color || '#f8f9fa';
+      const position = this.config.button_position || 'right';
+
       const buttonContainer = document.createElement('div');
-      buttonContainer.style.cssText = `position: fixed !important; bottom: 24px !important; ${this.config.button_position}: 24px !important; z-index: 2147483645 !important;`;
+      buttonContainer.id = 'clonefy-button-container';
+      buttonContainer.style.cssText = `position: fixed !important; bottom: 24px !important; ${position}: 24px !important; z-index: 2147483645 !important;`;
 
       this.button = document.createElement('button');
       this.button.className = 'clonefy-widget-button';
       this.button.setAttribute('aria-label', 'Abrir chat');
       this.button.title = `Chat com ${this.config.widget_name}`;
+      
+      // Apply inline styles for customization
+      this.button.style.background = primaryColor;
+      this.button.style.color = secondaryColor;
 
       // Definir conteúdo do botão
       this.updateButtonIcon(false);
@@ -766,11 +866,13 @@
     },
 
     createBubbleTemplate() {
+      const textColor = this.config.text_color || '#333333';
+
       const bubble = document.createElement('div');
       bubble.className = 'clonefy-bubble';
       bubble.innerHTML = `
         <button class="clonefy-bubble-close" aria-label="Fechar">✕</button>
-        <p class="clonefy-bubble-text">${this.config.bubble_message || 'Oi! Como posso te ajudar?'}</p>
+        <p class="clonefy-bubble-text" style="color: ${textColor};">${this.config.bubble_message || 'Oi! Como posso te ajudar?'}</p>
       `;
 
       // Close button handler
@@ -788,12 +890,19 @@
     },
 
     createAgentCardTemplate() {
+      const primaryColor = this.config.primary_color || '#0066cc';
+      const secondaryColor = this.config.secondary_color || '#f8f9fa';
+      const textColor = this.config.text_color || '#333333';
+
       console.log('CLONEFY: createAgentCardTemplate chamado', {
         config: this.config,
         widget_name: this.config.widget_name,
         avatar_url: this.config.avatar_url,
         show_status_indicator: this.config.show_status_indicator,
-        action_buttons: this.config.action_buttons
+        action_buttons: this.config.action_buttons,
+        primaryColor,
+        secondaryColor,
+        textColor
       });
 
       const card = document.createElement('div');
@@ -801,10 +910,10 @@
 
       const avatarHtml = this.config.avatar_url
         ? `<img src="${this.config.avatar_url}" alt="${this.config.widget_name}" class="clonefy-agent-card-avatar">`
-        : `<div class="clonefy-agent-card-avatar-placeholder">💬</div>`;
+        : `<div class="clonefy-agent-card-avatar-placeholder" style="color: ${secondaryColor};">💬</div>`;
 
       const statusHtml = this.config.show_status_indicator
-        ? `<p class="clonefy-agent-card-status">
+        ? `<p class="clonefy-agent-card-status" style="color: ${secondaryColor};">
             <span class="clonefy-status-dot"></span>
             ${this.config.status_text || 'Online agora'}
           </p>`
@@ -815,7 +924,7 @@
         buttonsHtml = `
           <div class="clonefy-agent-card-buttons">
             ${this.config.action_buttons.slice(0, 3).map((btn, index) =>
-          `<button class="clonefy-agent-card-btn" data-message="${btn.message || ''}" data-index="${index}">
+          `<button class="clonefy-agent-card-btn" data-message="${btn.message || ''}" data-index="${index}" style="background: ${primaryColor}; color: ${secondaryColor};">
                 ${btn.label || 'Botão'}
               </button>`
         ).join('')}
@@ -825,16 +934,16 @@
 
       card.innerHTML = `
         <button class="clonefy-agent-card-close" aria-label="Fechar">✕</button>
-        <div class="clonefy-agent-card-header">
+        <div class="clonefy-agent-card-header" style="background: linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd);">
           ${avatarHtml}
           <div class="clonefy-agent-card-info">
-            <p class="clonefy-agent-card-name">${this.config.widget_name || 'Assistente Virtual'}</p>
+            <p class="clonefy-agent-card-name" style="color: ${secondaryColor};">${this.config.widget_name || 'Assistente Virtual'}</p>
             ${statusHtml}
           </div>
         </div>
         <div class="clonefy-agent-card-body">
-          <p class="clonefy-agent-card-message">${this.config.welcome_message || 'Como posso ajudar você hoje?'}</p>
-          <div class="clonefy-agent-card-search">
+          <p class="clonefy-agent-card-message" style="color: ${textColor};">${this.config.welcome_message || 'Como posso ajudar você hoje?'}</p>
+          <div class="clonefy-agent-card-search" style="border-color: ${primaryColor}40;">
             <span class="clonefy-agent-card-search-icon">🔍</span>
             <span class="clonefy-agent-card-search-text">Pergunte algo...</span>
           </div>
@@ -885,6 +994,9 @@
     },
 
     createQuickQuestionsTemplate() {
+      const textColor = this.config.text_color || '#333333';
+      const primaryColor = this.config.primary_color || '#0066cc';
+
       const questionsContainer = document.createElement('div');
       questionsContainer.className = 'clonefy-quick-questions';
 
@@ -894,6 +1006,15 @@
         questionBtn.className = 'clonefy-quick-question';
         questionBtn.textContent = question;
         questionBtn.dataset.message = question;
+        questionBtn.style.color = textColor;
+
+        // Hover effect with primary color
+        questionBtn.addEventListener('mouseenter', () => {
+          questionBtn.style.borderColor = `${primaryColor}40`;
+        });
+        questionBtn.addEventListener('mouseleave', () => {
+          questionBtn.style.borderColor = 'rgba(0,0,0,0.08)';
+        });
 
         questionBtn.addEventListener('click', () => {
           this.pendingMessage = question;
