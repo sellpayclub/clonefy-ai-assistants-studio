@@ -18,8 +18,8 @@
   // Base URL para o iframe (onde o app está hospedado)
   // Detectar se estamos em desenvolvimento ou produção
   const scriptSrc = currentScript ? currentScript.src : '';
-  const isClonefyApp = scriptSrc.includes('clonefy.app');
-  const baseUrl = isClonefyApp ? 'https://clonefy.app' : window.location.origin;
+  const isClonefyApp = scriptSrc.includes('clonefyia.com');
+  const baseUrl = isClonefyApp ? 'https://clonefyia.com' : window.location.origin;
 
   console.log('CLONEFY: Inicializando widget', {
     assistantId: assistantId,

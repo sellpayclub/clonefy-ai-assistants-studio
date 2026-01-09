@@ -19,7 +19,7 @@
 ### **7 Commits no GitHub:**
 
 1. ✅ `000d754` - Correção do sistema de estilos (validação + logs)
-2. ✅ `44842f2` - URL atualizada para clonefy.app
+2. ✅ `44842f2` - URL atualizada para clonefyia.com
 3. ✅ `6d888a7` - Script SQL de configuração
 4. ✅ `58ccc9c` - Documentação completa
 5. ✅ `0604ef0` - Padrão alterado para agent_card (API + Embed)
@@ -50,7 +50,7 @@
   - Padrão alterado em 2 lugares
 
 - ✅ `src/components/SupportChatWidget.tsx`
-  - URL atualizada para clonefy.app
+  - URL atualizada para clonefyia.com
 
 ### **Banco de Dados:**
 - ✅ `supabase/migrations/20251129000001_widget_templates.sql`
@@ -150,7 +150,7 @@
 <script>
   (function() {
     var script = document.createElement('script');
-    script.src = 'https://clonefy.app/embed-widget-v2.js';
+    script.src = 'https://clonefyia.com/embed-widget-v2.js';
     script.dataset.assistantId = 'SEU_ASSISTANT_ID_AQUI';
     script.async = true;
     document.head.appendChild(script);

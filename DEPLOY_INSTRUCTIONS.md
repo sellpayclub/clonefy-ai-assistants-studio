@@ -5,11 +5,11 @@
 1. ✅ **Código corrigido e enviado para o GitHub** (3 commits)
    - Correção da validação de templates na API
    - Logs detalhados para debug
-   - Atualização do URL do widget para clonefy.app
+   - Atualização do URL do widget para clonefyia.com
    - Script de configuração do widget
 
 2. ✅ **Widget atualizado** no código
-   - `SupportChatWidget.tsx` agora usa `https://clonefy.app/embed-widget-v2.js`
+   - `SupportChatWidget.tsx` agora usa `https://clonefyia.com/embed-widget-v2.js`
 
 ## 📋 Próximos Passos (IMPORTANTE!)
 
@@ -77,7 +77,7 @@ Verifique se as colunas `widget_template`, `action_buttons`, etc. existem.
 
 ```bash
 # Testar a API diretamente
-curl -X POST https://clonefy.app/supabase/functions/v1/widget-config \
+curl -X POST https://clonefyia.com/supabase/functions/v1/widget-config \
   -H "Content-Type: application/json" \
   -d '{"assistantId": "7a218984-6ada-4581-b1b6-2119b4771260"}' | jq
 ```
@@ -99,7 +99,7 @@ curl -X POST https://clonefy.app/supabase/functions/v1/widget-config \
 
 ### Teste 2: No Site Clonefy.app
 
-1. Acesse https://clonefy.app
+1. Acesse https://clonefyia.com
 2. Abra o Console do navegador (F12)
 3. Procure por logs:
    ```
@@ -169,7 +169,7 @@ Verifique os logs:
 
 ## 🎉 Resultado Esperado
 
-Após seguir todos os passos acima, ao acessar https://clonefy.app você verá:
+Após seguir todos os passos acima, ao acessar https://clonefyia.com você verá:
 
 ✅ **Card do Agente** no canto da tela  
 ✅ Avatar/ícone do assistente  

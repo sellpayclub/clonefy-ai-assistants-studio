@@ -113,7 +113,7 @@ Use este código (já com cache busting):
   (function() {
     var script = document.createElement('script');
     // Adicionar timestamp para forçar atualização
-    script.src = 'https://clonefy.app/embed-widget-v2.js?v=' + Date.now();
+    script.src = 'https://clonefyia.com/embed-widget-v2.js?v=' + Date.now();
     script.dataset.assistantId = '44278fa6-9bd8-4958-9c6e-c3e8f478dfac';
     script.async = true;
     document.head.appendChild(script);

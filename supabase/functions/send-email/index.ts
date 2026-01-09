@@ -197,7 +197,7 @@ const serve_handler = async (req: Request): Promise<Response> => {
 
     // Send email using Resend
     const { error } = await resend.emails.send({
-      from: 'CLONEFY <noreply@clonefy.ai>',
+      from: 'CLONEFY <noreply@clonefyia.com>',
       to: [user.email],
       subject: subject,
       html: htmlContent,

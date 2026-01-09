@@ -23,7 +23,7 @@ Se você usa **Vercel**, **Netlify** ou similar com deploy automático do GitHub
 1. **Aguarde 2-5 minutos** - O deploy deve acontecer automaticamente
 2. Verifique o painel da sua plataforma de hosting
 3. Quando o deploy terminar, **limpe o cache do navegador**
-4. Acesse https://clonefy.app e teste
+4. Acesse https://clonefyia.com e teste
 
 ### Opção 2: Deploy Manual
 
@@ -105,7 +105,7 @@ supabase functions deploy widget-config
 
 ### 2. Verificar no Site
 
-1. Acesse: https://clonefy.app
+1. Acesse: https://clonefyia.com
 2. Abra o Console do navegador (F12)
 3. Procure pelos logs:
 
@@ -190,7 +190,7 @@ Widget Template: agent_card  ← DEVE SER agent_card
 
 ## 🎉 RESULTADO ESPERADO
 
-Após seguir todos os passos, ao acessar **https://clonefy.app** você verá:
+Após seguir todos os passos, ao acessar **https://clonefyia.com** você verá:
 
 ✅ **Card do Agente** no canto inferior direito  
 ✅ Avatar/ícone do assistente (se configurado)  

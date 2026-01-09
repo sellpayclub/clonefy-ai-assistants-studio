@@ -900,7 +900,7 @@ const Assistants = () => {
                           // Usar domínio customizado CLONEFY
                           const baseUrl = window.location.hostname.includes('lovable') 
                             ? window.location.origin 
-                            : 'https://clonefy.app'; // Domínio customizado CLONEFY
+                            : 'https://clonefyia.com'; // Domínio customizado CLONEFY
                           
                           const code = `<!-- Chat Flutuante CLONEFY -->
 <!-- IMPORTANTE: Este código carrega o chat dinamicamente. 
@@ -924,7 +924,7 @@ const Assistants = () => {
                         {(() => {
                           const exampleBaseUrl = window.location.hostname.includes('lovable') 
                             ? window.location.origin 
-                            : 'https://clonefy.app';
+                            : 'https://clonefyia.com';
                           return `<!-- Chat Flutuante CLONEFY -->
 <!-- IMPORTANTE: Este código carrega o chat dinamicamente. 
      As atualizações do agente (instruções, customização, templates, etc.) aparecem automaticamente
