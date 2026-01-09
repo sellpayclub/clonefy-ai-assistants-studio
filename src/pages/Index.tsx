@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Bot, Clock, Globe, Smartphone, MessageSquare, Zap, ArrowRight, Check } from "lucide-react";
+import { Bot, Clock, Globe, Smartphone, MessageSquare, Zap, ArrowRight, Check, Mic, Volume2, Image, Calendar, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -132,6 +132,81 @@ const Index = () => {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </a>
+        </div>
+      </section>
+
+      {/* AI Capabilities Section */}
+      <section className="py-10 sm:py-14 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            {/* Title */}
+            <div className="text-center mb-8">
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium mb-4">
+                <Sparkles className="h-4 w-4" />
+                Superpoderes da IA
+              </span>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-3">
+                Tudo que um humano faz, <span className="text-emerald-600">ela faz melhor!</span>
+              </h2>
+              <p className="text-slate-600 text-lg max-w-2xl mx-auto">
+                Uma IA completa que entende, vê, ouve e responde como um funcionário real
+              </p>
+            </div>
+
+            {/* Capabilities Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              {/* Escuta Áudio */}
+              <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-2xl p-4 sm:p-6 text-center">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-400 to-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
+                  <Mic className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                </div>
+                <h3 className="text-slate-900 font-bold text-sm sm:text-lg mb-1 sm:mb-2">Escuta Áudios</h3>
+                <p className="text-slate-600 text-xs sm:text-sm">
+                  Entende mensagens de voz e áudios enviados pelos clientes
+                </p>
+              </div>
+
+              {/* Responde em Áudio */}
+              <div className="bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200 rounded-2xl p-4 sm:p-6 text-center">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
+                  <Volume2 className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                </div>
+                <h3 className="text-slate-900 font-bold text-sm sm:text-lg mb-1 sm:mb-2">Responde em Áudio</h3>
+                <p className="text-slate-600 text-xs sm:text-sm">
+                  Pode clonar sua voz e responder com áudios personalizados
+                </p>
+              </div>
+
+              {/* Vê Imagens */}
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl p-4 sm:p-6 text-center">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
+                  <Image className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                </div>
+                <h3 className="text-slate-900 font-bold text-sm sm:text-lg mb-1 sm:mb-2">Vê Imagens e PDFs</h3>
+                <p className="text-slate-600 text-xs sm:text-sm">
+                  Analisa fotos, documentos e arquivos enviados
+                </p>
+              </div>
+
+              {/* Agenda */}
+              <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-4 sm:p-6 text-center">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
+                  <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                </div>
+                <h3 className="text-slate-900 font-bold text-sm sm:text-lg mb-1 sm:mb-2">Acessa Agendas</h3>
+                <p className="text-slate-600 text-xs sm:text-sm">
+                  Marca horários direto na sua agenda automaticamente
+                </p>
+              </div>
+            </div>
+
+            {/* Extra highlight */}
+            <div className="mt-8 bg-gradient-to-r from-emerald-500 to-green-600 rounded-2xl p-5 sm:p-6 text-center">
+              <p className="text-white text-base sm:text-xl font-semibold">
+                🤖 <span className="text-yellow-300">Sua IA trabalha 24/7</span> — enquanto você descansa, ela atende, agenda e vende!
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
