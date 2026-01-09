@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Bot, Clock, Globe, Smartphone, MessageSquare, Zap, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import LazyImage from "@/components/LazyImage";
 
 const Index = () => {
   const { setTheme } = useTheme();
+  const [chatLoaded, setChatLoaded] = useState(false);
 
   const SCHEDULING_URL = "https://www.agendamento-agendify.com/b/ia-clonefy";
   const CHAT_ASSISTANT_ID = "aeb677ad-3f58-4ecd-b414-79c1aa534d13";
@@ -34,7 +35,7 @@ const Index = () => {
   }, [setTheme]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-green-50/50">
       {/* Header */}
       <header className="container mx-auto px-4 py-4 lg:py-6">
         <div className="flex items-center justify-between">
@@ -48,14 +49,14 @@ const Index = () => {
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <Link to="/auth">
-              <Button variant="outline" size="sm" className="text-sm">
+              <Button variant="outline" size="sm" className="text-sm border-emerald-200 hover:bg-emerald-50">
                 Entrar
               </Button>
             </Link>
             <a href={SCHEDULING_URL} target="_blank" rel="noopener noreferrer">
               <Button 
                 size="sm" 
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-sm px-4"
+                className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-sm px-4"
               >
                 Agendar Demo
               </Button>
@@ -65,20 +66,20 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-8 sm:py-12 lg:py-16">
+      <section className="container mx-auto px-4 py-8 sm:py-10 lg:py-14">
         <div className="max-w-5xl mx-auto text-center">
           {/* Badge */}
-          <div className="mb-6">
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+          <div className="mb-5">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
               <Zap className="h-4 w-4" />
               Inteligência Artificial para Atendimento
             </span>
           </div>
           
           {/* Main Title */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-slate-900">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 leading-tight text-slate-900">
             Crie um{" "}
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-emerald-500 to-green-600 bg-clip-text text-transparent">
               Funcionário de IA
             </span>
             <br />
@@ -86,34 +87,34 @@ const Index = () => {
           </h1>
           
           {/* Subtitle */}
-          <p className="text-lg sm:text-xl lg:text-2xl text-slate-600 mb-8 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl lg:text-2xl text-slate-600 mb-6 max-w-4xl mx-auto leading-relaxed">
             É como ter o <strong className="text-slate-800">ChatGPT Especializado</strong> para o seu produto/negócio 
-            que <strong className="text-blue-600">responde instantaneamente</strong> às perguntas dos seus clientes.
+            que <strong className="text-emerald-600">responde instantaneamente</strong> às perguntas dos seus clientes.
           </p>
           
           {/* Features Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 max-w-4xl mx-auto">
-            <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-slate-100">
-              <Clock className="h-5 w-5 text-blue-600 flex-shrink-0" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8 max-w-4xl mx-auto">
+            <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-emerald-100">
+              <Clock className="h-5 w-5 text-emerald-600 flex-shrink-0" />
               <span className="text-sm font-medium text-slate-700">Atendimento 24/7</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-slate-100">
-              <Bot className="h-5 w-5 text-blue-600 flex-shrink-0" />
-              <span className="text-sm font-medium text-slate-700">100% Automático e Humanizado</span>
+            <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-emerald-100">
+              <Bot className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+              <span className="text-sm font-medium text-slate-700">100% Automático</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-slate-100">
-              <Globe className="h-5 w-5 text-blue-600 flex-shrink-0" />
-              <span className="text-sm font-medium text-slate-700">Fala +95 idiomas</span>
+            <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-emerald-100">
+              <Globe className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+              <span className="text-sm font-medium text-slate-700">+95 idiomas</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-slate-100">
-              <Smartphone className="h-5 w-5 text-blue-600 flex-shrink-0" />
-              <span className="text-sm font-medium text-slate-700">WhatsApp, Instagram, Site...</span>
+            <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-emerald-100">
+              <Smartphone className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+              <span className="text-sm font-medium text-slate-700">WhatsApp, Site...</span>
             </div>
           </div>
 
           {/* Highlight Box */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 sm:p-8 mb-10 max-w-3xl mx-auto shadow-xl">
-            <p className="text-white text-lg sm:text-xl lg:text-2xl font-semibold leading-relaxed">
+          <div className="bg-gradient-to-r from-emerald-500 to-green-600 rounded-2xl p-5 sm:p-6 mb-8 max-w-3xl mx-auto shadow-xl">
+            <p className="text-white text-lg sm:text-xl font-semibold leading-relaxed">
               Seu atendimento <span className="underline decoration-2 underline-offset-4">disponível sem descanso</span> e pagando{" "}
               <span className="text-yellow-300 font-bold">10% de um salário</span> de um humano.
             </p>
@@ -123,7 +124,7 @@ const Index = () => {
           <a href={SCHEDULING_URL} target="_blank" rel="noopener noreferrer">
             <Button 
               size="lg" 
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-6 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-8 py-6 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
             >
               QUERO AGENDAR UMA DEMONSTRAÇÃO!
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -133,45 +134,55 @@ const Index = () => {
       </section>
 
       {/* Chat Section */}
-      <section className="container mx-auto px-4 py-12 sm:py-16 lg:py-20">
-        <div className="max-w-4xl mx-auto">
+      <section className="container mx-auto px-4 py-10 sm:py-12">
+        <div className="max-w-2xl mx-auto">
           {/* Section Title */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 mb-4">
-              <MessageSquare className="h-6 w-6 text-blue-600" />
-              <span className="text-blue-600 font-semibold">Chat ao vivo</span>
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <MessageSquare className="h-5 w-5 text-emerald-600" />
+              <span className="text-emerald-600 font-semibold text-sm">Chat ao vivo</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
-              Tem dúvidas? <span className="text-blue-600">Fale com nossa IA:</span>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
+              Tem dúvidas? <span className="text-emerald-600">Fale com nossa IA:</span>
             </h2>
-            <p className="text-slate-600 text-lg">
-              Experimente agora mesmo como funciona o atendimento automatizado
+            <p className="text-slate-600 text-base">
+              Experimente agora mesmo!
             </p>
           </div>
 
           {/* Embedded Chat */}
-          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-emerald-200 relative">
+            {/* Loading Skeleton */}
+            {!chatLoaded && (
+              <div className="absolute inset-0 bg-white flex flex-col items-center justify-center z-10">
+                <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
+                <p className="text-slate-500 text-sm">Carregando chat...</p>
+              </div>
+            )}
             <iframe
               src={`/embed-chat/${CHAT_ASSISTANT_ID}`}
               className="w-full"
               style={{ 
-                height: '550px',
-                border: 'none'
+                height: '480px',
+                border: 'none',
+                opacity: chatLoaded ? 1 : 0,
+                transition: 'opacity 0.3s ease-in-out'
               }}
               title="Chat com IA CLONEFY"
               allow="microphone"
+              onLoad={() => setChatLoaded(true)}
             />
           </div>
 
           {/* CTA After Chat */}
-          <div className="text-center mt-10">
-            <p className="text-slate-600 mb-6 text-lg">
+          <div className="text-center mt-8">
+            <p className="text-slate-600 mb-4 text-base">
               Gostou? Tenha um assistente assim para o <strong>seu negócio</strong>!
             </p>
             <a href={SCHEDULING_URL} target="_blank" rel="noopener noreferrer">
               <Button 
                 size="lg" 
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-6 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-8 py-5 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
                 QUERO AGENDAR UMA DEMONSTRAÇÃO!
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -182,42 +193,42 @@ const Index = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="bg-white py-16 sm:py-20">
+      <section className="bg-white py-12 sm:py-16">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
-              Por que escolher a <span className="text-blue-600">CLONEFY</span>?
+          <div className="text-center mb-10">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 mb-3">
+              Por que escolher a <span className="text-emerald-600">CLONEFY</span>?
             </h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="text-center p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100">
-              <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Clock className="h-7 w-7 text-white" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="text-center p-5 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100">
+              <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <Clock className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Nunca Descansa</h3>
-              <p className="text-slate-600">
-                Atendimento 24 horas por dia, 7 dias por semana. Seus clientes nunca ficam sem resposta.
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Nunca Descansa</h3>
+              <p className="text-slate-600 text-sm">
+                Atendimento 24/7. Seus clientes nunca ficam sem resposta.
               </p>
             </div>
             
-            <div className="text-center p-6 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100">
-              <div className="w-14 h-14 bg-green-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="h-7 w-7 text-white" />
+            <div className="text-center p-5 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100">
+              <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <MessageSquare className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Conversas Naturais</h3>
-              <p className="text-slate-600">
-                IA treinada especificamente para seu negócio. Respostas humanizadas e contextualizadas.
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Conversas Naturais</h3>
+              <p className="text-slate-600 text-sm">
+                IA treinada para seu negócio. Respostas humanizadas.
               </p>
             </div>
             
-            <div className="text-center p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-100">
-              <div className="w-14 h-14 bg-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Smartphone className="h-7 w-7 text-white" />
+            <div className="text-center p-5 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100">
+              <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <Smartphone className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Multi-Plataforma</h3>
-              <p className="text-slate-600">
-                Integre no WhatsApp, Instagram, Facebook, seu site e muito mais. Tudo em um só lugar.
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Multi-Plataforma</h3>
+              <p className="text-slate-600 text-sm">
+                WhatsApp, Instagram, Facebook, seu site e mais.
               </p>
             </div>
           </div>
@@ -226,7 +237,7 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="border-t bg-slate-50">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-center">
             <LazyImage 
               src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png" 
@@ -235,7 +246,7 @@ const Index = () => {
               loading="lazy"
             />
           </div>
-          <p className="text-center text-slate-500 mt-3 text-sm">
+          <p className="text-center text-slate-500 mt-2 text-sm">
             © 2024 CLONEFY - Todos os direitos reservados
           </p>
         </div>

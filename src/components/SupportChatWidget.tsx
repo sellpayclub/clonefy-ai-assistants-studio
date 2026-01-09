@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 const SupportChatWidget = () => {
   useEffect(() => {
-    const assistantId = '7a218984-6ada-4581-b1b6-2119b4771260';
+    // Usando a Julia - Assistente CLONEFY
+    const assistantId = 'aeb677ad-3f58-4ecd-b414-79c1aa534d13';
     // Usar versão local em desenvolvimento, produção usa clonefyia.com
     const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const scriptUrl = isDev 
