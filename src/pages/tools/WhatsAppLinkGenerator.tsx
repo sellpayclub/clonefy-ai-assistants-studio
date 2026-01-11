@@ -2,46 +2,49 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Zap, ArrowRight, Check, Copy, MessageSquare, Phone, Smartphone, ExternalLink, Globe } from "lucide-react";
+import { Zap, ArrowRight, Check, MessageSquare, Phone, Smartphone, Globe } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import LazyImage from "@/components/LazyImage";
 import { Link as RouterLink } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import ClonefyPromoBanner from "@/components/ClonefyPromoBanner";
+import ResultPopup from "@/components/ResultPopup";
 
 const WhatsAppLinkGenerator = () => {
     const { setTheme } = useTheme();
-    const [phone, setPhone] = useState("");
+    const [phone, setPhone] = useState("55");
     const [message, setMessage] = useState("");
     const [generatedLink, setGeneratedLink] = useState("");
-    const [isCopied, setIsCopied] = useState(false);
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
 
     useEffect(() => {
         setTheme("light");
     }, [setTheme]);
 
+    const handlePhoneChange = (value: string) => {
+        // Remove non-digits
+        let cleanValue = value.replace(/\D/g, "");
+        // Ensure it starts with 55
+        if (!cleanValue.startsWith("55")) {
+            cleanValue = "55" + cleanValue.replace(/^55/, "");
+        }
+        setPhone(cleanValue);
+    };
+
     const handleGenerate = () => {
-        if (!phone) {
+        if (!phone || phone === "55") {
             toast.error("Por favor, digite um número de telefone.");
             return;
         }
 
-        // Clean phone number (remove non-digits)
+        // Clean phone number (remove non-digits) - already clean but just in case
         const cleanPhone = phone.replace(/\D/g, "");
         const encodedMessage = encodeURIComponent(message);
         const link = `https://wa.me/${cleanPhone}${message ? `?text=${encodedMessage}` : ""}`;
 
         setGeneratedLink(link);
-        toast.success("Link gerado com sucesso!");
-    };
-
-    const copyToClipboard = () => {
-        if (!generatedLink) return;
-        navigator.clipboard.writeText(generatedLink);
-        setIsCopied(true);
-        toast.success("Link copiado para a área de transferência!");
-        setTimeout(() => setIsCopied(false), 2000);
+        setIsPopupOpen(true);
     };
 
     return (
@@ -51,6 +54,18 @@ const WhatsAppLinkGenerator = () => {
                 <meta name="description" content="Crie links personalizados para o seu WhatsApp com mensagens pré-definidas de forma gratuita. Melhore sua conversão e facilite o contato dos seus clientes." />
                 <meta name="keywords" content="gerador link whatsapp, criar link whatsapp, link direto whatsapp, whatsapp message generator, clonefy" />
             </Helmet>
+
+            {/* Result Popup with Clonefy Banner */}
+            <ResultPopup
+                isOpen={isPopupOpen}
+                onClose={() => setIsPopupOpen(false)}
+                title="Link Gerado com Sucesso!"
+                description="Copie seu link e comece a receber mensagens agora."
+                resultLabel="Seu link do WhatsApp:"
+                resultValue={generatedLink}
+                actionUrl={generatedLink}
+                actionLabel="Testar Link"
+            />
 
             {/* Header */}
             <header className="container mx-auto px-4 py-4 lg:py-6">
@@ -101,15 +116,18 @@ const WhatsAppLinkGenerator = () => {
                                     Número do WhatsApp
                                 </label>
                                 <div className="relative">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-sm pointer-events-none">
+                                        🇧🇷 +
+                                    </div>
                                     <Input
                                         type="text"
-                                        placeholder="Ex: 5511999998888"
+                                        placeholder="5511999998888"
                                         value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
-                                        className="pl-4 h-12 rounded-xl border-slate-200 focus:border-emerald-500 focus:ring-emerald-500"
+                                        onChange={(e) => handlePhoneChange(e.target.value)}
+                                        className="pl-14 h-12 rounded-xl border-slate-200 focus:border-emerald-500 focus:ring-emerald-500 font-mono"
                                     />
                                     <p className="text-[10px] text-slate-400 mt-1.5 ml-1">
-                                        Inclua o código do país e DDD (apenas números).
+                                        O código do Brasil (55) já está incluído.
                                     </p>
                                 </div>
                             </div>
@@ -135,36 +153,6 @@ const WhatsAppLinkGenerator = () => {
                                 GERAR LINK AGORA
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Button>
-
-                            {generatedLink && (
-                                <div className="pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-4 duration-500">
-                                    <label className="block text-sm font-bold text-slate-700 mb-3">Seu link gerado:</label>
-                                    <div className="flex gap-2">
-                                        <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-600 truncate font-mono">
-                                            {generatedLink}
-                                        </div>
-                                        <Button
-                                            onClick={copyToClipboard}
-                                            variant="outline"
-                                            className={`shrink-0 rounded-xl px-4 border-slate-200 hover:bg-slate-50 ${isCopied ? 'text-emerald-600 border-emerald-200 bg-emerald-50' : ''}`}
-                                        >
-                                            {isCopied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
-                                        </Button>
-                                    </div>
-                                    <div className="mt-4 flex gap-3">
-                                        <a
-                                            href={generatedLink}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex-1"
-                                        >
-                                            <Button variant="ghost" className="w-full text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl gap-2 font-semibold">
-                                                Testar Link <ExternalLink className="h-4 w-4" />
-                                            </Button>
-                                        </a>
-                                    </div>
-                                </div>
-                            )}
                         </div>
 
                         {/* Preview Section */}
@@ -186,7 +174,7 @@ const WhatsAppLinkGenerator = () => {
                                         </div>
                                         <div className="flex-1">
                                             <p className="text-white text-xs font-bold truncate">
-                                                {phone || "Seu Número"}
+                                                +{phone || "55"}
                                             </p>
                                             <p className="text-white/70 text-[10px]">visto por último hoje às 09:00</p>
                                         </div>

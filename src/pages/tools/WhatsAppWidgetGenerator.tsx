@@ -2,29 +2,38 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Zap, ArrowRight, Check, Copy, MessageSquare, Phone, Smartphone, Code, Globe, Sparkles } from "lucide-react";
+import { Zap, Check, Smartphone, Code, Sparkles } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import LazyImage from "@/components/LazyImage";
 import { Link as RouterLink } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import ClonefyPromoBanner from "@/components/ClonefyPromoBanner";
+import ResultPopup from "@/components/ResultPopup";
 
 const WhatsAppWidgetGenerator = () => {
     const { setTheme } = useTheme();
-    const [phone, setPhone] = useState("");
+    const [phone, setPhone] = useState("55");
     const [message, setMessage] = useState("");
     const [btnText, setBtnText] = useState("Fale Conosco");
     const [btnColor, setBtnColor] = useState("#25D366");
     const [generatedCode, setGeneratedCode] = useState("");
-    const [isCopied, setIsCopied] = useState(false);
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
 
     useEffect(() => {
         setTheme("light");
     }, [setTheme]);
 
+    const handlePhoneChange = (value: string) => {
+        let cleanValue = value.replace(/\D/g, "");
+        if (!cleanValue.startsWith("55")) {
+            cleanValue = "55" + cleanValue.replace(/^55/, "");
+        }
+        setPhone(cleanValue);
+    };
+
     const handleGenerate = () => {
-        if (!phone) {
+        if (!phone || phone === "55") {
             toast.error("Por favor, digite um número de telefone.");
             return;
         }
@@ -41,15 +50,7 @@ const WhatsAppWidgetGenerator = () => {
 </div>`;
 
         setGeneratedCode(snippet);
-        toast.success("Código do Widget gerado!");
-    };
-
-    const copyToClipboard = () => {
-        if (!generatedCode) return;
-        navigator.clipboard.writeText(generatedCode);
-        setIsCopied(true);
-        toast.success("Código copiado!");
-        setTimeout(() => setIsCopied(false), 2000);
+        setIsPopupOpen(true);
     };
 
     return (
@@ -59,6 +60,16 @@ const WhatsAppWidgetGenerator = () => {
                 <meta name="description" content="Crie um botão flutuante do WhatsApp para o seu site em segundos. Ferramenta gratuita para aumentar conversões e facilitar o atendimento ao cliente." />
                 <meta name="keywords" content="gerador de botão whatsapp, widget whatsapp site, botão whatsapp flutuante, whatsapp button generator, clonefy" />
             </Helmet>
+
+            {/* Result Popup with Clonefy Banner */}
+            <ResultPopup
+                isOpen={isPopupOpen}
+                onClose={() => setIsPopupOpen(false)}
+                title="Widget Gerado com Sucesso!"
+                description="Cole o código abaixo antes da tag </body> do seu site."
+                resultLabel="Código HTML do Widget:"
+                resultValue={generatedCode}
+            />
 
             {/* Header */}
             <header className="container mx-auto px-4 py-4 lg:py-6">
@@ -104,12 +115,18 @@ const WhatsAppWidgetGenerator = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-sm font-bold text-slate-700 mb-2">Seu WhatsApp</label>
-                                        <Input
-                                            placeholder="Ex: 5511999998888"
-                                            value={phone}
-                                            onChange={(e) => setPhone(e.target.value)}
-                                            className="rounded-xl border-slate-200"
-                                        />
+                                        <div className="relative">
+                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-sm pointer-events-none">
+                                                🇧🇷 +
+                                            </div>
+                                            <Input
+                                                placeholder="5511999998888"
+                                                value={phone}
+                                                onChange={(e) => handlePhoneChange(e.target.value)}
+                                                className="pl-12 rounded-xl border-slate-200 font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 mt-1 ml-1">O código 55 já está incluído.</p>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-bold text-slate-700 mb-2">Texto do Botão</label>
@@ -156,26 +173,6 @@ const WhatsAppWidgetGenerator = () => {
                                     GERAR CÓDIGO DO WIDGET
                                     <Code className="ml-2 h-5 w-5" />
                                 </Button>
-
-                                {generatedCode && (
-                                    <div className="mt-8 pt-8 border-t border-slate-100 animate-in fade-in slide-in-from-top-4">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <label className="text-sm font-bold text-slate-700">Copie este código e cole antes da tag &lt;/body&gt; do seu site:</label>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={copyToClipboard}
-                                                className="text-emerald-600 hover:bg-emerald-50"
-                                            >
-                                                {isCopied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
-                                                {isCopied ? "Copiado!" : "Copiar Código"}
-                                            </Button>
-                                        </div>
-                                        <pre className="bg-slate-900 text-emerald-400 p-4 rounded-xl text-xs overflow-x-auto font-mono leading-relaxed">
-                                            {generatedCode}
-                                        </pre>
-                                    </div>
-                                )}
                             </div>
                         </div>
 
