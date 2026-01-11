@@ -1,0 +1,398 @@
+[
+    {
+        "slug": "clinicas-estetica",
+        "sector": "Clínicas de Estética",
+        "headline": "O Funcionário de IA especializado para Clínicas de Estética",
+        "intro": "Transforme o atendimento da sua clínica de estética com uma IA que entende de harmonização facial, procedimentos corporais e a jornada única de cada paciente.",
+        "use_case_audio": "Imagine uma paciente enviando um áudio às 22h perguntando sobre o tempo de recuperação do preenchimento labial. A Julia, sua assistente de IA, transcreve o áudio instantaneamente, identifica que a pergunta é sobre pós-procedimento e responde com informações precisas sobre cuidados, tempo de inchaço e quando a paciente pode usar maquiagem novamente. Tudo isso enquanto você descansa – e a paciente acorda com a resposta pronta no WhatsApp dela.",
+        "use_case_agenda": "Clínicas de estética vivem de agendamentos. A Julia integra com seu sistema de agenda e oferece horários disponíveis em tempo real. Quando uma paciente pede 'horário para botox quinta à tarde', a IA verifica a agenda do Dr. Marcos, encontra um slot às 15h, e já envia a confirmação. Se a paciente remarcar pelo WhatsApp, a Julia atualiza automaticamente o sistema – sem você precisar abrir nenhum programa.",
+        "content_section": "O mercado de estética movimenta bilhões no Brasil, mas a maioria das clínicas ainda perde pacientes por demora no atendimento. Uma pesquisa mostra que 67% das pessoas escolhem a clínica que responde primeiro, não necessariamente a melhor. Com a Clonefy, sua clínica responde em segundos, 24 horas por dia, 7 dias por semana.\n\nO diferencial da nossa IA para estética é o conhecimento especializado. Ela sabe a diferença entre ácido hialurônico e hidroxiapatita de cálcio. Entende que bioestimuladores têm resultados progressivos. Consegue explicar protocolos de skincare pós-procedimento. Quando uma paciente pergunta sobre harmonização facial, a Julia não dá respostas genéricas – ela pergunta se a paciente tem interesse em preenchimento, toxina botulínica ou fios de sustentação.\n\nAlém do atendimento, a IA ajuda na retenção. Ela envia lembretes de retorno para aplicações semestrais de toxina, avisa quando está na hora de renovar o protocolo de skincare, e até sugere procedimentos complementares baseados no histórico da paciente. Uma clínica em São Paulo aumentou o ticket médio em 40% apenas com essas sugestões automatizadas da Julia.",
+        "comparison": {
+            "human_cost": "R$ 2.500/mês (recepcionista)",
+            "human_hours": "8h por dia, 5 dias por semana",
+            "human_response": "5-30 minutos em horário comercial",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, 7 dias por semana",
+            "ai_response": "Menos de 10 segundos, sempre"
+        },
+        "roi_calculation": "Uma recepcionista custa em média R$ 2.500/mês com encargos. A Clonefy custa R$ 297/mês. Economia direta: R$ 2.203/mês ou R$ 26.436/ano. Mas o ROI real vem dos agendamentos recuperados: clínicas relatam 30% mais consultas por responder fora do horário comercial.",
+        "cta_text": "Agendar Demonstração para minha Clínica de Estética",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em clínicas de estética. Quer ver como eu agendo uma avaliação de harmonização facial agora mesmo?",
+        "meta_title": "IA para Atendimento de Clínicas de Estética - Automatize Agendamentos 24/7",
+        "meta_description": "Funcionário de IA especializado em clínicas de estética. Responde dúvidas sobre procedimentos, agenda consultas e envia lembretes de retorno automaticamente.",
+        "faq": [
+            {
+                "question": "A IA sabe responder sobre procedimentos estéticos?",
+                "answer": "Sim! A Julia é treinada com conhecimento sobre harmonização facial, procedimentos corporais, skincare e protocolos de recuperação. Você pode personalizar as respostas conforme os procedimentos que sua clínica oferece."
+            },
+            {
+                "question": "Como funciona a integração com minha agenda?",
+                "answer": "A Clonefy integra com Google Calendar, Outlook e sistemas específicos de clínicas. A IA oferece horários disponíveis em tempo real e atualiza automaticamente quando há agendamentos ou cancelamentos."
+            },
+            {
+                "question": "Posso usar a IA para enviar promoções?",
+                "answer": "Sim! Você pode configurar campanhas de reativação para pacientes que não voltam há 6 meses, promoções de aniversário e pacotes sazonais, tudo enviado automaticamente pelo WhatsApp."
+            }
+        ]
+    },
+    {
+        "slug": "escritorios-advocacia",
+        "sector": "Escritórios de Advocacia",
+        "headline": "O Funcionário de IA especializado para Escritórios de Advocacia",
+        "intro": "Automatize a triagem de processos e o primeiro atendimento do seu escritório com uma IA que entende prazos processuais, áreas do direito e a urgência de cada caso.",
+        "use_case_audio": "Um potencial cliente envia um áudio desesperado às 23h explicando que foi demitido injustamente e quer processar a empresa. A Julia transcreve o áudio, identifica que se trata de direito trabalhista, faz perguntas de triagem (tempo de empresa, se há acordo, documentos disponíveis) e já qualifica o lead antes de você acordar. Quando você chega ao escritório, o caso está resumido com as informações essenciais para decidir se aceita ou não.",
+        "use_case_agenda": "Advogados vivem de prazos. A Julia integra com seu sistema jurídico e lembra clientes de audiências, prazos para juntar documentos e reuniões de acompanhamento. Quando um cliente pergunta 'qual o status do meu processo?', a IA pode consultar o sistema e dar uma atualização básica, economizando horas de ligações repetitivas.",
+        "content_section": "A advocacia está se transformando. Escritórios que usam tecnologia para triagem de casos conseguem atender 3x mais clientes sem aumentar a equipe. O problema é que o primeiro contato – aquele que define se o cliente escolhe você ou o concorrente – geralmente é perdido por demora na resposta.\n\nA IA da Clonefy para advocacia entende a linguagem jurídica. Ela sabe que um cliente falando sobre 'demissão sem justa causa' é direito trabalhista, enquanto 'inventário' é direito de família/sucessões. Essa categorização automática permite que você priorize os casos mais lucrativos e urgentes.\n\nMas o diferencial está na conformidade. O Código de Ética da OAB proíbe certas práticas de captação, mas permite informar formas de contato. A Julia não promete resultados ou valores, apenas coleta informações para que você, advogado, faça a análise jurídica. Ela foi treinada para seguir as diretrizes éticas da profissão.\n\nPara escritórios que lidam com LGPD (Lei Geral de Proteção de Dados), a Julia também pode ser uma aliada na conformidade. Ela armazena conversas de forma segura, permite exclusão de dados quando solicitado e gera logs de consentimento – tudo o que você precisa para estar em dia com a lei que você mesmo aplica para seus clientes.",
+        "comparison": {
+            "human_cost": "R$ 3.000/mês (secretária jurídica)",
+            "human_hours": "8h por dia, 5 dias por semana",
+            "human_response": "Horário comercial, sujeito a filas",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, 7 dias por semana",
+            "ai_response": "Menos de 10 segundos, triagem incluída"
+        },
+        "roi_calculation": "Uma secretária jurídica qualificada custa em média R$ 3.000/mês. A Clonefy custa R$ 297/mês. Economia direta: R$ 2.703/mês. O ROI real vem da triagem: advogados relatam economizar 10h semanais em ligações iniciais que agora são feitas pela IA.",
+        "cta_text": "Agendar Demonstração para meu Escritório de Advocacia",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em escritórios de advocacia. Quer ver como eu faço a triagem inicial de um caso trabalhista ou cível?",
+        "meta_title": "IA para Atendimento de Escritórios de Advocacia - Triagem Automática 24/7",
+        "meta_description": "Funcionário de IA especializado em advocacia. Triagem de processos, qualificação de leads jurídicos e atendimento 24/7 conforme Código de Ética da OAB.",
+        "faq": [
+            {
+                "question": "A IA pode dar assessoria jurídica?",
+                "answer": "Não. A Julia faz triagem e coleta informações, mas nunca dá opiniões jurídicas ou promete resultados. Isso é exclusivo do advogado, conforme o Código de Ética da OAB."
+            },
+            {
+                "question": "Como a IA categoriza os casos?",
+                "answer": "Ela identifica palavras-chave nas mensagens e áudios: demissão, acidente, divórcio, inventário, contrato. Cada área do direito tem perguntas de triagem específicas para qualificar o lead."
+            },
+            {
+                "question": "É seguro armazenar dados de clientes?",
+                "answer": "Sim. A Clonefy segue padrões de segurança e privacidade, com criptografia e opções de exclusão de dados para conformidade com a LGPD."
+            }
+        ]
+    },
+    {
+        "slug": "pet-shops",
+        "sector": "Pet Shops e Clínicas Veterinárias",
+        "headline": "O Funcionário de IA especializado para Pet Shops",
+        "intro": "Automatize agendamentos de banho e tosa, lembretes de vacinas e atendimento 24h para tutores de pets com uma IA que entende o mundo animal.",
+        "use_case_audio": "Um tutor envia um áudio preocupado às 2h da manhã: 'Meu cachorro está vomitando amarelo, o que faço?'. A Julia transcreve, identifica que pode ser urgência veterinária e orienta o tutor a procurar um pronto-socorro 24h, enviando o endereço do mais próximo. Ao mesmo tempo, registra o contato para que você ligue no dia seguinte oferecendo uma consulta de acompanhamento. Isso é atendimento que fideliza.",
+        "use_case_agenda": "Banho e tosa semanal, vermífugo mensal, vacina anual – cada pet tem um calendário. A Julia mantém esse histórico e envia lembretes automáticos: 'Oi! O Thor está precisando da vacina V10. Quer agendar para essa semana?'. Tutores adoram pet shops que lembram deles, e você garante receita recorrente sem esforço.",
+        "content_section": "O mercado pet no Brasil cresce 15% ao ano e já movimenta mais de R$ 50 bilhões. Tutores tratam pets como filhos e querem atendimento de qualidade a qualquer hora. O problema? A maioria dos pet shops fecha às 18h e não responde WhatsApp fora do horário.\n\nA IA da Clonefy para pet shops entende a linguagem desse mercado. Ela sabe que 'Golden' é uma raça, não uma cor. Entende que 'tosa higiênica' e 'tosa na máquina' são serviços diferentes. Quando um tutor pergunta sobre racionamento para cães idosos, a Julia pode recomendar marcas específicas do seu estoque e já adicionar ao carrinho.\n\nO diferencial está nos lembretes inteligentes. A Julia sabe que a última vacina V10 do Rex foi em janeiro, então em dezembro ela avisa o tutor que está na hora do reforço. Sabe que a Mel faz banho toda terça, então na segunda ela confirma o horário. Sabe que o Pipoca compra a mesma ração todo mês, então uma semana antes ela pergunta se quer renovar o pedido.\n\nPara pet shops com veterinário, a integração é ainda mais poderosa. A IA pode coletar sintomas, agendar consultas de emergência e até enviar orientações de primeiros socorros enquanto o tutor chega à clínica. Um pet shop no interior de SP reduziu em 60% as ligações de madrugada apenas com a Julia respondendo dúvidas básicas e direcionando emergências corretamente.",
+        "comparison": {
+            "human_cost": "R$ 1.800/mês (atendente de pet shop)",
+            "human_hours": "8h por dia, 6 dias por semana",
+            "human_response": "Apenas horário comercial",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, 7 dias por semana",
+            "ai_response": "Instantâneo, inclusive de madrugada"
+        },
+        "roi_calculation": "Um atendente de pet shop custa em média R$ 1.800/mês. A Clonefy custa R$ 297/mês. Economia direta: R$ 1.503/mês. O ROI real vem da recorrência: lembretes automáticos de vacinas e banho aumentam o retorno de clientes em até 45%.",
+        "cta_text": "Agendar Demonstração para meu Pet Shop",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em pet shops. Quer ver como eu agendo um banho e tosa ou envio lembretes de vacina automáticos?",
+        "meta_title": "IA para Atendimento de Pet Shops - Agendamento de Banho e Tosa 24/7",
+        "meta_description": "Funcionário de IA especializado em pet shops. Agenda banho e tosa, envia lembretes de vacinas e responde tutores de pets 24 horas por dia.",
+        "faq": [
+            {
+                "question": "A IA pode responder sobre saúde animal?",
+                "answer": "A Julia pode dar orientações básicas e identificar urgências, mas sempre recomenda consulta veterinária para diagnósticos. Ela não substitui o médico veterinário."
+            },
+            {
+                "question": "Como funcionam os lembretes de vacina?",
+                "answer": "Você cadastra a data da última vacina de cada pet. A Julia calcula automaticamente quando vence e envia mensagem para o tutor uma semana antes."
+            },
+            {
+                "question": "Posso vender produtos pelo WhatsApp?",
+                "answer": "Sim! A Julia pode enviar o catálogo, anotar pedidos e até processar pagamentos via link de pagamento integrado."
+            }
+        ]
+    },
+    {
+        "slug": "clinicas-odontologicas",
+        "sector": "Clínicas Odontológicas",
+        "headline": "O Funcionário de IA especializado para Clínicas Odontológicas",
+        "intro": "Reduza faltas de pacientes e aumente agendamentos de procedimentos estéticos com uma IA que entende de odontologia e elimina o medo do dentista.",
+        "use_case_audio": "Um paciente envia um áudio às 21h: 'Estou com muita dor de dente, o que pode ser?'. A Julia transcreve, faz perguntas de triagem (dor ao morder? inchaço? sensibilidade ao frio?) e já identifica se é uma emergência ou pode esperar a consulta regular. Se for urgência, ela envia o número do plantão. Se não, agenda para o primeiro horário disponível e envia dicas para aliviar a dor até lá.",
+        "use_case_agenda": "O maior problema de clínicas odontológicas são as faltas. A Julia envia lembretes 48h e 24h antes da consulta, pede confirmação e reagenda automaticamente quem não pode ir. Para procedimentos longos como implantes, ela envia o protocolo de preparação (jejum, medicação pré-operatória) e tira dúvidas de última hora.",
+        "content_section": "Medo de dentista ainda afasta milhões de brasileiros dos consultórios. A boa notícia é que atendimento humanizado e proativo reduz essa barreira. A má notícia é que a maioria das clínicas não tem equipe para isso. É aí que a IA entra.\n\nA Julia foi treinada para ser acolhedora sem ser robótica. Quando alguém pergunta 'dói fazer canal?', ela não responde apenas 'não'. Ela explica que hoje existe anestesia eficiente, que o desconforto pós-procedimento é leve, e pergunta se o paciente gostaria de agendar uma consulta para avaliar o dente. Essa abordagem empática converte medos em agendamentos.\n\nPara procedimentos estéticos como clareamento, lentes de contato dental e harmonização orofacial, a Julia é uma máquina de vendas educativa. Ela envia fotos de antes e depois (com autorização dos pacientes), explica a diferença entre os tipos de lentes, compara preços e durabilidade. Quando o paciente está pronto, ela agenda a avaliação e já envia o que trazer para o orçamento.\n\nO ROI para clínicas odontológicas é impressionante. Uma clínica em Belo Horizonte reduziu faltas de 35% para 8% apenas com lembretes automatizados da Julia. Outra em Curitiba aumentou em 50% os agendamentos de estética dental porque a IA responde dúvidas de madrugada, quando as pessoas pesquisam 'quanto custa lente de contato dental' e querem respostas imediatas.",
+        "comparison": {
+            "human_cost": "R$ 2.200/mês (recepcionista de clínica)",
+            "human_hours": "8h por dia, 5 dias por semana",
+            "human_response": "Apenas horário comercial, faltas de 30%+",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, 7 dias por semana",
+            "ai_response": "Lembretes automáticos, faltas reduzidas para <10%"
+        },
+        "roi_calculation": "Uma recepcionista custa R$ 2.200/mês. A Clonefy custa R$ 297/mês. Economia direta: R$ 1.903/mês. Mas o ROI real vem da redução de faltas: com 25% menos faltas, uma clínica com 100 consultas/mês recupera 25 consultas x R$ 150 = R$ 3.750/mês.",
+        "cta_text": "Agendar Demonstração para minha Clínica Odontológica",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em clínicas odontológicas. Quer ver como eu reduzo faltas de pacientes e respondo sobre clareamento e lentes de contato dental?",
+        "meta_title": "IA para Atendimento de Clínicas Odontológicas - Reduza Faltas em 70%",
+        "meta_description": "Funcionário de IA especializado em odontologia. Envia lembretes de consulta, responde dúvidas sobre procedimentos e reduz faltas de pacientes.",
+        "faq": [
+            {
+                "question": "A IA pode dar diagnósticos odontológicos?",
+                "answer": "Não. A Julia faz triagem de urgência e tira dúvidas gerais, mas diagnósticos são exclusivos do dentista. Ela sempre agenda consulta para avaliação profissional."
+            },
+            {
+                "question": "Como funcionam os lembretes de consulta?",
+                "answer": "A Julia envia mensagem 48h e 24h antes da consulta pedindo confirmação. Se o paciente não puder ir, ela oferece reagendamento imediato."
+            },
+            {
+                "question": "Posso usar a IA para vender procedimentos estéticos?",
+                "answer": "Sim! A Julia pode enviar portfólio de antes e depois, explicar procedimentos e agendar avaliações para clareamento, lentes e outros tratamentos estéticos."
+            }
+        ]
+    },
+    {
+        "slug": "imobiliarias",
+        "sector": "Imobiliárias e Corretores",
+        "headline": "O Funcionário de IA especializado para Imobiliárias",
+        "intro": "Capture leads 24h, qualifique interessados automaticamente e nunca perca uma venda por demora no atendimento com IA especializada no mercado imobiliário.",
+        "use_case_audio": "Um interessado envia um áudio às 23h: 'Oi, vi um apartamento de 3 quartos na Zona Sul por 500 mil, vocês ainda têm? Aceita financiamento?'. A Julia transcreve, identifica o imóvel, verifica disponibilidade no sistema e responde: 'Sim, o apartamento ainda está disponível! Aceita financiamento bancário. Quer agendar uma visita? Temos horários amanhã às 10h ou 15h.' Tudo isso enquanto o corretor dorme.",
+        "use_case_agenda": "Visitas são a vida do corretor. A Julia agenda, confirma e reagenda visitas automaticamente. Ela envia lembrete 2h antes com o endereço e orientações (interfone, vaga de estacionamento). Após a visita, ela pergunta feedback e oferece imóveis similares se o cliente não gostou. Corretores relatam economizar 15h semanais só em logística de agendamento.",
+        "content_section": "O mercado imobiliário é competição pura. O cliente que manda mensagem para 5 imobiliárias fecha com quem responde primeiro. Pesquisas mostram que 78% dos leads imobiliários fecham com o primeiro corretor que faz contato. Você está respondendo rápido o suficiente?\n\nA Julia foi treinada especificamente para mercado imobiliário. Ela entende que 'ap 2 quartos ZN 400k' significa apartamento de 2 quartos na Zona Norte até R$ 400.000. Ela cruza isso com seu catálogo e oferece opções imediatamente. Não existe 'vou verificar e te retorno' – a resposta é instantânea.\n\nO diferencial está na qualificação. Antes de ocupar o tempo do corretor, a Julia descobre: o cliente já tem imóvel? vai financiar? qual banco? tem entrada? quer morar ou investir? qual prazo? Com essas informações, o corretor sabe exatamente quem priorizar e como abordar.\n\nPara lançamentos, a IA é ainda mais poderosa. Ela pode gerenciar lista de interesse, enviar updates de obra, informar data de entrega das chaves e gerar urgência com mensagens como 'Restam apenas 3 unidades no andar alto'. Uma imobiliária no Rio de Janeiro vendeu um bloco inteiro usando a Julia para nutrição de leads no WhatsApp.",
+        "comparison": {
+            "human_cost": "R$ 2.000/mês (SDR imobiliário) + comissões",
+            "human_hours": "8h por dia, leads de plantão ficam perdidos",
+            "human_response": "Minutos a horas, dependendo do horário",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, inclusive feriados e fins de semana",
+            "ai_response": "Menos de 10 segundos, sempre qualificado"
+        },
+        "roi_calculation": "Um SDR imobiliário custa R$ 2.000/mês + comissões. A Clonefy custa R$ 297/mês. Economia direta: R$ 1.703/mês. O ROI real vem das vendas: responder leads em segundos aumenta conversão em 391% segundo estudos do setor.",
+        "cta_text": "Agendar Demonstração para minha Imobiliária",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em imobiliárias. Quer ver como eu qualiffico leads e agendo visitas automaticamente?",
+        "meta_title": "IA para Atendimento de Imobiliárias - Qualifique Leads 24/7",
+        "meta_description": "Funcionário de IA especializado em mercado imobiliário. Responde leads instantaneamente, qualifica interessados e agenda visitas automaticamente.",
+        "faq": [
+            {
+                "question": "A IA pode mostrar imóveis disponíveis?",
+                "answer": "Sim! A Julia integra com seu CRM imobiliário e mostra opções baseadas nos critérios do cliente (bairro, quartos, faixa de preço, aceita financiamento)."
+            },
+            {
+                "question": "Como funciona o agendamento de visitas?",
+                "answer": "A IA oferece horários disponíveis, confirma com o cliente e envia lembrete automático 2h antes com endereço e instruções de acesso."
+            },
+            {
+                "question": "Posso usar para lançamentos?",
+                "answer": "Sim! A Julia gerencia lista de interesse, envia updates de obra, avisa sobre disponibilidade de unidades e gera urgência para fechamento."
+            }
+        ]
+    },
+    {
+        "slug": "academias-crossfit",
+        "sector": "Academias e Boxes de CrossFit",
+        "headline": "O Funcionário de IA especializado para Academias",
+        "intro": "Converta visitantes em alunos, reduza cancelamentos e reative inativos com uma IA que entende a jornada fitness e motiva resultados.",
+        "use_case_audio": "Um lead envia áudio às 20h: 'Oi, queria saber o preço da academia e se vocês têm musculação e funcional'. A Julia transcreve, identifica interesse em múltiplas modalidades e responde com os planos disponíveis, convida para uma aula experimental gratuita e já pergunta qual horário funciona melhor. Lead qualificado enquanto sua equipe de vendas descansa.",
+        "use_case_agenda": "Retenção é tudo em academia. A Julia monitora frequência dos alunos e envia mensagens automáticas: 'Ei, faz uma semana que você não aparece! Tudo bem? Lembra que consistência é a chave.' Para cancelamentos, ela identifica o motivo (preço, tempo, resultado) e oferece soluções antes de perder o aluno.",
+        "content_section": "Academias têm um problema crônico: 80% dos alunos que se matriculam em janeiro abandonam até março. Não é falta de vontade – é falta de acompanhamento. A Julia resolve isso com engajamento automatizado que parece humano.\n\nQuando um aluno falta 3 dias seguidos, a Julia manda mensagem. Quando ele bate um recorde de frequência no mês, ela parabeniza. Quando está perto de vencer o plano, ela oferece renovação com desconto. Esse carinho automatizado retém alunos que de outra forma iriam embora silenciosamente.\n\nPara captação de novos alunos, a IA é igualmente poderosa. Ela responde leads do Instagram e Google às 22h, quando as pessoas estão navegando e pensando 'preciso emagrecer'. Oferece aula experimental, pergunta objetivos (emagrecer, ganhar massa, saúde) e já encaminha para o professor responsável. Uma academia em Florianópolis aumentou matrículas em 35% apenas por responder leads de madrugada.\n\nPara boxes de CrossFit, a Julia entende a linguagem: WOD, PR, AMRAP, Rx. Ela pode enviar o treino do dia, ranking de competições internas e até vender vagas para eventos especiais. Comunidade fitness é engajada, e a IA ajuda a manter esse engajamento no WhatsApp.",
+        "comparison": {
+            "human_cost": "R$ 1.800/mês (consultor de vendas)",
+            "human_hours": "8h por dia, leads noturnos perdidos",
+            "human_response": "Horário comercial apenas",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, inclusive domingos e feriados",
+            "ai_response": "Instantâneo, com qualificação de objetivos"
+        },
+        "roi_calculation": "Um consultor de vendas custa R$ 1.800/mês. A Clonefy custa R$ 297/mês. Economia direta: R$ 1.503/mês. O ROI real vem da retenção: reduzir cancelamentos em 20% em uma academia com 500 alunos significa manter 100 alunos/ano x R$ 100/mês = R$ 120.000/ano.",
+        "cta_text": "Agendar Demonstração para minha Academia",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em academias. Quer ver como eu respondo leads, ofereço aulas experimentais e retenho alunos automaticamente?",
+        "meta_title": "IA para Atendimento de Academias - Aumente Retenção em 40%",
+        "meta_description": "Funcionário de IA especializado em academias e boxes de CrossFit. Converte leads em alunos, reduz cancelamentos e reativa inativos automaticamente.",
+        "faq": [
+            {
+                "question": "A IA pode oferecer aulas experimentais?",
+                "answer": "Sim! A Julia oferece aula grátis, pergunta objetivos do aluno e agenda o melhor horário com o professor responsável."
+            },
+            {
+                "question": "Como funciona o engajamento de alunos?",
+                "answer": "A IA monitora frequência e envia mensagens automáticas: motivação para quem está sumido, parabéns para quem está consistente, ofertas de renovação antes do vencimento."
+            },
+            {
+                "question": "Funciona para CrossFit?",
+                "answer": "Sim! A Julia entende a linguagem (WOD, PR, Rx), pode enviar o treino do dia e gerenciar inscrições em competições internas."
+            }
+        ]
+    },
+    {
+        "slug": "restaurantes-delivery",
+        "sector": "Restaurantes e Delivery",
+        "headline": "O Funcionário de IA especializado para Restaurantes",
+        "intro": "Receba pedidos de delivery próprio, responda sobre cardápio e alérgenos, e fidelize clientes sem pagar 30% de taxa para apps de entrega.",
+        "use_case_audio": "Um cliente envia áudio às 13h: 'Oi, queria pedir aquele prato de parmegiana, mas sem o arroz e com salada no lugar. Vocês fazem?'. A Julia transcreve, confirma a personalização, informa o preço ajustado e já pergunta endereço e forma de pagamento. Pedido fechado em menos de 1 minuto.",
+        "use_case_agenda": "Para restaurantes com reservas, a Julia é indispensável. Ela oferece mesas disponíveis, confirma reservas 24h antes, e gerencia lista de espera em dias cheios. 'Sua mesa para 4 está confirmada para sábado às 20h. Lembre que ficamos no estacionamento X.' Experiência premium, automática.",
+        "content_section": "iFood, Rappi e Uber Eats cobram até 30% de comissão. Para restaurantes com ticket médio de R$ 50, isso significa R$ 15 por pedido indo para plataformas. A Julia permite delivery próprio pelo WhatsApp: sem taxa, com relacionamento direto com o cliente.\n\nA IA foi treinada para entender pedidos complexos: 'Pizza meia calabresa meia frango sem cebola na calabresa com borda de catupiry'. Ela confirma cada detalhe, calcula o preço e envia para a cozinha. Erros de pedido, que custam tempo e ingredientes, caem drasticamente.\n\nPara alérgenos e restrições, a Julia é uma aliada de segurança alimentar. Quando um cliente pergunta 'tem glúten?', ela consulta a ficha técnica do prato e responde com precisão. Isso não é apenas conveniência – é prevenção de acidentes graves para celíacos e alérgicos.\n\nO diferencial está na fidelização. A Julia lembra os pedidos anteriores do cliente: 'Oi João! Quer repetir seu pedido de sempre? Combo executivo com suco de laranja, entrega no escritório?'. Esse nível de personalização transforma clientes ocasionais em fãs. Um restaurante em Campinas aumentou pedidos recorrentes em 60% usando a memória de pedidos da Julia.",
+        "comparison": {
+            "human_cost": "R$ 1.500/mês (atendente de pedidos) + 30% de taxa iFood",
+            "human_hours": "Horário de funcionamento do restaurante",
+            "human_response": "Sujeito a ocupação da equipe",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy), 0% de taxa",
+            "ai_hours": "24h (pode receber pedidos para próximo dia)",
+            "ai_response": "Instantâneo, sem filas"
+        },
+        "roi_calculation": "Taxas de apps custam 30% do faturamento delivery. Para um restaurante com R$ 30.000/mês em delivery, isso é R$ 9.000 de comissão. Migrando 50% para WhatsApp com Clonefy, economia de R$ 4.500/mês menos R$ 297 = R$ 4.203/mês de lucro adicional.",
+        "cta_text": "Agendar Demonstração para meu Restaurante",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em restaurantes. Quer ver como eu recebo pedidos de delivery, respondo sobre ingredientes e lembro dos clientes fiéis?",
+        "meta_title": "IA para Atendimento de Restaurantes - Delivery Próprio sem iFood",
+        "meta_description": "Funcionário de IA especializado em restaurantes. Recebe pedidos de delivery pelo WhatsApp, sem taxas de apps. Responde sobre alérgenos e fideliza clientes.",
+        "faq": [
+            {
+                "question": "A IA pode receber pedidos complexos?",
+                "answer": "Sim! A Julia entende personalizações (sem cebola, borda recheada, meia a meia), confirma cada detalhe e calcula o preço automaticamente."
+            },
+            {
+                "question": "Como funciona o pagamento?",
+                "answer": "A Julia envia link de pagamento online ou anota para pagamento na entrega. Você escolhe as formas aceitas."
+            },
+            {
+                "question": "Posso informar sobre alérgenos?",
+                "answer": "Sim! Cadastre a ficha técnica dos pratos e a Julia responde com precisão sobre glúten, lactose, amendoim e outros alérgenos."
+            }
+        ]
+    },
+    {
+        "slug": "escolas-cursos",
+        "sector": "Escolas e Cursos Online",
+        "headline": "O Funcionário de IA especializado para Escolas e Cursos",
+        "intro": "Converta leads interessados em matrículas, tire dúvidas sobre grade curricular e acompanhe alunos durante o curso com IA educacional.",
+        "use_case_audio": "Um lead envia áudio às 22h: 'Oi, vi o anúncio do curso de inglês de vocês. Quanto custa e em quanto tempo fico fluente?'. A Julia transcreve, explica os níveis do curso, prazos realistas para fluência, envia tabela de preços e convida para aula experimental. Enquanto o lead pesquisa concorrentes, você já tem ele engajado.",
+        "use_case_agenda": "Alunos de cursos longos precisam de acompanhamento. A Julia envia lembretes de aulas, materiais complementares, avisos de provas e até mensagens de motivação quando detecta queda de engajamento. Para cursos online, ela pode enviar links de acesso e resolver problemas técnicos básicos.",
+        "content_section": "O mercado de educação é competitivo. Entre o interesse inicial ('quero aprender inglês') e a matrícula, o lead pesquisa 5-10 escolas. Quem responde primeiro, com mais informação e mais empatia, fecha a matrícula. A Julia coloca sua escola na pole position.\n\nA IA foi treinada para entender objeções educacionais: 'é caro', 'não tenho tempo', 'será que funciona online?'. Para cada objeção, ela tem respostas preparadas: planos de parcelamento, horários flexíveis, depoimentos de alunos. Isso libera sua equipe de vendas para focar em fechamentos, não em convencimentos iniciais.\n\nO diferencial está no acompanhamento durante o curso. A Julia avisa: 'Lembra que amanhã tem prova de inglês intermediário! Revise o capítulo 5.' Para cursos com certificado, ela lembra prazos de entrega de trabalhos e até envia os materiais pelo WhatsApp. Esse acompanhamento reduz evasão drasticamente.\n\nPara cursos online (EAD), a IA é ainda mais crucial. Alunos EAD desistem por falta de contato humano. A Julia simula esse contato: parabeniza módulos concluídos, envia dicas extras, cria senso de comunidade. Uma escola de cursos livres online reduziu evasão de 40% para 15% usando a Julia para engajamento semanal.",
+        "comparison": {
+            "human_cost": "R$ 2.500/mês (consultor educacional)",
+            "human_hours": "Horário comercial, leads noturnos perdidos",
+            "human_response": "Minutos a horas dependendo da demanda",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, inclusive madrugada quando adultos pesquisam cursos",
+            "ai_response": "Instantâneo com todas as informações do curso"
+        },
+        "roi_calculation": "Um consultor educacional custa R$ 2.500/mês. A Clonefy custa R$ 297/mês. Economia direta: R$ 2.203/mês. O ROI real vem das matrículas noturnas: escolas relatam 25% mais matrículas por responder leads de 20h às 23h.",
+        "cta_text": "Agendar Demonstração para minha Escola",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em escolas e cursos. Quer ver como eu converto leads em matrículas e acompanho alunos durante o curso?",
+        "meta_title": "IA para Atendimento de Escolas e Cursos - Aumente Matrículas 24/7",
+        "meta_description": "Funcionário de IA especializado em educação. Tire dúvidas sobre cursos, converta leads em matrículas e reduza evasão com acompanhamento automatizado.",
+        "faq": [
+            {
+                "question": "A IA pode explicar a grade curricular?",
+                "answer": "Sim! Cadastre as informações dos cursos e a Julia explica níveis, durações, preços e diferenciais para cada lead interessado."
+            },
+            {
+                "question": "Como funciona o acompanhamento de alunos?",
+                "answer": "A Julia envia lembretes de aulas, materiais extras, avisos de provas e mensagens de motivação baseadas no progresso do aluno."
+            },
+            {
+                "question": "Funciona para cursos online?",
+                "answer": "Especialmente! A IA envia links de acesso, resolve problemas técnicos básicos e mantém o engajamento que cursos EAD precisam."
+            }
+        ]
+    },
+    {
+        "slug": "contabilidade",
+        "sector": "Escritórios de Contabilidade",
+        "headline": "O Funcionário de IA especializado para Escritórios de Contabilidade",
+        "intro": "Atenda clientes sobre prazos fiscais, organize demandas de documentos e capture leads MEI e ME 24 horas por dia com IA contábil.",
+        "use_case_audio": "Um cliente envia áudio às 21h: 'Oi, qual o prazo do IRPJ desse trimestre? E preciso enviar alguma coisa?'. A Julia transcreve, consulta o calendário fiscal e responde: 'O IRPJ vence dia 30. Para calcularmos corretamente, precisamos do faturamento do trimestre. Você pode enviar o extrato ou relatório de vendas?' Atendimento contábil profissional, à noite.",
+        "use_case_agenda": "Contabilidade vive de prazos. A Julia mantém calendário fiscal atualizado e envia lembretes para clientes: 'Lembre-se: DAS do MEI vence dia 20. Já pagou? Se precisar de ajuda, estamos aqui.' Isso previne multas, fideliza clientes e mostra proatividade do escritório.",
+        "content_section": "Escritórios de contabilidade atendem dezenas (ou centenas) de clientes. Cada um com dúvidas recorrentes: 'quando vence meu imposto?', 'preciso enviar o quê?', 'quanto paguei de taxa mês passado?'. Essas perguntas simples consomem horas que poderiam ser gastas em consultoria estratégica.\n\nA Julia foi treinada para responder dúvidas contábeis básicas. Ela sabe a diferença entre MEI, ME e Lucro Presumido. Entende que ICMS é estadual e ISS é municipal. Quando um cliente novo pergunta 'quanto custa abrir empresa?', ela qualifica (tipo de atividade, faturamento esperado, sócios) antes de dar um orçamento.\n\nO diferencial está na cobrança de documentos. Todo contador sabe: o cliente nunca manda o que você pede na primeira vez. A Julia envia lembrete automático: 'Oi! Ainda estamos aguardando o extrato bancário de outubro para fechar seu mês. Pode enviar?' Três dias depois, se não veio: 'Lembrete: precisamos do extrato até amanhã para não atrasar as obrigações.' Perseverança automática.\n\nPara captação de clientes, a IA qualifica leads 24h. Quando alguém pesquisa 'contador para MEI' às 23h e manda mensagem, a Julia responde na hora, explica os serviços, passa valores e já agenda reunião de fechamento. Um escritório em Porto Alegre dobrou sua carteira de MEIs usando a Julia para atendimento noturno.",
+        "comparison": {
+            "human_cost": "R$ 2.800/mês (assistente contábil)",
+            "human_hours": "Horário comercial, sem suporte em fechamento",
+            "human_response": "Horas, especialmente em período de declaração",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, inclusive período de IR",
+            "ai_response": "Instantâneo com informações de prazos e documentos"
+        },
+        "roi_calculation": "Um assistente contábil custa R$ 2.800/mês. A Clonefy custa R$ 297/mês. Economia direta: R$ 2.503/mês. O ROI real vem da retenção: clientes que recebem lembretes de prazos não esquecem o escritório e renovam contratos.",
+        "cta_text": "Agendar Demonstração para meu Escritório de Contabilidade",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em contabilidade. Quer ver como eu lembro prazos fiscais, cobro documentos e atendo leads MEI automaticamente?",
+        "meta_title": "IA para Atendimento de Escritórios de Contabilidade - Prazos Fiscais 24/7",
+        "meta_description": "Funcionário de IA especializado em contabilidade. Lembra prazos fiscais, cobra documentos de clientes e capta leads MEI e ME automaticamente.",
+        "faq": [
+            {
+                "question": "A IA sabe sobre legislação contábil?",
+                "answer": "A Julia tem conhecimento básico sobre regimes tributários, prazos fiscais e documentos necessários. Para questões complexas, ela direciona ao contador responsável."
+            },
+            {
+                "question": "Como funcionam os lembretes de prazos?",
+                "answer": "A IA monitora o calendário fiscal e envia lembretes personalizados para cada cliente baseado no regime tributário dele (MEI, Simples, Presumido, etc)."
+            },
+            {
+                "question": "Posso usar para cobrança de documentos?",
+                "answer": "Sim! A Julia envia lembretes automáticos de documentos pendentes com frequência configurável até o cliente enviar."
+            }
+        ]
+    },
+    {
+        "slug": "psicologia-terapia",
+        "sector": "Psicólogos e Terapeutas",
+        "headline": "O Funcionário de IA especializado para Psicólogos",
+        "intro": "Reduza a barreira do primeiro contato, agende sessões com empatia e envie lembretes de consulta com IA treinada em acolhimento.",
+        "use_case_audio": "Um potencial paciente envia áudio às 23h, voz baixa: 'Oi... estou passando por um momento difícil e acho que preciso de ajuda. Como funciona?'. A Julia transcreve com sensibilidade, responde de forma acolhedora, explica como funcionam as sessões (sem promessas terapêuticas) e oferece os primeiros horários disponíveis. Esse primeiro contato empático pode salvar vidas.",
+        "use_case_agenda": "Terapia exige constância. A Julia envia lembretes gentis: 'Oi! Lembrete carinhoso: sua sessão é amanhã às 15h. Nos vemos lá 💜'. Para cancelamentos de última hora, ela oferece reagendamento imediato. Para pacientes que somem, ela manda check-in suave após 2 semanas.",
+        "content_section": "Buscar ajuda psicológica ainda carrega estigma no Brasil. Muitas pessoas precisam de coragem para mandar a primeira mensagem – e se encontram um formulário frio ou demora na resposta, desistem. A Julia quebra essa barreira com acolhimento instantâneo.\n\nA IA foi treinada seguindo princípios do CFP (Conselho Federal de Psicologia). Ela nunca promete cura, não dá diagnósticos e não substitui a terapia. O que ela faz é explicar o processo terapêutico, tirar dúvidas sobre valores e horários, e agendar a primeira sessão com empatia.\n\nO diferencial está na linguagem. A Julia foi programada para ser acolhedora: 'Fico feliz que você está buscando ajuda. Isso já é um grande passo.' Ela valida os sentimentos sem invadir o espaço do terapeuta. Esse tom faz diferença para pessoas em momento de vulnerabilidade.\n\nPara terapeutas que atendem online, a IA ajuda com a logística técnica. Ela envia link da videochamada, orienta sobre conexão e privacidade, e até faz um 'teste de áudio' automatizado antes da sessão. Um psicólogo em Brasília relatou que a Julia reduziu em 80% os problemas técnicos no início das sessões online.",
+        "comparison": {
+            "human_cost": "R$ 0 (a maioria dos psicólogos não tem secretária)",
+            "human_hours": "Apenas horário de atendimento, leads perdidos fora",
+            "human_response": "Horas, dependendo da agenda do profissional",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, acolhimento sempre disponível",
+            "ai_response": "Instantâneo com empatia programada"
+        },
+        "roi_calculation": "A maioria dos psicólogos autônomos não tem secretária e perde leads fora do horário. Com a Clonefy, você responde às 23h quando a pessoa mais precisa de ajuda. Psicólogos relatam aumento de 40% em novos pacientes por atender leads noturnos.",
+        "cta_text": "Agendar Demonstração para meu Consultório de Psicologia",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em consultórios de psicologia. Quer ver como eu acolho pacientes em potencial e agendo sessões com empatia?",
+        "meta_title": "IA para Atendimento de Psicólogos - Acolhimento 24/7",
+        "meta_description": "Funcionário de IA especializado em psicologia e terapia. Primeiro contato acolhedor, agendamento de sessões e lembretes empáticos. Conforme ética do CFP.",
+        "faq": [
+            {
+                "question": "A IA pode fazer atendimento psicológico?",
+                "answer": "Não. A Julia faz acolhimento inicial e agendamento, mas nunca dá orientações terapêuticas. Isso é exclusivo do psicólogo, conforme o Código de Ética do CFP."
+            },
+            {
+                "question": "Como é feito o acolhimento?",
+                "answer": "A Julia usa linguagem empática e validadora, sem julgamentos. Ela explica o processo terapêutico e agenda a primeira sessão de forma gentil."
+            },
+            {
+                "question": "Funciona para terapia online?",
+                "answer": "Sim! A IA envia links de videochamada, orienta sobre privacidade e até ajuda a testar áudio/vídeo antes da sessão."
+            }
+        ]
+    },
+    {
+        "slug": "lojas-moveis",
+        "sector": "Lojas de Móveis e Decoração",
+        "headline": "O Funcionário de IA especializado para Lojas de Móveis",
+        "intro": "Atenda clientes sobre medidas, prazos de entrega e personalizações de móveis 24h com IA que entende de decoração e projetos.",
+        "use_case_audio": "Um cliente envia áudio: 'Oi, vi um sofá no showroom de vocês. É aquele cinza de 3 lugares. Queria saber se vocês fazem em azul petróleo e se dá pra entregar até o natal'. A Julia transcreve, identifica o modelo, confirma que aceita personalização de tecido com acréscimo, verifica prazo de produção e responde com todas as informações. Venda encaminhada enquanto o vendedor atende presencial.",
+        "use_case_agenda": "Montagem de móveis exige agendamento. A Julia coordena: 'Seu sofá está pronto! Podemos entregar e montar terça ou quinta. Qual prefere?'. Após a entrega, ela envia pesquisa de satisfação e até oferece produtos complementares: 'Vimos que você comprou um sofá. Temos almofadas decorativas que combinam! Quer ver?'.",
+        "content_section": "Móveis são compras de alto valor e consideração. O cliente pesquisa, visita showrooms, pede orçamentos e demora semanas para decidir. A loja que mantém contato durante esse período fecha a venda. A Julia automatiza esse follow-up estratégico.\n\nA IA foi treinada para entender o vocabulário de móveis: chaise, retrátil, reclinável, módulos, padrões de MDF. Quando um cliente pergunta 'vocês têm rack para TV de 65 polegadas?', ela calcula a medida necessária e oferece opções compatíveis do catálogo.\n\nO diferencial está na personalização. Lojas de móveis planejados vivem de projetos sob medida. A Julia coleta as medidas do ambiente, preferências de cor e estilo, e até sugere inspirações. Com essas informações, o projetista já começa o trabalho adiantado. Um loja de móveis em Curitiba reduziu em 40% o tempo de atendimento in loco usando a Julia para qualificação prévia.\n\nPara pós-venda, a IA garante satisfação. Ela acompanha o prazo de produção, avisa quando o móvel está pronto, agenda entrega e montagem, e liga após 7 dias para garantir que tudo está perfeito. Esse cuidado gera indicações – que para móveis de alto valor, são extremamente valiosas.",
+        "comparison": {
+            "human_cost": "R$ 2.000/mês (atendente de showroom)",
+            "human_hours": "Horário comercial, leads de noite perdidos",
+            "human_response": "Depende do movimento do showroom",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, inclusive quando o cliente pesquisa à noite",
+            "ai_response": "Instantâneo com informações de catálogo e medidas"
+        },
+        "roi_calculation": "Uma venda de móveis planejados vale em média R$ 15.000. Perder um lead por demora no atendimento custa caro. Com a Julia, você não perde mais leads noturnos. Lojas relatam fechar 2-3 vendas adicionais por mês apenas por responder fora do horário.",
+        "cta_text": "Agendar Demonstração para minha Loja de Móveis",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em lojas de móveis. Quer ver como eu respondo sobre medidas, tecidos e prazos de entrega automaticamente?",
+        "meta_title": "IA para Atendimento de Lojas de Móveis - Orçamentos 24/7",
+        "meta_description": "Funcionário de IA especializado em móveis e decoração. Responde sobre medidas, personalizações, prazos de entrega e agenda montagem automaticamente.",
+        "faq": [
+            {
+                "question": "A IA sabe sobre medidas de móveis?",
+                "answer": "Sim! A Julia calcula medidas necessárias (ex: rack para TV de X polegadas) e oferece opções compatíveis do seu catálogo."
+            },
+            {
+                "question": "Posso usar para móveis planejados?",
+                "answer": "Especialmente! A IA coleta medidas do ambiente, preferências de estilo e adiantando informações para o projetista."
+            },
+            {
+                "question": "Como funciona o pós-venda?",
+                "answer": "A Julia acompanha produção, agenda entrega/montagem e faz follow-up de satisfação nos dias seguintes."
+            }
+        ]
+    }
+]

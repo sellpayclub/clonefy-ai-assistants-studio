@@ -1,0 +1,362 @@
+[
+    {
+        "slug": "corretores-imoveis",
+        "title": "Gerador de Link de WhatsApp para Corretores de Imóveis",
+        "profession_name": "Corretores de Imóveis",
+        "pain_point": "Para quem trabalha no mercado imobiliário, cada lead representa uma comissão potencial de milhares de reais. O problema é que muitos interessados desistem antes mesmo de fazer contato porque precisam salvar o número, abrir o WhatsApp e ainda pensar no que escrever. Com um link direto e uma mensagem pré-configurada como 'Olá, vi um imóvel no seu site e gostaria de mais informações', você elimina toda essa fricção. O cliente clica e já está conversando com você sobre o apartamento dos sonhos dele.",
+        "suggested_message": "Olá! Vi um imóvel no seu site e gostaria de agendar uma visita. Pode me ajudar?",
+        "meta_description": "Crie links de WhatsApp personalizados para corretagem imobiliária. Aumente suas vendas de imóveis com links diretos que facilitam o primeiro contato.",
+        "faq": [
+            {
+                "question": "Como um link de WhatsApp ajuda corretores de imóveis?",
+                "answer": "Facilita o contato instantâneo de interessados em imóveis, eliminando a barreira de salvar o número do corretor."
+            },
+            {
+                "question": "Posso usar mensagens diferentes para cada imóvel?",
+                "answer": "Sim! Crie um link específico para cada imóvel, com a mensagem mencionando o endereço ou código do imóvel."
+            }
+        ]
+    },
+    {
+        "slug": "psicologos",
+        "title": "Gerador de Link de WhatsApp para Psicólogos",
+        "profession_name": "Psicólogos",
+        "pain_point": "Buscar ajuda psicológica já é um passo difícil para muitas pessoas. Se ainda precisarem passar por obstáculos como preencher formulários ou fazer ligações, grande parte desiste. Um link de WhatsApp com uma mensagem acolhedora quebra essa resistência inicial. O paciente em potencial clica, envia a mensagem e pronto – o primeiro contato está feito. Para psicólogos que trabalham com terapia online, essa facilidade pode significar dobrar o número de agendamentos.",
+        "suggested_message": "Olá! Gostaria de agendar uma consulta de avaliação. Quais horários estão disponíveis?",
+        "meta_description": "Links de WhatsApp para psicólogos e terapeutas. Facilite o agendamento de consultas e reduza a resistência do primeiro contato.",
+        "faq": [
+            {
+                "question": "É ético usar WhatsApp para captar pacientes de psicologia?",
+                "answer": "Sim, desde que respeitando o Código de Ética do CFP. O WhatsApp facilita o agendamento, não substitui a consulta."
+            },
+            {
+                "question": "Como manter a privacidade do paciente?",
+                "answer": "Use o WhatsApp Business com mensagens automáticas profissionais e mantenha as conversas protegidas."
+            }
+        ]
+    },
+    {
+        "slug": "clinicas-estetica",
+        "title": "Gerador de Link de WhatsApp para Clínicas de Estética",
+        "profession_name": "Clínicas de Estética",
+        "pain_point": "O mercado de estética é impulsivo. A cliente vê um resultado no Instagram, quer fazer o mesmo procedimento e precisa agendar agora. Se o processo for complicado, ela desiste ou vai para a concorrência. Links de WhatsApp na bio do Instagram, nos stories e nos anúncios capturam esse desejo no momento certo. Uma mensagem como 'Quero agendar uma avaliação para [procedimento]' já traz a cliente pronta para fechar.",
+        "suggested_message": "Oi! Vi um procedimento no Instagram e quero agendar uma avaliação. Vocês têm disponibilidade essa semana?",
+        "meta_description": "Links de WhatsApp para clínicas de estética e harmonização facial. Capture leads do Instagram direto para o agendamento.",
+        "faq": [
+            {
+                "question": "Como usar links de WhatsApp no Instagram para estética?",
+                "answer": "Coloque o link na bio, nos destaques de 'Agende' e use o sticker de link nos stories."
+            },
+            {
+                "question": "Qual mensagem funciona melhor para clínicas de estética?",
+                "answer": "Mensagens que mencionam 'avaliação gratuita' ou o procedimento específico têm maior conversão."
+            }
+        ]
+    },
+    {
+        "slug": "advogados",
+        "title": "Gerador de Link de WhatsApp para Advogados",
+        "profession_name": "Advogados",
+        "pain_point": "Clientes que precisam de advogados geralmente estão em situações urgentes: acidentes, divórcios, problemas trabalhistas. Eles querem falar com alguém agora, não preencher formulários. Um link de WhatsApp no seu site ou Google Meu Negócio captura esses leads no momento de maior necessidade. A mensagem pré-configurada pode já solicitar informações básicas do caso, economizando tempo na triagem.",
+        "suggested_message": "Olá, Dr(a). Preciso de orientação jurídica sobre [descreva brevemente seu caso]. Podemos conversar?",
+        "meta_description": "Links de WhatsApp para advogados e escritórios de advocacia. Receba consultas jurídicas diretamente no celular.",
+        "faq": [
+            {
+                "question": "OAB permite captação de clientes por WhatsApp?",
+                "answer": "O Código de Ética permite informar formas de contato. O link de WhatsApp é uma forma de contato, não publicidade vedada."
+            },
+            {
+                "question": "Como organizar leads jurídicos pelo WhatsApp?",
+                "answer": "Use o WhatsApp Business com etiquetas para categorizar por área do direito (trabalhista, família, etc)."
+            }
+        ]
+    },
+    {
+        "slug": "dentistas",
+        "title": "Gerador de Link de WhatsApp para Dentistas",
+        "profession_name": "Dentistas",
+        "pain_point": "O medo de dentista é real – e quanto mais etapas até o agendamento, mais tempo o paciente tem para desistir. Links de WhatsApp reduzem a fricção ao mínimo: um clique e a conversa começa. Para procedimentos estéticos como clareamento e lentes de contato, onde a decisão é mais emocional, essa agilidade é ainda mais importante. O paciente vê o antes e depois, clica no link e agenda.",
+        "suggested_message": "Olá! Gostaria de agendar uma avaliação odontológica. Quais são os próximos horários disponíveis?",
+        "meta_description": "Links de WhatsApp para consultórios odontológicos. Facilite agendamentos e reduza desistências de pacientes.",
+        "faq": [
+            {
+                "question": "Como reduzir faltas de pacientes com WhatsApp?",
+                "answer": "Envie lembretes automáticos 24h antes da consulta pelo WhatsApp Business."
+            },
+            {
+                "question": "Posso enviar orçamentos pelo WhatsApp?",
+                "answer": "Sim! Muitos pacientes preferem receber o orçamento por escrito para analisar com calma."
+            }
+        ]
+    },
+    {
+        "slug": "personal-trainers",
+        "title": "Gerador de Link de WhatsApp para Personal Trainers",
+        "profession_name": "Personal Trainers",
+        "pain_point": "Quem busca um personal geralmente está motivado – viu uma transformação no Instagram, está insatisfeito com o corpo ou recebeu uma recomendação médica. Esse momento de motivação é precioso e passa rápido. Com um link de WhatsApp estrategicamente posicionado na bio ou nos stories, você captura esse lead na hora. A mensagem pode já perguntar sobre objetivos, facilitando a primeira conversa.",
+        "suggested_message": "Oi! Vi seu trabalho e tenho interesse em consultoria de treino. Meu objetivo é [emagrecer/ganhar massa/melhorar condicionamento]. Podemos conversar?",
+        "meta_description": "Links de WhatsApp para personal trainers. Conquiste alunos diretamente pelas redes sociais com links personalizados.",
+        "faq": [
+            {
+                "question": "Como personal trainers podem usar links de WhatsApp?",
+                "answer": "Coloque na bio do Instagram, nos stories e em cada post de transformação de alunos."
+            },
+            {
+                "question": "Qual a melhor mensagem para captar alunos?",
+                "answer": "Peça para o lead já mencionar seu objetivo (emagrecer, hipertrofia, etc) para personalizar a resposta."
+            }
+        ]
+    },
+    {
+        "slug": "nutricionistas",
+        "title": "Gerador de Link de WhatsApp para Nutricionistas",
+        "profession_name": "Nutricionistas",
+        "pain_point": "A maioria das pessoas adia indefinidamente a consulta com nutricionista. 'Segunda eu começo' vira um ciclo. Links de WhatsApp quebram essa procrastinação permitindo o agendamento imediato quando a motivação aparece. Para nutricionistas que trabalham com nichos específicos (esportivo, emagrecimento, vegano), a mensagem pré-configurada pode já identificar o perfil do paciente.",
+        "suggested_message": "Olá! Tenho interesse em agendar uma consulta nutricional. Meu objetivo é [emagrecer/ganhar peso/melhorar alimentação]. Quais os próximos horários?",
+        "meta_description": "Links de WhatsApp para nutricionistas. Agende consultas nutricionais diretamente pelo celular do paciente.",
+        "faq": [
+            {
+                "question": "Nutricionistas podem atender por WhatsApp?",
+                "answer": "O atendimento inicial e agendamento sim. Consultas formais precisam seguir as diretrizes do CFN."
+            },
+            {
+                "question": "Como qualificar leads pelo WhatsApp?",
+                "answer": "A mensagem pré-configurada pode pedir o objetivo nutricional, economizando tempo na triagem."
+            }
+        ]
+    },
+    {
+        "slug": "fotografos",
+        "title": "Gerador de Link de WhatsApp para Fotógrafos",
+        "profession_name": "Fotógrafos",
+        "pain_point": "O portfólio convence, mas o orçamento fecha no WhatsApp. Fotógrafos que facilitam esse caminho – do Instagram direto para a conversa – fecham mais contratos. Links personalizados para cada tipo de ensaio (casamento, família, corporativo) já trazem o cliente segmentado. A mensagem pode solicitar a data do evento, adiantando o processo de fechamento.",
+        "suggested_message": "Oi! Amei seu trabalho e gostaria de um orçamento para [casamento/ensaio/evento corporativo]. A data seria [aproximadamente quando].",
+        "meta_description": "Links de WhatsApp para fotógrafos. Receba pedidos de orçamento diretamente do seu portfólio online.",
+        "faq": [
+            {
+                "question": "Como fotógrafos podem usar links de WhatsApp no portfólio?",
+                "answer": "Adicione um botão 'Solicitar Orçamento' em cada categoria do portfólio com mensagem específica."
+            },
+            {
+                "question": "Qual informação pedir na mensagem?",
+                "answer": "Data do evento, tipo de ensaio e local são as informações mais úteis para o primeiro contato."
+            }
+        ]
+    },
+    {
+        "slug": "pet-shops",
+        "title": "Gerador de Link de WhatsApp para Pet Shops",
+        "profession_name": "Pet Shops",
+        "pain_point": "Donos de pets são extremamente engajados e querem resolver tudo pelo celular. Agendamento de banho e tosa, dúvidas sobre ração, emergências veterinárias – tudo passa pelo WhatsApp. Um link direto no Google Meu Negócio ou nas redes sociais facilita esse contato. A mensagem pode já pedir o nome do pet e o serviço desejado, agilizando o atendimento.",
+        "suggested_message": "Olá! Gostaria de agendar um banho e tosa para meu pet. O nome dele é [nome] e é um [raça/porte]. Quais horários têm disponíveis?",
+        "meta_description": "Links de WhatsApp para pet shops e banho e tosa. Agende serviços para pets pelo celular dos tutores.",
+        "faq": [
+            {
+                "question": "Como pet shops podem organizar agendamentos por WhatsApp?",
+                "answer": "Use o WhatsApp Business com catálogo de serviços e respostas rápidas para cada tipo de agendamento."
+            },
+            {
+                "question": "Posso enviar lembretes de vacinas pelo WhatsApp?",
+                "answer": "Sim! Lembretes de vacinas e vermífugos fidelizam clientes e geram retorno recorrente."
+            }
+        ]
+    },
+    {
+        "slug": "saloes-beleza",
+        "title": "Gerador de Link de WhatsApp para Salões de Beleza",
+        "profession_name": "Salões de Beleza",
+        "pain_point": "Agendamentos de última hora são comuns em salões – alguém vê o cabelo no espelho e decide cortar hoje. Se o salão não responde rápido, a cliente vai para outro. Links de WhatsApp com mensagens como 'Vocês têm horário para hoje?' capturam essa demanda imediata. Para promoções e pacotes, links específicos ajudam a medir resultados de cada campanha.",
+        "suggested_message": "Oi! Gostaria de agendar um horário para [corte/escova/tratamento]. Vocês têm disponibilidade [hoje/essa semana]?",
+        "meta_description": "Links de WhatsApp para salões de beleza. Agende cortes, escovas e tratamentos capilares pelo celular.",
+        "faq": [
+            {
+                "question": "Como gerenciar agenda de salão pelo WhatsApp?",
+                "answer": "Use o WhatsApp Business integrado com ferramentas de agendamento ou mantenha uma planilha organizada."
+            },
+            {
+                "question": "Posso ter links diferentes para cada serviço?",
+                "answer": "Sim! Crie links específicos para corte, coloração, manicure etc. para organizar os contatos."
+            }
+        ]
+    },
+    {
+        "slug": "arquitetos",
+        "title": "Gerador de Link de WhatsApp para Arquitetos",
+        "profession_name": "Arquitetos",
+        "pain_point": "Projetos de arquitetura são decisões importantes e caras. Os clientes pesquisam muito antes de fazer contato. Quando finalmente decidem, querem falar diretamente com o profissional, não com uma secretária ou formulário. Links de WhatsApp no portfólio online ou LinkedIn permitem essa conexão direta, passando profissionalismo e acessibilidade ao mesmo tempo.",
+        "suggested_message": "Olá! Vi seu portfólio e gostaria de conversar sobre um projeto de [reforma/casa nova/interiores]. Podemos agendar uma reunião inicial?",
+        "meta_description": "Links de WhatsApp para arquitetos e designers de interiores. Receba solicitações de projetos diretamente no celular.",
+        "faq": [
+            {
+                "question": "Arquitetos devem usar WhatsApp para captar clientes?",
+                "answer": "Sim! É o canal preferido para primeiros contatos no Brasil, mesmo para serviços de alto valor."
+            },
+            {
+                "question": "Como qualificar leads de arquitetura pelo WhatsApp?",
+                "answer": "A mensagem pode pedir tipo de projeto, metragem estimada e bairro para uma triagem inicial."
+            }
+        ]
+    },
+    {
+        "slug": "contadores",
+        "title": "Gerador de Link de WhatsApp para Contadores",
+        "profession_name": "Contadores",
+        "pain_point": "Época de declaração de IR é rush para contadores. Clientes querem respostas rápidas sobre documentação, prazos e valores. Um link de WhatsApp no site ou nas redes sociais agiliza esse atendimento. Para serviços recorrentes como contabilidade de MEI, a mensagem pré-configurada pode já perguntar o tipo de empresa, qualificando o lead desde o início.",
+        "suggested_message": "Olá! Preciso de serviços contábeis para minha empresa. Sou [MEI/ME/Lucro Presumido] e gostaria de um orçamento. Podemos conversar?",
+        "meta_description": "Links de WhatsApp para contadores e escritórios contábeis. Capte clientes que precisam de contabilidade urgente.",
+        "faq": [
+            {
+                "question": "Como contadores podem usar WhatsApp para captar clientes?",
+                "answer": "Links no site, Google Meu Negócio e resposta a dúvidas em grupos de empreendedores."
+            },
+            {
+                "question": "É seguro enviar documentos fiscais por WhatsApp?",
+                "answer": "Para documentos sensíveis, use plataformas seguras. WhatsApp é ideal para o primeiro contato e dúvidas."
+            }
+        ]
+    },
+    {
+        "slug": "professores-particulares",
+        "title": "Gerador de Link de WhatsApp para Professores Particulares",
+        "profession_name": "Professores Particulares",
+        "pain_point": "Pais buscando reforço escolar querem resolver rápido – a prova do filho é na próxima semana. Professores que respondem primeiro geralmente fecham a aula. Links de WhatsApp em anúncios classificados e grupos de bairro capturam esses leads urgentes. A mensagem pode já perguntar a matéria e série do aluno, agilizando o matching.",
+        "suggested_message": "Olá! Estou procurando professor particular de [matéria] para aluno do [série/ano]. O objetivo é [reforço/preparação para prova]. Podemos conversar sobre valores e disponibilidade?",
+        "meta_description": "Links de WhatsApp para professores particulares. Conecte-se com pais e alunos que precisam de reforço escolar.",
+        "faq": [
+            {
+                "question": "Como professores particulares podem divulgar seu WhatsApp?",
+                "answer": "Grupos de pais no Facebook, classificados online e indicações são os melhores canais."
+            },
+            {
+                "question": "Qual informação pedir no primeiro contato?",
+                "answer": "Matéria, série do aluno, objetivo (reforço/provas) e disponibilidade de horários."
+            }
+        ]
+    },
+    {
+        "slug": "mecanicos",
+        "title": "Gerador de Link de WhatsApp para Mecânicos",
+        "profession_name": "Mecânicos",
+        "pain_point": "Carro com problema é urgência. O dono quer saber rápido: 'Quanto custa?' e 'Pode ser hoje?'. Links de WhatsApp no Google Meu Negócio capturam esses clientes em emergência. A possibilidade de enviar foto ou áudio do problema pelo WhatsApp é um diferencial enorme – o cliente descreve o barulho, você já tem uma ideia do diagnóstico antes dele chegar.",
+        "suggested_message": "Olá! Meu carro está com [descreva o problema/barulho]. Vocês podem fazer uma avaliação? [Se possível, envie foto ou áudio do problema]",
+        "meta_description": "Links de WhatsApp para oficinas mecânicas. Receba diagnósticos de problemas automotivos pelo celular.",
+        "faq": [
+            {
+                "question": "Clientes podem enviar áudio do problema do carro?",
+                "answer": "Sim! Incentive isso na mensagem. Ouvir o barulho ajuda no diagnóstico prévio."
+            },
+            {
+                "question": "Como organizar orçamentos pelo WhatsApp?",
+                "answer": "Use o WhatsApp Business com respostas rápidas para orçamentos padrão de serviços comuns."
+            }
+        ]
+    },
+    {
+        "slug": "eletricistas",
+        "title": "Gerador de Link de WhatsApp para Eletricistas",
+        "profession_name": "Eletricistas",
+        "pain_point": "Problemas elétricos são urgentes e perigosos. O cliente quer falar com alguém agora, não preencher formulários. Links de WhatsApp no Google Meu Negócio e em sites locais capturam essas emergências. A mensagem pode pedir endereço e descrição do problema, permitindo que você já tenha uma ideia do serviço antes de ir ao local.",
+        "suggested_message": "Olá! Preciso de um eletricista para [descreva o problema: tomada queimada, curto-circuito, instalação]. Meu endereço é [bairro/região]. Vocês atendem aqui?",
+        "meta_description": "Links de WhatsApp para eletricistas. Receba chamados de emergência e orçamentos de serviços elétricos.",
+        "faq": [
+            {
+                "question": "Como eletricistas podem captar clientes online?",
+                "answer": "Google Meu Negócio com link de WhatsApp e presença em grupos de bairro são os melhores canais."
+            },
+            {
+                "question": "Posso cobrar pela visita técnica?",
+                "answer": "Sim, e informe isso na primeira mensagem para alinhar expectativas."
+            }
+        ]
+    },
+    {
+        "slug": "designers-graficos",
+        "title": "Gerador de Link de WhatsApp para Designers Gráficos",
+        "profession_name": "Designers Gráficos",
+        "pain_point": "Clientes de design muitas vezes não sabem explicar o que querem por e-mail. Pelo WhatsApp, podem enviar referências, prints e explicar melhor a ideia. Links no portfólio Behance ou Dribbble direcionam para uma conversa mais fluida. A mensagem pode já perguntar o tipo de projeto (logo, social media, apresentação), economizando tempo de briefing.",
+        "suggested_message": "Oi! Curti muito seu portfólio e preciso de um trabalho de [logo/identidade visual/design para redes sociais]. Podemos conversar sobre prazos e valores?",
+        "meta_description": "Links de WhatsApp para designers gráficos. Receba briefings e referências de projetos diretamente pelo celular.",
+        "faq": [
+            {
+                "question": "Como designers podem receber briefings pelo WhatsApp?",
+                "answer": "Peça para o cliente enviar referências visuais e descrever o projeto por áudio ou texto."
+            },
+            {
+                "question": "Devo criar links diferentes para cada tipo de serviço?",
+                "answer": "Sim! Links para logo, social media e material impresso ajudam na organização."
+            }
+        ]
+    },
+    {
+        "slug": "consultores-financeiros",
+        "title": "Gerador de Link de WhatsApp para Consultores Financeiros",
+        "profession_name": "Consultores Financeiros",
+        "pain_point": "Falar sobre dinheiro é delicado. Muitas pessoas evitam buscar ajuda financeira por vergonha. O WhatsApp oferece uma barreira de entrada mais baixa que uma ligação ou reunião presencial. Um link com mensagem acolhedora ('Quero organizar minhas finanças') quebra a resistência inicial e abre a porta para a conversa de venda.",
+        "suggested_message": "Olá! Gostaria de uma consultoria para [organizar minhas finanças/investir/sair das dívidas]. Podemos conversar sobre como funciona o seu trabalho?",
+        "meta_description": "Links de WhatsApp para consultores financeiros. Conecte-se com clientes que querem organizar suas finanças.",
+        "faq": [
+            {
+                "question": "Como abordar clientes sobre finanças pessoais?",
+                "answer": "Use uma mensagem acolhedora que não julgue. Foco em 'organizar' e 'crescer', não em 'problemas'."
+            },
+            {
+                "question": "Consultoria financeira pode ser feita por WhatsApp?",
+                "answer": "O primeiro contato e reuniões de acompanhamento sim. Para planos detalhados, use videochamadas."
+            }
+        ]
+    },
+    {
+        "slug": "coachs",
+        "title": "Gerador de Link de WhatsApp para Coaches",
+        "profession_name": "Coaches",
+        "pain_point": "O coach precisa demonstrar valor antes de vender. Links de WhatsApp em conteúdos gratuitos (eBooks, vídeos, lives) capturam pessoas que já consumiram algo seu e querem mais. A mensagem pode ser gatilho de engajamento: 'Vi seu conteúdo sobre [tema] e quero aplicar na minha vida'. Isso já traz o lead qualificado e pronto para a sessão de descoberta.",
+        "suggested_message": "Olá! Acompanho seu trabalho e gostaria de saber mais sobre seu processo de coaching. Como funciona uma sessão?",
+        "meta_description": "Links de WhatsApp para coaches de vida e carreira. Capture leads dos seus conteúdos e converta em clientes.",
+        "faq": [
+            {
+                "question": "Como coaches podem usar WhatsApp para vender?",
+                "answer": "Links em e-books, após lives e em posts de alto engajamento convertem seguidores em leads."
+            },
+            {
+                "question": "Qual a melhor abordagem para sessão de descoberta?",
+                "answer": "Ofereça uma sessão gratuita de 30 minutos via link de WhatsApp com mensagem específica."
+            }
+        ]
+    },
+    {
+        "slug": "restaurantes",
+        "title": "Gerador de Link de WhatsApp para Restaurantes",
+        "profession_name": "Restaurantes",
+        "pain_point": "Delivery próprio pelo WhatsApp evita taxas de apps como iFood e Rappi. Clientes fiéis preferem pedir direto porque sabem que apoia o negócio local. Links de WhatsApp no cardápio digital, Instagram e Google facilitam esse pedido direto. A mensagem pode já mencionar 'Quero fazer um pedido', separando dos contatos de reclamação ou dúvidas.",
+        "suggested_message": "Olá! Gostaria de fazer um pedido para [delivery/retirada]. [Pode enviar o cardápio ou informar os pratos do dia?]",
+        "meta_description": "Links de WhatsApp para restaurantes. Receba pedidos de delivery diretamente, sem taxas de aplicativos.",
+        "faq": [
+            {
+                "question": "Vale a pena ter delivery próprio por WhatsApp?",
+                "answer": "Sim! Você economiza até 30% de taxas e fideliza clientes com atendimento personalizado."
+            },
+            {
+                "question": "Como organizar pedidos pelo WhatsApp?",
+                "answer": "Use o WhatsApp Business com catálogo de pratos e respostas rápidas para itens mais pedidos."
+            }
+        ]
+    },
+    {
+        "slug": "loja-roupas",
+        "title": "Gerador de Link de WhatsApp para Lojas de Roupas",
+        "profession_name": "Lojas de Roupas",
+        "pain_point": "Clientes de moda querem atendimento personalizado. Perguntas sobre tamanhos, combinações e disponibilidade são constantes. Links de WhatsApp nos posts do Instagram transformam comentários ('Tem no P?') em conversas privadas de venda. O vendedor pode enviar fotos de looks, sugerir combinações e fechar a venda ali mesmo.",
+        "suggested_message": "Oi! Vi uma peça no Instagram de vocês e quero saber se tem no meu tamanho [P/M/G]. [Pode descrever ou enviar print da peça]",
+        "meta_description": "Links de WhatsApp para lojas de roupas. Transforme seguidores do Instagram em clientes pelo atendimento personalizado.",
+        "faq": [
+            {
+                "question": "Como lojas de roupas podem vender pelo WhatsApp?",
+                "answer": "Responda comentários do Instagram por DM com link de WhatsApp para continuar a conversa."
+            },
+            {
+                "question": "Posso enviar catálogos pelo WhatsApp?",
+                "answer": "Sim! O WhatsApp Business permite criar catálogos com fotos, preços e descrições."
+            }
+        ]
+    }
+]

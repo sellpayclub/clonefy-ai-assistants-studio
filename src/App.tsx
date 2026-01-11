@@ -28,6 +28,8 @@ const LazyClickGo = lazy(() => import("./pages/tools/ClickGo"));
 const LazyWhatsAppLinkGenerator = lazy(() => import("./pages/tools/WhatsAppLinkGenerator"));
 const LazyWhatsAppWidgetGenerator = lazy(() => import("./pages/tools/WhatsAppWidgetGenerator"));
 const LazyWhatsAppROICalculator = lazy(() => import("./pages/tools/WhatsAppROICalculator"));
+const LazyNicheLinkGenerator = lazy(() => import("./pages/tools/NicheLinkGenerator"));
+const LazySectorIASolution = lazy(() => import("./pages/ia/SectorIASolution"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -123,6 +125,16 @@ const App = () => {
                 <Route path="/ferramentas/calculadora-roi-whatsapp" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <LazyWhatsAppROICalculator />
+                  </Suspense>
+                } />
+                <Route path="/ferramentas/whatsapp-link/:slug" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyNicheLinkGenerator />
+                  </Suspense>
+                } />
+                <Route path="/ia/:slug" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazySectorIASolution />
                   </Suspense>
                 } />
                 <Route path="/thank-you" element={<ThankYou />} />
