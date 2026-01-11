@@ -24,6 +24,10 @@ const LazyAdmin = lazy(() => import("./pages/Admin"));
 const LazyEspanol = lazy(() => import("./pages/Espanol"));
 const LazyWidgetCustomization = lazy(() => import("./pages/WidgetCustomization"));
 const LazyWidgetAnalytics = lazy(() => import("./pages/WidgetAnalytics"));
+const LazyClickGo = lazy(() => import("./pages/tools/ClickGo"));
+const LazyWhatsAppLinkGenerator = lazy(() => import("./pages/tools/WhatsAppLinkGenerator"));
+const LazyWhatsAppWidgetGenerator = lazy(() => import("./pages/tools/WhatsAppWidgetGenerator"));
+const LazyWhatsAppROICalculator = lazy(() => import("./pages/tools/WhatsAppROICalculator"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,12 +58,12 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <ThemeProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <ConditionalSupportWidget />
-                <Routes>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ConditionalSupportWidget />
+              <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
@@ -74,37 +78,57 @@ const App = () => {
                     <LazyWhatsApp />
                   </Suspense>
                 } />
-                 <Route path="/conversations" element={
+                <Route path="/conversations" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <LazyConversations />
                   </Suspense>
                 } />
-                 <Route path="/admin" element={
-                   <Suspense fallback={<LoadingFallback />}>
-                     <LazyAdmin />
-                   </Suspense>
-                  } />
-                  <Route path="/espanol" element={
-                    <Suspense fallback={<LoadingFallback />}>
-                      <LazyEspanol />
-                    </Suspense>
-                  } />
-                   <Route path="/embed/chat/:agentId" element={<EmbedChat />} />
-                   <Route path="/embed-chat/:assistantId" element={<EmbedChat />} />
-                   <Route path="/widget-customization" element={
-                     <Suspense fallback={<LoadingFallback />}>
-                       <LazyWidgetCustomization />
-                     </Suspense>
-                   } />
-                   <Route path="/widget-analytics" element={
-                     <Suspense fallback={<LoadingFallback />}>
-                       <LazyWidgetAnalytics />
-                     </Suspense>
-                   } />
-                   <Route path="/thank-you" element={<ThankYou />} />
-                   <Route path="/lead-capture" element={<LeadCapture />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
+                <Route path="/admin" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyAdmin />
+                  </Suspense>
+                } />
+                <Route path="/espanol" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyEspanol />
+                  </Suspense>
+                } />
+                <Route path="/embed/chat/:agentId" element={<EmbedChat />} />
+                <Route path="/embed-chat/:assistantId" element={<EmbedChat />} />
+                <Route path="/widget-customization" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyWidgetCustomization />
+                  </Suspense>
+                } />
+                <Route path="/widget-analytics" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyWidgetAnalytics />
+                  </Suspense>
+                } />
+                <Route path="/ferramentas/clickgo" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyClickGo />
+                  </Suspense>
+                } />
+                <Route path="/ferramentas/gerador-link-whatsapp" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyWhatsAppLinkGenerator />
+                  </Suspense>
+                } />
+                <Route path="/ferramentas/gerador-widget-whatsapp" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyWhatsAppWidgetGenerator />
+                  </Suspense>
+                } />
+                <Route path="/ferramentas/calculadora-roi-whatsapp" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyWhatsAppROICalculator />
+                  </Suspense>
+                } />
+                <Route path="/thank-you" element={<ThankYou />} />
+                <Route path="/lead-capture" element={<LeadCapture />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
