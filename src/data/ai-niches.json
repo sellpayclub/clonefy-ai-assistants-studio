@@ -42,7 +42,7 @@
         "intro": "Automatize a triagem de processos e o primeiro atendimento do seu escritório com uma IA que entende prazos processuais, áreas do direito e a urgência de cada caso.",
         "use_case_audio": "Um potencial cliente envia um áudio desesperado às 23h explicando que foi demitido injustamente e quer processar a empresa. A Julia transcreve o áudio, identifica que se trata de direito trabalhista, faz perguntas de triagem (tempo de empresa, se há acordo, documentos disponíveis) e já qualifica o lead antes de você acordar. Quando você chega ao escritório, o caso está resumido com as informações essenciais para decidir se aceita ou não.",
         "use_case_agenda": "Advogados vivem de prazos. A Julia integra com seu sistema jurídico e lembra clientes de audiências, prazos para juntar documentos e reuniões de acompanhamento. Quando um cliente pergunta 'qual o status do meu processo?', a IA pode consultar o sistema e dar uma atualização básica, economizando horas de ligações repetitivas.",
-        "content_section": "A advocacia está se transformando. Escritórios que usam tecnologia para triagem de casos conseguem atender 3x mais clientes sem aumentar a equipe. O problema é que o primeiro contato – aquele que define se o cliente escolhe você ou o concorrente – geralmente é perdido por demora na resposta.\n\nA IA da Clonefy para advocacia entende a linguagem jurídica. Ela sabe que um cliente falando sobre 'demissão sem justa causa' é direito trabalhista, enquanto 'inventário' é direito de família/sucessões. Essa categorização automática permite que você priorize os casos mais lucrativos e urgentes.\n\nMas o diferencial está na conformidade. O Código de Ética da OAB proíbe certas práticas de captação, mas permite informar formas de contato. A Julia não promete resultados ou valores, apenas coleta informações para que você, advogado, faça a análise jurídica. Ela foi treinada para seguir as diretrizes éticas da profissão.\n\nPara escritórios que lidam com LGPD (Lei Geral de Proteção de Dados), a Julia também pode ser uma aliada na conformidade. Ela armazena conversas de forma segura, permite exclusão de dados quando solicitado e gera logs de consentimento – tudo o que você precisa para estar em dia com a lei que você mesmo aplica para seus clientes.",
+        "content_section": "A advocacia está se transformando. Escritórios que usam tecnologia para triagem de casos conseguem atender 3x mais clientes sem aumentar a equipe. O problema é que o primeiro contato – aquele que define se o cliente escolhe você ou o concorrente – geralmente é perdido por demora na resposta.\n\nA IA da Clonefy para advocacia entende a linguagem jurídica. Ela sabe que um cliente falando sobre 'demissão sem justa causa' é direito trabalhista, enquanto 'inventário' é direito de família/sucessões. Essa categorização automática permite que você priorize os casos mais lucrativos e urgentes.\n\nBut o diferencial está na conformidade. O Código de Ética da OAB proíbe certas práticas de captação, mas permite informar formas de contato. A Julia não promete resultados ou valores, apenas coleta informações para que você, advogado, faça a análise jurídica. Ela foi treinada para seguir as diretrizes éticas da profissão.\n\nPara escritórios que lidam com LGPD (Lei Geral de Proteção de Dados), a Julia também pode ser uma aliada na conformidade. Ela armazena conversas de forma segura, permite exclusão de dados quando solicitado e gera logs de consentimento – tudo o que você precisa para estar em dia com a lei que você mesmo aplica para seus clientes.",
         "comparison": {
             "human_cost": "R$ 3.000/mês (secretária jurídica)",
             "human_hours": "8h por dia, 5 dias por semana",
@@ -98,7 +98,7 @@
                 "answer": "A Julia pode dar orientações básicas e identificar urgências, mas sempre recomenda consulta veterinária para diagnósticos. Ela não substitui o médico veterinário."
             },
             {
-                "question": "Como funcionam os lembretes de vacina?",
+                "question": "Como funciona os lembretes de vacina?",
                 "answer": "Você cadastra a data da última vacina de cada pet. A Julia calcula automaticamente quando vence e envia mensagem para o tutor uma semana antes."
             },
             {
@@ -161,7 +161,7 @@
         },
         "roi_calculation": "Um SDR imobiliário custa R$ 2.000/mês + comissões. A Clonefy custa R$ 297/mês. Economia direta: R$ 1.703/mês. O ROI real vem das vendas: responder leads em segundos aumenta conversão em 391% segundo estudos do setor.",
         "cta_text": "Agendar Demonstração para minha Imobiliária",
-        "widget_greeting": "Olá! Sou a Julia, assistente especializada em imobiliárias. Quer ver como eu qualiffico leads e agendo visitas automaticamente?",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em imobiliárias. Quer ver como eu qualifico leads e agendo visitas automaticamente?",
         "meta_title": "IA para Atendimento de Imobiliárias - Qualifique Leads 24/7",
         "meta_description": "Funcionário de IA especializado em mercado imobiliário. Responde leads instantaneamente, qualifica interessados e agenda visitas automaticamente.",
         "faq": [
@@ -392,6 +392,366 @@
             {
                 "question": "Como funciona o pós-venda?",
                 "answer": "A Julia acompanha produção, agenda entrega/montagem e faz follow-up de satisfação nos dias seguintes."
+            }
+        ]
+    },
+    {
+        "slug": "e-commerce",
+        "sector": "E-commerce e Lojas Virtuais",
+        "headline": "O Funcionário de IA especializado para E-commerce",
+        "intro": "Reduza o abandono de carrinho e responda dúvidas sobre frete e estoque 24h com uma IA que vende por você no WhatsApp.",
+        "use_case_audio": "Um cliente envia áudio às 23h: 'Oi, gostei dessa bota mas estou na dúvida se a forma é pequena. Calço 37, será que compro o 37 mesmo ou o 38?'. A Julia transcreve, consulta a tabela de medidas do produto e responde: 'Olá! A forma desse modelo é padrão, mas para botas recomendamos o 38 para maior conforto com meias. Temos os dois em estoque! Quer que eu gere o link de pagamento para você?'. Venda fechada na hora.",
+        "use_case_agenda": "E-commerces não agendam consultas, mas agendam 'avisos de estoque'. A Julia monitora: 'Lembra daquele vestido que você queria? Acabou de chegar em estoque o tamanho P! Clique aqui para comprar antes que acabe.' Esse senso de urgência personalizado converte 4x mais que e-mail marketing.",
+        "content_section": "O maior problema do e-commerce é o abandono de carrinho. 70% dos clientes desistem da compra por dúvidas de última hora: frete, tamanho, prazo de entrega ou medo da loja não ser confiável. A Julia resolve isso no canal mais íntimo do brasileiro: o WhatsApp.\n\nA IA integra com sua plataforma (Shopify, Nuvemshop, Tray, Woo) e responde em tempo real. 'Onde está meu pedido?' - A Julia consulta o rastreio e informa. 'Posso trocar se não servir?' - A Julia explica a política de trocas. 'Tem cupom de desconto?' - A Julia oferece um cupom de primeira compra para fechar a venda ali mesmo.\n\nO diferencial está na proatividade. A Julia identifica carrinhos abandonados e manda mensagem: 'Oi Ana! Vi que você deixou itens lindos no carrinho. Ficou com alguma dúvida? Posso te ajudar a finalizar?' Muitas vezes, uma simples resposta de 10 segundos recupera uma venda de centenas de reais.\n\nAlém da recuperação, a IA ajuda no cross-sell. Se o cliente comprou um smartphone, a Julia sugere: 'Vimos que você comprou um iPhone 15. Quer aproveitar e levar a película e a capa com 20% de desconto no mesmo frete?' Lojas virtuais relatam aumento de 25% no ticket médio usando as sugestões inteligentes da Julia.",
+        "comparison": {
+            "human_cost": "R$ 2.000/mês (atendente de SAC)",
+            "human_hours": "Horário comercial, noite e final de semana sem suporte",
+            "human_response": "Minutos a horas em dias de promoção",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, essencial para fechar vendas noturnas",
+            "ai_response": "Menos de 10 segundos, com consulta a estoque e frete"
+        },
+        "roi_calculation": "Um atendente de SAC custa R$ 2.000/mês. A Clonefy custa R$ 297/mês. Economia direta: R$ 1.703/mês. O ROI real vem da recuperação de carrinhos: recuperar apenas 5 carrinhos de R$ 200 por mês paga a ferramenta 3x.",
+        "cta_text": "Agendar Demonstração para minha Loja Virtual",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em e-commerce. Quer ver como eu respondo dúvidas de frete, recupero carrinhos e vendo mais pelo WhatsApp?",
+        "meta_title": "IA para Atendimento de E-commerce - Recupere Carrinhos 24/7",
+        "meta_description": "Funcionário de IA especializado em lojas virtuais. Responde sobre frete, estoque, rastreio de pedidos e recupera carrinhos abandonados automaticamente.",
+        "faq": [
+            {
+                "question": "A IA integra com minha plataforma de e-commerce?",
+                "answer": "Sim! A Julia integra com Shopify, Nuvemshop, Tray, WooCommerce e outras via API ou Webhook para consultar estoque, frete e pedidos."
+            },
+            {
+                "question": "Como funciona a recuperação de carrinhos?",
+                "answer": "A IA identifica quando um cliente deixa itens no carrinho sem finalizar e envia uma mensagem gentil no WhatsApp tirando dúvidas e oferecendo ajuda (ou cupom) para concluir a compra."
+            },
+            {
+                "question": "A IA pode consultar o rastreio do pedido?",
+                "answer": "Sim! O cliente envia o CPF ou número do pedido e a Julia informa o status atual da entrega em tempo real."
+            }
+        ]
+    },
+    {
+        "slug": "concessionarias",
+        "sector": "Concessionárias e Lojas de Veículos",
+        "headline": "O Funcionário de IA especializado para Concessionárias",
+        "intro": "Qualifique leads de veículos 24h, agende Test Drives e responda sobre financiamento com IA especializada no setor automotivo.",
+        "use_case_audio": "Um lead envia áudio às 22h: 'Oi, vi aquela Hilux 2022 no site. Qual a quilometragem? Aceitam carro na troca? Tenho um Corolla 2020'. A Julia transcreve, consulta o estoque, informa a quilometragem exata e responde: 'Olá! A Hilux está com 45.000km e em excelente estado. Sim, aceitamos seu Corolla na troca! Quer que eu faça uma pré-avaliação agora ou prefere agendar um Test Drive para amanhã?'. Lead quente pronto para o vendedor.",
+        "use_case_agenda": "Test Drive é o momento da verdade. A Julia agenda e confirma: 'Seu Test Drive na Hilux está confirmado para amanhã às 10h com o consultor Ricardo. Lembre de trazer sua CNH válida. Nos vemos na concessionária!'. Se o cliente não aparece, ela tenta reagendar na mesma hora.",
+        "content_section": "Venda de veículos é High Ticket e exige resposta rápida. Um lead de carro esfria em 15 minutos. Se ele manda mensagem de noite e só recebe resposta no dia seguinte, provavelmente já falou com 3 concorrentes. A Julia garante que você seja o primeiro.\n\nA IA foi treinada para entender o mercado automotivo: modelos, anos, tipos de câmbio, combustível, teto solar, financiamento. Ela qualifica o lead: tem entrada? quer financiar em quanto tempo? tem carro na troca? score de crédito? Com isso, o vendedor recebe o lead 'mastigado' e foca apenas no fechamento.\n\nO diferencial está na avaliação de seminovos. A Julia pode solicitar fotos do carro do cliente (frente, traseira, interior, painel) e informações básicas para uma pré-avaliação. Isso gera engajamento e faz o cliente sentir que a negociação já começou. Concessionárias relatam que leads que passam pela pré-avaliação da Julia têm 3x mais chance de comparecer à loja.\n\nPara o pós-venda da oficina, a IA é igualmente valiosa. Ela agenda revisões, avisa sobre recalls, lembra do vencimento do seguro e oferece serviços de estética automotiva. Um grupo de concessionárias no PR aumentou o faturamento da oficina em 20% usando a Julia para lembretes de revisão por quilometragem.",
+        "comparison": {
+            "human_cost": "R$ 3.000/mês (SDR automotivo)",
+            "human_hours": "Horário comercial, leads de final de semana ficam no vácuo",
+            "human_response": "Média de 40 minutos em horário comercial",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, inclusive domingos e feriados",
+            "ai_response": "Menos de 10 segundos, com qualificação completa"
+        },
+        "roi_calculation": "Um SDR automotivo custa R$ 3.000/mês. A Clonefy custa R$ 297/mês. Economia direta: R$ 2.703/mês. O ROI real vem da venda: vender apenas 1 carro a mais por mês por responder leads de domingo paga a ferramenta por 2 anos.",
+        "cta_text": "Agendar Demonstração para minha Concessionária",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em concessionárias. Quer ver como eu qualifico leads, faço pré-avaliação de troca e agendo Test Drives?",
+        "meta_title": "IA para Atendimento de Concessionárias - Leads Qualificados 24/7",
+        "meta_description": "Funcionário de IA especializado em concessionárias e lojas de veículos. Responde dúvidas de estoque, financiamento e agenda Test Drives automaticamente.",
+        "faq": [
+            {
+                "question": "A IA sabe o estoque atualizado?",
+                "answer": "Sim! A Julia integra com seu sistema de gestão de estoque e informa modelos disponíveis, anos, cores e preços atualizados."
+            },
+            {
+                "question": "Como funciona a avaliação de carros na troca?",
+                "answer": "A IA solicita as informações do veículo do cliente (ano, modelo, km) e pede fotos chave. Com base nisso, pode dar uma faixa de preço estimada ou encaminhar para o avaliador humano."
+            },
+            {
+                "question": "A IA pode calcular parcelas de financiamento?",
+                "answer": "Sim! Com base no valor do veículo e entrada, a Julia pode fazer simulações básicas de parcelas para adiantar a negociação."
+            }
+        ]
+    },
+    {
+        "slug": "hoteis-pousadas",
+        "sector": "Hotéis e Pousadas",
+        "headline": "O Funcionário de IA especializado para Hotéis e Pousadas",
+        "intro": "Aumente reservas diretas, responda sobre disponibilidade e facilite o check-in 24h com uma IA que entende de hospitalidade.",
+        "use_case_audio": "Um hóspede envia áudio às 21h: 'Oi, queria saber se o quarto de casal tem ar condicionado e sacada com vista pro mar. E qual o horário do café da manhã?'. A Julia transcreve, confirma os detalhes do quarto, informa o horário do café e já responde: 'Sim! Nossas suítes Master têm ar condicionado e uma varanda incrível de frente para o mar. O café é servido das 7h às 10h. Quer que eu verifique a disponibilidade para sua data?'. Reserva direta garantida.",
+        "use_case_agenda": "Reservas são a alma do negócio. A Julia integra com seu motor de reservas (CM) e oferece datas disponíveis e preços em tempo real. 'Temos a suíte disponível de 15 a 18 de março por R$ 1.200. Quer garantir sua reserva agora?'. Sem pagar 15% de comissão para o Booking.",
+        "content_section": "OTAs como Booking e Expedia cobram entre 15% e 25% de comissão por cada reserva. Para um hotel que fatura R$ 100 mil por mês, isso é R$ 20 mil indo para intermediários. A Julia incentiva a reserva direta pelo WhatsApp, oferecendo benefícios exclusivos e atendimento instantâneo.\n\nA IA foi treinada para ser uma concierge digital. Ela responde dúvidas sobre pet friendly, estacionamento, voltagem das tomadas, pontos turísticos próximos e transfer. Se o hóspede tem uma necessidade especial (ex: cama extra para criança), a Julia anota e já avisa a governança.\n\nO diferencial está no atendimento durante a estadia. O hóspede não precisa ligar para a recepção para pedir uma toalha ou saber a senha do Wi-Fi. Ele manda um Zap, a Julia responde e já dispara um alerta para o camareiro. Isso gera uma experiência premium com menos equipe na recepção.\n\nPara o pós-check-out, a IA é imbatível na fidelização. Ela envia pesquisa de satisfação, oferece desconto para a próxima estadia e lembra de datas especiais: 'Oi Carlos! Vimos que você se hospedou conosco no ano passado. Quer aproveitar uma oferta especial para seu aniversário esse mês?'. Hotéis relatam que 15% das reservas diretas vêm dessas campanhas de lembrança da Julia.",
+        "comparison": {
+            "human_cost": "R$ 2.500/mês (recepcionista de hotel)",
+            "human_hours": "Recepção 24h exige 4 funcionários em turnos",
+            "human_response": "Sujeito a picos de check-in/check-out",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, sem precisar de turnos",
+            "ai_response": "Instantâneo, tirando dúvidas e fazendo reservas"
+        },
+        "roi_calculation": "Comissões de OTAs custam 20% da reserva. Uma reserva de R$ 1.000 custa R$ 200 de taxa. Fazendo apenas 2 reservas diretas a mais por mês via WhatsApp, a Clonefy já está paga. Hotéis relatam aumentar reservas diretas em 30% com a Julia.",
+        "cta_text": "Agendar Demonstração para meu Hotel",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em hotéis e pousadas. Quer ver como eu respondo dúvidas, aumento reservas diretas e atendo hóspedes 24h?",
+        "meta_title": "IA para Atendimento de Hotéis - Aumente Reservas Diretas 24/7",
+        "meta_description": "Funcionário de IA especializado em hospitalidade. Responde sobre disponibilidade, preços, serviços do hotel e faz reservas diretas pelo WhatsApp.",
+        "faq": [
+            {
+                "question": "A IA pode fazer reservas sozinhas?",
+                "answer": "Sim! A Julia integra com seu motor de reservas ou PMS para consultar datas, preços e disponibilidade, gerando a pré-reserva ou enviando link de pagamento."
+            },
+            {
+                "question": "Como a IA ajuda a diminuir as taxas do Booking?",
+                "answer": "Ao oferecer atendimento instantâneo e vantagens exclusivas no WhatsApp (como late check-out), a Julia atrai o cliente para reservar direto com você, evitando a comissão das plataformas."
+            },
+            {
+                "question": "A IA pode atuar como Concierge?",
+                "answer": "Sim! Ela responde sobre horários de café, senha de Wi-Fi, indica passeios locais, chama transfer e até anota pedidos para a governança."
+            }
+        ]
+    },
+    {
+        "slug": "saloes-beleza",
+        "sector": "Salões de Beleza e Barbearias",
+        "headline": "O Funcionário de IA especializado para Salões de Beleza",
+        "intro": "Elimine o telefone tocando no meio dos atendimentos e automatize agendamentos 24h com uma IA que entende de estilo e beleza.",
+        "use_case_audio": "Uma cliente envia áudio às 22h: 'Oi, queria marcar luzes pro sábado de manhã, mas meu cabelo tá com progressiva, tem algum problema?'. A Julia transcreve, identifica o serviço e a dúvida técnica, e responde: 'Olá! Não há problema, mas recomendamos um teste de mecha antes para garantir a saúde dos fios. Temos horário sábado às 9h ou 11h. Quer deixar agendado?'. Agendamento técnico feito sem interromper o cabeleireiro.",
+        "use_case_agenda": "Salões vivem de agenda lotada e 'no-shows'. A Julia confirma agendamentos 24h antes, reagenda desistências na hora e avisa a profissional. 'Seu horário de manicure está confirmado para amanhã às 14h com a Bia. Se precisar mudar, é só avisar por aqui.' Redução de buracos na agenda em até 30%.",
+        "content_section": "O setor de beleza no Brasil é resiliente, mas a gestão do tempo é o maior desafio. Cabeleireiros e manicures perdem produtividade (e dinheiro) parando para responder WhatsApp ou atender telefone. A Julia da Clonefy assume essa função, atendendo com a mesma atenção e detalhismo de uma recepcionista dedicada.\n\nA IA foi treinada para entender serviços de beleza: coloração, balayage, selagem, design de sobrancelha, barboterapia. Ela tira dúvidas sobre preços, duração dos procedimentos e indicações: 'Quanto tempo demora as luzes?' - A Julia responde explicand o que depende do tamanho do cabelo, mas a média é de 3 a 4 horas. Isso alinha expectativas antes da cliente sentar na cadeira.\n\nO diferencial está na venda de produtos pós-procedimento. Se a cliente fez luzes, a Julia sugere: 'Vimos que você fez luzes hoje! Temos o kit de manutenção da marca X para manter o loiro vivo por mais tempo. Quer que eu reserve um pra você retirar na próxima visita?'. Salões relatam aumento de 15% no faturamento com venda de produtos via WhatsApp.\n\nPara barbearias premium, a Julia entende o estilo 'Lifestyle': agenda horário, avisa sobre a cerveja gelada por conta da casa e até lembra o cliente que está na hora de dar aquele tapa na barba: 'Fala, João! Já faz 15 dias que você veio. Quer marcar o corte e a barba para esse final de semana?' Fidelização bruta e automática.",
+        "comparison": {
+            "human_cost": "R$ 1.800/mês (recepcionista)",
+            "human_hours": "8h por dia, sem atendimento noturno",
+            "human_response": "Sujeito a interrupções no atendimento",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, agenda sempre aberta",
+            "ai_response": "Instantâneo, sem tirar o foco do profissional"
+        },
+        "roi_calculation": "Uma recepcionista custa R$ 1.800/mês. A Clonefy custa R$ 297/mês. Economia de R$ 1.503/mês. Mas o ROI real vem da agenda: reduzir furos em 20% em um salão com ticket de R$ 100 significa recuperar R$ 2.000+ por mês em serviços.",
+        "cta_text": "Agendar Demonstração para meu Salão",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em salões de beleza. Quer ver como eu agendo horários e reduzo faltas automaticamente?",
+        "meta_title": "IA para Atendimento de Salões de Beleza - Agendamento 24/7",
+        "meta_description": "Funcionário de IA especializado em salões e barbearias. Agenda serviços, tira dúvidas sobre procedimentos e reduz no-shows com lembretes automáticos.",
+        "faq": [
+            {
+                "question": "A IA pode explicar sobre técnicas de cabelo?",
+                "answer": "Sim! A Julia entende a diferença entre luzes, progressiva, selagem e outros. Ela tira dúvidas básicas e agenda o teste de mecha quando necessário."
+            },
+            {
+                "question": "Como funciona a confirmação de horário?",
+                "answer": "A Julia envia mensagem automática 24h antes pedindo confirmação. Se a cliente desmarca, a IA já oferece o horário vago para outras interessadas."
+            },
+            {
+                "question": "Posso vender produtos pelo WhatsApp?",
+                "answer": "Sim! A Julia pode sugerir kits de manutenção pós-procedimento e reservar os produtos no estoque para a cliente retirar no salão."
+            }
+        ]
+    },
+    {
+        "slug": "assistencia-tecnica",
+        "sector": "Assistência Técnica",
+        "headline": "O Funcionário de IA especializado para Assistência Técnica",
+        "intro": "Agilize orçamentos de celulares e computadores, informe status de reparo e tire dúvidas técnicas 24h com IA especializada.",
+        "use_case_audio": "Um cliente envia áudio: 'Meu iPhone 13 caiu na água e não liga mais, quanto custa o conserto?'. A Julia transcreve, identifica o modelo e o problema (dano por líquido), e responde: 'Olá! Danos por líquido exigem desoxidação e análise em laboratório. O serviço de desoxidação custa a partir de R$ 150, mas precisamos avaliar se afetou a placa ou tela. Quer agendar a entrega do aparelho agora?'. Suporte técnico preciso, imediato.",
+        "use_case_agenda": "Transparência é tudo. A Julia informa o status: 'Seu notebook já está na bancada de testes! A previsão de conclusão é amanhã às 16h. Te aviso assim que estiver pronto para retirar.' Isso reduz ligações ansiosas dos clientes e libera os técnicos para trabalharem.",
+        "content_section": "O setor de assistência técnica sofre com excesso de ligações repetitivas: 'tem peça em estoque?', 'quanto custa trocar a tela do modelo X?', 'meu aparelho já tá pronto?'. A Julia assume 80% dessa carga, deixando os técnicos focados no que realmente gera receita: o reparo.\n\nA IA foi treinada para entender o vocabulário técnico: touch, display, conector de carga, reballing, backup, formatação. Ela tira dúvidas sobre garantias, formas de pagamento e prazos médios de reparo. 'Quanto tempo demora pra trocar bateria de iPhone?' - A Julia responde que em média 40 minutos se agendar antes, e sugere o agendamento.\n\nO diferencial está na logística de coleta (Leva e Traz). A Julia pode agendar o motoboy para buscar o aparelho no endereço do cliente, confirmando valores e horários. Assistências que usam o sistema 'Leva e Traz' via WhatsApp relatam aumento de 50% no volume de reparos, pois eliminam o esforço do cliente de ir até a loja.\n\nPara assistência de eletrodomésticos, a Julia qualifica o atendimento em domicílio: 'Geladeira parou de gelar, marca Brastemp, modelo Frost Free'. Ela já coleta o CEP e passa a taxa de visita técnica, agendando o melhor horário para o técnico ir até o local.",
+        "comparison": {
+            "human_cost": "R$ 1.800/mês (atendente de balcão)",
+            "human_hours": "8h por dia, sem suporte em feriados",
+            "human_response": "Demora em horários de pico",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, orçamento prévio sempre pronto",
+            "ai_response": "Instantâneo, com histórico de orçamentos"
+        },
+        "roi_calculation": "Um atendente custa R$ 1.800/mês. A Clonefy custa R$ 297/mês. Economia de R$ 1.503/mês. ROI real: técnicos focados produzem 30% mais reparos por dia, o que em uma loja média significa R$ 5.000+ de lucro extra.",
+        "cta_text": "Agendar Demonstração para minha Assistência",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em assistência técnica. Quer ver como eu passo orçamentos prévios e informo o status do reparo automaticamente?",
+        "meta_title": "IA para Atendimento de Assistência Técnica - Orçamentos 24/7",
+        "meta_description": "Funcionário de IA especializado em assistência técnica de celulares e computadores. Passa orçamentos, informa status de reparo e agenda coletas via motoboy.",
+        "faq": [
+            {
+                "question": "A IA pode dar orçamento exato?",
+                "answer": "A Julia dá orçamentos prévios com base no problema relatado, mas sempre informa que o valor final depende da análise técnica presencial."
+            },
+            {
+                "question": "Como o cliente consulta o status do reparo?",
+                "answer": "O cliente envia o número da Ordem de Serviço (OS) e a Julia consulta no sistema, informando em qual etapa o aparelho está (análise, peça aguardando, pronto)."
+            },
+            {
+                "question": "Funciona para coleta em domicílio?",
+                "answer": "Sim! A Julia pode agendar o serviço de Leva e Traz, confirmando o endereço e o horário para o motoboy buscar o aparelho."
+            }
+        ]
+    },
+    {
+        "slug": "consultorias",
+        "sector": "Consultorias e Mentorias",
+        "headline": "O Funcionário de IA especializado para Consultores",
+        "intro": "Qualifique mentorados, agende sessões de estratégia e venda seus pacotes de consultoria 24h com IA de alto desempenho.",
+        "use_case_audio": "Um lead envia áudio: 'Vi sua mentoria de negócios, atuo no varejo e estou faturando 50k mas estagnado. Como funciona sua consultoria?'. A Julia transcreve, identifica o nível do lead, apresenta os pilares da sua mentoria e responde: 'Olá! Fazemos mentorias voltadas para escala de faturamento. Para esse nível, temos o programa X. Quer agendar uma call de 15 min de diagnóstico grátis amanhã?'. Call agendada sem você abrir o WhatsApp.",
+        "use_case_agenda": "Agenda de consultor é lotada. A Julia é sua gatekeeper: ela só permite agendamento de quem está qualificado. Envia lembretes das sessões, materiais de apoio pré-call (briefing) e coleta o feedback pós-mentoria para seus depoimentos.",
+        "content_section": "Consultores e mentores vendem conhecimento, mas gastam muito tempo no 'comercial' tentando explicar como funcionam seus programas. A Julia assume essa função educativa, apresentando seus métodos, resultados de alunos (case studies) e tirando dúvidas sobre investimento e duração.\n\nA IA foi treinada para entender o funil de vendas de infoprodutos e serviços: bônus, garantia, acesso vitalício, acompanhamento em grupo vs individual. Ela qualifica o lead pelo faturamento, tamanho da equipe ou objetivo: 'Quero crescer meu Instagram' - A Julia foca na oferta de mentoria de marketing. 'Quero organizar meu financeiro' - Ela foca na oferta de gestão.\n\nO diferencial está na antecipação. Antes da sua primeira reunião, a Julia já coletou: site do cliente, principais dores, faturamento atual e expectativa. Você entra na call sabendo exatamente onde atacar para fechar o contrato. Consultores relatam que a taxa de fechamento em calls sobe de 20% para 45% com essa qualificação prévia.\n\nPara mentorias em grupo, a Julia faz a gestão de comunidade no WhatsApp: avisa sobre aulas ao vivo, envia o replay, tira dúvidas sobre o acesso à plataforma e mantém o engajamento alto. Você foca em dar a aula, a Julia foca na logística.",
+        "comparison": {
+            "human_cost": "R$ 2.500/mês (assistente executiva)",
+            "human_hours": "8h por dia, leads qualificados no final de semana perdidos",
+            "human_response": "Varia conforme a agenda do consultor",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, qualificação profunda de madrugada",
+            "ai_response": "Instantâneo, apresentando cases e autoridade"
+        },
+        "roi_calculation": "Uma consultoria de R$ 5.000 paga a Clonefy por quase 2 anos. Perder 1 lead qualificado por falta de resposta rápida custa milhares de reais. Com a Julia, você aumenta a taxa de agendamento em 30%.",
+        "cta_text": "Agendar Demonstração para minha Consultoria",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em consultores e mentores. Quer ver como eu qualifico leads de alto valor e agendo calls de diagnóstico?",
+        "meta_title": "IA para Atendimento de Consultores - Agende Mentorias 24/7",
+        "meta_description": "Funcionário de IA especializado em consultoria e mentoria. Qualifica leads, apresenta autoridade, agenda calls de e faz follow-up de alunos.",
+        "faq": [
+            {
+                "question": "A IA pode explicar meu método?",
+                "answer": "Sim! Você treina a Julia com os pilares da sua metodologia e ela explica para cada lead interessado, criando autoridade antes mesmo de você falar com eles."
+            },
+            {
+                "question": "Como funciona a qualificação de leads?",
+                "answer": "A IA faz perguntas estratégicas (faturamento, objetivos, desafios) para garantir que apenas leads com o perfil ideal cheguem na sua agenda para o fechamento."
+            },
+            {
+                "question": "Ela gerencia grupos de WhatsApp?",
+                "answer": "Sim! A Julia pode enviar avisos, links de aula e tirar dúvidas técnicas de alunos dentro de grupos de mentoria."
+            }
+        ]
+    },
+    {
+        "slug": "agencias-viagens",
+        "sector": "Agências de Viagens",
+        "headline": "O Funcionário de IA especializado para Agências de Viagens",
+        "intro": "Venda pacotes, tire dúvidas sobre vistos e destinos, e dê suporte ao viajante 24h com uma IA que conhece o mundo.",
+        "use_case_audio": "Um viajante envia áudio às 23h: 'Oi, queria ver um pacote para Orlando em maio, para 2 adultos e 2 crianças. Incluindo Disney e Universal. O que vocês têm?'. A Julia transcreve, consulta suas ofertas, e responde: 'Olá! Maio é uma época excelente para Orlando. Temos pacotes com aéreo, hotel dentro do complexo e ingressos a partir de R$ X por pessoa. Quer que eu envie o roteiro detalhado em PDF agora?'. Lead de viagem quente às 23h.",
+        "use_case_agenda": "Viagem é feita de datas. A Julia lembra o cliente de tudo: 'Lembrete: seu check-in é amanhã! Seus vouchers estão aqui no Zap. Boa viagem!'. Durante a viagem, se o cliente pergunta 'qual o fuso horário agora?' ou 'onde fica a embaixada?', a Julia responde em segundos, garantindo a paz do passageiro.",
+        "content_section": "Agencias de viagens competem com sites de busca globais. O diferencial é o serviço personalizado e a segurança de ter alguém para socorrer se algo der errado. A Julia permite que sua agência dê suporte 24h sem precisar de plantão humano noturno.\n\nA IA foi treinada para entender o mercado de turismo: milhas, conexões, categorias de hotéis (turística, luxo), tipos de vistos e seguros viagem. Ela ajuda no cross-sell: comprou a passagem? A Julia oferece o seguro e o aluguel de carro. 'Vai pra Europa? Lembre-se que o seguro viagem é obrigatório. Quer cotar o plano de R$ 30 mil ou R$ 50 mil de cobertura?'.\n\nO diferencial está no suporte em tempo real. O passageiro está no aeroporto em Paris e o portão mudou? A Julia avisa. Perdeu o transfer? A Julia ajuda a chamar um novo. Isso cria uma experiência de 'Agência Boutique' que justifica o valor do seu serviço. Agências relatam que clientes que usam a Julia durante a viagem têm 90% mais chance de indicar a agência para amigos.\n\nPara cotações complexas, a IA qualifica o perfil: econômico, moderado ou luxo? Gosta de aventura ou descanso? Com essas respostas, o agente de viagens humano faz uma proposta muito mais assertiva e com menos idas e vindas de mensagens.",
+        "comparison": {
+            "human_cost": "R$ 2.200/mês (agente de viagens)",
+            "human_hours": "Horário comercial, sem suporte em fusos horários diferentes",
+            "human_response": "Demorada durante feriados e férias",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, fale com o passageiro no fuso dele",
+            "ai_response": "Instantâneo com informações de destinos e documentos"
+        },
+        "roi_calculation": "Uma comissão de pacote internacional paga a ferramenta por meses. Perder uma venda de R$ 20k por responder 2h depois custa muito. Com a Julia, você aumenta a conversão de orçamentos em 25% por ser onipresente.",
+        "cta_text": "Agendar Demonstração para minha Agência",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em agências de viagens. Quer ver como eu vendo pacotes e dou suporte ao viajante 24h em qualquer fuso?",
+        "meta_title": "IA para Atendimento de Agências de Viagens - Suporte 24/7",
+        "meta_description": "Funcionário de IA especializado em turismo. Vende pacotes de viagem, tira dúvidas sobre destinos e dá suporte ao viajante em tempo real via WhatsApp.",
+        "faq": [
+            {
+                "question": "A IA conhece as regras de cada país?",
+                "answer": "Sim! A Julia é atualizada sobre exigências de visto, vacinas e documentos para os principais destinos do mundo."
+            },
+            {
+                "question": "Como funciona o suporte durante a viagem?",
+                "answer": "O cliente pode tirar dúvidas sobre horários, endereços, fuso horário e até ajuda em emergências leves, com a Julia respondendo no fuso em que ele estiver."
+            },
+            {
+                "question": "Ela faz cotações completas?",
+                "answer": "A Julia coleta todas as preferências do viajante e apresenta opções básicas, encaminhando os leads qualificados para o agente fechar o roteiro final."
+            }
+        ]
+    },
+    {
+        "slug": "eventos-buffets",
+        "sector": "Eventos e Buffets",
+        "headline": "O Funcionário de IA especializado para Buffets e Eventos",
+        "intro": "Responda orçamentos de festas instantaneamente, qualifique convidados e gerencie datas 24h com uma IA que entende de celebração.",
+        "use_case_audio": "Uma noiva envia áudio às 23h: 'Oi, queria saber se vocês têm data disponível para 15 de novembro de 2025, para 150 convidados, e se o buffet inclui bebidas alcoólicas'. A Julia transcreve, consulta o calendário de eventos, e responde: 'Olá! Parabéns pelo noivado! Sim, temos o dia 15/11/2025 disponível. Nossos pacotes para 150 pessoas começam em R$ X e incluem bar completo. Quer que eu envie nosso cardápio de casamentos e as fotos do salão agora?'. Uma venda de R$ 30k que começa com uma resposta imediata de madrugada.",
+        "use_case_agenda": "Gestão de visitas técnicas é crucial. A Julia agenda: 'Podemos mostrar o espaço amanhã às 14h ou 16h. Qual prefere?'. Após a visita, ela faz o follow-up: 'O que achou do espaço? Ficou com alguma dúvida sobre o contrato?'. Buffets relatam que o tempo entre o primeiro contato e a assinatura do contrato caiu 40% com a Julia.",
+        "content_section": "O mercado de eventos é movido por sonhos e ansiedade. Quando uma mãe decide fazer a festa de 1 ano do filho ou um casal decide casar, eles querem respostas na hora. A demora de 12h para enviar um orçamento básico pode fazer o cliente fechar com o concorrente que foi mais rápido. A Julia garante que seu buffet seja o mais ágil do mercado.\n\nA IA foi treinada para entender a logística de festas: RSVP, tipos de serviço (finger food, empratado, buffet), decoração, som e luz, e restrições alimentares. Ela qualifica o lead: qual a data? quantos convidados? qual o tipo de evento (social ou corporativo)? Com essas informações, você envia uma proposta personalizada em minutos, não em dias.\n\nO diferencial está no RSVP automatizado. A Julia pode mandar mensagem para todos os convidados confirmando a presença: 'Olá! Você foi convidado para o casamento de Ana e Pedro. Confirma sua presença até dia 10?'. Ela gera a lista final de confirmados automaticamente, economizando dezenas de horas da sua equipe e evitando desperdício de comida.\n\nPara corporativo, a Julia entende a urgência de empresas: pede o CNPJ para faturamento, pergunta sobre equipamentos de projeção e coffee break, e agenda reuniões rápidas com o gerente de eventos. Um espaço de eventos em Barueri dobrou seus orçamentos corporativos fechados usando a Julia para qualificação rápida de leads do LinkedIn.",
+        "comparison": {
+            "human_cost": "R$ 2.200/mês (atendente comercial)",
+            "human_hours": "Horário comercial, noivas pesquisam de madrugada",
+            "human_response": "Demorada devido à complexidade dos orçamentos",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, suporte total no RSVP",
+            "ai_response": "Instantâneo com envio de portfólio e cardápios"
+        },
+        "roi_calculation": "Uma festa de R$ 20.000 paga a Clonefy por 5 anos. Capturar 1 evento a mais por mês por responder rápido de noite gera um lucro absurdo. Espaços de eventos relatam ROI de 50x no primeiro mês.",
+        "cta_text": "Agendar Demonstração para meu Buffet",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em buffets e eventos. Quer ver como eu respondo orçamentos, envio cardápios e faço RSVP automático?",
+        "meta_title": "IA para Atendimento de Buffets e Eventos - Orçamentos 24/7",
+        "meta_description": "Funcionário de IA especializado em eventos. Responde orçamentos na hora, envia cardápios, faz RSVP automático e qualifica leads de festas 24h.",
+        "faq": [
+            {
+                "question": "A IA pode enviar meu cardápio?",
+                "answer": "Sim! A Julia envia seus cardápios em PDF ou link, explica o que está incluso em cada pacote e tira dúvidas sobre personalização de pratos."
+            },
+            {
+                "question": "Como funciona o RSVP automático?",
+                "answer": "Você fornece a lista de convidados e a Julia envia mensagens individuais no WhatsApp pedindo confirmação de presença e restrições alimentares, gerando um relatório final para você."
+            },
+            {
+                "question": "Ela sabe sobre datas disponíveis?",
+                "answer": "Sim! A Julia integra com seu calendário de locação e informa na hora se a data pretendida pelo cliente está livre ou se há opções próximas."
+            }
+        ]
+    },
+    {
+        "slug": "seguradoras",
+        "sector": "Seguradoras e Corretoras de Seguros",
+        "headline": "O Funcionário de IA especializado para Corretoras de Seguros",
+        "intro": "Atenda sinistros 24h, faça cotações de renovação e tire dúvidas sobre apólices com uma IA que entende de proteção.",
+        "use_case_audio": "Um cliente envia áudio nervoso às 2h: 'Bati o carro agora na Avenida Brasil, o que eu faço? Preciso de guincho!'. A Julia transcreve, identifica a urgência, acalma o cliente e responde: 'Olá! Primeiro, verifique se todos estão bem. Já localizei sua apólice. Vou solicitar o guincho agora para sua localização. Pode enviar uma foto do veículo e do local?'. Suporte em sinistro que fideliza o cliente para sempre.",
+        "use_case_agenda": "Seguros vencem todo ano. A Julia faz a gestão de renovação: 'Sua apólice de Auto vence em 30 dias. Já preparei 3 cotações comparativas para você manter sua proteção pelo melhor preço. Quer ver?'. Corretoras relatam que a taxa de renovação sobe de 70% para 92% com esse acompanhamento proativo.",
+        "content_section": "Corretoras de seguros vendem promessa de ajuda em momentos difíceis. Mas se no momento do acidente o corretor não atende o telefone, a promessa se quebra. A Julia garante que sua corretora atenda em 10 segundos, no momento em que o cliente mais precisa, seja um acidente de carro, um cano estourado (seguro residencial) ou uma dúvida de saúde.\n\nA IA foi treinada para entender o mercado de seguros: franquia, cobertura de terceiros, bônus de renovação, carência, vigência. Ela qualifica novos leads: 'Quero seguro de vida' - A Julia pergunta idade, profissão e beneficiários. 'Quero seguro viagem' - Ela pergunta destino e datas. Com as respostas, o sistema gera a cotação oficial em segundos.\n\nO diferencial está na educação do cliente. Muitos não sabem o que contratar. A Julia explica: 'O que é cobertura de vidros?' - Ela detalha a importância. 'Vale a pena franquia reduzida?' - Ela faz a comparação de custo-benefício. Isso aumenta o ticket médio da venda porque o cliente entende o valor do que está comprando.\n\nPara corretoras multidisciplinares, a Julia atua no cross-sell: o cliente tem o Seguro Auto? Ela oferece o Seguro Residencial com desconto de 'combo'. Corretoras em Porto Alegre aumentaram o índice de apólices por CPF em 35% com as sugestões inteligentes da Julia no WhatsApp.",
+        "comparison": {
+            "human_cost": "R$ 3.000/mês (assistente de seguros)",
+            "human_hours": "8h por dia, sinistros noturnos ficam sem suporte humano direto",
+            "human_response": "Depende da disponibilidade do corretor no celular",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, suporte total em sinistros de madrugada",
+            "ai_response": "Instantâneo, acalmando o cliente e acionando assistências"
+        },
+        "roi_calculation": "Uma comissão de Seguro Saúde paga a Clonefy por 1 ano. Aumentar a taxa de renovação em 10% em uma carteira média gera R$ 50k+ de lucro anual. O ROI é imediato na retenção e no atendimento de sinistros.",
+        "cta_text": "Agendar Demonstração para minha Corretora",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em corretoras de seguros. Quer ver como eu atendo sinistros 24h e faço renovações automáticas?",
+        "meta_title": "IA para Atendimento de Seguradoras - Suporte a Sinistros 24/7",
+        "meta_description": "Funcionário de IA especializado em seguros. Atende sinistros, tira dúvidas de apólices, faz cotações de renovação e capta leads 24 horas por dia.",
+        "faq": [
+            {
+                "question": "A IA pode acionar o guincho?",
+                "answer": "Sim! A Julia pode ser integrada com o sistema da seguradora para solicitar assistências básicas (guincho, chaveiro, eletricista) em caso de emergência."
+            },
+            {
+                "question": "Como funciona a renovação automática?",
+                "answer": "A IA monitora o vencimento das apólices e entra em contato com o cliente 30 dias antes, já apresentando opções de valores e coberturas para renovação rápida."
+            },
+            {
+                "question": "Ela sabe explicar coberturas complexas?",
+                "answer": "Sim! A Julia explica termos como franquia, coberturas de terceiros, lucros cessantes e outras cláusulas de forma simples para o cliente."
+            }
+        ]
+    },
+    {
+        "slug": "logistica-transportadoras",
+        "sector": "Logística e Transportadoras",
+        "headline": "O Funcionário de IA especializado para Logística",
+        "intro": "Informe rastreio em tempo real, tire dúvidas sobre fretes e prazos, e qualifique motoristas 24h com IA de alta performance.",
+        "use_case_audio": "Um cliente envia áudio: 'Minha carga de eletrônicos saiu de SP ontem, qual a previsão de chegada aqui em Curitiba?'. A Julia transcreve, consulta o TMS (sistema de transporte), identifica a placa do caminhão e o status da rota, e responde: 'Olá! Sua carga está em trânsito pela BR-116, com chegada prevista para amanhã às 10h. Quer que eu envie um alerta quando o motorista entrar na cidade?'. Consultoria de logística proativa.",
+        "use_case_agenda": "Agendamento de carga e descarga é o gargalo da logística. A Julia coordena: 'Temos janelas para descarga amanhã às 8h, 10h ou 14h. Qual seu motorista vai assumir?'. Ela coleta os dados do motorista (Nome, CPF, Placa) e já envia a autorização de entrada, reduzindo filas na portaria.",
+        "content_section": "Eficiência em logística é informação em tempo real. O cliente que não sabe onde está sua carga fica ansioso e ocupa sua equipe de SAC. A Julia resolve isso abrindo um canal direto de consulta no WhatsApp, funcionando 24h por dia, mesmo quando seu escritório está fechado.\n\nA IA foi treinada para o vocabulário de transporte: CTRC, nota fiscal, paletização, carga fracionada vs lotação, cubagem, frete valor e frete peso. Ela faz cotações rápidas: 'Quanto custa enviar 2 pallets de Curitiba para Recife?' - A Julia coleta peso, medidas e valor da nota, e passa uma estimativa baseada na sua tabela de preços.\n\nO diferencial está na qualificação de motoristas e agregados. A Julia pode fazer a triagem inicial de novos motoristas: 'Tem qual categoria de CNH? O caminhão é baú ou sider? Qual o ano do veículo?'. Isso cria um banco de dados qualificado para quando você precisar de um frete urgente. Transportadoras relatam que o tempo para encontrar um motorista agregado caiu de 4h para 20 minutos com a Julia.\n\nPara o destinatário final, a IA é um diferencial competitivo. Você oferece para seu cliente um 'Bot de Rastreio' personalizado com a marca dele, que avisa o recebedor exatamente quando a carga está chegando. Isso reduz reentregas por destinatário ausente em até 40%.",
+        "comparison": {
+            "human_cost": "R$ 2.000/mês (atendente de SAC logístico)",
+            "human_hours": "8h por dia, caminhões rodam 24h",
+            "human_response": "Demorada em horários de pico de expedição",
+            "ai_cost": "R$ 297/mês (Plano Pro Clonefy)",
+            "ai_hours": "24h por dia, suporte total enquanto a carga está na estrada",
+            "ai_response": "Instantâneo com dados de rastreio e cotações"
+        },
+        "roi_calculation": "Um atendente de SAC custa R$ 2.000/mês. A Clonefy custa R$ 297/mês. Economia de R$ 1.703/mês. O ROI real vem da eficiência operacional: reduzir reentregas e filas de portaria economiza milhares de reais em combustível e horas extras de motoristas.",
+        "cta_text": "Agendar Demonstração para minha Transportadora",
+        "widget_greeting": "Olá! Sou a Julia, assistente especializada em logística e transporte. Quer ver como eu informo rastreio e agendo janelas de carga automaticamente?",
+        "meta_title": "IA para Atendimento de Logística - Rastreio e Fretes 24/7",
+        "meta_description": "Funcionário de IA especializado em transporte e logística. Informa rastreio, calcula fretes, qualifica motoristas e agenda janelas de carga 24h.",
+        "faq": [
+            {
+                "question": "A IA pode consultar meu sistema de rastreio?",
+                "answer": "Sim! A Julia integra via API com os principais TMS do mercado para informar a localização exata da carga em tempo real."
+            },
+            {
+                "question": "Como funciona o agendamento de janelas?",
+                "answer": "A IA apresenta os horários disponíveis na sua doca ou armazém, o motorista escolhe e fornece os dados para cadastro prévio, agilizando a portaria."
+            },
+            {
+                "question": "Ela sabe calcular preço de frete?",
+                "answer": "Sim! Com base na sua tabela de preços, a Julia coleta origem, destino, peso e cubagem para entregar uma cotação estimada instantânea."
             }
         ]
     }

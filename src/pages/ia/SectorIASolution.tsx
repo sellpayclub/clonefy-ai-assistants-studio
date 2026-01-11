@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
-import { Bot, Mic, Calendar, Check, X, ArrowRight, Zap, ChevronDown, ChevronUp, MessageCircle, Clock, DollarSign } from "lucide-react";
+import { Bot, Mic, Calendar, Check, X, ArrowRight, Zap, ChevronDown, ChevronUp, MessageCircle, Clock, DollarSign, Sparkles, Calculator } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import LazyImage from "@/components/LazyImage";
 import aiNichesData from "@/data/ai-niches.json";
@@ -36,6 +36,9 @@ const SectorIASolution = () => {
     const { setTheme } = useTheme();
     const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
     const [showWidget, setShowWidget] = useState(false);
+    const [chatLoaded, setChatLoaded] = useState(false);
+
+    const CHAT_ASSISTANT_ID = "aeb677ad-3f58-4ecd-b414-79c1aa534d13";
 
     const sector = useMemo(() => {
         return (aiNichesData as SectorData[]).find((s) => s.slug === slug);
@@ -94,7 +97,7 @@ const SectorIASolution = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-green-50/50 font-sans">
             <Helmet>
                 <title>{sector.meta_title}</title>
                 <meta name="description" content={sector.meta_description} />
@@ -111,266 +114,430 @@ const SectorIASolution = () => {
                             <LazyImage
                                 src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png"
                                 alt="CLONEFY Logo"
-                                className="h-10 w-auto"
+                                className="h-14 w-auto sm:h-16 lg:h-20"
                                 loading="eager"
                             />
                         </Link>
-                        <div className="h-6 w-px bg-slate-300 mx-1"></div>
-                        <span className="text-lg font-bold text-indigo-700">IA Solutions</span>
                     </div>
-                    <Link to="/">
-                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                            Conhecer Clonefy
-                        </Button>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                        <Link to="/auth">
+                            <Button variant="outline" size="sm" className="text-xs sm:text-sm border-emerald-200 hover:bg-emerald-50 px-2 sm:px-3">
+                                Entrar
+                            </Button>
+                        </Link>
+                        <a href="https://www.agendamento-agendify.com/b/ia-clonefy" target="_blank" rel="noopener noreferrer">
+                            <Button
+                                size="sm"
+                                className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-xs sm:text-sm px-2 sm:px-4"
+                            >
+                                Agendar Demo
+                            </Button>
+                        </a>
+                    </div>
                 </div>
             </header>
 
-            <main className="container mx-auto px-4 py-12 lg:py-16">
+            <main>
                 {/* Hero Section */}
-                <header className="max-w-5xl mx-auto text-center mb-16">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold mb-6">
-                        <Bot className="h-4 w-4" />
-                        SOLUÇÃO ESPECIALIZADA
-                    </div>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 mb-6 leading-tight">
-                        {sector.headline}
-                    </h1>
-                    <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-                        {sector.intro}
-                    </p>
-                </header>
+                <section className="container mx-auto px-4 py-8 sm:py-10 lg:py-14 text-center">
+                    <div className="max-w-5xl mx-auto">
+                        <div className="mb-5 animate-in fade-in slide-in-from-top-4 duration-700">
+                            <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium border border-emerald-200">
+                                <Bot className="h-4 w-4" />
+                                IA Especializada para {sector.sector}
+                            </span>
+                        </div>
 
-                {/* Superpowers Section */}
-                <section className="max-w-6xl mx-auto mb-20">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center mb-12">
-                        Superpoderes no <span className="text-indigo-600">{sector.sector}</span>
-                    </h2>
-
-                    <div className="grid md:grid-cols-2 gap-8">
-                        {/* Audio Use Case */}
-                        <article className="bg-white rounded-3xl shadow-xl border border-indigo-100 p-8 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl"></div>
-                            <div className="relative z-10">
-                                <div className="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center mb-6">
-                                    <Mic className="h-7 w-7 text-indigo-600" />
-                                </div>
-                                <h3 className="text-xl font-bold text-slate-900 mb-4">
-                                    IA que Escuta Áudios
-                                </h3>
-                                <p className="text-slate-600 leading-relaxed">
-                                    {sector.use_case_audio}
-                                </p>
-                            </div>
-                        </article>
-
-                        {/* Agenda Use Case */}
-                        <article className="bg-white rounded-3xl shadow-xl border border-indigo-100 p-8 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl"></div>
-                            <div className="relative z-10">
-                                <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center mb-6">
-                                    <Calendar className="h-7 w-7 text-emerald-600" />
-                                </div>
-                                <h3 className="text-xl font-bold text-slate-900 mb-4">
-                                    Integração com Agenda
-                                </h3>
-                                <p className="text-slate-600 leading-relaxed">
-                                    {sector.use_case_agenda}
-                                </p>
-                            </div>
-                        </article>
-                    </div>
-                </section>
-
-                {/* Content Section */}
-                <section className="max-w-4xl mx-auto mb-20">
-                    <article className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 sm:p-12">
-                        <h2 className="text-2xl font-bold text-slate-900 mb-6">
-                            Por que {sector.sector} precisam de IA para atendimento?
-                        </h2>
-                        <div className="prose prose-slate prose-lg max-w-none">
-                            {sector.content_section.split('\n\n').map((paragraph, i) => (
-                                <p key={i} className="text-slate-600 leading-relaxed mb-4">
-                                    {paragraph}
-                                </p>
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 leading-tight text-slate-900 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            {sector.headline.split('IA').map((part, i, arr) => (
+                                <span key={i}>
+                                    {part}
+                                    {i < arr.length - 1 && (
+                                        <span className="bg-gradient-to-r from-emerald-500 to-green-600 bg-clip-text text-transparent">
+                                            IA
+                                        </span>
+                                    )}
+                                </span>
                             ))}
-                        </div>
-                    </article>
-                </section>
+                        </h1>
 
-                {/* Comparison Table */}
-                <section className="max-w-5xl mx-auto mb-20">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center mb-12">
-                        Atendente Humano vs. IA Clonefy<br />
-                        <span className="text-indigo-600">no setor de {sector.sector}</span>
-                    </h2>
-
-                    <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
-                        <div className="grid grid-cols-3 gap-0">
-                            {/* Header */}
-                            <div className="p-4 sm:p-6 bg-slate-50 border-b border-slate-100">
-                                <span className="text-sm font-bold text-slate-500 uppercase">Critério</span>
-                            </div>
-                            <div className="p-4 sm:p-6 bg-red-50 border-b border-slate-100 text-center">
-                                <span className="text-sm font-bold text-red-600 uppercase">Atendente Humano</span>
-                            </div>
-                            <div className="p-4 sm:p-6 bg-emerald-50 border-b border-slate-100 text-center">
-                                <span className="text-sm font-bold text-emerald-600 uppercase">IA Clonefy</span>
-                            </div>
-
-                            {/* Cost Row */}
-                            <div className="p-4 sm:p-6 border-b border-slate-100 flex items-center gap-2">
-                                <DollarSign className="h-5 w-5 text-slate-400" />
-                                <span className="font-medium text-slate-900">Custo Mensal</span>
-                            </div>
-                            <div className="p-4 sm:p-6 border-b border-slate-100 text-center">
-                                <span className="text-red-600 font-semibold">{sector.comparison.human_cost}</span>
-                            </div>
-                            <div className="p-4 sm:p-6 border-b border-slate-100 text-center">
-                                <span className="text-emerald-600 font-bold">{sector.comparison.ai_cost}</span>
-                            </div>
-
-                            {/* Hours Row */}
-                            <div className="p-4 sm:p-6 border-b border-slate-100 flex items-center gap-2">
-                                <Clock className="h-5 w-5 text-slate-400" />
-                                <span className="font-medium text-slate-900">Disponibilidade</span>
-                            </div>
-                            <div className="p-4 sm:p-6 border-b border-slate-100 text-center">
-                                <span className="text-red-600">{sector.comparison.human_hours}</span>
-                            </div>
-                            <div className="p-4 sm:p-6 border-b border-slate-100 text-center">
-                                <span className="text-emerald-600 font-semibold">{sector.comparison.ai_hours}</span>
-                            </div>
-
-                            {/* Response Row */}
-                            <div className="p-4 sm:p-6 flex items-center gap-2">
-                                <MessageCircle className="h-5 w-5 text-slate-400" />
-                                <span className="font-medium text-slate-900">Tempo de Resposta</span>
-                            </div>
-                            <div className="p-4 sm:p-6 text-center">
-                                <span className="text-red-600">{sector.comparison.human_response}</span>
-                            </div>
-                            <div className="p-4 sm:p-6 text-center">
-                                <span className="text-emerald-600 font-semibold">{sector.comparison.ai_response}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* ROI Calculation */}
-                    <div className="mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 sm:p-8 text-white">
-                        <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                            <Zap className="h-5 w-5" />
-                            Cálculo de ROI para {sector.sector}
-                        </h3>
-                        <p className="text-indigo-100 leading-relaxed">
-                            {sector.roi_calculation}
+                        <p className="text-lg sm:text-xl lg:text-2xl text-slate-600 mb-8 max-w-4xl mx-auto leading-relaxed animate-in fade-in delay-200 duration-700">
+                            {sector.intro}
                         </p>
+
+                        <div className="bg-gradient-to-r from-emerald-500 to-green-600 rounded-2xl p-5 sm:p-6 mb-8 max-w-3xl mx-auto shadow-xl animate-in zoom-in-95 duration-500 delay-300">
+                            <p className="text-white text-lg sm:text-xl font-semibold leading-relaxed">
+                                Responda clientes de <span className="underline decoration-2 underline-offset-4">{sector.sector}</span> 24h por dia e converta mais com ajuda da Julia.
+                            </p>
+                        </div>
+
+                        <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 delay-500">
+                            <a href="https://www.agendamento-agendify.com/b/ia-clonefy" target="_blank" rel="noopener noreferrer">
+                                <Button
+                                    size="lg"
+                                    className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-8 py-7 text-lg font-bold rounded-2xl shadow-lg transform hover:scale-105 transition-all group"
+                                >
+                                    {sector.cta_text}
+                                    <ArrowRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
+                                </Button>
+                            </a>
+                        </div>
                     </div>
                 </section>
 
-                {/* CTA Section */}
-                <section className="max-w-3xl mx-auto mb-20">
-                    <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden">
-                        <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl"></div>
-                        <div className="relative z-10">
-                            <Bot className="h-16 w-16 text-indigo-400 mx-auto mb-6" />
-                            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-                                Pronto para automatizar seu {sector.sector}?
-                            </h2>
-                            <p className="text-slate-300 mb-8 max-w-xl mx-auto">
-                                Agende uma demonstração gratuita e veja a Julia atendendo clientes do seu setor em tempo real.
-                            </p>
-                            <Link to="/">
-                                <Button size="lg" className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-8 py-6 text-lg rounded-xl">
-                                    {sector.cta_text}
-                                    <ArrowRight className="ml-2 h-5 w-5" />
-                                </Button>
-                            </Link>
+                {/* Capabilities Grid */}
+                <section className="py-14 sm:py-20 bg-white">
+                    <div className="container mx-auto px-4">
+                        <div className="max-w-5xl mx-auto">
+                            <div className="text-center mb-12">
+                                <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium mb-4">
+                                    <Sparkles className="h-4 w-4" />
+                                    Superpoderes da Julia
+                                </span>
+                                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+                                    Tudo que um humano faz, <span className="text-emerald-600">ela faz melhor!</span>
+                                </h2>
+                                <p className="text-slate-600 text-lg">Uma IA treinada para o setor de {sector.sector}</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                                {/* Audio Use Case */}
+                                <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-3xl p-8 relative overflow-hidden group hover:shadow-lg transition-all">
+                                    <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-amber-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform">
+                                        <Mic className="w-7 h-7 text-white" />
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-slate-900 mb-4">Escuta e Entende Áudios</h3>
+                                    <p className="text-slate-600 leading-relaxed italic text-lg opacity-90">
+                                        "{sector.use_case_audio}"
+                                    </p>
+                                    <div className="mt-6 flex items-center gap-2 text-orange-700 font-semibold bg-white/60 w-fit px-4 py-2 rounded-full border border-orange-200">
+                                        <Check className="w-5 h-5" />
+                                        <span>Triagem Automática por Voz</span>
+                                    </div>
+                                </div>
+
+                                {/* Agenda Use Case */}
+                                <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-3xl p-8 relative overflow-hidden group hover:shadow-lg transition-all">
+                                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform">
+                                        <Calendar className="w-7 h-7 text-white" />
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-slate-900 mb-4">Gestão de Agenda</h3>
+                                    <p className="text-slate-600 leading-relaxed italic text-lg opacity-90">
+                                        "{sector.use_case_agenda}"
+                                    </p>
+                                    <div className="mt-6 flex items-center gap-2 text-emerald-700 font-semibold bg-white/60 w-fit px-4 py-2 rounded-full border border-emerald-200">
+                                        <Check className="w-5 h-5" />
+                                        <span>Sincronização em Tempo Real</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Main Content Section */}
+                            <div className="bg-slate-900 rounded-[2.5rem] p-8 sm:p-14 border border-slate-800 shadow-2xl relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
+                                <div className="relative z-10">
+                                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-8 border-l-4 border-emerald-500 pl-6">
+                                        O Futuro do Atendimento para {sector.sector}
+                                    </h2>
+                                    <div className="prose prose-invert prose-emerald prose-lg max-w-none">
+                                        {sector.content_section.split('\n\n').map((paragraph, i) => (
+                                            <p key={i} className="text-slate-300 leading-relaxed mb-6 font-light">
+                                                {paragraph}
+                                            </p>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Comparison Table Section */}
+                <section className="py-14 sm:py-24 bg-gradient-to-br from-slate-50 to-emerald-50">
+                    <div className="container mx-auto px-4">
+                        <div className="max-w-5xl mx-auto">
+                            <div className="text-center mb-16">
+                                <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+                                    Atendente Humano vs. <span className="text-emerald-600">Funcionário de IA</span>
+                                </h2>
+                                <p className="text-slate-600">A comparação definitiva para o seu negócio de {sector.sector}</p>
+                            </div>
+
+                            <div className="bg-white rounded-[2rem] overflow-hidden shadow-2xl border border-emerald-100 animate-in fade-in duration-1000">
+                                <div className="grid grid-cols-3">
+                                    {/* Header */}
+                                    <div className="p-6 bg-slate-50 border-b border-slate-100 font-bold uppercase text-xs tracking-widest text-slate-400">Dimensão</div>
+                                    <div className="p-6 bg-slate-50 border-b border-slate-100 text-center font-bold text-slate-700 uppercase text-xs tracking-widest">Atendente Humano</div>
+                                    <div className="p-6 bg-emerald-500 border-b border-emerald-600 text-center font-bold text-white uppercase text-xs tracking-widest">IA Clonefy</div>
+
+                                    {/* Custo */}
+                                    <div className="p-6 sm:p-8 border-b border-slate-50 flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center shrink-0">
+                                            <DollarSign className="w-5 h-5 text-slate-500" />
+                                        </div>
+                                        <span className="font-bold text-slate-800">Custo Mensal</span>
+                                    </div>
+                                    <div className="p-6 sm:p-8 border-b border-slate-50 text-center">
+                                        <span className="text-red-500 font-medium px-3 py-1 bg-red-50 rounded-full">{sector.comparison.human_cost}</span>
+                                    </div>
+                                    <div className="p-6 sm:p-8 border-b border-slate-50 text-center bg-emerald-50/50">
+                                        <span className="text-emerald-600 font-bold text-xl">{sector.comparison.ai_cost}</span>
+                                    </div>
+
+                                    {/* Disponibilidade */}
+                                    <div className="p-6 sm:p-8 border-b border-slate-50 flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center shrink-0">
+                                            <Clock className="w-5 h-5 text-slate-500" />
+                                        </div>
+                                        <span className="font-bold text-slate-800">Disponibilidade</span>
+                                    </div>
+                                    <div className="p-6 sm:p-8 border-b border-slate-50 text-center text-slate-600">{sector.comparison.human_hours}</div>
+                                    <div className="p-6 sm:p-8 border-b border-slate-50 text-center bg-emerald-50/50">
+                                        <span className="text-emerald-600 font-bold">{sector.comparison.ai_hours}</span>
+                                    </div>
+
+                                    {/* Resposta */}
+                                    <div className="p-6 sm:p-8 flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center shrink-0">
+                                            <Zap className="w-5 h-5 text-slate-500" />
+                                        </div>
+                                        <span className="font-bold text-slate-800">Tempo de Resposta</span>
+                                    </div>
+                                    <div className="p-6 sm:p-8 text-center text-slate-600">{sector.comparison.human_response}</div>
+                                    <div className="p-6 sm:p-8 text-center bg-emerald-50/50">
+                                        <div className="inline-flex items-center gap-2 text-emerald-600 font-bold text-lg animate-pulse">
+                                            <Zap className="w-5 h-5 fill-current" />
+                                            {sector.comparison.ai_response}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* ROI Box */}
+                            <div className="mt-12 bg-white p-8 rounded-3xl border border-emerald-200 shadow-lg flex flex-col md:flex-row items-center gap-8 animate-in slide-in-from-bottom-8 duration-700">
+                                <div className="w-20 h-20 bg-emerald-100 rounded-[2rem] flex items-center justify-center shrink-0 shadow-inner">
+                                    <Calculator className="w-10 h-10 text-emerald-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold text-slate-900 mb-2">Impacto no ROI</h3>
+                                    <p className="text-slate-600 text-lg leading-relaxed">
+                                        {sector.roi_calculation}
+                                    </p>
+                                </div>
+                                <div className="shrink-0 w-full md:w-auto">
+                                    <a href="https://www.agendamento-agendify.com/b/ia-clonefy" target="_blank" rel="noopener noreferrer">
+                                        <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-6 px-8 rounded-2xl">
+                                            Verificar ROI Real
+                                        </Button>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Embedded Chat Section */}
+                <section className="py-14 sm:py-20 bg-white">
+                    <div className="container mx-auto px-4">
+                        <div className="max-w-2xl mx-auto">
+                            <div className="text-center mb-8">
+                                <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium mb-4">
+                                    <MessageCircle className="h-4 w-4" />
+                                    Chat ao Vivo
+                                </span>
+                                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+                                    Teste a Julia <span className="text-emerald-600">agora mesmo!</span>
+                                </h2>
+                                <p className="text-slate-600 text-lg">Converse com nossa IA especializada em {sector.sector}</p>
+                            </div>
+
+                            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-emerald-200 relative">
+                                {!chatLoaded && (
+                                    <div className="absolute inset-0 bg-white flex flex-col items-center justify-center z-10">
+                                        <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
+                                        <p className="text-slate-500 text-sm">Carregando chat...</p>
+                                    </div>
+                                )}
+                                <iframe
+                                    src={`/embed-chat/${CHAT_ASSISTANT_ID}`}
+                                    className="w-full"
+                                    style={{
+                                        height: '500px',
+                                        border: 'none',
+                                        opacity: chatLoaded ? 1 : 0,
+                                        transition: 'opacity 0.3s ease-in-out'
+                                    }}
+                                    title={`Chat com IA para ${sector.sector}`}
+                                    allow="microphone"
+                                    onLoad={() => setChatLoaded(true)}
+                                />
+                            </div>
+
+                            <div className="text-center mt-8">
+                                <p className="text-slate-600 mb-4 text-lg">
+                                    Gostou? Tenha uma <strong className="text-emerald-600">Julia especializada</strong> para seu negócio!
+                                </p>
+                                <a href="https://www.agendamento-agendify.com/b/ia-clonefy" target="_blank" rel="noopener noreferrer">
+                                    <Button
+                                        size="lg"
+                                        className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-8 py-6 text-lg font-bold rounded-2xl shadow-lg transform hover:scale-105 transition-all"
+                                    >
+                                        QUERO MINHA PRÓPRIA IA
+                                        <ArrowRight className="ml-2 h-5 w-5" />
+                                    </Button>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </section>
 
                 {/* FAQ Section */}
-                <section className="max-w-4xl mx-auto mb-20">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center mb-12">
-                        Perguntas Frequentes sobre IA para {sector.sector}
-                    </h2>
-                    <div className="space-y-4">
-                        {sector.faq.map((item, index) => (
-                            <article
-                                key={index}
-                                className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm"
-                            >
-                                <button
-                                    onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
-                                    className="w-full flex items-center justify-between p-5 text-left hover:bg-slate-50 transition-colors"
-                                >
-                                    <span className="font-semibold text-slate-900 pr-4">{item.question}</span>
-                                    {expandedFaq === index ? (
-                                        <ChevronUp className="h-5 w-5 text-indigo-500 shrink-0" />
-                                    ) : (
-                                        <ChevronDown className="h-5 w-5 text-slate-400 shrink-0" />
-                                    )}
-                                </button>
-                                {expandedFaq === index && (
-                                    <div className="px-5 pb-5 text-slate-600 leading-relaxed">
-                                        {item.answer}
+                <section className="py-14 sm:py-24 bg-slate-50">
+                    <div className="container mx-auto px-4">
+                        <div className="max-w-4xl mx-auto">
+                            <div className="text-center mb-16">
+                                <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+                                    Tudo que você precisa saber
+                                </h2>
+                                <p className="text-slate-600">Dúvidas comuns sobre IA no setor de {sector.sector}</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                {sector.faq.map((item, index) => (
+                                    <div
+                                        key={index}
+                                        className="group bg-slate-50 hover:bg-white border border-slate-200 hover:border-emerald-500 rounded-3xl overflow-hidden transition-all duration-300"
+                                    >
+                                        <button
+                                            onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
+                                            className="w-full flex items-center justify-between p-6 sm:p-8 text-left transition-colors"
+                                        >
+                                            <span className="text-lg font-bold text-slate-900">{item.question}</span>
+                                            <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${expandedFaq === index ? 'bg-emerald-500 text-white rotate-180' : 'bg-slate-200 text-slate-500'}`}>
+                                                <ChevronDown className="h-5 w-5" />
+                                            </div>
+                                        </button>
+                                        {expandedFaq === index && (
+                                            <div className="px-6 sm:px-8 pb-8 text-slate-600 text-lg leading-relaxed animate-in slide-in-from-top-4 duration-300">
+                                                {item.answer}
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </article>
-                        ))}
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Final Call to Action */}
+                <section className="py-20 sm:py-32 bg-slate-900 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
+                        <div className="absolute top-10 left-10 w-96 h-96 bg-emerald-500 rounded-full blur-[120px]"></div>
+                        <div className="absolute bottom-10 right-10 w-96 h-96 bg-green-500 rounded-full blur-[120px]"></div>
+                    </div>
+
+                    <div className="container mx-auto px-4 relative z-10 text-center">
+                        <div className="max-w-4xl mx-auto">
+                            <span className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500/10 text-emerald-400 rounded-full text-lg font-bold mb-8 border border-emerald-500/20">
+                                <Zap className="h-6 w-6 fill-current" />
+                                Comece hoje mesmo
+                            </span>
+                            <h2 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-white mb-8 leading-tight">
+                                Transforme seu atendimento com <span className="text-emerald-500">IA de ponta</span>
+                            </h2>
+                            <p className="text-slate-400 text-xl sm:text-2xl mb-12 font-light">
+                                Pare de perder leads por demora no WhatsApp. Junte-se à revolução da Clonefy no setor de {sector.sector}.
+                            </p>
+                            <a href="https://www.agendamento-agendify.com/b/ia-clonefy" target="_blank" rel="noopener noreferrer">
+                                <Button size="lg" className="bg-emerald-500 hover:bg-emerald-600 text-white font-black px-12 py-8 text-2xl rounded-[2rem] shadow-[0_0_50px_-12px_rgba(16,185,129,0.5)] transform hover:scale-105 active:scale-95 transition-all">
+                                    AGENDAR DEMO AGORA
+                                    <ArrowRight className="ml-3 h-8 w-8" />
+                                </Button>
+                            </a>
+                        </div>
                     </div>
                 </section>
             </main>
 
-            {/* Julia Widget (Pre-configured for sector) */}
+            {/* Footer */}
+            <footer className="border-t border-slate-200 bg-white pt-20 pb-12">
+                <div className="container mx-auto px-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16 px-4">
+                        <div className="col-span-2">
+                            <LazyImage
+                                src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png"
+                                alt="CLONEFY Logo"
+                                className="h-16 w-auto mb-8"
+                                loading="lazy"
+                            />
+                            <p className="text-slate-500 text-lg leading-relaxed max-w-sm">
+                                Especialistas em criar Funcionários de IA que trabalham 24h para o seu negócio. Atendimento, vendas e suporte totalmente automatizados.
+                            </p>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-slate-900 mb-6 uppercase text-sm tracking-widest">Plataforma</h4>
+                            <nav className="flex flex-col gap-4">
+                                <Link to="/" className="text-slate-600 hover:text-emerald-600 text-lg">Home</Link>
+                                <Link to="/auth" className="text-slate-600 hover:text-emerald-600 text-lg">Entrar no Painel</Link>
+                                <a href="https://www.agendamento-agendify.com/b/ia-clonefy" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-emerald-600 text-lg font-bold">Agendar Demo</a>
+                            </nav>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-slate-900 mb-6 uppercase text-sm tracking-widest">IA Solutions</h4>
+                            <nav className="flex flex-col gap-4">
+                                <Link to="/ia/clinicas-estetica" className="text-slate-600 hover:text-emerald-600 text-sm">Clínicas de Estética</Link>
+                                <Link to="/ia/imobiliarias" className="text-slate-600 hover:text-emerald-600 text-sm">Imobiliárias</Link>
+                                <Link to="/ia/restaurantes-delivery" className="text-slate-600 hover:text-emerald-600 text-sm">Restaurantes</Link>
+                                <Link to="/ia/academias-crossfit" className="text-slate-600 hover:text-emerald-600 text-sm">Academias</Link>
+                                <Link to="/ia/contabilidade" className="text-slate-600 hover:text-emerald-600 text-sm">Contabilidade</Link>
+                            </nav>
+                        </div>
+                    </div>
+                    <div className="border-t border-slate-100 pt-10 text-center">
+                        <p className="text-slate-400 text-sm">
+                            © 2024 CLONEFY - TECNOLOGIA EM ATENDIMENTO IA. TODOS OS DIREITOS RESERVADOS.
+                        </p>
+                    </div>
+                </div>
+            </footer>
+
+            {/* Julia Widget Popup */}
             {showWidget && (
-                <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 duration-500">
-                    <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 max-w-xs mb-4">
-                        <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center shrink-0">
-                                <Bot className="h-5 w-5 text-white" />
+                <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-10 duration-700">
+                    <div className="bg-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-emerald-100 p-6 max-w-[320px] relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-green-600"></div>
+                        <div className="flex flex-col gap-4 relative z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg group-hover:rotate-12 transition-transform">
+                                    <Bot className="h-6 w-6 text-white" />
+                                </div>
+                                <div>
+                                    <h5 className="font-black text-slate-900 tracking-tight">Julia da Clonefy</h5>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                                        <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-tighter">Online Agora</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-sm text-slate-700 mb-3">
-                                    {sector.widget_greeting}
-                                </p>
-                                <Link to="/">
-                                    <Button size="sm" className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs">
-                                        Testar Julia Agora
-                                    </Button>
-                                </Link>
-                            </div>
+                            <p className="text-slate-600 text-sm leading-relaxed font-medium">
+                                {sector.widget_greeting}
+                            </p>
+                            <a href="https://www.agendamento-agendify.com/b/ia-clonefy" target="_blank" rel="noopener noreferrer">
+                                <Button size="sm" className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold rounded-xl py-5 shadow-emerald-200 shadow-lg">
+                                    Teste Gratuito
+                                    <Zap className="ml-2 h-4 w-4 fill-current" />
+                                </Button>
+                            </a>
                         </div>
                         <button
                             onClick={() => setShowWidget(false)}
-                            className="absolute top-2 right-2 text-slate-400 hover:text-slate-600"
+                            className="absolute top-2 right-2 text-slate-300 hover:text-slate-500 bg-slate-50 hover:bg-slate-100 rounded-full p-1.5 transition-colors"
                         >
                             <X className="h-4 w-4" />
                         </button>
                     </div>
                 </div>
             )}
-
-            {/* Footer */}
-            <footer className="bg-slate-900 text-white py-12">
-                <div className="container mx-auto px-4 text-center">
-                    <LazyImage
-                        src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png"
-                        alt="CLONEFY Logo"
-                        className="h-10 w-auto mx-auto mb-6 brightness-0 invert"
-                        loading="lazy"
-                    />
-                    <div className="flex justify-center gap-6 flex-wrap mb-6">
-                        <Link to="/" className="text-slate-400 hover:text-white transition-colors">Home</Link>
-                        <Link to="/ferramentas/clickgo" className="text-slate-400 hover:text-white transition-colors">ClickGo</Link>
-                        <Link to="/ferramentas/gerador-link-whatsapp" className="text-slate-400 hover:text-white transition-colors">Gerador de Link</Link>
-                    </div>
-                    <p className="text-slate-500 text-sm">
-                        © 2024 Clonefy - Funcionários de IA para WhatsApp
-                    </p>
-                </div>
-            </footer>
         </div>
     );
 };
