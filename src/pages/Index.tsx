@@ -467,10 +467,10 @@ const Index = () => {
             <div className="flex flex-col items-center md:items-start">
               <h4 className="font-bold text-slate-900 mb-4 uppercase text-xs tracking-wider">Ferramentas Gratuitas</h4>
               <nav className="flex flex-col gap-2">
-                <Link to="/ferramentas/clickgo" className="text-emerald-600 hover:text-emerald-700 text-sm font-medium flex items-center gap-2">
+                <a href="https://clickgo-redirec-wpp.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 text-sm font-medium flex items-center gap-2">
                   <Zap className="h-4 w-4" />
                   ClickGo - Redirecionador de WhatsApp
-                </Link>
+                </a>
                 <Link to="/ferramentas/gerador-link-whatsapp" className="text-emerald-600 hover:text-emerald-700 text-sm font-medium flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
                   Gerador de Link de WhatsApp
