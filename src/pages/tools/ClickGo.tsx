@@ -9,7 +9,7 @@ import ClonefyPromoBanner from "@/components/ClonefyPromoBanner";
 
 const ClickGo = () => {
   const { setTheme } = useTheme();
-  const CLICKGO_PROD_URL = "https://clickgo.sellpay.club"; // Placeholder URL
+  const CLICKGO_PROD_URL = "https://clickgo-redirec-wpp.vercel.app";
 
   useEffect(() => {
     // Força modo claro na página de vendas para manter consistência com o Clonefy
