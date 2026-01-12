@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut, Palette, BarChart3, Wrench, Zap, Link as LinkIcon, Code, Calculator, Play } from "lucide-react";
+import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut, Palette, BarChart3, Wrench, Zap, Link as LinkIcon, Code, Calculator, Users } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { cleanupAuthState, forceCleanReload } from "@/lib/auth-utils";
@@ -31,6 +31,7 @@ const menuItems = [
   { title: "sidebar.whatsapp.title", url: "/whatsapp", icon: Smartphone, description: "sidebar.whatsapp.description" },
   { title: "sidebar.conversations.title", url: "/conversations", icon: MessageSquare, description: "sidebar.conversations.description" },
   { title: "Chat Flutuante", url: "/widget-customization", icon: Palette, description: "Personalize o chat para seu site" },
+  { title: "CRM Leads", url: "/crm-leads", icon: Users, description: "Gestão inteligente de leads extraídos" },
   { title: "Analytics do Chat", url: "/widget-analytics", icon: BarChart3, description: "Analise o desempenho do chat" },
   { title: "sidebar.admin.title", url: "/admin", icon: Settings, description: "sidebar.admin.description" },
 ];
@@ -274,25 +275,6 @@ const AppSidebar = () => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild className="h-10 group">
-                  <NavLink
-                    to="/webhook-simulator"
-                    className={`
-                      flex items-center rounded-lg transition-all duration-200
-                      text-muted-foreground hover:text-foreground hover:bg-muted/50
-                      ${collapsed ? 'justify-center p-2' : 'px-3 py-2'}
-                    `}
-                  >
-                    <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
-                      <Play className={`flex-shrink-0 text-orange-500 ${collapsed ? 'w-5 h-5' : 'w-4 h-4'}`} />
-                      {!collapsed && (
-                        <span className="text-sm font-medium">🧪 Teste Webhook</span>
-                      )}
-                    </div>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

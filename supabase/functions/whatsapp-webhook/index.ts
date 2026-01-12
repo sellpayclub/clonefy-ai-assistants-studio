@@ -883,6 +883,17 @@ serve(async (req) => {
             }
         }
 
+        // --- LÓGICA DE CRM LEADS (Profiling em Background) ---
+        // Não esperamos o profiling terminar para responder ao WhatsApp (velocidade é prioridade)
+        console.log('📈 Iniciando Profiling de Lead para o CRM...');
+        processCRMLead(
+            instanceConfig.idassistentgpt,
+            userId,
+            contactNumber,
+            `Usuário: ${currentMessages}\nAssistente: ${assistantResponse}`,
+            openaiApiKey
+        ).catch(e => console.error('❌ Erro no background profiling:', e));
+
         console.log('🎉 Processamento concluído com sucesso!');
 
         return new Response(JSON.stringify({
@@ -1025,5 +1036,88 @@ async function updateAnalytics(assistantId: string, userId: string, type: 'user'
         }
     } catch (err) {
         console.error('❌ Erro global no updateAnalytics:', err);
+    }
+}
+
+/**
+ * Processa a conversa para extrair informações do Lead para o CRM
+ */
+async function processCRMLead(assistantId: string, userId: string, whatsappNumber: string, conversation: string, apiKey: string) {
+    if (!assistantId || !userId || !apiKey) return;
+
+    try {
+        console.log('🧠 Extraindo dados do lead via IA...');
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o-mini', // Modelo rápido e barato para extração
+                messages: [
+                    {
+                        role: 'system',
+                        content: `Você é um analista de CRM. Sua tarefa é extrair informações de uma conversa de WhatsApp.
+                        Retorne APENAS um JSON plano com as seguintes chaves:
+                        - name: Nome do cliente (se identificado, senão deixe null)
+                        - email: Email do cliente (se identificado, senão deixe null)
+                        - lead_score: Um número de 0 a 100 baseado no interesse de compra (0=curioso, 100=pronto para comprar)
+                        - intent_summary: Um resumo de 1 frase do que o cliente quer.`
+                    },
+                    {
+                        role: 'user',
+                        content: `Conversa:\n${conversation}`
+                    }
+                ],
+                response_format: { type: 'json_object' }
+            })
+        });
+
+        if (!response.ok) throw new Error('Falha na extração GPT');
+
+        const data = await response.json();
+        const profiling = JSON.parse(data.choices[0].message.content);
+
+        console.log('📊 Dados extraídos p/ CRM:', profiling);
+
+        // Upsert na tabela crm_leads
+        // Procurar lead existente
+        const { data: existingLead } = await supabase
+            .from('crm_leads')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('whatsapp_number', whatsappNumber)
+            .maybeSingle();
+
+        const leadData: any = {
+            user_id: userId,
+            assistant_id: assistantId,
+            whatsapp_number: whatsappNumber,
+            last_interaction: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+
+        if (profiling.name) leadData.name = profiling.name;
+        if (profiling.email) leadData.email = profiling.email;
+        if (profiling.lead_score !== undefined) leadData.lead_score = profiling.lead_score;
+        if (profiling.intent_summary) leadData.intent_summary = profiling.intent_summary;
+
+        if (existingLead) {
+            console.log('📝 Atualizando lead existente no CRM...');
+            await supabase
+                .from('crm_leads')
+                .update(leadData)
+                .eq('id', existingLead.id);
+        } else {
+            console.log('🆕 Criando novo lead no CRM...');
+            await supabase
+                .from('crm_leads')
+                .insert(leadData);
+        }
+
+    } catch (err) {
+        console.error('⚠️ Falha no profiling/CRM:', err);
     }
 }
