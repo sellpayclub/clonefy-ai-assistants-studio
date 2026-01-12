@@ -26,8 +26,18 @@ const generateTempPassword = (): string => {
 };
 
 // Enviar email via Resend
-const sendWelcomeEmail = async (email: string, name: string, password: string, productName: string) => {
+const sendWelcomeEmail = async (email: string, name: string, password: string, productName: string, planType: string = "pro") => {
     const loginUrl = "https://clonefyia.com/auth";
+    const whatsappSupport = "https://wa.me/5511999999999"; // Substitua pelo número real
+
+    // Determinar recursos do plano
+    const planFeatures: Record<string, { agents: string; connections: string; color: string }> = {
+        "starter": { agents: "1 Funcionário de IA", connections: "1 Conexão WhatsApp", color: "#3b82f6" },
+        "pro": { agents: "3 Funcionários de IA", connections: "3 Conexões WhatsApp", color: "#10b981" },
+        "unlimited": { agents: "Funcionários Ilimitados", connections: "10 Conexões WhatsApp", color: "#8b5cf6" },
+    };
+
+    const plan = planFeatures[planType.toLowerCase()] || planFeatures["pro"];
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -37,57 +47,90 @@ const sendWelcomeEmail = async (email: string, name: string, password: string, p
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Seu acesso CLONEFY está pronto!</title>
     </head>
-    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8fafc;">
-      <div style="background: white; border-radius: 16px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #0f172a;">
+      <div style="background: #1e293b; border-radius: 16px; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border: 1px solid #334155;">
+        
+        <!-- Header -->
         <div style="text-align: center; margin-bottom: 30px;">
-          <img src="https://ekfkrwueqwpqakpsrsjt.supabase.co/storage/v1/object/public/assistant-media/clonefy-logo.png" alt="CLONEFY" style="height: 60px; margin-bottom: 20px;">
-          <h1 style="color: #10b981; margin: 0; font-size: 28px;">🎉 Parabéns pela sua compra!</h1>
+          <img src="https://ekfkrwueqwpqakpsrsjt.supabase.co/storage/v1/object/public/assistant-media/clonefy-logo.png" alt="CLONEFY" style="height: 50px; margin-bottom: 20px;">
+          <h1 style="color: #10b981; margin: 0; font-size: 32px;">🎉 Parabéns!</h1>
+          <p style="color: #94a3b8; margin: 10px 0 0 0; font-size: 18px;">Sua compra foi confirmada com sucesso</p>
         </div>
         
-        <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 25px; border-radius: 12px; margin-bottom: 25px;">
-          <h2 style="margin: 0 0 10px 0; font-size: 20px;">Olá, ${name}!</h2>
-          <p style="margin: 0; opacity: 0.95;">Seu acesso ao <strong>${productName}</strong> está pronto!</p>
+        <!-- Greeting Box -->
+        <div style="background: linear-gradient(135deg, ${plan.color}, ${plan.color}cc); color: white; padding: 25px; border-radius: 12px; margin-bottom: 25px;">
+          <h2 style="margin: 0 0 10px 0; font-size: 22px;">Olá, ${name}! 👋</h2>
+          <p style="margin: 0; opacity: 0.95; font-size: 16px;">Seu acesso ao <strong>${productName}</strong> está ativo!</p>
         </div>
 
-        <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 12px; padding: 25px; margin-bottom: 25px;">
-          <h3 style="color: #166534; margin: 0 0 20px 0; font-size: 18px;">🔐 Seus dados de acesso:</h3>
-          
-          <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-            <p style="margin: 0; color: #6b7280; font-size: 14px;">Email:</p>
-            <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 600; color: #111827;">${email}</p>
-          </div>
-          
-          <div style="background: white; padding: 15px; border-radius: 8px;">
-            <p style="margin: 0; color: #6b7280; font-size: 14px;">Senha temporária:</p>
-            <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: 700; color: #10b981; font-family: monospace; letter-spacing: 2px;">${password}</p>
+        <!-- Product Info -->
+        <div style="background: #334155; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+          <h3 style="color: #f8fafc; margin: 0 0 15px 0; font-size: 16px;">📦 Detalhes do seu plano:</h3>
+          <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <div style="background: #1e293b; padding: 12px 16px; border-radius: 8px; flex: 1; min-width: 150px;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">FUNCIONÁRIOS DE IA</p>
+              <p style="margin: 5px 0 0 0; color: #10b981; font-size: 16px; font-weight: 600;">${plan.agents}</p>
+            </div>
+            <div style="background: #1e293b; padding: 12px 16px; border-radius: 8px; flex: 1; min-width: 150px;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">CONEXÕES WHATSAPP</p>
+              <p style="margin: 5px 0 0 0; color: #10b981; font-size: 16px; font-weight: 600;">${plan.connections}</p>
+            </div>
           </div>
         </div>
 
+        <!-- Credentials Box -->
+        <div style="background: linear-gradient(135deg, #064e3b, #065f46); border: 2px solid #10b981; border-radius: 12px; padding: 25px; margin-bottom: 25px;">
+          <h3 style="color: #10b981; margin: 0 0 20px 0; font-size: 18px;">🔐 Seus dados de acesso:</h3>
+          
+          <div style="background: #0f172a; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <p style="margin: 0; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Email de acesso</p>
+            <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 600; color: #f8fafc;">${email}</p>
+          </div>
+          
+          <div style="background: #0f172a; padding: 15px; border-radius: 8px;">
+            <p style="margin: 0; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Senha temporária</p>
+            <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: 700; color: #10b981; font-family: 'Courier New', monospace; letter-spacing: 3px;">${password}</p>
+          </div>
+        </div>
+
+        <!-- CTA Button -->
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${loginUrl}" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 16px 40px; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 18px; display: inline-block; box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.4);">
-            🚀 ACESSAR MINHA CONTA
+          <a href="${loginUrl}" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 18px 50px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 18px; display: inline-block; box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.5); transition: all 0.3s;">
+            🚀 ACESSAR MINHA CONTA AGORA
           </a>
         </div>
 
-        <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
-          <p style="margin: 0; color: #92400e; font-size: 14px;">
-            <strong>⚠️ Importante:</strong> Após o primeiro login, recomendamos que você altere sua senha para uma de sua preferência.
+        <!-- Warning -->
+        <div style="background: #422006; border: 1px solid #f59e0b; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
+          <p style="margin: 0; color: #fbbf24; font-size: 14px;">
+            <strong>⚠️ Importante:</strong> Após o primeiro login, altere sua senha para uma de sua preferência em Configurações → Alterar Senha.
           </p>
         </div>
 
-        <div style="background: #eff6ff; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
-          <h3 style="color: #1e40af; margin: 0 0 15px 0; font-size: 16px;">✨ O que você pode fazer agora:</h3>
-          <ul style="margin: 0; padding-left: 20px; color: #1e40af;">
-            <li style="margin-bottom: 8px;">Criar seus assistentes de IA personalizados</li>
-            <li style="margin-bottom: 8px;">Conectar seu WhatsApp para atendimento automatizado</li>
-            <li style="margin-bottom: 8px;">Acessar todas as ferramentas bônus incluídas</li>
-            <li>Começar a vender no piloto automático!</li>
+        <!-- Features -->
+        <div style="background: #1e3a5f; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+          <h3 style="color: #60a5fa; margin: 0 0 15px 0; font-size: 16px;">✨ Comece agora mesmo:</h3>
+          <ul style="margin: 0; padding-left: 20px; color: #93c5fd;">
+            <li style="margin-bottom: 8px;">Crie seu primeiro assistente de IA em minutos</li>
+            <li style="margin-bottom: 8px;">Conecte seu WhatsApp e automatize o atendimento</li>
+            <li style="margin-bottom: 8px;">Use as ferramentas bônus: ClickGo, Widget, Link Generator</li>
+            <li>Comece a vender no piloto automático 24/7!</li>
           </ul>
         </div>
 
-        <div style="text-align: center; color: #6b7280; font-size: 14px; border-top: 1px solid #e5e7eb; padding-top: 25px;">
-          <p style="margin: 0 0 10px 0;">Precisa de ajuda? Fale conosco pelo WhatsApp</p>
-          <p style="margin: 0;">© 2024 CLONEFY - Inteligência Artificial que Vende</p>
+        <!-- Support -->
+        <div style="background: #14532d; border-radius: 12px; padding: 20px; margin-bottom: 25px; text-align: center;">
+          <p style="color: #86efac; margin: 0 0 15px 0; font-size: 16px;"><strong>💬 Precisa de ajuda?</strong></p>
+          <a href="${whatsappSupport}" style="background: #22c55e; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; display: inline-block;">
+            Falar com Suporte via WhatsApp
+          </a>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; color: #64748b; font-size: 13px; border-top: 1px solid #334155; padding-top: 25px;">
+          <p style="margin: 0 0 5px 0;">Este email foi enviado automaticamente após a confirmação do pagamento.</p>
+          <p style="margin: 0 0 5px 0;">© 2024 CLONEFY - Inteligência Artificial que Vende</p>
+          <p style="margin: 0; color: #475569;">Desenvolvido com ❤️ no Brasil</p>
         </div>
       </div>
     </body>
@@ -103,7 +146,7 @@ const sendWelcomeEmail = async (email: string, name: string, password: string, p
         body: JSON.stringify({
             from: "CLONEFY <acesso@email.clonefyia.com>",
             to: [email],
-            subject: "🎉 Seu acesso CLONEFY está pronto!",
+            subject: `🎉 ${name}, seu acesso ao ${productName} está pronto!`,
             html: htmlContent,
         }),
     });
@@ -166,14 +209,26 @@ serve(async (req) => {
         const productName = webhookData.Product?.product_name ||
             webhookData.product?.name ||
             webhookData.product_name ||
+            webhookData.offer?.name ||
             "Plano CLONEFY";
+
+        // Detectar tipo do plano baseado no nome do produto
+        const productNameLower = productName.toLowerCase();
+        let planType = "pro"; // default
+        if (productNameLower.includes("starter") || productNameLower.includes("básico") || productNameLower.includes("47")) {
+            planType = "starter";
+        } else if (productNameLower.includes("ilimitado") || productNameLower.includes("unlimited") || productNameLower.includes("197")) {
+            planType = "unlimited";
+        } else if (productNameLower.includes("pro") || productNameLower.includes("97")) {
+            planType = "pro";
+        }
 
         const orderStatus = webhookData.order_status ||
             webhookData.status ||
             webhookData.webhook_event_type ||
             webhookData.event;
 
-        logStep("Extracted data", { customerEmail, customerName, productName, orderStatus });
+        logStep("Extracted data", { customerEmail, customerName, productName, planType, orderStatus });
 
         if (!customerEmail) {
             logStep("ERROR: Email não encontrado");
@@ -291,7 +346,7 @@ serve(async (req) => {
 
         // Enviar email de boas-vindas com credenciais
         logStep("Enviando email de acesso...");
-        await sendWelcomeEmail(customerEmail, customerName, tempPassword, productName);
+        await sendWelcomeEmail(customerEmail, customerName, tempPassword, productName, planType);
         logStep("Email enviado com sucesso!");
 
         logStep("=== WEBHOOK PROCESSADO COM SUCESSO ===");
