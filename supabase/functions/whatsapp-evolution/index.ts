@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const EVOLUTION_API_URL = 'https://evolutionapi.clonefyia.com';
 const EVOLUTION_API_KEY = '94805bfbb25f77f37a029f5a3dbfe62b';
-const WEBHOOK_URL = 'https://webhook.dcsaudeautomacao.com/webhook/clonefy';
+const WEBHOOK_URL = 'https://ekfkrwueqwpqakpsrsjt.supabase.co/functions/v1/whatsapp-webhook';
 
 interface CreateInstanceRequest {
   action: 'create' | 'list' | 'delete' | 'test_api' | 'get_qr' | 'check_status';
@@ -28,7 +28,7 @@ serve(async (req) => {
 
   try {
     console.log('WhatsApp Evolution: Starting request processing');
-    
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -74,7 +74,7 @@ serve(async (req) => {
   } catch (error: any) {
     console.error('WhatsApp Evolution: Error:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: error.message,
         timestamp: new Date().toISOString()
       }),
@@ -96,7 +96,7 @@ async function createWhatsAppInstanceSequential(
 ) {
   try {
     console.log('=== STEP 0: Checking if instance already exists ===');
-    
+
     // 0. Verificar se instância já existe no banco de dados
     const { data: existingInstance } = await supabaseClient
       .from('n8n_fluxogpt')
@@ -104,13 +104,13 @@ async function createWhatsAppInstanceSequential(
       .eq('nomeinstancia', instanceName)
       .eq('emailuser', userEmail)
       .single();
-    
+
     if (existingInstance) {
       throw new Error(`Uma instância com o nome "${instanceName}" já existe. Escolha um nome diferente.`);
     }
-    
+
     console.log('=== STEP 1: Creating instance ===');
-    
+
     // 1. Criar Instância (Primeira chamada)
     const createResponse = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
       method: 'POST',
@@ -133,12 +133,12 @@ async function createWhatsAppInstanceSequential(
     if (!createResponse.ok) {
       const errorData = await createResponse.text();
       console.error('Step 1 failed:', errorData);
-      
+
       // Verificar se é erro de nome duplicado
       if (errorData.includes('already in use') || errorData.includes('já está em uso')) {
         throw new Error(`O nome "${instanceName}" já está sendo usado. Escolha um nome diferente.`);
       }
-      
+
       throw new Error(`Falha ao criar instância: ${errorData}`);
     }
 
@@ -146,10 +146,10 @@ async function createWhatsAppInstanceSequential(
     console.log('Step 1 SUCCESS:', createData);
 
     console.log('=== STEP 2: Setting webhook ===');
-    
+
     // Aguardar um pouco antes de configurar webhook
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     // 2. Configurar Webhook (Segunda chamada - só após sucesso da primeira)
     const webhookPayload = {
       webhook: {
@@ -160,9 +160,9 @@ async function createWhatsAppInstanceSequential(
         webhook_base64: true
       }
     };
-    
+
     console.log('Webhook payload:', JSON.stringify(webhookPayload, null, 2));
-    
+
     const webhookResponse = await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
       method: 'POST',
       headers: {
@@ -183,7 +183,7 @@ async function createWhatsAppInstanceSequential(
     }
 
     console.log('=== STEP 3: Setting additional instance settings ===');
-    
+
     // 3a. Configurar settings da instância
     const settingsPayload = {
       settings: {
@@ -197,7 +197,7 @@ async function createWhatsAppInstanceSequential(
         wavoipToken: ""
       }
     };
-    
+
     const settingsResponse = await fetch(`${EVOLUTION_API_URL}/settings/set/${instanceName}`, {
       method: 'POST',
       headers: {
@@ -216,7 +216,7 @@ async function createWhatsAppInstanceSequential(
     }
 
     console.log('=== STEP 4: Connecting and generating QR ===');
-    
+
     // 4. Conectar e Gerar QR (após configurações)
     const connectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
       method: 'GET',
@@ -235,14 +235,14 @@ async function createWhatsAppInstanceSequential(
     console.log('Step 4 SUCCESS:', connectData);
 
     const qrCode = connectData.base64;
-    
+
     if (!qrCode || !qrCode.startsWith('data:image/')) {
       console.error('QR Code inválido:', qrCode);
       throw new Error('QR Code not generated or invalid format');
     }
 
     console.log('=== STEP 5: Getting OpenAI Assistant ID ===');
-    
+
     // 4. Buscar o openai_assistant_id do assistente
     const { data: assistantData, error: assistantError } = await supabaseClient
       .from('assistants')
@@ -256,7 +256,7 @@ async function createWhatsAppInstanceSequential(
     }
 
     console.log('=== STEP 6: Saving to Supabase ===');
-    
+
     // 5. Salvar no Supabase com o openai_assistant_id correto e campos ElevenLabs
     const dbData: any = {
       id: Date.now(), // bigint precisa de valor explícito
@@ -270,7 +270,7 @@ async function createWhatsAppInstanceSequential(
     if (elevenLabsApiKey) {
       dbData.ApiELEVEN = elevenLabsApiKey;
     }
-    
+
     if (voiceId) {
       dbData.IDvoz = voiceId;
     }
@@ -300,7 +300,7 @@ async function createWhatsAppInstanceSequential(
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
-    
+
   } catch (error: any) {
     console.error('createWhatsAppInstanceSequential error:', error);
     throw error;
@@ -323,7 +323,7 @@ async function listConnections(supabaseClient: any, userEmail: string) {
     (data || []).map(async (connection: any) => {
       try {
         console.log(`=== CHECKING STATUS for: ${connection.nomeinstancia} ===`);
-        
+
         const statusResponse = await fetch(`${EVOLUTION_API_URL}/instance/connectionState/${connection.nomeinstancia}`, {
           method: 'GET',
           headers: {
@@ -336,7 +336,7 @@ async function listConnections(supabaseClient: any, userEmail: string) {
         if (statusResponse.ok) {
           const statusData = await statusResponse.json();
           console.log(`Full status data for ${connection.nomeinstancia}:`, JSON.stringify(statusData, null, 2));
-          
+
           // Extract comprehensive connection info
           let connectionInfo = {
             whatsappuser: null,
@@ -345,7 +345,7 @@ async function listConnections(supabaseClient: any, userEmail: string) {
             profilePicUrl: null,
             state: null
           };
-          
+
           console.log(`Raw response structure for ${connection.nomeinstancia}:`, {
             hasInstance: !!statusData.instance,
             hasState: !!statusData.state,
@@ -356,42 +356,42 @@ async function listConnections(supabaseClient: any, userEmail: string) {
             instanceNumber: statusData.instance?.number || statusData.instance?.phone,
             keys: Object.keys(statusData)
           });
-          
+
           // Try different response formats from Evolution API
           if (statusData.instance) {
             connectionInfo.state = statusData.instance.state;
-            
+
             if (statusData.instance.state === 'open' || statusData.instance.state === 'connected') {
-              connectionInfo.whatsappuser = statusData.instance.owner || 
-                                           statusData.instance.profileName ||
-                                           statusData.instance.user ||
-                                           'Conectado';
+              connectionInfo.whatsappuser = statusData.instance.owner ||
+                statusData.instance.profileName ||
+                statusData.instance.user ||
+                'Conectado';
               connectionInfo.profileName = statusData.instance.profileName || statusData.instance.owner;
               connectionInfo.phoneNumber = statusData.instance.number || statusData.instance.phone;
               connectionInfo.profilePicUrl = statusData.instance.profilePicUrl || statusData.instance.picture;
             }
           } else if (statusData.state) {
             connectionInfo.state = statusData.state;
-            
+
             if (statusData.state === 'open' || statusData.state === 'connected') {
-              connectionInfo.whatsappuser = statusData.owner || 
-                                           statusData.profileName ||
-                                           statusData.user ||
-                                           'Conectado';
+              connectionInfo.whatsappuser = statusData.owner ||
+                statusData.profileName ||
+                statusData.user ||
+                'Conectado';
               connectionInfo.profileName = statusData.profileName || statusData.owner;
               connectionInfo.phoneNumber = statusData.number || statusData.phone;
               connectionInfo.profilePicUrl = statusData.profilePicUrl || statusData.picture;
             }
           }
-          
+
           console.log(`Connection ${connection.nomeinstancia} - Extracted info:`, connectionInfo);
-          
+
           // Update database with comprehensive info
           if (connectionInfo.whatsappuser !== connection.whatsappuser) {
             console.log(`🔄 UPDATING database for ${connection.nomeinstancia} with comprehensive data`);
-            
+
             const updateData: any = { whatsappuser: connectionInfo.whatsappuser };
-            
+
             // Store additional data in JSON format if available
             if (connectionInfo.profileName || connectionInfo.phoneNumber || connectionInfo.profilePicUrl) {
               updateData.message = JSON.stringify({
@@ -401,19 +401,19 @@ async function listConnections(supabaseClient: any, userEmail: string) {
                 lastUpdated: new Date().toISOString()
               });
             }
-            
+
             const { error: updateError } = await supabaseClient
               .from('n8n_fluxogpt')
               .update(updateData)
               .eq('id', connection.id);
-              
+
             if (updateError) {
               console.error(`❌ Failed to update ${connection.nomeinstancia}:`, updateError);
             } else {
               console.log(`✅ Successfully updated ${connection.nomeinstancia} with profile data`);
             }
           }
-          
+
           // Update connection object with new data
           connection.whatsappuser = connectionInfo.whatsappuser;
           if (connectionInfo.profileName || connectionInfo.phoneNumber || connectionInfo.profilePicUrl) {
@@ -432,7 +432,7 @@ async function listConnections(supabaseClient: any, userEmail: string) {
         console.error(`💥 ERROR checking status for ${connection.nomeinstancia}:`, error);
         // Keep original whatsappuser value
       }
-      
+
       return connection;
     })
   );
@@ -484,7 +484,7 @@ async function deleteConnection(instanceName: string, supabaseClient: any) {
 async function getQrCode(instanceName: string, supabaseClient: any) {
   try {
     console.log('=== Getting QR Code for instance:', instanceName, '===');
-    
+
     const connectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
       method: 'GET',
       headers: {
@@ -502,7 +502,7 @@ async function getQrCode(instanceName: string, supabaseClient: any) {
     console.log('QR Code response:', connectData);
 
     const qrCode = connectData.base64;
-    
+
     if (!qrCode || !qrCode.startsWith('data:image/')) {
       console.error('Invalid QR Code:', qrCode);
       throw new Error('QR Code not generated or invalid format');
@@ -518,7 +518,7 @@ async function getQrCode(instanceName: string, supabaseClient: any) {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
-    
+
   } catch (error: any) {
     console.error('Error in getQrCode:', error);
     return new Response(
@@ -537,7 +537,7 @@ async function getQrCode(instanceName: string, supabaseClient: any) {
 async function checkConnectionStatus(instanceName: string, supabaseClient: any) {
   try {
     console.log(`=== CHECKING SINGLE CONNECTION STATUS for: ${instanceName} ===`);
-    
+
     const statusResponse = await fetch(`${EVOLUTION_API_URL}/instance/connectionState/${instanceName}`, {
       method: 'GET',
       headers: {
@@ -555,11 +555,11 @@ async function checkConnectionStatus(instanceName: string, supabaseClient: any) 
 
     const statusData = await statusResponse.json();
     console.log(`Status data:`, JSON.stringify(statusData, null, 2));
-    
+
     // Check multiple possible response formats
     let whatsappUser = null;
     let connectionState = 'disconnected';
-    
+
     console.log(`Raw response structure:`, {
       hasInstance: !!statusData.instance,
       hasState: !!statusData.state,
@@ -568,52 +568,52 @@ async function checkConnectionStatus(instanceName: string, supabaseClient: any) 
       keys: Object.keys(statusData),
       fullData: statusData
     });
-    
+
     // Try different response formats from Evolution API
     if (statusData.instance) {
       connectionState = statusData.instance.state || 'disconnected';
       // Multiple ways to detect connection and get user info
       if (statusData.instance.state === 'open' || statusData.instance.state === 'connected') {
-        whatsappUser = statusData.instance.owner || 
-                      statusData.instance.phone || 
-                      statusData.instance.number ||
-                      statusData.instance.user ||
-                      statusData.instance.profileName ||
-                      statusData.instance.wid ||
-                      'Conectado';
+        whatsappUser = statusData.instance.owner ||
+          statusData.instance.phone ||
+          statusData.instance.number ||
+          statusData.instance.user ||
+          statusData.instance.profileName ||
+          statusData.instance.wid ||
+          'Conectado';
       }
     } else if (statusData.state) {
       connectionState = statusData.state || 'disconnected';
       if (statusData.state === 'open' || statusData.state === 'connected') {
-        whatsappUser = statusData.owner || 
-                      statusData.phone || 
-                      statusData.number ||
-                      statusData.user ||
-                      statusData.profileName ||
-                      statusData.wid ||
-                      'Conectado';
+        whatsappUser = statusData.owner ||
+          statusData.phone ||
+          statusData.number ||
+          statusData.user ||
+          statusData.profileName ||
+          statusData.wid ||
+          'Conectado';
       }
     } else {
       // Fallback: try to detect connection by presence of user data
       const userIndicators = [
-        statusData.owner, statusData.phone, statusData.number, 
+        statusData.owner, statusData.phone, statusData.number,
         statusData.user, statusData.profileName, statusData.wid
       ].filter(Boolean);
-      
+
       if (userIndicators.length > 0) {
         connectionState = 'open';
         whatsappUser = userIndicators[0];
       }
     }
-    
+
     console.log(`Final status - State: ${connectionState}, User: ${whatsappUser}`);
-    
+
     // Update database
     const { error: updateError } = await supabaseClient
       .from('n8n_fluxogpt')
       .update({ whatsappuser: whatsappUser })
       .eq('nomeinstancia', instanceName);
-      
+
     if (updateError) {
       console.error(`Failed to update database:`, updateError);
       throw new Error(`Failed to update database: ${updateError.message}`);
@@ -633,7 +633,7 @@ async function checkConnectionStatus(instanceName: string, supabaseClient: any) 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
-    
+
   } catch (error: any) {
     console.error('Error in checkConnectionStatus:', error);
     return new Response(
@@ -658,9 +658,9 @@ async function testEvolutionAPI() {
         'apikey': EVOLUTION_API_KEY,
       },
     });
-    
+
     const responseText = await testResponse.text();
-    
+
     return new Response(
       JSON.stringify({
         success: testResponse.ok,
@@ -692,11 +692,11 @@ async function testEvolutionAPI() {
  */
 async function updateVoiceSettings(supabaseClient: any, body: any, userEmail: string) {
   const { instance_name, voice_id, api_key } = body;
-  
+
   if (!instance_name) {
     return new Response(
       JSON.stringify({ error: 'Instance name is required' }),
-      { 
+      {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
@@ -705,12 +705,12 @@ async function updateVoiceSettings(supabaseClient: any, body: any, userEmail: st
 
   try {
     console.log(`WhatsApp Evolution: Updating voice settings for instance: ${instance_name}`);
-    
+
     // Build update object with only provided values
     const updateData: any = {};
     if (voice_id !== null) updateData.IDvoz = voice_id || null;
     if (api_key !== null) updateData.ApiELEVEN = api_key || null;
-    
+
     // Update the record in Supabase
     const { data, error } = await supabaseClient
       .from('n8n_fluxogpt')
@@ -722,11 +722,11 @@ async function updateVoiceSettings(supabaseClient: any, body: any, userEmail: st
     if (error) {
       console.error('Supabase update error:', error);
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Failed to update voice settings in database' 
+        JSON.stringify({
+          success: false,
+          error: 'Failed to update voice settings in database'
         }),
-        { 
+        {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
@@ -735,11 +735,11 @@ async function updateVoiceSettings(supabaseClient: any, body: any, userEmail: st
 
     if (!data || data.length === 0) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Connection not found or no access' 
+        JSON.stringify({
+          success: false,
+          error: 'Connection not found or no access'
         }),
-        { 
+        {
           status: 404,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
@@ -747,14 +747,14 @@ async function updateVoiceSettings(supabaseClient: any, body: any, userEmail: st
     }
 
     console.log(`WhatsApp Evolution: Voice settings updated successfully for ${instance_name}`);
-    
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         message: 'Voice settings updated successfully',
         data: data[0]
       }),
-      { 
+      {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
@@ -762,11 +762,11 @@ async function updateVoiceSettings(supabaseClient: any, body: any, userEmail: st
   } catch (error: any) {
     console.error('Update voice settings error:', error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
+      JSON.stringify({
+        success: false,
+        error: error.message
       }),
-      { 
+      {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }

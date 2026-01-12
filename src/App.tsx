@@ -30,6 +30,7 @@ const LazyWhatsAppWidgetGenerator = lazy(() => import("./pages/tools/WhatsAppWid
 const LazyWhatsAppROICalculator = lazy(() => import("./pages/tools/WhatsAppROICalculator"));
 const LazyNicheLinkGenerator = lazy(() => import("./pages/tools/NicheLinkGenerator"));
 const LazySectorIASolution = lazy(() => import("./pages/ia/SectorIASolution"));
+const LazyWebhookSimulator = lazy(() => import("./pages/WebhookSimulator"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -139,6 +140,11 @@ const App = () => {
                 } />
                 <Route path="/thank-you" element={<ThankYou />} />
                 <Route path="/lead-capture" element={<LeadCapture />} />
+                <Route path="/webhook-simulator" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyWebhookSimulator />
+                  </Suspense>
+                } />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
