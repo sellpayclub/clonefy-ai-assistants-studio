@@ -514,7 +514,25 @@ const Index = () => {
                     <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
                       <Zap className="w-3 h-3 text-emerald-400" />
                     </div>
-                    <span><strong className="text-white">Bônus:</strong> ClickGo, Gerador de Link de WhatsApp, Botão de WhatsApp e Calculadora de ROI</span>
+                    <span><strong className="text-yellow-400">Bônus 1:</strong> ClickGo (Redirecionador)</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-3 h-3 text-yellow-400" />
+                    </div>
+                    <span><strong className="text-yellow-400">Bônus 2:</strong> Gerador de Link WhatsApp</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-3 h-3 text-yellow-400" />
+                    </div>
+                    <span><strong className="text-yellow-400">Bônus 3:</strong> Botão de WhatsApp</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-3 h-3 text-yellow-400" />
+                    </div>
+                    <span><strong className="text-yellow-400">Bônus 4:</strong> Calculadora de ROI</span>
                   </li>
                   <li className="flex items-center gap-3 text-slate-300">
                     <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
@@ -593,7 +611,25 @@ const Index = () => {
                     <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
                       <Zap className="w-3 h-3 text-emerald-400" />
                     </div>
-                    <span><strong className="text-white">Bônus:</strong> ClickGo, Gerador de Link de WhatsApp, Botão de WhatsApp e Calculadora de ROI</span>
+                    <span><strong className="text-yellow-400">Bônus 1:</strong> ClickGo (Redirecionador)</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-3 h-3 text-yellow-400" />
+                    </div>
+                    <span><strong className="text-yellow-400">Bônus 2:</strong> Gerador de Link WhatsApp</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-3 h-3 text-yellow-400" />
+                    </div>
+                    <span><strong className="text-yellow-400">Bônus 3:</strong> Botão de WhatsApp</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-3 h-3 text-yellow-400" />
+                    </div>
+                    <span><strong className="text-yellow-400">Bônus 4:</strong> Calculadora de ROI</span>
                   </li>
                   <li className="flex items-center gap-3 text-emerald-400 font-medium">
                     <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
@@ -660,7 +696,25 @@ const Index = () => {
                     <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
                       <Zap className="w-3 h-3 text-emerald-400" />
                     </div>
-                    <span><strong className="text-white">Bônus:</strong> ClickGo, Gerador de Link de WhatsApp, Botão de WhatsApp e Calculadora de ROI</span>
+                    <span><strong className="text-yellow-400">Bônus 1:</strong> ClickGo (Redirecionador)</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-3 h-3 text-yellow-400" />
+                    </div>
+                    <span><strong className="text-yellow-400">Bônus 2:</strong> Gerador de Link WhatsApp</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-3 h-3 text-yellow-400" />
+                    </div>
+                    <span><strong className="text-yellow-400">Bônus 3:</strong> Botão de WhatsApp</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-3 h-3 text-yellow-400" />
+                    </div>
+                    <span><strong className="text-yellow-400">Bônus 4:</strong> Calculadora de ROI</span>
                   </li>
                   <li className="flex items-center gap-3 text-emerald-400 font-medium">
                     <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
