@@ -514,7 +514,7 @@ const Index = () => {
                     <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
                       <Zap className="w-3 h-3 text-emerald-400" />
                     </div>
-                    <span>Ferramentas bônus incluídas</span>
+                    <span>Bônus: ClickGo, Link WPP, Widget, ROI</span>
                   </li>
                   <li className="flex items-center gap-3 text-slate-300">
                     <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
@@ -593,25 +593,13 @@ const Index = () => {
                     <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
                       <Zap className="w-3 h-3 text-emerald-400" />
                     </div>
-                    <span>Ferramentas bônus incluídas</span>
+                    <span>Bônus: ClickGo, Link WPP, Widget, ROI</span>
                   </li>
                   <li className="flex items-center gap-3 text-emerald-400 font-medium">
                     <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
-                      <Users className="w-3 h-3 text-emerald-400" />
+                      <Code className="w-3 h-3 text-emerald-400" />
                     </div>
-                    <span>Múltiplos atendentes</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-slate-300">
-                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
-                      <Eye className="w-3 h-3 text-emerald-400" />
-                    </div>
-                    <span>Vê imagens e documentos</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-slate-300">
-                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
-                      <Clock className="w-3 h-3 text-emerald-400" />
-                    </div>
-                    <span>Disponível 24h (celular desligado)</span>
+                    <span>Embed IA no seu site</span>
                   </li>
                   <li className="flex items-center gap-3 text-slate-300">
                     <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
@@ -672,25 +660,13 @@ const Index = () => {
                     <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
                       <Zap className="w-3 h-3 text-emerald-400" />
                     </div>
-                    <span>Ferramentas bônus incluídas</span>
+                    <span>Bônus: ClickGo, Link WPP, Widget, ROI</span>
                   </li>
                   <li className="flex items-center gap-3 text-emerald-400 font-medium">
                     <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                      <Crown className="w-3 h-3 text-emerald-400" />
+                      <Code className="w-3 h-3 text-emerald-400" />
                     </div>
-                    <span>Suporte prioritário</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-slate-300">
-                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                      <Eye className="w-3 h-3 text-emerald-400" />
-                    </div>
-                    <span>Vê imagens e documentos</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-slate-300">
-                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                      <Clock className="w-3 h-3 text-emerald-400" />
-                    </div>
-                    <span>Disponível 24h (celular desligado)</span>
+                    <span>Embed IA no seu site</span>
                   </li>
                   <li className="flex items-center gap-3 text-slate-300">
                     <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
