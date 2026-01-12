@@ -31,6 +31,7 @@ const LazyWhatsAppWidgetGenerator = lazy(() => import("./pages/tools/WhatsAppWid
 const LazyWhatsAppROICalculator = lazy(() => import("./pages/tools/WhatsAppROICalculator"));
 const LazyNicheLinkGenerator = lazy(() => import("./pages/tools/NicheLinkGenerator"));
 const LazySectorIASolution = lazy(() => import("./pages/ia/SectorIASolution"));
+const LazyMercadoDigital = lazy(() => import("./pages/MercadoDigital"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -68,6 +69,11 @@ const App = () => {
               <ConditionalSupportWidget />
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/mercado-digital" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyMercadoDigital />
+                  </Suspense>
+                } />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/dashboard" element={<Dashboard />} />

@@ -202,6 +202,39 @@ const Index = () => {
                   Marca horários direto na sua agenda automaticamente
                 </p>
               </div>
+
+              {/* Follow-up Automático */}
+              <div className="bg-gradient-to-br from-red-50 to-rose-50 border border-red-200 rounded-2xl p-4 sm:p-6 text-center">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
+                  <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                </div>
+                <h3 className="text-slate-900 font-bold text-sm sm:text-lg mb-1 sm:mb-2">Follow-up Automático</h3>
+                <p className="text-slate-600 text-xs sm:text-sm">
+                  Reengaja clientes que pararam de responder no momento certo
+                </p>
+              </div>
+
+              {/* CRM Inteligente */}
+              <div className="bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200 rounded-2xl p-4 sm:p-6 text-center">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
+                  <Users className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                </div>
+                <h3 className="text-slate-900 font-bold text-sm sm:text-lg mb-1 sm:mb-2">CRM com LeadScore</h3>
+                <p className="text-slate-600 text-xs sm:text-sm">
+                  Identifica leads quentes e extrai dados automaticamente
+                </p>
+              </div>
+
+              {/* Envio de Mídias */}
+              <div className="bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-200 rounded-2xl p-4 sm:p-6 text-center col-span-2 lg:col-span-2">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
+                  <Image className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                </div>
+                <h3 className="text-slate-900 font-bold text-sm sm:text-lg mb-1 sm:mb-2">Envio de Mídias</h3>
+                <p className="text-slate-600 text-xs sm:text-sm">
+                  Sua IA envia fotos, vídeos e arquivos direto para o cliente
+                </p>
+              </div>
             </div>
 
             {/* Extra highlight */}
@@ -655,6 +688,24 @@ const Index = () => {
                     </div>
                     <span>Embed IA no seu site</span>
                   </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Follow-up Automático IA</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Users className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>CRM Leads com LeadScore</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Image className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Envio de fotos, vídeos e arquivos</span>
+                  </li>
                 </ul>
                 <a href="https://pay.kiwify.com.br/Z17cId5" target="_blank" rel="noopener noreferrer">
                   <Button className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white py-5 font-bold shadow-lg">
@@ -751,6 +802,24 @@ const Index = () => {
                       <Code className="w-3 h-3 text-emerald-400" />
                     </div>
                     <span>Embed IA no seu site</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-emerald-400 font-bold">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Follow-up Automático IA</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-emerald-400 font-bold">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Users className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>CRM Leads Inteligente</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-emerald-400 font-bold">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Image className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Envio de mídias ilimitado</span>
                   </li>
                 </ul>
                 <a href="https://pay.kiwify.com.br/MvFo5AL" target="_blank" rel="noopener noreferrer">
