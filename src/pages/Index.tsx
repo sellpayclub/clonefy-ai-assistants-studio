@@ -631,17 +631,29 @@ const Index = () => {
                     </div>
                     <span><strong className="text-yellow-400">Bônus 4:</strong> Calculadora de ROI</span>
                   </li>
-                  <li className="flex items-center gap-3 text-emerald-400 font-medium">
+                  <li className="flex items-center gap-3 text-slate-300">
                     <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
-                      <Code className="w-3 h-3 text-emerald-400" />
+                      <Eye className="w-3 h-3 text-emerald-400" />
                     </div>
-                    <span>Embed IA no seu site</span>
+                    <span>Vê imagens e documentos</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Clock className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Disponível 24h (celular desligado)</span>
                   </li>
                   <li className="flex items-center gap-3 text-slate-300">
                     <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
                       <Shield className="w-3 h-3 text-emerald-400" />
                     </div>
                     <span>Anti-bloqueio WhatsApp</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-emerald-400 font-medium">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Code className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Embed IA no seu site</span>
                   </li>
                 </ul>
                 <a href="https://pay.kiwify.com.br/Z17cId5" target="_blank" rel="noopener noreferrer">
@@ -716,17 +728,29 @@ const Index = () => {
                     </div>
                     <span><strong className="text-yellow-400">Bônus 4:</strong> Calculadora de ROI</span>
                   </li>
-                  <li className="flex items-center gap-3 text-emerald-400 font-medium">
+                  <li className="flex items-center gap-3 text-slate-300">
                     <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                      <Code className="w-3 h-3 text-emerald-400" />
+                      <Eye className="w-3 h-3 text-emerald-400" />
                     </div>
-                    <span>Embed IA no seu site</span>
+                    <span>Vê imagens e documentos</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Clock className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Disponível 24h (celular desligado)</span>
                   </li>
                   <li className="flex items-center gap-3 text-slate-300">
                     <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
                       <Shield className="w-3 h-3 text-emerald-400" />
                     </div>
                     <span>Anti-bloqueio WhatsApp</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-emerald-400 font-medium">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Code className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Embed IA no seu site</span>
                   </li>
                 </ul>
                 <a href="https://pay.kiwify.com.br/MvFo5AL" target="_blank" rel="noopener noreferrer">
