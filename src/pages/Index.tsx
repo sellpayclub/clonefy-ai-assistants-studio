@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Bot, Clock, Globe, Smartphone, MessageSquare, Zap, ArrowRight, Check, Mic, Volume2, Image, Calendar, Sparkles, Code, Calculator, Crown, Infinity, Users } from "lucide-react";
+import { Bot, Clock, Globe, Smartphone, MessageSquare, Zap, ArrowRight, Check, Mic, Volume2, Image, Calendar, Sparkles, Code, Calculator, Crown, Infinity, Users, Shield, Eye, HelpCircle, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -516,6 +516,24 @@ const Index = () => {
                     </div>
                     <span>Ferramentas bônus incluídas</span>
                   </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Eye className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Vê imagens e documentos</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Clock className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Disponível 24h (celular desligado)</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Shield className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Anti-bloqueio WhatsApp</span>
+                  </li>
                 </ul>
                 <a href="https://pay.kiwify.com.br/rImx3dy" target="_blank" rel="noopener noreferrer">
                   <Button className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 py-5 font-bold">
@@ -583,6 +601,24 @@ const Index = () => {
                     </div>
                     <span>Múltiplos atendentes</span>
                   </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Eye className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Vê imagens e documentos</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Clock className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Disponível 24h (celular desligado)</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Shield className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Anti-bloqueio WhatsApp</span>
+                  </li>
                 </ul>
                 <a href="https://pay.kiwify.com.br/Z17cId5" target="_blank" rel="noopener noreferrer">
                   <Button className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white py-5 font-bold shadow-lg">
@@ -644,6 +680,24 @@ const Index = () => {
                     </div>
                     <span>Suporte prioritário</span>
                   </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Eye className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Vê imagens e documentos</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Clock className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Disponível 24h (celular desligado)</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Shield className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Anti-bloqueio WhatsApp</span>
+                  </li>
                 </ul>
                 <a href="https://pay.kiwify.com.br/MvFo5AL" target="_blank" rel="noopener noreferrer">
                   <Button className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 py-5 font-bold">
@@ -660,6 +714,108 @@ const Index = () => {
                 <span className="text-2xl">🔒</span>
                 <span className="text-yellow-400 font-medium">Garantia de 7 dias. Não gostou? Devolvemos seu dinheiro!</span>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-12 sm:py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto">
+            {/* Title */}
+            <div className="text-center mb-10">
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium mb-4">
+                <HelpCircle className="h-4 w-4" />
+                Perguntas Frequentes
+              </span>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-3">
+                Tire suas <span className="text-emerald-600">dúvidas</span>
+              </h2>
+            </div>
+
+            {/* FAQ Items */}
+            <div className="space-y-4">
+              <details className="group bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+                <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
+                  <span className="font-semibold text-slate-900">Como funciona a IA de atendimento?</span>
+                  <ChevronDown className="w-5 h-5 text-slate-500 group-open:rotate-180 transition-transform" />
+                </summary>
+                <div className="px-5 pb-5 text-slate-600">
+                  A IA é treinada especificamente para o seu negócio. Ela aprende sobre seus produtos, serviços e forma de atender, respondendo automaticamente às perguntas dos clientes 24 horas por dia, 7 dias por semana.
+                </div>
+              </details>
+
+              <details className="group bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+                <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
+                  <span className="font-semibold text-slate-900">A IA funciona mesmo com o celular desligado?</span>
+                  <ChevronDown className="w-5 h-5 text-slate-500 group-open:rotate-180 transition-transform" />
+                </summary>
+                <div className="px-5 pb-5 text-slate-600">
+                  Sim! A IA roda em nossos servidores na nuvem, então ela continua atendendo seus clientes 24 horas, mesmo que você desligue o celular ou fique sem internet. Você nunca perde uma venda.
+                </div>
+              </details>
+
+              <details className="group bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+                <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
+                  <span className="font-semibold text-slate-900">O que é a tecnologia anti-bloqueio do WhatsApp?</span>
+                  <ChevronDown className="w-5 h-5 text-slate-500 group-open:rotate-180 transition-transform" />
+                </summary>
+                <div className="px-5 pb-5 text-slate-600">
+                  Utilizamos tecnologia avançada que simula comportamento humano natural, evitando que o WhatsApp detecte automação. Isso protege seu número de ser bloqueado, garantindo continuidade no atendimento.
+                </div>
+              </details>
+
+              <details className="group bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+                <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
+                  <span className="font-semibold text-slate-900">A IA consegue ver imagens e documentos?</span>
+                  <ChevronDown className="w-5 h-5 text-slate-500 group-open:rotate-180 transition-transform" />
+                </summary>
+                <div className="px-5 pb-5 text-slate-600">
+                  Sim! Nossa IA possui visão computacional avançada. Ela consegue analisar fotos, comprovantes, documentos PDF e muito mais, entendendo o conteúdo e respondendo de forma inteligente.
+                </div>
+              </details>
+
+              <details className="group bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+                <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
+                  <span className="font-semibold text-slate-900">Posso cancelar a qualquer momento?</span>
+                  <ChevronDown className="w-5 h-5 text-slate-500 group-open:rotate-180 transition-transform" />
+                </summary>
+                <div className="px-5 pb-5 text-slate-600">
+                  Sim! Não há fidelidade. Você pode cancelar seu plano a qualquer momento diretamente pelo painel. Além disso, oferecemos garantia de 7 dias - se não gostar, devolvemos 100% do seu dinheiro.
+                </div>
+              </details>
+
+              <details className="group bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+                <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
+                  <span className="font-semibold text-slate-900">Quanto tempo leva para configurar?</span>
+                  <ChevronDown className="w-5 h-5 text-slate-500 group-open:rotate-180 transition-transform" />
+                </summary>
+                <div className="px-5 pb-5 text-slate-600">
+                  Em menos de 10 minutos você já tem sua IA funcionando! Basta criar sua conta, treinar a IA com as informações do seu negócio e conectar seu WhatsApp via QR Code.
+                </div>
+              </details>
+
+              <details className="group bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+                <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
+                  <span className="font-semibold text-slate-900">Posso mudar de plano depois?</span>
+                  <ChevronDown className="w-5 h-5 text-slate-500 group-open:rotate-180 transition-transform" />
+                </summary>
+                <div className="px-5 pb-5 text-slate-600">
+                  Claro! Você pode fazer upgrade ou downgrade do seu plano a qualquer momento. A mudança é aplicada imediatamente e o valor é ajustado proporcionalmente.
+                </div>
+              </details>
+            </div>
+
+            {/* CTA */}
+            <div className="text-center mt-10">
+              <p className="text-slate-600 mb-4">Ainda tem dúvidas?</p>
+              <a href="#planos" onClick={scrollToPlanos}>
+                <Button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-8 py-5 font-bold rounded-xl">
+                  Ver Planos e Começar
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </a>
             </div>
           </div>
         </div>
