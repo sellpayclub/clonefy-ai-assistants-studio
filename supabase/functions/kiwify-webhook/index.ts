@@ -28,7 +28,7 @@ const generateTempPassword = (): string => {
 // Enviar email via Resend
 const sendWelcomeEmail = async (email: string, name: string, password: string, productName: string, planType: string = "pro") => {
     const loginUrl = "https://clonefyia.com/auth";
-    const whatsappSupport = "https://wa.me/5511999999999"; // Substitua pelo número real
+    const whatsappSupport = "https://wa.me/5515998355640";
 
     // Determinar recursos do plano
     const planFeatures: Record<string, { agents: string; connections: string; color: string }> = {
