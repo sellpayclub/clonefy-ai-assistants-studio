@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Bot, Clock, Globe, Smartphone, MessageSquare, Zap, ArrowRight, Check, Mic, Volume2, Image, Calendar, Sparkles, Code, Calculator } from "lucide-react";
+import { Bot, Clock, Globe, Smartphone, MessageSquare, Zap, ArrowRight, Check, Mic, Volume2, Image, Calendar, Sparkles, Code, Calculator, Crown, Infinity, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -9,8 +9,12 @@ const Index = () => {
   const { setTheme } = useTheme();
   const [chatLoaded, setChatLoaded] = useState(false);
 
-  const SCHEDULING_URL = "https://www.agendamento-agendify.com/b/ia-clonefy";
   const CHAT_ASSISTANT_ID = "aeb677ad-3f58-4ecd-b414-79c1aa534d13";
+
+  const scrollToPlanos = (e: React.MouseEvent) => {
+    e.preventDefault();
+    document.getElementById('planos')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
     // Força modo claro na página de vendas
@@ -53,13 +57,13 @@ const Index = () => {
                 Entrar
               </Button>
             </Link>
-            <a href={SCHEDULING_URL} target="_blank" rel="noopener noreferrer">
+            <a href="#planos" onClick={scrollToPlanos}>
               <Button
                 size="sm"
                 className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-xs sm:text-sm px-2 sm:px-4"
               >
-                <span className="hidden sm:inline">Agendar Demo</span>
-                <span className="sm:hidden">Demo</span>
+                <span className="hidden sm:inline">Ver Planos</span>
+                <span className="sm:hidden">Planos</span>
               </Button>
             </a>
           </div>
@@ -122,13 +126,13 @@ const Index = () => {
           </div>
 
           {/* CTA Button */}
-          <a href={SCHEDULING_URL} target="_blank" rel="noopener noreferrer" className="block w-full sm:w-auto sm:inline-block">
+          <a href="#planos" onClick={scrollToPlanos} className="block w-full sm:w-auto sm:inline-block">
             <Button
               size="lg"
               className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
             >
-              <span className="hidden sm:inline">QUERO AGENDAR UMA DEMONSTRAÇÃO!</span>
-              <span className="sm:hidden">AGENDAR DEMONSTRAÇÃO</span>
+              <span className="hidden sm:inline">VER PLANOS E COMEÇAR AGORA!</span>
+              <span className="sm:hidden">VER PLANOS</span>
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </a>
@@ -328,7 +332,7 @@ const Index = () => {
 
             {/* CTA */}
             <div className="text-center mt-8 px-4">
-              <a href={SCHEDULING_URL} target="_blank" rel="noopener noreferrer" className="block w-full sm:w-auto sm:inline-block">
+              <a href="#planos" onClick={scrollToPlanos} className="block w-full sm:w-auto sm:inline-block">
                 <Button
                   size="lg"
                   className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
@@ -389,13 +393,13 @@ const Index = () => {
             <p className="text-slate-600 mb-4 text-base">
               Gostou? Tenha um assistente assim para o <strong>seu negócio</strong>!
             </p>
-            <a href={SCHEDULING_URL} target="_blank" rel="noopener noreferrer" className="block w-full sm:w-auto sm:inline-block">
+            <a href="#planos" onClick={scrollToPlanos} className="block w-full sm:w-auto sm:inline-block">
               <Button
                 size="lg"
                 className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-6 sm:px-8 py-5 text-base sm:text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
-                <span className="hidden sm:inline">QUERO AGENDAR UMA DEMONSTRAÇÃO!</span>
-                <span className="sm:hidden">AGENDAR DEMONSTRAÇÃO</span>
+                <span className="hidden sm:inline">VER PLANOS E COMEÇAR!</span>
+                <span className="sm:hidden">VER PLANOS</span>
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </a>
@@ -446,6 +450,221 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="planos" className="py-12 sm:py-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            {/* Title */}
+            <div className="text-center mb-10">
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-full text-sm font-medium mb-4">
+                <Sparkles className="h-4 w-4" />
+                Planos e Preços
+              </span>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3">
+                Escolha seu <span className="text-emerald-400">Plano</span>
+              </h2>
+              <p className="text-slate-300 text-lg max-w-2xl mx-auto">
+                Comece agora e tenha seu funcionário de IA trabalhando 24/7!
+              </p>
+            </div>
+
+            {/* Pricing Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Plan 1 - Starter */}
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-emerald-500/50 transition-all duration-300">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold text-white mb-2">Plano Starter</h3>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-4xl font-bold text-emerald-400">R$ 47</span>
+                    <span className="text-slate-400">/mês</span>
+                  </div>
+                </div>
+                <ul className="space-y-3 mb-6">
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span><strong className="text-white">1</strong> Funcionário de IA</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span><strong className="text-white">1</strong> Conexão WhatsApp</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Mensagens <strong className="text-white">ilimitadas</strong></span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Contatos <strong className="text-white">ilimitados</strong></span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Mic className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Escuta ativa (IA ouve áudio)</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Ferramentas bônus incluídas</span>
+                  </li>
+                </ul>
+                <a href="https://pay.kiwify.com.br/rImx3dy" target="_blank" rel="noopener noreferrer">
+                  <Button className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 py-5 font-bold">
+                    Assinar Agora
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </a>
+              </div>
+
+              {/* Plan 2 - Pro (Highlighted) */}
+              <div className="bg-gradient-to-br from-emerald-500/20 to-green-600/20 backdrop-blur-sm border-2 border-emerald-500 rounded-2xl p-6 relative transform md:-translate-y-4 shadow-2xl shadow-emerald-500/20">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <span className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-4 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+                    <Crown className="w-4 h-4" />
+                    MAIS POPULAR
+                  </span>
+                </div>
+                <div className="text-center mb-6 mt-2">
+                  <h3 className="text-xl font-bold text-white mb-2">Plano Pro</h3>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-4xl font-bold text-emerald-400">R$ 97</span>
+                    <span className="text-slate-400">/mês</span>
+                  </div>
+                </div>
+                <ul className="space-y-3 mb-6">
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span><strong className="text-white">3</strong> Funcionários de IA</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span><strong className="text-white">3</strong> Conexões WhatsApp</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Mensagens <strong className="text-white">ilimitadas</strong></span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Contatos <strong className="text-white">ilimitados</strong></span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Mic className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Escuta ativa (IA ouve áudio)</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Ferramentas bônus incluídas</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-emerald-400 font-medium">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Users className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Múltiplos atendentes</span>
+                  </li>
+                </ul>
+                <a href="https://pay.kiwify.com.br/Z17cId5" target="_blank" rel="noopener noreferrer">
+                  <Button className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white py-5 font-bold shadow-lg">
+                    Assinar Agora
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </a>
+              </div>
+
+              {/* Plan 3 - Enterprise */}
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-emerald-500/50 transition-all duration-300">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold text-white mb-2">Plano Ilimitado</h3>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-4xl font-bold text-emerald-400">R$ 197</span>
+                    <span className="text-slate-400">/mês</span>
+                  </div>
+                </div>
+                <ul className="space-y-3 mb-6">
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Infinity className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Funcionários de IA <strong className="text-emerald-400">ilimitados</strong></span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Infinity className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Conexões WhatsApp <strong className="text-emerald-400">ilimitadas</strong></span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Mensagens <strong className="text-white">ilimitadas</strong></span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Contatos <strong className="text-white">ilimitados</strong></span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Mic className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Escuta ativa (IA ouve áudio)</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Ferramentas bônus incluídas</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-emerald-400 font-medium">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Crown className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span>Suporte prioritário</span>
+                  </li>
+                </ul>
+                <a href="https://pay.kiwify.com.br/MvFo5AL" target="_blank" rel="noopener noreferrer">
+                  <Button className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 py-5 font-bold">
+                    Assinar Agora
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </a>
+              </div>
+            </div>
+
+            {/* Guarantee */}
+            <div className="text-center mt-10">
+              <div className="inline-flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 rounded-full px-6 py-3">
+                <span className="text-2xl">🔒</span>
+                <span className="text-yellow-400 font-medium">Garantia de 7 dias. Não gostou? Devolvemos seu dinheiro!</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t bg-slate-50 pt-12 pb-8">
         <div className="container mx-auto px-4">
@@ -491,7 +710,7 @@ const Index = () => {
             <div className="flex flex-col items-center md:items-start">
               <h4 className="font-bold text-slate-900 mb-4 uppercase text-xs tracking-wider">Institucional</h4>
               <nav className="flex flex-col gap-2">
-                <a href={SCHEDULING_URL} target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-emerald-600 text-sm">Agendar Demonstração</a>
+                <a href="#planos" onClick={scrollToPlanos} className="text-slate-600 hover:text-emerald-600 text-sm">Ver Planos</a>
                 <Link to="#" className="text-slate-600 hover:text-emerald-600 text-sm">Política de Privacidade</Link>
                 <Link to="#" className="text-slate-600 hover:text-emerald-600 text-sm">Termos de Uso</Link>
               </nav>
