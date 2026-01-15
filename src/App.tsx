@@ -36,6 +36,7 @@ const LazyVentasEspanol = lazy(() => import("./pages/VentasEspanol"));
 
 // Follow-up System
 const LazyFollowupDashboard = lazy(() => import("./pages/followup/FollowupDashboard"));
+const LazyFollowupCampaignWizard = lazy(() => import("./pages/followup/FollowupCampaignWizard"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -137,7 +138,7 @@ const App = () => {
                 } />
                 <Route path="/followup/campaigns/new" element={
                   <Suspense fallback={<LoadingFallback />}>
-                    <LazyFollowupDashboard />
+                    <LazyFollowupCampaignWizard />
                   </Suspense>
                 } />
                 <Route path="/followup/campaigns/:id" element={
