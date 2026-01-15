@@ -37,6 +37,8 @@ const LazyVentasEspanol = lazy(() => import("./pages/VentasEspanol"));
 // Follow-up System
 const LazyFollowupDashboard = lazy(() => import("./pages/followup/FollowupDashboard"));
 const LazyFollowupCampaignWizard = lazy(() => import("./pages/followup/FollowupCampaignWizard"));
+const LazyFollowupImportLeads = lazy(() => import("./pages/followup/FollowupImportLeads"));
+const LazyFollowupLeadsList = lazy(() => import("./pages/followup/FollowupLeadsList"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -148,12 +150,12 @@ const App = () => {
                 } />
                 <Route path="/followup/leads" element={
                   <Suspense fallback={<LoadingFallback />}>
-                    <LazyFollowupDashboard />
+                    <LazyFollowupLeadsList />
                   </Suspense>
                 } />
                 <Route path="/followup/import" element={
                   <Suspense fallback={<LoadingFallback />}>
-                    <LazyFollowupDashboard />
+                    <LazyFollowupImportLeads />
                   </Suspense>
                 } />
 
