@@ -4,14 +4,42 @@ export default {
     login: "Iniciar Sesión",
     startFree: "Comenzar Gratis"
   },
-  
+
+  // Footer
+  footer: {
+    copyright: "© 2024 CLONEFY. Todos los derechos reservados."
+  },
+
+  // Auth Pages
+  auth: {
+    title: "CLONEFY",
+    subtitle: "Plataforma de Clones de IA para WhatsApp",
+    signin: "Iniciar Sesión",
+    signup: "Registrarse",
+    email: "Email",
+    password: "Contraseña",
+    fullName: "Nombre Completo",
+    emailPlaceholder: "tu@email.com",
+    passwordPlaceholder: "••••••••",
+    fullNamePlaceholder: "Tu Nombre",
+    signInButton: "Entrar",
+    signUpButton: "Crear Cuenta",
+    signingIn: "Entrando...",
+    signingUp: "Creando cuenta...",
+    accountCreated: "¡Cuenta creada con éxito!",
+    checkEmail: "Revisa tu correo para confirmar tu cuenta.",
+    signInError: "Error al iniciar sesión",
+    signUpError: "Error al crear cuenta",
+    signOutError: "Error al cerrar sesión"
+  },
+
   // Hero Section
   hero: {
     badge: "🚀 Conoce la Inteligencia Artificial que vende por ti 24 horas al día",
     title: "Clona tu mejor",
     roles: {
       vendedor: "vendedor",
-      sdr: "SDR", 
+      sdr: "SDR",
       atendente: "agente",
       funcionario: "empleado"
     },
@@ -176,7 +204,7 @@ export default {
   // Navigation
   nav: {
     dashboard: "Panel",
-    assistants: "Clones de IA", 
+    assistants: "Clones de IA",
     conversations: "Conversaciones",
     whatsapp: "WhatsApp",
     settings: "Configuración",
@@ -218,7 +246,7 @@ export default {
     howToConnect: "Cómo conectar:",
     steps: {
       step1: "1. Abre WhatsApp en tu teléfono",
-      step2: "2. Toca los tres puntos (⋮) y selecciona \"Dispositivos vinculados\"", 
+      step2: "2. Toca los tres puntos (⋮) y selecciona \"Dispositivos vinculados\"",
       step3: "3. Toca en \"Vincular un dispositivo\"",
       step4: "4. Apunta la cámara hacia este código QR"
     },

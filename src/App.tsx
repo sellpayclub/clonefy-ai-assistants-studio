@@ -32,6 +32,7 @@ const LazyWhatsAppROICalculator = lazy(() => import("./pages/tools/WhatsAppROICa
 const LazyNicheLinkGenerator = lazy(() => import("./pages/tools/NicheLinkGenerator"));
 const LazySectorIASolution = lazy(() => import("./pages/ia/SectorIASolution"));
 const LazyMercadoDigital = lazy(() => import("./pages/MercadoDigital"));
+const LazyVentasEspanol = lazy(() => import("./pages/VentasEspanol"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,6 +73,11 @@ const App = () => {
                 <Route path="/mercado-digital" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <LazyMercadoDigital />
+                  </Suspense>
+                } />
+                <Route path="/es" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyVentasEspanol />
                   </Suspense>
                 } />
                 <Route path="/auth" element={<Auth />} />
