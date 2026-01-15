@@ -247,6 +247,128 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Follow-up IA Section - NEW */}
+      <section className="py-12 sm:py-16 bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            {/* Title */}
+            <div className="text-center mb-10">
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-rose-100 text-rose-700 rounded-full text-sm font-medium mb-4">
+                <Zap className="h-4 w-4" />
+                Novidade Exclusiva
+              </span>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-3">
+                Follow-up Automático com <span className="text-rose-500">IA Inteligente</span>
+              </h2>
+              <p className="text-slate-600 text-lg max-w-2xl mx-auto">
+                Nunca mais perca um cliente por falta de acompanhamento! A IA faz follow-up no momento certo.
+              </p>
+            </div>
+
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+              {/* Left - Benefits */}
+              <div className="space-y-5">
+                <div className="flex gap-4 p-4 bg-white rounded-xl shadow-sm border border-rose-100">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center flex-shrink-0">
+                    <Users className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 mb-1">Importe sua lista de leads</h4>
+                    <p className="text-slate-600 text-sm">Upload de CSV ou cadastro manual. Validação automática de números WhatsApp.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 p-4 bg-white rounded-xl shadow-sm border border-rose-100">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 mb-1">IA cria mensagens personalizadas</h4>
+                    <p className="text-slate-600 text-sm">Com base nos dados do seu negócio, a IA gera mensagens naturais e persuasivas.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 p-4 bg-white rounded-xl shadow-sm border border-rose-100">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center flex-shrink-0">
+                    <Clock className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 mb-1">Disparo no horário certo</h4>
+                    <p className="text-slate-600 text-sm">Controle de anti-spam, dias úteis e horário comercial. Sem risco de bloqueio!</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 p-4 bg-white rounded-xl shadow-sm border border-rose-100">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 mb-1">Human Takeover inteligente</h4>
+                    <p className="text-slate-600 text-sm">Quando você responder, a IA pausa automaticamente para você continuar a conversa.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right - Feature Card */}
+              <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 sm:p-8 text-white">
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-rose-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Zap className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">Como funciona?</h3>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-sm font-bold">1</div>
+                    <p className="text-slate-300">Crie uma campanha e preencha dados do seu negócio</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-sm font-bold">2</div>
+                    <p className="text-slate-300">Importe seus leads (CSV ou manual)</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-sm font-bold">3</div>
+                    <p className="text-slate-300">Conecte seu WhatsApp exclusivo</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-sm font-bold">4</div>
+                    <p className="text-slate-300">Ative e deixe a IA trabalhar!</p>
+                  </div>
+                </div>
+
+                <div className="mt-6 p-4 bg-white/10 rounded-xl">
+                  <p className="text-center text-sm">
+                    <span className="text-rose-400 font-semibold">Resultado:</span> Mais vendas recuperadas com menos esforço!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
+              <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-rose-100">
+                <p className="text-2xl sm:text-3xl font-bold text-rose-500">+35%</p>
+                <p className="text-slate-600 text-sm">Recuperação de leads</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-rose-100">
+                <p className="text-2xl sm:text-3xl font-bold text-orange-500">100%</p>
+                <p className="text-slate-600 text-sm">Automático</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-rose-100">
+                <p className="text-2xl sm:text-3xl font-bold text-amber-500">0</p>
+                <p className="text-slate-600 text-sm">Leads esquecidos</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-rose-100">
+                <p className="text-2xl sm:text-3xl font-bold text-green-500">24/7</p>
+                <p className="text-slate-600 text-sm">Funcionando sempre</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Integration Section - DESTAQUE */}
       <section className="py-10 sm:py-14 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="container mx-auto px-4">
