@@ -34,6 +34,9 @@ const LazySectorIASolution = lazy(() => import("./pages/ia/SectorIASolution"));
 const LazyMercadoDigital = lazy(() => import("./pages/MercadoDigital"));
 const LazyVentasEspanol = lazy(() => import("./pages/VentasEspanol"));
 
+// Follow-up System
+const LazyFollowupDashboard = lazy(() => import("./pages/followup/FollowupDashboard"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -125,6 +128,34 @@ const App = () => {
                     <LazyCRMLeads />
                   </Suspense>
                 } />
+
+                {/* Follow-up System Routes */}
+                <Route path="/followup" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyFollowupDashboard />
+                  </Suspense>
+                } />
+                <Route path="/followup/campaigns/new" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyFollowupDashboard />
+                  </Suspense>
+                } />
+                <Route path="/followup/campaigns/:id" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyFollowupDashboard />
+                  </Suspense>
+                } />
+                <Route path="/followup/leads" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyFollowupDashboard />
+                  </Suspense>
+                } />
+                <Route path="/followup/import" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyFollowupDashboard />
+                  </Suspense>
+                } />
+
                 <Route path="/ferramentas/clickgo" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <LazyClickGo />
@@ -156,7 +187,6 @@ const App = () => {
                   </Suspense>
                 } />
                 <Route path="/thank-you" element={<ThankYou />} />
-                <Route path="/lead-capture" element={<LeadCapture />} />
                 <Route path="/lead-capture" element={<LeadCapture />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

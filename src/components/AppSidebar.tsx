@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut, Palette, BarChart3, Wrench, Zap, Link as LinkIcon, Code, Calculator, Users } from "lucide-react";
+import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut, Palette, BarChart3, Wrench, Zap, Link as LinkIcon, Code, Calculator, Users, Megaphone } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { cleanupAuthState, forceCleanReload } from "@/lib/auth-utils";
@@ -30,6 +30,7 @@ const menuItems = [
   { title: "sidebar.agents.title", url: "/assistants", icon: Bot, description: "sidebar.agents.description" },
   { title: "sidebar.whatsapp.title", url: "/whatsapp", icon: Smartphone, description: "sidebar.whatsapp.description" },
   { title: "sidebar.conversations.title", url: "/conversations", icon: MessageSquare, description: "sidebar.conversations.description" },
+  { title: "Follow-up IA", url: "/followup", icon: Megaphone, description: "Campanhas de follow-up automatizado", highlight: true },
   { title: "Chat Flutuante", url: "/widget-customization", icon: Palette, description: "Personalize o chat para seu site" },
   { title: "CRM Leads", url: "/crm-leads", icon: Users, description: "Gestão inteligente de leads extraídos" },
   { title: "Analytics do Chat", url: "/widget-analytics", icon: BarChart3, description: "Analise o desempenho do chat" },
