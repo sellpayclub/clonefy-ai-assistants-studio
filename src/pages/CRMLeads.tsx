@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from '@supabase/supabase-js';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Search, Filter, MessageSquare, Phone, Mail, Calendar } from "lucide-react";
+import { Users, Search, Filter, MessageSquare, Phone, Mail, Calendar, Globe, Smartphone } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import AppSidebar from "@/components/AppSidebar";
@@ -20,6 +20,7 @@ interface Lead {
     lead_score: number;
     status: string;
     intent_summary: string | null;
+    source: 'whatsapp' | 'widget' | null;
     last_interaction: string;
     created_at: string;
 }
@@ -76,6 +77,23 @@ const CRMLeads = () => {
         if (score >= 80) return <Badge className="bg-red-500 hover:bg-red-600">🔥 Quente ({score})</Badge>;
         if (score >= 40) return <Badge className="bg-orange-400 hover:bg-orange-500">⛅ Morno ({score})</Badge>;
         return <Badge className="bg-blue-400 hover:bg-blue-500">❄️ Frio ({score})</Badge>;
+    };
+
+    const getSourceBadge = (source: string | null) => {
+        if (source === 'widget') {
+            return (
+                <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-tight px-1.5 py-0 gap-1 border-purple-500/50 text-purple-600">
+                    <Globe className="h-2.5 w-2.5" />
+                    Site
+                </Badge>
+            );
+        }
+        return (
+            <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-tight px-1.5 py-0 gap-1 border-green-500/50 text-green-600">
+                <Smartphone className="h-2.5 w-2.5" />
+                WhatsApp
+            </Badge>
+        );
     };
 
     if (!user && !loading) return null;
@@ -137,7 +155,7 @@ const CRMLeads = () => {
                                         </div>
                                         <h3 className="text-lg font-semibold mb-1">Nenhum lead encontrado</h3>
                                         <p className="text-muted-foreground text-sm max-w-xs mx-auto">
-                                            Os leads aparecerão aqui automaticamente conforme seus agentes conversarem com os clientes no WhatsApp.
+                                            Os leads aparecerão aqui automaticamente conforme seus agentes conversarem com os clientes no WhatsApp ou no Chat do Site.
                                         </p>
                                     </div>
                                 ) : (
@@ -160,6 +178,7 @@ const CRMLeads = () => {
                                                             <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-tight px-1.5 py-0">
                                                                 {lead.status}
                                                             </Badge>
+                                                            {getSourceBadge(lead.source)}
                                                         </div>
 
                                                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">

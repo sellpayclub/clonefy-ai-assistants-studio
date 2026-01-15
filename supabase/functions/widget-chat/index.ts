@@ -13,6 +13,161 @@ const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+/**
+ * Atualiza métricas de analytics em tempo real para o Widget
+ */
+async function updateAnalytics(assistantId: string, userId: string, type: 'user' | 'assistant' | 'conversation' | 'visitor') {
+  if (!assistantId || !userId) return;
+
+  const today = new Date().toISOString().split('T')[0];
+  console.log(`📊 [Widget] Atualizando analytics: ${type} para assistente ${assistantId}`);
+
+  try {
+    // Tentar buscar registro hoje
+    const { data: analytics, error: fetchError } = await supabase
+      .from('widget_analytics')
+      .select('*')
+      .eq('assistant_id', assistantId)
+      .eq('date', today)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error('❌ [Widget] Erro ao buscar analytics:', fetchError);
+      return;
+    }
+
+    if (!analytics) {
+      // Criar novo registro para hoje
+      const { error: insertError } = await supabase
+        .from('widget_analytics')
+        .insert({
+          assistant_id: assistantId,
+          user_id: userId,
+          date: today,
+          unique_visitors: type === 'visitor' ? 1 : 0,
+          total_conversations: type === 'conversation' ? 1 : 0,
+          total_messages: (type === 'user' || type === 'assistant') ? 1 : 0,
+          total_user_messages: type === 'user' ? 1 : 0,
+          total_bot_messages: type === 'assistant' ? 1 : 0
+        });
+
+      if (insertError) console.error('❌ [Widget] Erro ao criar analytics:', insertError);
+    } else {
+      // Atualizar existente
+      const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+
+      if (type === 'visitor') update.unique_visitors = (analytics.unique_visitors || 0) + 1;
+      if (type === 'conversation') update.total_conversations = (analytics.total_conversations || 0) + 1;
+      if (type === 'user' || type === 'assistant') {
+        update.total_messages = (analytics.total_messages || 0) + 1;
+        if (type === 'user') update.total_user_messages = (analytics.total_user_messages || 0) + 1;
+        if (type === 'assistant') update.total_bot_messages = (analytics.total_bot_messages || 0) + 1;
+      }
+
+      const { error: updateError } = await supabase
+        .from('widget_analytics')
+        .update(update)
+        .eq('id', analytics.id);
+
+      if (updateError) console.error('❌ [Widget] Erro ao atualizar analytics:', updateError);
+    }
+  } catch (err) {
+    console.error('❌ [Widget] Erro global no updateAnalytics:', err);
+  }
+}
+
+/**
+ * Processa a conversa para extrair informações do Lead para o CRM (Widget)
+ */
+async function processCRMLead(
+  assistantId: string,
+  userId: string,
+  widgetSessionId: string,
+  conversation: string,
+  apiKey: string
+) {
+  if (!assistantId || !userId || !apiKey) return;
+
+  try {
+    console.log('🧠 [Widget] Extraindo dados do lead via IA...');
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini', // Modelo rápido e barato para extração
+        messages: [
+          {
+            role: 'system',
+            content: `Você é um analista de CRM. Sua tarefa é extrair informações de uma conversa de chat do site.
+            Retorne APENAS um JSON plano com as seguintes chaves:
+            - name: Nome do cliente (se identificado, senão deixe null)
+            - email: Email do cliente (se identificado, senão deixe null)
+            - lead_score: Um número de 0 a 100 baseado no interesse de compra (0=curioso, 100=pronto para comprar)
+            - intent_summary: Um resumo de 1 frase do que o cliente quer.`
+          },
+          {
+            role: 'user',
+            content: `Conversa:\n${conversation}`
+          }
+        ],
+        response_format: { type: 'json_object' }
+      })
+    });
+
+    if (!response.ok) throw new Error('Falha na extração GPT');
+
+    const data = await response.json();
+    const profiling = JSON.parse(data.choices[0].message.content);
+
+    console.log('📊 [Widget] Dados extraídos p/ CRM:', profiling);
+
+    // Upsert na tabela crm_leads
+    // Procurar lead existente pelo session ID do widget
+    const { data: existingLead } = await supabase
+      .from('crm_leads')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('whatsapp_number', widgetSessionId)
+      .maybeSingle();
+
+    const leadData: Record<string, unknown> = {
+      user_id: userId,
+      assistant_id: assistantId,
+      whatsapp_number: widgetSessionId, // Usamos este campo para armazenar o ID da sessão do widget
+      source: 'widget', // Novo campo para identificar a origem
+      last_interaction: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    if (profiling.name) leadData.name = profiling.name;
+    if (profiling.email) leadData.email = profiling.email;
+    if (profiling.lead_score !== undefined) leadData.lead_score = profiling.lead_score;
+    if (profiling.intent_summary) leadData.intent_summary = profiling.intent_summary;
+
+    if (existingLead) {
+      console.log('📝 [Widget] Atualizando lead existente no CRM...');
+      await supabase
+        .from('crm_leads')
+        .update(leadData)
+        .eq('id', existingLead.id);
+    } else {
+      console.log('🆕 [Widget] Criando novo lead no CRM...');
+      await supabase
+        .from('crm_leads')
+        .insert(leadData);
+    }
+
+    console.log('✅ [Widget] Lead processado com sucesso no CRM!');
+
+  } catch (err) {
+    console.error('⚠️ [Widget] Falha no profiling/CRM:', err);
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -21,7 +176,7 @@ serve(async (req) => {
 
   try {
     const { action, agentId, message, conversationId } = await req.json();
-    
+
     console.log(`Widget Chat API - Action: ${action}, Agent: ${agentId}`);
 
     if (action === 'get_agent') {
@@ -64,8 +219,11 @@ serve(async (req) => {
       // Create or get conversation
       let currentConversationId = conversationId;
       let threadId = '';
-      
+      let isNewConversation = false;
+
       if (!currentConversationId) {
+        isNewConversation = true;
+
         // Create OpenAI thread first (parallel optimization)
         const threadResponse = await fetch('https://api.openai.com/v1/threads', {
           method: 'POST',
@@ -105,6 +263,11 @@ serve(async (req) => {
         }
 
         currentConversationId = newConversation.id;
+
+        // 📊 Analytics: Registrar nova conversa e novo visitante
+        updateAnalytics(agentId, agent.user_id, 'conversation').catch(e => console.error('Analytics error:', e));
+        updateAnalytics(agentId, agent.user_id, 'visitor').catch(e => console.error('Analytics error:', e));
+
       } else {
         // Get existing thread ID
         const { data: conversation, error: convFetchError } = await supabase
@@ -112,16 +275,19 @@ serve(async (req) => {
           .select('openai_thread_id')
           .eq('id', currentConversationId)
           .single();
-        
+
         if (convFetchError || !conversation) {
           throw new Error('Conversation not found');
         }
-        
+
         threadId = conversation?.openai_thread_id;
         if (!threadId) {
           throw new Error('Thread ID not found for conversation');
         }
       }
+
+      // 📊 Analytics: Registrar mensagem do usuário
+      updateAnalytics(agentId, agent.user_id, 'user').catch(e => console.error('Analytics error:', e));
 
       // Parallel operations for better performance
       const [messageResponse, dbInsertResponse] = await Promise.all([
@@ -188,19 +354,19 @@ serve(async (req) => {
               'OpenAI-Beta': 'assistants=v2'
             },
           });
-          
+
           const fullRunData = await fullRunResponse.json();
           const requiredAction = fullRunData.required_action;
-          
+
           if (requiredAction && requiredAction.type === 'submit_tool_outputs') {
             console.log('Processing tool calls for widget...');
-            
+
             for (const toolCall of requiredAction.submit_tool_outputs.tool_calls) {
               if (toolCall.type === 'function') {
                 const functionName = toolCall.function.name;
                 if (['check_availability', 'create_appointment', 'list_appointments', 'cancel_appointment', 'reschedule_appointment', 'update_appointment'].includes(functionName)) {
                   console.log(`Widget calling calendar function: ${functionName}`);
-                  
+
                   // Call our calendar proxy to handle the function call
                   const proxyResponse = await supabase.functions.invoke('chat-proxy', {
                     body: {
@@ -212,13 +378,13 @@ serve(async (req) => {
                       arguments: toolCall.function.arguments
                     }
                   });
-                  
+
                   if (proxyResponse.error) {
                     console.error(`Error calling calendar function: ${proxyResponse.error.message}`);
                   } else {
                     console.log('Calendar function called successfully');
                   }
-                  
+
                   // The proxy handles the tool output submission, so we continue
                   break;
                 }
@@ -229,7 +395,7 @@ serve(async (req) => {
 
         // Shorter wait time for faster responses
         await new Promise(resolve => setTimeout(resolve, pollInterval));
-        
+
         const statusResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${run.id}`, {
           headers: {
             'Authorization': `Bearer ${openAIApiKey}`,
@@ -240,7 +406,7 @@ serve(async (req) => {
         const statusData = await statusResponse.json();
         runStatus = statusData.status;
         attempts++;
-        
+
         // Log progress para debugging - reduzindo logs
         if (attempts % 6 === 0) { // Log a cada ~1.8 segundos
           console.log(`Assistant processing... Status: ${runStatus}, Attempt: ${attempts}`);
@@ -276,6 +442,9 @@ serve(async (req) => {
           throw new Error('Invalid message format from assistant');
         }
 
+        // 📊 Analytics: Registrar mensagem do assistente
+        updateAnalytics(agentId, agent.user_id, 'assistant').catch(e => console.error('Analytics error:', e));
+
         // Background save - não bloquear resposta (sem catch)
         supabase.from('messages').insert({
           conversation_id: currentConversationId,
@@ -286,9 +455,19 @@ serve(async (req) => {
           console.log('Assistant message saved to database');
         });
 
-        return new Response(JSON.stringify({ 
+        // 🧠 CRM: Processar lead em background (não bloqueia resposta)
+        console.log('📈 [Widget] Iniciando Profiling de Lead para o CRM...');
+        processCRMLead(
+          agentId,
+          agent.user_id,
+          `widget_${currentConversationId}`, // ID único da sessão do widget
+          `Usuário: ${message}\nAssistente: ${responseText}`,
+          openAIApiKey!
+        ).catch(e => console.error('❌ [Widget] Erro no background profiling:', e));
+
+        return new Response(JSON.stringify({
           response: responseText,
-          conversationId: currentConversationId 
+          conversationId: currentConversationId
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
