@@ -360,12 +360,11 @@ Pedro Costa,5521777777777,`;
                                 </CardHeader>
                                 <CardContent>
                                     <div
-                                        className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                                        onClick={() => fileInputRef.current?.click()}
+                                        className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors"
                                     >
                                         <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                                        <p className="text-sm font-medium mb-1">Clique para selecionar</p>
-                                        <p className="text-xs text-muted-foreground">ou arraste o arquivo aqui</p>
+                                        <p className="text-sm font-medium mb-1">Selecione um arquivo CSV</p>
+                                        <p className="text-xs text-muted-foreground mb-4">ou arraste o arquivo aqui</p>
                                         <input
                                             ref={fileInputRef}
                                             type="file"
@@ -373,6 +372,18 @@ Pedro Costa,5521777777777,`;
                                             className="hidden"
                                             onChange={handleFileUpload}
                                         />
+                                        <Button
+                                            type="button"
+                                            variant="default"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                fileInputRef.current?.click();
+                                            }}
+                                        >
+                                            <Upload className="h-4 w-4 mr-2" />
+                                            Selecionar Arquivo
+                                        </Button>
                                     </div>
                                     <Button variant="ghost" size="sm" className="mt-3 w-full" onClick={downloadTemplate}>
                                         <Download className="h-4 w-4 mr-2" />

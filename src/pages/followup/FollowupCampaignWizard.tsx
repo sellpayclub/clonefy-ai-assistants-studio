@@ -20,8 +20,11 @@ import {
     Trash2,
     Clock,
     Calendar,
-    Shield
+    Shield,
+    Wifi,
+    WifiOff
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AppSidebar from "@/components/AppSidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -83,14 +86,33 @@ const FollowupCampaignWizard = () => {
     const { t } = useLanguage();
     const { toast } = useToast();
     const navigate = useNavigate();
+    const [whatsappInstances, setWhatsappInstances] = useState<{ instance_name: string; status: string }[]>([]);
 
     useEffect(() => {
         const getSession = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             setUser(session?.user ?? null);
+            if (session?.user) {
+                fetchWhatsappInstances(session.user.id);
+            }
         };
         getSession();
     }, []);
+
+    const fetchWhatsappInstances = async (userId: string) => {
+        try {
+            const { data, error } = await (supabase as any)
+                .from('n8n_fluxogpt')
+                .select('instance_name, status')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setWhatsappInstances(data || []);
+        } catch (error) {
+            console.error('Erro ao buscar instâncias:', error);
+        }
+    };
 
     const updateCampaignData = (field: keyof CampaignData, value: any) => {
         setCampaignData(prev => ({ ...prev, [field]: value }));
@@ -166,10 +188,45 @@ const FollowupCampaignWizard = () => {
     const handleSaveCampaign = async () => {
         if (!user) return;
 
+        if (!campaignData.whatsapp_instance) {
+            toast({
+                title: "Nome da conexão obrigatório",
+                description: "Digite um nome para a conexão WhatsApp",
+                variant: "destructive",
+            });
+            setCurrentStep(4);
+            return;
+        }
+
         setLoading(true);
         try {
-            // Criar campanha no banco
-            const { data, error } = await (supabase as any)
+            // 1. Criar instância WhatsApp via Evolution API
+            toast({
+                title: "Criando conexão WhatsApp...",
+                description: "Aguarde enquanto configuramos sua conexão",
+            });
+
+            const evolutionResponse = await fetch('https://api.cfroi.click/instance/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': '94805bfbb25f77f37a029f5a3dbfe62b'
+                },
+                body: JSON.stringify({
+                    instanceName: `followup-${campaignData.whatsapp_instance}-${user.id.substring(0, 8)}`,
+                    qrcode: true,
+                    integration: 'WHATSAPP-BAILEYS'
+                })
+            });
+
+            let whatsappInstanceKey = campaignData.whatsapp_instance;
+            if (evolutionResponse.ok) {
+                const evolutionData = await evolutionResponse.json();
+                whatsappInstanceKey = evolutionData.instance?.instanceName || campaignData.whatsapp_instance;
+            }
+
+            // 2. Criar campanha no banco (com status draft)
+            const { data: campaign, error: campaignError } = await (supabase as any)
                 .from('followup_campaigns')
                 .insert({
                     user_id: user.id,
@@ -187,20 +244,72 @@ const FollowupCampaignWizard = () => {
                     start_hour: campaignData.start_hour,
                     end_hour: campaignData.end_hour,
                     working_days: campaignData.working_days,
-                    whatsapp_instance: campaignData.whatsapp_instance,
+                    whatsapp_instance: whatsappInstanceKey,
+                    whatsapp_status: 'disconnected',
                     status: 'draft',
                 })
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (campaignError) throw campaignError;
+
+            // 3. Criar assistente OpenAI dedicado via Edge Function
+            toast({
+                title: "Criando IA especializada...",
+                description: "Gerando assistente com os dados do seu negócio",
+            });
+
+            try {
+                const assistantResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL || 'https://ekfkrwueqwpqakpsrsjt.supabase.co'}/functions/v1/openai-assistants`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+                    },
+                    body: JSON.stringify({
+                        action: 'create',
+                        name: `Follow-up - ${campaignData.business_name || 'Campanha'}`,
+                        instructions: `Você é um especialista em follow-up de vendas para ${campaignData.business_name || 'uma empresa'}.
+
+SOBRE O NEGÓCIO:
+${campaignData.business_description || 'Empresa de vendas'}
+
+PROPOSTA DE VALOR:
+${campaignData.value_proposition || 'Oferecemos as melhores soluções'}
+
+OBJEÇÕES COMUNS E RESPOSTAS:
+${campaignData.common_objections.filter(o => o.objection).map(o => `- Objeção: ${o.objection}\n  Resposta: ${o.response}`).join('\n') || 'Usar argumentos de valor'}
+
+TOM DE VOZ: ${campaignData.tone_of_voice === 'friendly' ? 'Amigável e empático' : campaignData.tone_of_voice === 'professional' ? 'Profissional e formal' : 'Casual e descontraído'}
+
+SUA MISSÃO:
+- Gerar mensagens de follow-up naturais e persuasivas
+- Ser ${campaignData.tone_of_voice} em todas as interações
+- Máximo de 3 linhas por mensagem
+- Não ser insistente, despertar curiosidade`,
+                        model: 'gpt-4o-mini'
+                    })
+                });
+
+                if (assistantResponse.ok) {
+                    const assistantData = await assistantResponse.json();
+                    // Atualizar campanha com ID do assistente
+                    await (supabase as any)
+                        .from('followup_campaigns')
+                        .update({ openai_assistant_id: assistantData.id })
+                        .eq('id', campaign.id);
+                }
+            } catch (aiError) {
+                console.error('Erro ao criar assistente:', aiError);
+                // Continua mesmo sem assistente - usará geração direta
+            }
 
             toast({
                 title: "Campanha criada!",
-                description: "Sua campanha foi salva como rascunho.",
+                description: "Sua campanha foi salva. Conecte o WhatsApp para ativar.",
             });
 
-            navigate(`/followup/campaigns/${data.id}`);
+            navigate(`/followup/campaigns/${campaign.id}`);
         } catch (error: any) {
             console.error('Erro ao criar campanha:', error);
             toast({
@@ -479,37 +588,66 @@ Maria Santos, 5511888888888, maria@email.com"
             case 4:
                 return (
                     <div className="space-y-6">
-                        <div className="text-center py-8">
-                            <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
-                                <Smartphone className="h-8 w-8 text-green-500" />
+                        <div className="text-center py-4">
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${campaignData.whatsapp_instance ? 'bg-green-500/20' : 'bg-muted'
+                                }`}>
+                                <Smartphone className={`h-8 w-8 ${campaignData.whatsapp_instance ? 'text-green-500' : 'text-muted-foreground'
+                                    }`} />
                             </div>
                             <h3 className="text-lg font-medium mb-2">Conectar WhatsApp</h3>
                             <p className="text-sm text-muted-foreground mb-6">
-                                Selecione uma instância existente ou crie uma nova
+                                Crie uma conexão exclusiva para esta campanha de follow-up
                             </p>
-
-                            <div className="max-w-sm mx-auto space-y-4">
-                                <Input
-                                    placeholder="Nome da instância WhatsApp"
-                                    value={campaignData.whatsapp_instance}
-                                    onChange={(e) => updateCampaignData('whatsapp_instance', e.target.value)}
-                                />
-                                <Button
-                                    variant="outline"
-                                    className="w-full"
-                                    onClick={() => navigate('/whatsapp')}
-                                >
-                                    <Smartphone className="h-4 w-4 mr-2" />
-                                    Gerenciar Conexões WhatsApp
-                                </Button>
-                            </div>
                         </div>
 
-                        <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-sm">
-                            <p className="font-medium text-yellow-600 mb-1">⚠️ Importante</p>
+                        <div className="max-w-md mx-auto space-y-4">
+                            {/* Nome da instância */}
+                            <div className="space-y-2">
+                                <Label>Nome da conexão</Label>
+                                <Input
+                                    placeholder="Ex: followup-vendas"
+                                    value={campaignData.whatsapp_instance}
+                                    onChange={(e) => updateCampaignData('whatsapp_instance', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Apenas letras minúsculas, números e hífens
+                                </p>
+                            </div>
+
+                            {/* Botão de criar conexão */}
+                            {!campaignData.whatsapp_instance ? (
+                                <div className="p-6 bg-muted/30 rounded-lg text-center border border-dashed">
+                                    <WifiOff className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                                    <p className="text-sm text-muted-foreground mb-2">
+                                        Digite um nome para a conexão acima
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="p-6 bg-green-500/10 rounded-lg text-center border border-green-500/30">
+                                    <Wifi className="h-10 w-10 text-green-500 mx-auto mb-3" />
+                                    <p className="text-sm font-medium text-green-600 mb-2">
+                                        Conexão configurada: {campaignData.whatsapp_instance}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        O QR Code será exibido ao ativar a campanha
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg text-sm">
+                            <p className="font-medium text-blue-600 mb-1">💡 Conexão Exclusiva</p>
                             <p className="text-muted-foreground">
-                                A conexão WhatsApp precisa estar ativa para os disparos funcionarem.
-                                Você pode pular esta etapa e configurar depois.
+                                Esta conexão é <strong>exclusiva para follow-up</strong> e não interfere nos seus assistentes.
+                                Você conectará seu WhatsApp ao ativar a campanha.
+                            </p>
+                        </div>
+
+                        <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg text-sm">
+                            <p className="font-medium text-purple-600 mb-1">🤖 IA Automática</p>
+                            <p className="text-muted-foreground">
+                                Ao salvar, o sistema criará uma IA especializada com os dados do seu negócio
+                                para gerar mensagens personalizadas de follow-up.
                             </p>
                         </div>
                     </div>
