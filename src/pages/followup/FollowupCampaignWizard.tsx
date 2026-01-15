@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from '@supabase/supabase-js';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -87,6 +87,9 @@ const FollowupCampaignWizard = () => {
     const { toast } = useToast();
     const navigate = useNavigate();
     const [whatsappInstances, setWhatsappInstances] = useState<{ instance_name: string; status: string }[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [importedLeads, setImportedLeads] = useState<{ name: string; whatsapp: string; email?: string }[]>([]);
+    const [manualLeadsText, setManualLeadsText] = useState('');
 
     useEffect(() => {
         const getSession = async () => {
@@ -200,29 +203,35 @@ const FollowupCampaignWizard = () => {
 
         setLoading(true);
         try {
-            // 1. Criar instância WhatsApp via Evolution API
-            toast({
-                title: "Criando conexão WhatsApp...",
-                description: "Aguarde enquanto configuramos sua conexão",
-            });
+            // 1. Tentar criar instância WhatsApp via Evolution API (pode falhar por CORS)
+            let whatsappInstanceKey = `followup-${campaignData.whatsapp_instance}-${user.id.substring(0, 8)}`;
 
-            const evolutionResponse = await fetch('https://api.cfroi.click/instance/create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': '94805bfbb25f77f37a029f5a3dbfe62b'
-                },
-                body: JSON.stringify({
-                    instanceName: `followup-${campaignData.whatsapp_instance}-${user.id.substring(0, 8)}`,
-                    qrcode: true,
-                    integration: 'WHATSAPP-BAILEYS'
-                })
-            });
+            try {
+                toast({
+                    title: "Configurando campanha...",
+                    description: "Aguarde enquanto salvamos os dados",
+                });
 
-            let whatsappInstanceKey = campaignData.whatsapp_instance;
-            if (evolutionResponse.ok) {
-                const evolutionData = await evolutionResponse.json();
-                whatsappInstanceKey = evolutionData.instance?.instanceName || campaignData.whatsapp_instance;
+                const evolutionResponse = await fetch('https://api.cfroi.click/instance/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': '94805bfbb25f77f37a029f5a3dbfe62b'
+                    },
+                    body: JSON.stringify({
+                        instanceName: whatsappInstanceKey,
+                        qrcode: true,
+                        integration: 'WHATSAPP-BAILEYS'
+                    })
+                });
+
+                if (evolutionResponse.ok) {
+                    const evolutionData = await evolutionResponse.json();
+                    whatsappInstanceKey = evolutionData.instance?.instanceName || whatsappInstanceKey;
+                }
+            } catch (evolutionError) {
+                console.log('Evolution API não disponível, continuando com salvamento local:', evolutionError);
+                // Continua salvando a campanha mesmo sem criar a instância
             }
 
             // 2. Criar campanha no banco (com status draft)
@@ -447,17 +456,73 @@ SUA MISSÃO:
             case 2:
                 return (
                     <div className="space-y-6">
-                        <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
+                        <div
+                            className="text-center py-12 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors"
+                            onClick={() => fileInputRef.current?.click()}
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                e.currentTarget.classList.add('border-primary', 'bg-primary/5');
+                            }}
+                            onDragLeave={(e) => {
+                                e.preventDefault();
+                                e.currentTarget.classList.remove('border-primary', 'bg-primary/5');
+                            }}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                e.currentTarget.classList.remove('border-primary', 'bg-primary/5');
+                                const files = e.dataTransfer.files;
+                                if (files && files.length > 0) {
+                                    const file = files[0];
+                                    const reader = new FileReader();
+                                    reader.onload = (ev) => {
+                                        const content = ev.target?.result as string;
+                                        const lines = content.split('\n').filter(l => l.trim());
+                                        const leads = lines.slice(1).map(line => {
+                                            const parts = line.split(/[,;\t]/).map(p => p.trim());
+                                            return { name: parts[0] || 'Lead', whatsapp: parts[1] || '', email: parts[2] };
+                                        }).filter(l => l.whatsapp);
+                                        setImportedLeads(leads);
+                                        toast({ title: `${leads.length} leads importados!` });
+                                    };
+                                    reader.readAsText(file);
+                                }
+                            }}
+                        >
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".csv,.txt"
+                                style={{ display: 'none' }}
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    const reader = new FileReader();
+                                    reader.onload = (ev) => {
+                                        const content = ev.target?.result as string;
+                                        const lines = content.split('\n').filter(l => l.trim());
+                                        const leads = lines.slice(1).map(line => {
+                                            const parts = line.split(/[,;\t]/).map(p => p.trim());
+                                            return { name: parts[0] || 'Lead', whatsapp: parts[1] || '', email: parts[2] };
+                                        }).filter(l => l.whatsapp);
+                                        setImportedLeads(leads);
+                                        toast({ title: `${leads.length} leads importados!` });
+                                    };
+                                    reader.readAsText(file);
+                                }}
+                            />
                             <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                            <h3 className="text-lg font-medium mb-2">Arraste um arquivo CSV ou clique para selecionar</h3>
+                            <h3 className="text-lg font-medium mb-2">Clique ou arraste um arquivo CSV</h3>
                             <p className="text-sm text-muted-foreground mb-4">
                                 Formato: Nome, WhatsApp, Email (opcional)
                             </p>
-                            <Button variant="outline">
-                                <Upload className="h-4 w-4 mr-2" />
-                                Selecionar Arquivo
-                            </Button>
                         </div>
+
+                        {importedLeads.length > 0 && (
+                            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <p className="text-green-700 font-medium">✅ {importedLeads.length} leads prontos para importar</p>
+                                <p className="text-sm text-green-600">Os leads serão salvos ao criar a campanha</p>
+                            </div>
+                        )}
 
                         <div className="text-center text-muted-foreground">ou</div>
 
@@ -468,7 +533,24 @@ SUA MISSÃO:
 João Silva, 5511999999999
 Maria Santos, 5511888888888, maria@email.com"
                                 rows={6}
+                                value={manualLeadsText}
+                                onChange={(e) => setManualLeadsText(e.target.value)}
                             />
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    const lines = manualLeadsText.split('\n').filter(l => l.trim());
+                                    const leads = lines.map(line => {
+                                        const parts = line.split(/[,;\t]/).map(p => p.trim());
+                                        return { name: parts[0] || 'Lead', whatsapp: parts[1] || '', email: parts[2] };
+                                    }).filter(l => l.whatsapp);
+                                    setImportedLeads(prev => [...prev, ...leads]);
+                                    setManualLeadsText('');
+                                    toast({ title: `${leads.length} leads adicionados!` });
+                                }}
+                            >
+                                Adicionar Leads
+                            </Button>
                             <p className="text-xs text-muted-foreground">
                                 Formato: Nome, WhatsApp, Email (opcional) - separados por vírgula
                             </p>

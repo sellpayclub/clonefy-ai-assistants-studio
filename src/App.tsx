@@ -37,6 +37,7 @@ const LazyVentasEspanol = lazy(() => import("./pages/VentasEspanol"));
 // Follow-up System
 const LazyFollowupDashboard = lazy(() => import("./pages/followup/FollowupDashboard"));
 const LazyFollowupCampaignWizard = lazy(() => import("./pages/followup/FollowupCampaignWizard"));
+const LazyFollowupCampaignDetails = lazy(() => import("./pages/followup/FollowupCampaignDetails"));
 const LazyFollowupImportLeads = lazy(() => import("./pages/followup/FollowupImportLeads"));
 const LazyFollowupLeadsList = lazy(() => import("./pages/followup/FollowupLeadsList"));
 
@@ -145,7 +146,7 @@ const App = () => {
                 } />
                 <Route path="/followup/campaigns/:id" element={
                   <Suspense fallback={<LoadingFallback />}>
-                    <LazyFollowupDashboard />
+                    <LazyFollowupCampaignDetails />
                   </Suspense>
                 } />
                 <Route path="/followup/leads" element={
