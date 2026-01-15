@@ -81,13 +81,48 @@ serve(async (req) => {
             });
         }
 
-        // Ignorar mensagens enviadas por nós mesmos
+        // Detectar se é mensagem do humano (dono da conta) para ativar Human Takeover
         if (payload.data.key.fromMe) {
-            console.log('⏭️ Mensagem própria ignorada');
-            return new Response(JSON.stringify({ status: 'ignored', reason: 'own_message' }), {
-                status: 200,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
+            console.log('👤 Mensagem do HUMANO detectada - Verificando Human Takeover');
+
+            const instanceName = payload.instance;
+            const contactNumber = payload.data.key.remoteJid.replace('@s.whatsapp.net', '');
+
+            // Buscar registro do contato
+            const { data: existingContact } = await supabase
+                .from('n8n_fluxogpt')
+                .select('id')
+                .eq('nomeinstancia', instanceName)
+                .eq('whatsappuser', contactNumber)
+                .single();
+
+            if (existingContact) {
+                // Ativar pausa de 2 horas
+                const takeoverUntil = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+
+                await supabase
+                    .from('n8n_fluxogpt')
+                    .update({ human_takeover_until: takeoverUntil })
+                    .eq('id', existingContact.id);
+
+                console.log(`⏸️ HUMAN TAKEOVER ATIVADO! IA pausada até ${takeoverUntil} para contato ${contactNumber}`);
+
+                return new Response(JSON.stringify({
+                    status: 'takeover_activated',
+                    contact: contactNumber,
+                    pausedUntil: takeoverUntil,
+                    message: 'IA pausada por 2 horas - humano assumiu a conversa'
+                }), {
+                    status: 200,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            } else {
+                console.log('⏭️ Mensagem própria ignorada (contato ainda não registrado)');
+                return new Response(JSON.stringify({ status: 'ignored', reason: 'own_message_no_contact' }), {
+                    status: 200,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            }
         }
 
         const instanceName = payload.instance;
@@ -369,6 +404,37 @@ serve(async (req) => {
             .eq('nomeinstancia', instanceName)
             .eq('whatsappuser', contactNumber)
             .single();
+
+        // 🛑 HUMAN TAKEOVER CHECK: Verificar se a IA está pausada para este contato
+        if (existingContact?.human_takeover_until) {
+            const takeoverUntil = new Date(existingContact.human_takeover_until);
+
+            if (takeoverUntil > new Date()) {
+                // IA ainda está pausada - humano está atendendo
+                const remainingMinutes = Math.ceil((takeoverUntil.getTime() - Date.now()) / (1000 * 60));
+                console.log(`⏸️ HUMAN TAKEOVER ATIVO! IA pausada até ${existingContact.human_takeover_until} (${remainingMinutes} min restantes)`);
+                console.log(`👤 Humano está atendendo o contato ${contactNumber} - IA não responderá`);
+
+                return new Response(JSON.stringify({
+                    status: 'paused',
+                    reason: 'human_takeover',
+                    contact: contactNumber,
+                    resumesAt: existingContact.human_takeover_until,
+                    remainingMinutes: remainingMinutes,
+                    message: 'IA pausada - humano está atendendo este contato'
+                }), {
+                    status: 200,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            } else {
+                // Takeover expirou - limpar e continuar
+                console.log('✅ Human Takeover expirado - IA voltando a responder');
+                await supabase
+                    .from('n8n_fluxogpt')
+                    .update({ human_takeover_until: null })
+                    .eq('id', existingContact.id);
+            }
+        }
 
         const now = Date.now().toString();
         let currentMessages = messageContent;
