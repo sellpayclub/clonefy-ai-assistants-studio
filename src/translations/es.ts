@@ -48,36 +48,36 @@ export default {
     subtitleBold: "¡100% automática y humanizada!",
     createAssistant: "Crear Mi Primer Clon de IA",
     watchDemo: "Ver Demostración",
-    description1: "Enseña a tu Clon a Seguir tu Script de Ventas o tu Atención y Automatiza 100% tu WhatsApp",
+    description1: "Enseña a tu Clon a Seguir tu Script de Ventas o tu Servicio y Automatiza 100% tu WhatsApp",
     description2: "Tu Empleado Disponible 24 horas al día, sin descanso y pagando el 10% de un salario."
   },
 
   // Features Section
   features: {
     title: "Funcionalidades Poderosas",
-    subtitle: "Todo lo que necesitas para automatizar y escalar tu atención al cliente",
+    subtitle: "Todo lo que necesitas para automatizar y escalar tu servicio al cliente",
     salesAgent: {
       title: "Agente de Ventas",
       description: "¡SDR, Closer, Vendedor profesional! Enseña a tu Clon a vender tu Producto/Servicio y crea un vendedor profesional que se ajusta y mejora con cada conversación, enviando enlaces personalizados, videos y mucho más."
     },
     scheduling: {
       title: "Programación",
-      description: "Crea una secretar.IA y deja que se encargue de tu agenda y gestione la atención de tus clientes de manera inteligente y personalizada."
+      description: "Crea una secretar.IA y deja que se encargue de tu agenda y gestione el servicio de tus clientes de manera inteligente y personalizada."
     },
     multiService: {
-      title: "Multi-Atención",
-      description: "Tu Clon tendrá un historial de conversación, atendiendo de forma personalizada a cada cliente, recordando a todos y creando una atención 100% personalizada."
+      title: "Multi-Servicio",
+      description: "Tu Clon tendrá un historial de conversación, atendiendo de forma personalizada a cada cliente, recordando a todos y creando un servicio 100% personalizado."
     },
     support: {
-      title: "Soporte y Atención",
-      description: "Usa tu clon para automatizar tu soporte y atención al cliente, incluye toda la información sobre tu negocio y déjalo disponible para ayudar a tus clientes."
+      title: "Soporte y Servicio",
+      description: "Usa tu clon para automatizar tu soporte y servicio al cliente, incluye toda la información sobre tu negocio y déjalo disponible para ayudar a tus clientes."
     },
     naturalConversations: {
       title: "Conversaciones Naturales",
       description: "Tu Inteligencia Artificial conversa de forma natural y humanizada siempre con mucha simpatía y profesionalismo."
     },
     fastService: {
-      title: "Atención Rápida",
+      title: "Servicio Rápido",
       description: "¡Tus clientes y Leads respondidos rápidamente en cualquier momento! Toma el control y supervisa todo lo que dice la IA."
     }
   },
@@ -377,7 +377,7 @@ export default {
       title: "¡Felicidades! ¡Te calificaste!",
       description: "Basado en tus respuestas, eres un candidato ideal para nuestra solución.",
       benefits: [
-        "Atención 24/7 automatizada",
+        "Servicio 24/7 automatizado",
         "Aumento de conversiones",
         "Reducción de costos operativos",
         "Escalabilidad ilimitada"
@@ -397,7 +397,7 @@ export default {
     title: "Planes y Precios",
     subtitle: "Elige el mejor plan para tu negocio",
     currency: "$",
-    finalMessage: "¡Comienza ahora y transforma tu atención al cliente con IA!",
+    finalMessage: "¡Comienza ahora y transforma tu servicio al cliente con IA!",
     finalMessageHighlight: "Sin compromiso, cancela cuando quieras.",
     plans: {
       basic: {
@@ -484,7 +484,7 @@ export default {
         features: [
           "Conexión por código QR",
           "Múltiples instancias de WhatsApp",
-          "Atención automática 24/7"
+          "Servicio automático 24/7"
         ]
       },
       step5: {
@@ -499,7 +499,7 @@ export default {
       },
       result: {
         title: "¡Agente Funcionando Perfectamente!",
-        description: "¡Ve tu agente en acción! Conversaciones naturales, respuestas inteligentes y atención profesional 24 horas al día, todos los días.",
+        description: "¡Ve tu agente en acción! Conversaciones naturales, respuestas inteligentes y servicio profesional 24 horas al día, todos los días.",
         features: [
           "Conversaciones naturales y fluidas",
           "Respuestas contextualizadas",

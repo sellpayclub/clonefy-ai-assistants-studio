@@ -77,7 +77,7 @@ const VentasEspanol = () => {
           <div className="mb-5">
             <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
               <Zap className="h-4 w-4" />
-              Inteligencia Artificial para Atención
+              Inteligencia Artificial para Servicio
             </span>
           </div>
 
@@ -88,7 +88,7 @@ const VentasEspanol = () => {
               Empleado de IA
             </span>
             <br />
-            especializado para tu atención!
+            especializado para tu servicio!
           </h1>
 
           {/* Subtitle */}
@@ -101,7 +101,7 @@ const VentasEspanol = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8 max-w-4xl mx-auto">
             <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-emerald-100">
               <Clock className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-              <span className="text-sm font-medium text-slate-700">Atención 24/7</span>
+              <span className="text-sm font-medium text-slate-700">Servicio 24/7</span>
             </div>
             <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-emerald-100">
               <Bot className="h-5 w-5 text-emerald-600 flex-shrink-0" />
@@ -120,7 +120,7 @@ const VentasEspanol = () => {
           {/* Highlight Box */}
           <div className="bg-gradient-to-r from-emerald-500 to-green-600 rounded-2xl p-5 sm:p-6 mb-8 max-w-3xl mx-auto shadow-xl">
             <p className="text-white text-lg sm:text-xl font-semibold leading-relaxed">
-              Tu atención <span className="underline decoration-2 underline-offset-4">disponible sin descanso</span> y pagando{" "}
+              Tu servicio <span className="underline decoration-2 underline-offset-4">disponible sin descanso</span> y pagando{" "}
               <span className="text-yellow-300 font-bold">10% de un salario</span> de un humano.
             </p>
           </div>
@@ -261,7 +261,7 @@ const VentasEspanol = () => {
                 Integra tu IA en <span className="text-emerald-400">CUALQUIER LUGAR</span>
               </h2>
               <p className="text-slate-300 text-lg max-w-2xl mx-auto">
-                La misma IA entrenada para tu negocio funcionando en todas tus plataformas de atención
+                La misma IA entrenada para tu negocio funcionando en todas tus plataformas de servicio
               </p>
             </div>
 
@@ -275,7 +275,7 @@ const VentasEspanol = () => {
                   </svg>
                 </div>
                 <h3 className="text-white font-bold text-sm sm:text-lg mb-0.5 sm:mb-1">WhatsApp</h3>
-                <p className="text-slate-400 text-[10px] sm:text-xs">Atención 24/7</p>
+                <p className="text-slate-400 text-[10px] sm:text-xs">Servicio 24/7</p>
               </div>
 
               {/* Instagram */}
@@ -456,7 +456,7 @@ const VentasEspanol = () => {
               </div>
               <h3 className="text-lg font-bold text-slate-900 mb-2">Nunca Descansa</h3>
               <p className="text-slate-600 text-sm">
-                Atención 24/7. Tus clientes nunca quedan sin respuesta.
+                Servicio 24/7. Tus clientes nunca quedan sin respuesta.
               </p>
             </div>
 
@@ -861,7 +861,7 @@ const VentasEspanol = () => {
             <div className="space-y-4">
               <details className="group bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
                 <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
-                  <span className="font-semibold text-slate-900">¿Cómo funciona la IA de atención?</span>
+                  <span className="font-semibold text-slate-900">¿Cómo funciona la IA de servicio?</span>
                   <ChevronDown className="w-5 h-5 text-slate-500 group-open:rotate-180 transition-transform" />
                 </summary>
                 <div className="px-5 pb-5 text-slate-600">
@@ -885,7 +885,7 @@ const VentasEspanol = () => {
                   <ChevronDown className="w-5 h-5 text-slate-500 group-open:rotate-180 transition-transform" />
                 </summary>
                 <div className="px-5 pb-5 text-slate-600">
-                  Utilizamos tecnología avanzada que simula comportamiento humano natural, evitando que WhatsApp detecte automatización. Esto protege tu número de ser bloqueado, garantizando continuidad en la atención.
+                  Utilizamos tecnología avanzada que simula comportamiento humano natural, evitando que WhatsApp detecte automatización. Esto protege tu número de ser bloqueado, garantizando continuidad en el servicio.
                 </div>
               </details>
 
@@ -957,7 +957,7 @@ const VentasEspanol = () => {
                 loading="lazy"
               />
               <p className="text-slate-500 text-sm text-center md:text-left max-w-xs">
-                Transformamos la atención de tu negocio con el poder de la Inteligencia Artificial.
+                Transformamos el servicio de tu negocio con el poder de la Inteligencia Artificial.
               </p>
             </div>
 
@@ -998,7 +998,7 @@ const VentasEspanol = () => {
 
           <div className="border-t pt-8">
             <p className="text-center text-slate-500 text-xs">
-              © 2024 CLONEFY - Todos os direitos reservados. Inteligencia Artificial para Atención.
+              © 2024 CLONEFY - Todos os direitos reservados. Inteligencia Artificial para Servicio.
             </p>
           </div>
         </div>
