@@ -360,30 +360,58 @@ Pedro Costa,5521777777777,`;
                                 </CardHeader>
                                 <CardContent>
                                     <div
-                                        className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors"
+                                        className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        onDragOver={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            e.currentTarget.classList.add('border-primary', 'bg-primary/5');
+                                        }}
+                                        onDragLeave={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            e.currentTarget.classList.remove('border-primary', 'bg-primary/5');
+                                        }}
+                                        onDrop={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            e.currentTarget.classList.remove('border-primary', 'bg-primary/5');
+                                            const files = e.dataTransfer.files;
+                                            if (files && files.length > 0) {
+                                                const file = files[0];
+                                                if (file.name.endsWith('.csv') || file.name.endsWith('.txt')) {
+                                                    const reader = new FileReader();
+                                                    reader.onload = (ev) => {
+                                                        const content = ev.target?.result as string;
+                                                        const leads = parseCSV(content);
+                                                        setParsedLeads(leads);
+                                                        const validCount = leads.filter(l => l.isValid).length;
+                                                        toast({
+                                                            title: `${leads.length} leads encontrados`,
+                                                            description: `${validCount} válidos, ${leads.length - validCount} com problemas`,
+                                                        });
+                                                    };
+                                                    reader.readAsText(file);
+                                                } else {
+                                                    toast({
+                                                        title: "Formato inválido",
+                                                        description: "Use arquivos .csv ou .txt",
+                                                        variant: "destructive",
+                                                    });
+                                                }
+                                            }
+                                        }}
                                     >
                                         <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                                        <p className="text-sm font-medium mb-1">Selecione um arquivo CSV</p>
-                                        <p className="text-xs text-muted-foreground mb-4">ou arraste o arquivo aqui</p>
+                                        <p className="text-sm font-medium mb-1">Clique aqui ou arraste um arquivo</p>
+                                        <p className="text-xs text-muted-foreground mb-3">Aceita arquivos .csv e .txt</p>
                                         <input
                                             ref={fileInputRef}
                                             type="file"
                                             accept=".csv,.txt"
-                                            className="hidden"
+                                            style={{ display: 'none' }}
                                             onChange={handleFileUpload}
                                         />
-                                        <Button
-                                            type="button"
-                                            variant="default"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                fileInputRef.current?.click();
-                                            }}
-                                        >
-                                            <Upload className="h-4 w-4 mr-2" />
-                                            Selecionar Arquivo
-                                        </Button>
                                     </div>
                                     <Button variant="ghost" size="sm" className="mt-3 w-full" onClick={downloadTemplate}>
                                         <Download className="h-4 w-4 mr-2" />
