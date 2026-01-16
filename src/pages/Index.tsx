@@ -605,6 +605,54 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Company Office Section */}
+      <section className="py-12 sm:py-16 bg-gradient-to-br from-slate-50 to-emerald-50/30">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-8">
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium mb-4">
+                <Users className="h-4 w-4" />
+                Nossa Equipe
+              </span>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-3">
+                Conheça a <span className="text-emerald-600">CLONEFY</span>
+              </h2>
+              <p className="text-slate-600 text-lg max-w-2xl mx-auto">
+                Uma empresa brasileira dedicada a transformar o atendimento de empresas com inteligência artificial
+              </p>
+            </div>
+
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+              <img
+                src="/clonefy-office.jpg"
+                alt="Escritório Clonefy - Equipe de desenvolvimento"
+                className="w-full h-64 sm:h-80 md:h-96 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end">
+                <div className="p-6 sm:p-8 w-full">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <h3 className="text-white text-xl sm:text-2xl font-bold mb-1">Sede da Clonefy</h3>
+                      <p className="text-white/80 text-sm sm:text-base">Tecnologia e inovação para seu negócio</p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-center">
+                        <p className="text-emerald-400 text-2xl sm:text-3xl font-bold">+500</p>
+                        <p className="text-white/60 text-xs sm:text-sm">Empresas atendidas</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-emerald-400 text-2xl sm:text-3xl font-bold">24/7</p>
+                        <p className="text-white/60 text-xs sm:text-sm">Suporte</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section id="planos" className="py-12 sm:py-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="container mx-auto px-4">
