@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from '@supabase/supabase-js';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Search, Filter, MessageSquare, Phone, Mail, Calendar, Globe, Smartphone } from "lucide-react";
+import { Users, Search, Filter, MessageSquare, Phone, Mail, Calendar, Globe, Smartphone, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import AppSidebar from "@/components/AppSidebar";
@@ -11,6 +11,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import SupportChatWidget from "@/components/SupportChatWidget";
 import { useToast } from "@/hooks/use-toast";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Lead {
     id: string;
@@ -30,8 +36,15 @@ const CRMLeads = () => {
     const [leads, setLeads] = useState<Lead[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const { t } = useLanguage();
     const { toast } = useToast();
+
+    const handleLeadClick = (lead: Lead) => {
+        setSelectedLead(lead);
+        setIsDialogOpen(true);
+    };
 
     useEffect(() => {
         const getSession = async () => {
@@ -104,15 +117,25 @@ const CRMLeads = () => {
                 <AppSidebar />
 
                 <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden">
-                    <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center justify-between mb-6">
+                    {/* Header com imagem da empresa */}
+                    <div className="mb-6">
+                        <div className="relative w-full h-32 sm:h-40 md:h-48 rounded-xl overflow-hidden mb-4">
+                            <img
+                                src="/clonefy-office.jpg"
+                                alt="Escritório Clonefy"
+                                className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center">
+                                <div className="p-4 sm:p-6">
+                                    <h1 className="text-2xl sm:text-3xl font-bold text-white">CRM Leads</h1>
+                                    <p className="text-white/80 text-sm sm:text-base">
+                                        Gestão inteligente de contatos extraídos via IA
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                         <div className="flex items-center gap-3">
                             <SidebarTrigger />
-                            <div>
-                                <h1 className="text-2xl font-bold">CRM Leads</h1>
-                                <p className="text-muted-foreground text-sm">
-                                    Gestão inteligente de contatos extraídos via IA
-                                </p>
-                            </div>
                         </div>
                     </div>
 
@@ -161,7 +184,14 @@ const CRMLeads = () => {
                                 ) : (
                                     <div className="divide-y divide-border/40">
                                         {filteredLeads.map((lead) => (
-                                            <div key={lead.id} className="p-4 hover:bg-muted/30 transition-colors group relative overflow-hidden">
+                                            <div
+                                                key={lead.id}
+                                                className="p-4 hover:bg-muted/30 transition-colors group relative overflow-hidden cursor-pointer"
+                                                onClick={() => handleLeadClick(lead)}
+                                                role="button"
+                                                tabIndex={0}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleLeadClick(lead)}
+                                            >
                                                 <div className="flex flex-col md:flex-row md:items-center gap-4 relative z-10">
                                                     {/* Avatar/Initials */}
                                                     <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border border-primary/20 shadow-sm group-hover:scale-105 transition-transform duration-300">
@@ -229,6 +259,122 @@ const CRMLeads = () => {
                         </Card>
                     </div>
                 </main>
+
+                {/* Dialog de Detalhes do Lead */}
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogContent className="sm:max-w-lg">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border border-primary/20">
+                                    <span className="text-primary font-bold text-lg">
+                                        {selectedLead?.name ? selectedLead.name[0].toUpperCase() : '#'}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span className="text-lg">{selectedLead?.name || 'Desconhecido'}</span>
+                                    <div className="flex gap-2 mt-1">
+                                        {selectedLead && getScoreBadge(selectedLead.lead_score)}
+                                        {selectedLead && getSourceBadge(selectedLead.source)}
+                                    </div>
+                                </div>
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        {selectedLead && (
+                            <div className="space-y-4 mt-4">
+                                {/* Informações de Contato */}
+                                <div className="space-y-3">
+                                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Contato</h4>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                                            <Phone className="h-4 w-4 text-green-500" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">WhatsApp</p>
+                                                <p className="font-medium">{selectedLead.whatsapp_number}</p>
+                                            </div>
+                                            <a
+                                                href={`https://wa.me/${selectedLead.whatsapp_number.replace(/\D/g, '')}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="ml-auto"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <Button size="sm" variant="outline" className="gap-2">
+                                                    <MessageSquare className="h-3.5 w-3.5" />
+                                                    Abrir
+                                                </Button>
+                                            </a>
+                                        </div>
+                                        {selectedLead.email && (
+                                            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                                                <Mail className="h-4 w-4 text-blue-500" />
+                                                <div>
+                                                    <p className="text-xs text-muted-foreground">E-mail</p>
+                                                    <p className="font-medium">{selectedLead.email}</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Status */}
+                                <div className="space-y-3">
+                                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Status</h4>
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="outline" className="text-sm uppercase font-bold">
+                                            {selectedLead.status}
+                                        </Badge>
+                                    </div>
+                                </div>
+
+                                {/* Interesse/Intenção */}
+                                {selectedLead.intent_summary && (
+                                    <div className="space-y-3">
+                                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Interesse Detectado pela IA</h4>
+                                        <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                                            <p className="text-sm italic">"{selectedLead.intent_summary}"</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Datas */}
+                                <div className="space-y-3">
+                                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Histórico</h4>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="p-3 bg-muted/50 rounded-lg">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                                                <p className="text-xs text-muted-foreground">Última Interação</p>
+                                            </div>
+                                            <p className="font-medium text-sm">
+                                                {new Date(selectedLead.last_interaction).toLocaleDateString('pt-BR', {
+                                                    day: '2-digit',
+                                                    month: 'short',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </p>
+                                        </div>
+                                        <div className="p-3 bg-muted/50 rounded-lg">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                                                <p className="text-xs text-muted-foreground">Criado em</p>
+                                            </div>
+                                            <p className="font-medium text-sm">
+                                                {new Date(selectedLead.created_at).toLocaleDateString('pt-BR', {
+                                                    day: '2-digit',
+                                                    month: 'short',
+                                                    year: 'numeric'
+                                                })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
 
                 <SupportChatWidget />
             </div>
