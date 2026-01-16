@@ -34,6 +34,9 @@ const LazySectorIASolution = lazy(() => import("./pages/ia/SectorIASolution"));
 const LazyMercadoDigital = lazy(() => import("./pages/MercadoDigital"));
 const LazyVentasEspanol = lazy(() => import("./pages/VentasEspanol"));
 
+// Group Management System (isolated)
+const LazyGroupManagement = lazy(() => import("./pages/GroupManagement"));
+
 // Follow-up System
 const LazyFollowupDashboard = lazy(() => import("./pages/followup/FollowupDashboard"));
 const LazyFollowupCampaignWizard = lazy(() => import("./pages/followup/FollowupCampaignWizard"));
@@ -130,6 +133,13 @@ const App = () => {
                 <Route path="/crm-leads" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <LazyCRMLeads />
+                  </Suspense>
+                } />
+
+                {/* Group Management System (isolated) */}
+                <Route path="/grupos" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyGroupManagement />
                   </Suspense>
                 } />
 
