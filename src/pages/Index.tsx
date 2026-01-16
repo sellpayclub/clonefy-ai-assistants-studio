@@ -50,6 +50,19 @@ const Index = () => {
               className="h-14 w-auto sm:h-16 lg:h-20"
               loading="eager"
             />
+            {/* Partner Badges */}
+            <div className="hidden sm:flex items-center gap-2 ml-2 pl-2 border-l border-slate-200">
+              <img
+                src="https://leadsales.io/wp-content/uploads/2025/11/Meta-Business-Partner.svg"
+                alt="Meta Business Partner"
+                className="h-6 lg:h-7 opacity-70 hover:opacity-100 transition-opacity"
+              />
+              <img
+                src="https://leadsales.io/wp-content/uploads/2025/11/WhatsApp-Solution-Partner.svg"
+                alt="WhatsApp Solution Partner"
+                className="h-6 lg:h-7 opacity-70 hover:opacity-100 transition-opacity"
+              />
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Link to="/auth">
