@@ -22,7 +22,6 @@ import { AssistantKnowledgeUpload } from "@/components/AssistantKnowledgeUpload"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
-import SupportChatWidget from "@/components/SupportChatWidget";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { AssistantTemplates } from "@/components/AssistantTemplates";
 import { OptimizedAssistantCard } from "@/components/OptimizedAssistantCard";
@@ -1077,7 +1076,6 @@ const Assistants = () => {
         </main>
         
         {/* Support Chat Widget for internal system */}
-        <SupportChatWidget />
         <OnboardingGuide />
       </div>
     </SidebarProvider>

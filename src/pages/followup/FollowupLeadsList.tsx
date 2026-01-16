@@ -27,7 +27,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import AppSidebar from "@/components/AppSidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import SupportChatWidget from "@/components/SupportChatWidget";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -441,7 +440,6 @@ const FollowupLeadsList = () => {
                     </Card>
                 </main>
 
-                <SupportChatWidget />
             </div>
         </SidebarProvider>
     );

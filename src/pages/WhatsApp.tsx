@@ -15,7 +15,6 @@ import AppSidebar from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
 import { useUserLimits } from "@/hooks/useUserLimits";
-import SupportChatWidget from "@/components/SupportChatWidget";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { performanceCache, requestCache } from '@/utils/performance';
@@ -1234,7 +1233,6 @@ const WhatsApp = () => {
         </main>
         
         {/* Support Chat Widget for internal system */}
-        <SupportChatWidget />
       </div>
     </SidebarProvider>
   );

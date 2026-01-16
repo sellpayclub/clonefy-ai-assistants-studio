@@ -23,7 +23,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import AppSidebar from "@/components/AppSidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import SupportChatWidget from "@/components/SupportChatWidget";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -543,7 +542,6 @@ Pedro Costa, 5521777777777`}
                     </div>
                 </main>
 
-                <SupportChatWidget />
             </div>
         </SidebarProvider>
     );

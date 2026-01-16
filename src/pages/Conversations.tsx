@@ -13,7 +13,6 @@ import AppSidebar from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import SupportChatWidget from "@/components/SupportChatWidget";
 import { useOptimizedConversations } from "@/hooks/useOptimizedConversations";
 import { performanceCache } from "@/utils/performance";
 import TypingMessage from "@/components/TypingMessage";
@@ -548,7 +547,6 @@ const Conversations = memo(() => {
           </div>
         </div>
         
-        <SupportChatWidget />
       </div>
     </SidebarProvider>
   );

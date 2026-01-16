@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import AppSidebar from "@/components/AppSidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import SupportChatWidget from "@/components/SupportChatWidget";
 import { useToast } from "@/hooks/use-toast";
 import {
     Dialog,
@@ -376,7 +375,6 @@ const CRMLeads = () => {
                     </DialogContent>
                 </Dialog>
 
-                <SupportChatWidget />
             </div>
         </SidebarProvider>
     );
