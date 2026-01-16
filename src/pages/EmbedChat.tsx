@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Send, Bot, User, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import TypingMessage from "@/components/TypingMessage";
+import MediaRenderer, { hasMedia } from "@/components/MediaRenderer";
 
 // Hook para calcular altura dinâmica da viewport (funciona com teclado virtual)
 const useViewportHeight = () => {
@@ -103,7 +104,7 @@ const EmbedChat = () => {
 
       try {
         console.log('Loading agent:', actualAgentId);
-        
+
         // Carregar agente e customização em paralelo
         const [agentResponse, customizationResponse] = await Promise.all([
           supabase.functions.invoke('widget-chat', {
@@ -131,24 +132,24 @@ const EmbedChat = () => {
         // Verificar se há erro na resposta
         if (agentResponse.data?.error) {
           console.error('API error:', agentResponse.data.error);
-          setError(agentResponse.data.error === 'Agent not found' 
-            ? 'Agente não encontrado' 
+          setError(agentResponse.data.error === 'Agent not found'
+            ? 'Agente não encontrado'
             : 'Erro ao carregar o agente');
           return;
         }
 
         if (agentResponse.data && agentResponse.data.agent) {
           setAgent(agentResponse.data.agent);
-          
+
           // Carregar customização se existir (ignorar erro se não houver customização)
           if (customizationResponse.data && !customizationResponse.error) {
             setCustomization(customizationResponse.data);
           }
-          
+
           // Add welcome message usando customização se disponível
-          const welcomeText = customizationResponse.data?.welcome_message || 
-                            `Olá! Eu sou ${agentResponse.data.agent.name}. ${agentResponse.data.agent.description || 'Como posso te ajudar hoje?'}`;
-          
+          const welcomeText = customizationResponse.data?.welcome_message ||
+            `Olá! Eu sou ${agentResponse.data.agent.name}. ${agentResponse.data.agent.description || 'Como posso te ajudar hoje?'}`;
+
           const welcomeMessage = {
             id: '1',
             role: 'assistant' as const,
@@ -163,8 +164,8 @@ const EmbedChat = () => {
         }
       } catch (err) {
         console.error('Error loading agent:', err);
-        const errorMessage = err instanceof Error 
-          ? err.message 
+        const errorMessage = err instanceof Error
+          ? err.message
           : 'Erro ao carregar o agente. Verifique sua conexão e tente novamente.';
         setError(errorMessage);
       }
@@ -180,7 +181,7 @@ const EmbedChat = () => {
       if (event.origin !== window.location.origin) return;
 
       const { type, data } = event.data;
-      
+
       switch (type) {
         case 'clonefy:config':
           // Configuração recebida do widget
@@ -209,10 +210,10 @@ const EmbedChat = () => {
 
     // Notificar widget pai sobre nova mensagem do usuário
     if (window.parent && window.parent !== window) {
-    window.parent.postMessage({
-      type: 'clonefy:message_sent',
-      data: { messageType: 'user' }
-    }, '*');
+      window.parent.postMessage({
+        type: 'clonefy:message_sent',
+        data: { messageType: 'user' }
+      }, '*');
     }
 
     try {
@@ -245,24 +246,24 @@ const EmbedChat = () => {
         };
 
         setMessages(prev => [...prev, assistantMessage]);
-        
+
         // Notificar widget pai sobre nova mensagem do assistente
         if (window.parent && window.parent !== window) {
-        window.parent.postMessage({
-          type: 'clonefy:message_sent',
-          data: { messageType: 'assistant' }
-        }, '*');
+          window.parent.postMessage({
+            type: 'clonefy:message_sent',
+            data: { messageType: 'assistant' }
+          }, '*');
         }
-        
+
         if (data.conversationId && !conversationId) {
           setConversationId(data.conversationId);
           // Notificar widget pai sobre nova conversa
           if (window.parent && window.parent !== window) {
-          window.parent.postMessage({
-            type: 'clonefy:conversation_started',
-            data: { conversationId: data.conversationId }
-          }, '*');
-        }
+            window.parent.postMessage({
+              type: 'clonefy:conversation_started',
+              data: { conversationId: data.conversationId }
+            }, '*');
+          }
         }
       } else {
         throw new Error('Resposta inválida do servidor');
@@ -275,8 +276,8 @@ const EmbedChat = () => {
         content: err instanceof Error && err.message.includes('timeout')
           ? 'A resposta está demorando mais que o esperado. Por favor, tente novamente.'
           : err instanceof Error && err.message.includes('not found')
-          ? 'Agente não encontrado. Verifique se o agente está ativo.'
-          : 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente em alguns instantes.',
+            ? 'Agente não encontrado. Verifique se o agente está ativo.'
+            : 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente em alguns instantes.',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -320,9 +321,9 @@ const EmbedChat = () => {
   const textColor = customization?.text_color || '#1a1a1a';
 
   return (
-    <div 
+    <div
       className="flex items-center justify-center p-0 sm:p-4"
-      style={{ 
+      style={{
         backgroundColor: '#f5f5f5',
         height: viewportHeight,
         minHeight: viewportHeight,
@@ -340,11 +341,11 @@ const EmbedChat = () => {
         paddingRight: 'env(safe-area-inset-right)',
       }}
     >
-      <div 
+      <div
         className="flex flex-col w-full sm:rounded-lg shadow-lg
                         sm:max-w-[450px] sm:min-h-[500px]
                         md:max-w-[500px] md:max-h-[700px]"
-        style={{ 
+        style={{
           backgroundColor: '#ffffff',
           border: `1px solid ${primaryColor}30`,
           height: '100%',
@@ -353,21 +354,21 @@ const EmbedChat = () => {
         }}
       >
         {/* Header */}
-        <div 
+        <div
           className="flex items-center gap-3 p-3 sm:p-4 border-b rounded-t-lg flex-shrink-0"
-          style={{ 
+          style={{
             backgroundColor: `${primaryColor}15`,
             borderBottom: `1px solid ${primaryColor}30`
           }}
         >
           {customization?.avatar_url ? (
-            <img 
-              src={customization.avatar_url} 
+            <img
+              src={customization.avatar_url}
               alt="Avatar"
               className="w-8 h-8 rounded-full object-cover"
             />
           ) : (
-            <div 
+            <div
               className="w-8 h-8 rounded-full flex items-center justify-center"
               style={{ backgroundColor: `${primaryColor}20` }}
             >
@@ -385,17 +386,17 @@ const EmbedChat = () => {
             size="sm"
             onClick={() => {
               if (window.parent && window.parent !== window) {
-              window.parent.postMessage({
-                type: 'clonefy:close_widget',
-                data: {}
-              }, '*');
+                window.parent.postMessage({
+                  type: 'clonefy:close_widget',
+                  data: {}
+                }, '*');
               } else {
                 // Se não estiver em iframe, apenas recarrega a página
                 window.location.href = '/';
               }
             }}
             className="h-8 w-8 p-0"
-            style={{ 
+            style={{
               backgroundColor: 'transparent',
               color: '#6b7280'
             }}
@@ -405,9 +406,9 @@ const EmbedChat = () => {
         </div>
 
         {/* Messages */}
-        <div 
+        <div
           className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth"
-          style={{ 
+          style={{
             backgroundColor: '#ffffff',
             overscrollBehavior: 'contain',
             WebkitOverflowScrolling: 'touch',
@@ -420,19 +421,18 @@ const EmbedChat = () => {
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex gap-2 ${
-                message.role === 'user' ? 'justify-end' : 'justify-start'
-              }`}
+              className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'
+                }`}
             >
               {message.role === 'assistant' && (
                 customization?.avatar_url ? (
-                  <img 
-                    src={customization.avatar_url} 
+                  <img
+                    src={customization.avatar_url}
                     alt="Avatar"
                     className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-1"
                   />
                 ) : (
-                  <div 
+                  <div
                     className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1"
                     style={{ backgroundColor: `${primaryColor}20` }}
                   >
@@ -442,19 +442,19 @@ const EmbedChat = () => {
               )}
               <div
                 className={`max-w-[80%] sm:max-w-[85%] p-2.5 sm:p-3 rounded-lg break-words`}
-                style={message.role === 'user' 
-                  ? { 
-                      backgroundColor: primaryColor,
-                      color: '#ffffff',
-                      wordBreak: 'break-word',
-                      overflowWrap: 'break-word'
-                    }
-                  : { 
-                      backgroundColor: secondaryColor,
-                      color: textColor,
-                      wordBreak: 'break-word',
-                      overflowWrap: 'break-word'
-                    }
+                style={message.role === 'user'
+                  ? {
+                    backgroundColor: primaryColor,
+                    color: '#ffffff',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word'
+                  }
+                  : {
+                    backgroundColor: secondaryColor,
+                    color: textColor,
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word'
+                  }
                 }
               >
                 <div className="space-y-2 sm:space-y-3">
@@ -463,16 +463,32 @@ const EmbedChat = () => {
                       {message.content}
                     </p>
                   ) : (
-                    <TypingMessage 
-                      content={message.content}
-                      speed={5}
-                      className="text-sm"
-                    />
+                    <>
+                      {/* Render media if present */}
+                      {hasMedia(message.content) && (
+                        <MediaRenderer content={message.content} className="text-sm" />
+                      )}
+                      {/* Render text with typing animation */}
+                      {!hasMedia(message.content) && (
+                        <TypingMessage
+                          content={message.content}
+                          speed={5}
+                          className="text-sm"
+                        />
+                      )}
+                      {hasMedia(message.content) && (
+                        <TypingMessage
+                          content={message.content.replace(/(https?:\/\/[^\s<>"{}|\\^`[\]]+)/gi, '').trim()}
+                          speed={5}
+                          className="text-sm"
+                        />
+                      )}
+                    </>
                   )}
                 </div>
               </div>
               {message.role === 'user' && (
-                <div 
+                <div
                   className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1"
                   style={{ backgroundColor: '#f0f0f0' }}
                 >
@@ -484,34 +500,34 @@ const EmbedChat = () => {
           {isLoading && (
             <div className="flex gap-2">
               {customization?.avatar_url ? (
-                <img 
-                  src={customization.avatar_url} 
+                <img
+                  src={customization.avatar_url}
                   alt="Avatar"
                   className="w-6 h-6 rounded-full object-cover mt-1"
                 />
               ) : (
-                <div 
+                <div
                   className="w-6 h-6 rounded-full flex items-center justify-center mt-1"
                   style={{ backgroundColor: `${primaryColor}20` }}
                 >
                   <Bot className="h-3 w-3" style={{ color: primaryColor }} />
                 </div>
               )}
-              <div 
+              <div
                 className="p-2.5 sm:p-3 rounded-lg"
                 style={{ backgroundColor: secondaryColor }}
               >
                 <div className="flex space-x-1">
-                  <div 
+                  <div
                     className="w-2 h-2 rounded-full animate-bounce"
                     style={{ backgroundColor: primaryColor }}
                   ></div>
-                  <div 
-                    className="w-2 h-2 rounded-full animate-bounce" 
+                  <div
+                    className="w-2 h-2 rounded-full animate-bounce"
                     style={{ backgroundColor: primaryColor, animationDelay: '0.1s' }}
                   ></div>
-                  <div 
-                    className="w-2 h-2 rounded-full animate-bounce" 
+                  <div
+                    className="w-2 h-2 rounded-full animate-bounce"
                     style={{ backgroundColor: primaryColor, animationDelay: '0.2s' }}
                   ></div>
                 </div>
@@ -522,9 +538,9 @@ const EmbedChat = () => {
         </div>
 
         {/* Input */}
-        <div 
+        <div
           className="p-3 sm:p-4 border-t"
-          style={{ 
+          style={{
             backgroundColor: '#ffffff',
             borderTop: `1px solid ${primaryColor}20`,
             flexShrink: 0,
