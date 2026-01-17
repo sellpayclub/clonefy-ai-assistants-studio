@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import AppSidebar from "@/components/AppSidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import {
     Users,
     MessageSquare,
@@ -348,482 +350,490 @@ const GroupManagement = () => {
     };
 
     return (
-        <div className="min-h-screen bg-background">
-            {/* Header */}
-            <div className="border-b bg-gradient-to-r from-purple-500/10 to-blue-500/10">
-                <div className="container mx-auto px-4 py-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-2xl font-bold flex items-center gap-2">
-                                <Users className="h-6 w-6 text-purple-600" />
-                                Gerenciamento de Grupos
-                            </h1>
-                            <p className="text-muted-foreground mt-1">
-                                Monitore grupos, receba alertas e relatórios diários automáticos
-                            </p>
-                        </div>
-                        <div className="flex gap-2">
-                            <Button variant="outline" onClick={loadGroups}>
-                                <RefreshCw className="h-4 w-4 mr-2" />
-                                Atualizar
-                            </Button>
-                            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-                                <DialogTrigger asChild>
-                                    <Button onClick={loadAvailableGroups}>
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Adicionar Grupo
+        <SidebarProvider>
+            <div className="min-h-screen flex w-full bg-background">
+                <AppSidebar />
+                <main className="flex-1 overflow-auto">
+                    {/* Header */}
+                    <div className="border-b bg-gradient-to-r from-purple-500/10 to-blue-500/10">
+                        <div className="container mx-auto px-4 py-6">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <SidebarTrigger />
+                                    <div>
+                                        <h1 className="text-2xl font-bold flex items-center gap-2">
+                                            <Users className="h-6 w-6 text-purple-600" />
+                                            Gerenciamento de Grupos
+                                        </h1>
+                                        <p className="text-muted-foreground mt-1">
+                                            Monitore grupos, receba alertas e relatórios diários automáticos
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button variant="outline" onClick={loadGroups}>
+                                        <RefreshCw className="h-4 w-4 mr-2" />
+                                        Atualizar
                                     </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                                    <DialogHeader>
-                                        <DialogTitle>Adicionar Grupo para Monitoramento</DialogTitle>
-                                        <DialogDescription>
-                                            Selecione um grupo do WhatsApp para monitorar
-                                        </DialogDescription>
-                                    </DialogHeader>
+                                    <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+                                        <DialogTrigger asChild>
+                                            <Button onClick={loadAvailableGroups}>
+                                                <Plus className="h-4 w-4 mr-2" />
+                                                Adicionar Grupo
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                                            <DialogHeader>
+                                                <DialogTitle>Adicionar Grupo para Monitoramento</DialogTitle>
+                                                <DialogDescription>
+                                                    Selecione um grupo do WhatsApp para monitorar
+                                                </DialogDescription>
+                                            </DialogHeader>
 
-                                    {loadingAvailable ? (
-                                        <div className="flex items-center justify-center py-8">
-                                            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-4">
-                                            <div className="grid gap-2">
-                                                <Label>Palavras-chave para alertas (separadas por vírgula)</Label>
-                                                <Input
-                                                    placeholder="urgente, problema, reclamação"
-                                                    value={newKeywords}
-                                                    onChange={(e) => setNewKeywords(e.target.value)}
-                                                />
-                                            </div>
-
-                                            <div className="grid gap-2">
-                                                <Label>Horário do relatório diário</Label>
-                                                <Input
-                                                    type="time"
-                                                    value={newReportTime}
-                                                    onChange={(e) => setNewReportTime(e.target.value)}
-                                                />
-                                            </div>
-
-                                            <div className="grid gap-2 mt-4">
-                                                <Label>Grupos disponíveis</Label>
-                                                {availableGroups.length === 0 ? (
-                                                    <p className="text-muted-foreground text-sm">
-                                                        Nenhum grupo encontrado. Verifique suas instâncias.
-                                                    </p>
-                                                ) : (
-                                                    <div className="space-y-2">
-                                                        {availableGroups.map((group) => (
-                                                            <Card
-                                                                key={group.id}
-                                                                className="cursor-pointer hover:bg-muted/50 transition-colors"
-                                                                onClick={() => addGroup(group)}
-                                                            >
-                                                                <CardContent className="p-3 flex items-center justify-between">
-                                                                    <div>
-                                                                        <p className="font-medium">{group.subject || group.name}</p>
-                                                                        <p className="text-xs text-muted-foreground">
-                                                                            {group.instance_name} • {group.size || 0} participantes
-                                                                        </p>
-                                                                    </div>
-                                                                    <Plus className="h-4 w-4 text-muted-foreground" />
-                                                                </CardContent>
-                                                            </Card>
-                                                        ))}
+                                            {loadingAvailable ? (
+                                                <div className="flex items-center justify-center py-8">
+                                                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-4">
+                                                    <div className="grid gap-2">
+                                                        <Label>Palavras-chave para alertas (separadas por vírgula)</Label>
+                                                        <Input
+                                                            placeholder="urgente, problema, reclamação"
+                                                            value={newKeywords}
+                                                            onChange={(e) => setNewKeywords(e.target.value)}
+                                                        />
                                                     </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                                </DialogContent>
-                            </Dialog>
+
+                                                    <div className="grid gap-2">
+                                                        <Label>Horário do relatório diário</Label>
+                                                        <Input
+                                                            type="time"
+                                                            value={newReportTime}
+                                                            onChange={(e) => setNewReportTime(e.target.value)}
+                                                        />
+                                                    </div>
+
+                                                    <div className="grid gap-2 mt-4">
+                                                        <Label>Grupos disponíveis</Label>
+                                                        {availableGroups.length === 0 ? (
+                                                            <p className="text-muted-foreground text-sm">
+                                                                Nenhum grupo encontrado. Verifique suas instâncias.
+                                                            </p>
+                                                        ) : (
+                                                            <div className="space-y-2">
+                                                                {availableGroups.map((group) => (
+                                                                    <Card
+                                                                        key={group.id}
+                                                                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                                                        onClick={() => addGroup(group)}
+                                                                    >
+                                                                        <CardContent className="p-3 flex items-center justify-between">
+                                                                            <div>
+                                                                                <p className="font-medium">{group.subject || group.name}</p>
+                                                                                <p className="text-xs text-muted-foreground">
+                                                                                    {group.instance_name} • {group.size || 0} participantes
+                                                                                </p>
+                                                                            </div>
+                                                                            <Plus className="h-4 w-4 text-muted-foreground" />
+                                                                        </CardContent>
+                                                                    </Card>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div className="container mx-auto px-4 py-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* WhatsApp Connection + Lista de Grupos */}
-                    <div className="lg:col-span-1 space-y-4">
-                        {/* Card de Conexão WhatsApp */}
-                        <Card className={connectionStatus === 'connected' ? 'border-green-500/50 bg-green-500/5' : ''}>
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    {connectionStatus === 'connected' ? (
-                                        <Wifi className="h-5 w-5 text-green-500" />
-                                    ) : (
-                                        <WifiOff className="h-5 w-5 text-muted-foreground" />
-                                    )}
-                                    Conexão WhatsApp
-                                </CardTitle>
-                                <CardDescription>
-                                    Conexão exclusiva para monitoramento de grupos
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {connectionStatus === 'connected' ? (
-                                    <div className="flex items-center gap-2">
-                                        <Badge className="bg-green-500">Conectado</Badge>
-                                        <span className="text-sm text-muted-foreground">
-                                            Pronto para monitorar grupos
-                                        </span>
-                                    </div>
-                                ) : qrCode ? (
-                                    <div className="text-center">
-                                        <p className="text-sm text-muted-foreground mb-3">
-                                            Escaneie o QR Code com seu WhatsApp
-                                        </p>
-                                        <div className="bg-white p-4 rounded-lg inline-block">
-                                            <img
-                                                src={qrCode.startsWith('data:') ? qrCode : `data:image/png;base64,${qrCode}`}
-                                                alt="QR Code WhatsApp"
-                                                className="w-48 h-48 mx-auto"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-muted-foreground mt-3">
-                                            Aguardando conexão...
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <Button
-                                        onClick={connectWhatsApp}
-                                        disabled={loadingConnection}
-                                        className="w-full"
-                                    >
-                                        {loadingConnection ? (
-                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <div className="container mx-auto px-4 py-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* WhatsApp Connection + Lista de Grupos */}
+                            <div className="lg:col-span-1 space-y-4">
+                                {/* Card de Conexão WhatsApp */}
+                                <Card className={connectionStatus === 'connected' ? 'border-green-500/50 bg-green-500/5' : ''}>
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="text-lg flex items-center gap-2">
+                                            {connectionStatus === 'connected' ? (
+                                                <Wifi className="h-5 w-5 text-green-500" />
+                                            ) : (
+                                                <WifiOff className="h-5 w-5 text-muted-foreground" />
+                                            )}
+                                            Conexão WhatsApp
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Conexão exclusiva para monitoramento de grupos
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {connectionStatus === 'connected' ? (
+                                            <div className="flex items-center gap-2">
+                                                <Badge className="bg-green-500">Conectado</Badge>
+                                                <span className="text-sm text-muted-foreground">
+                                                    Pronto para monitorar grupos
+                                                </span>
+                                            </div>
+                                        ) : qrCode ? (
+                                            <div className="text-center">
+                                                <p className="text-sm text-muted-foreground mb-3">
+                                                    Escaneie o QR Code com seu WhatsApp
+                                                </p>
+                                                <div className="bg-white p-4 rounded-lg inline-block">
+                                                    <img
+                                                        src={qrCode.startsWith('data:') ? qrCode : `data:image/png;base64,${qrCode}`}
+                                                        alt="QR Code WhatsApp"
+                                                        className="w-48 h-48 mx-auto"
+                                                    />
+                                                </div>
+                                                <p className="text-xs text-muted-foreground mt-3">
+                                                    Aguardando conexão...
+                                                </p>
+                                            </div>
                                         ) : (
-                                            <QrCode className="h-4 w-4 mr-2" />
+                                            <Button
+                                                onClick={connectWhatsApp}
+                                                disabled={loadingConnection}
+                                                className="w-full"
+                                            >
+                                                {loadingConnection ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                                ) : (
+                                                    <QrCode className="h-4 w-4 mr-2" />
+                                                )}
+                                                Conectar WhatsApp
+                                            </Button>
                                         )}
-                                        Conectar WhatsApp
-                                    </Button>
-                                )}
-                            </CardContent>
-                        </Card>
+                                    </CardContent>
+                                </Card>
 
-                        {/* Lista de Grupos */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg">Grupos Monitorados</CardTitle>
-                                <CardDescription>
-                                    {groups.length} grupo(s) ativo(s)
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-2">
-                                {loading ? (
-                                    <div className="flex items-center justify-center py-8">
-                                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                                    </div>
-                                ) : groups.length === 0 ? (
-                                    <p className="text-muted-foreground text-center py-8">
-                                        Nenhum grupo monitorado ainda
-                                    </p>
-                                ) : (
-                                    groups.map((group) => (
-                                        <Card
-                                            key={group.id}
-                                            className={`cursor-pointer transition-colors ${selectedGroup?.id === group.id
-                                                ? 'bg-primary/10 border-primary'
-                                                : 'hover:bg-muted/50'
-                                                }`}
-                                            onClick={() => loadGroupDetails(group)}
-                                        >
-                                            <CardContent className="p-3">
-                                                <div className="flex items-start justify-between">
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="font-medium truncate">{group.group_name}</p>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <Badge variant="outline" className="text-xs">
-                                                                <MessageSquare className="h-3 w-3 mr-1" />
-                                                                {group.total_messages || 0}
-                                                            </Badge>
-                                                            {group.alerts_enabled && (
-                                                                <Badge variant="secondary" className="text-xs">
-                                                                    <Bell className="h-3 w-3 mr-1" />
-                                                                    Alertas
-                                                                </Badge>
+                                {/* Lista de Grupos */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-lg">Grupos Monitorados</CardTitle>
+                                        <CardDescription>
+                                            {groups.length} grupo(s) ativo(s)
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-2">
+                                        {loading ? (
+                                            <div className="flex items-center justify-center py-8">
+                                                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                            </div>
+                                        ) : groups.length === 0 ? (
+                                            <p className="text-muted-foreground text-center py-8">
+                                                Nenhum grupo monitorado ainda
+                                            </p>
+                                        ) : (
+                                            groups.map((group) => (
+                                                <Card
+                                                    key={group.id}
+                                                    className={`cursor-pointer transition-colors ${selectedGroup?.id === group.id
+                                                        ? 'bg-primary/10 border-primary'
+                                                        : 'hover:bg-muted/50'
+                                                        }`}
+                                                    onClick={() => loadGroupDetails(group)}
+                                                >
+                                                    <CardContent className="p-3">
+                                                        <div className="flex items-start justify-between">
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="font-medium truncate">{group.group_name}</p>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <Badge variant="outline" className="text-xs">
+                                                                        <MessageSquare className="h-3 w-3 mr-1" />
+                                                                        {group.total_messages || 0}
+                                                                    </Badge>
+                                                                    {group.alerts_enabled && (
+                                                                        <Badge variant="secondary" className="text-xs">
+                                                                            <Bell className="h-3 w-3 mr-1" />
+                                                                            Alertas
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            {group.is_active ? (
+                                                                <Badge className="bg-green-500/20 text-green-700 text-xs">Ativo</Badge>
+                                                            ) : (
+                                                                <Badge variant="destructive" className="text-xs">Pausado</Badge>
                                                             )}
                                                         </div>
+                                                    </CardContent>
+                                                </Card>
+                                            ))
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </div>
+
+                            {/* Detalhes do Grupo */}
+                            <div className="lg:col-span-2">
+                                {selectedGroup ? (
+                                    <Tabs defaultValue="overview" className="space-y-4">
+                                        <TabsList className="grid grid-cols-4 w-full">
+                                            <TabsTrigger value="overview">
+                                                <TrendingUp className="h-4 w-4 mr-2" />
+                                                Visão Geral
+                                            </TabsTrigger>
+                                            <TabsTrigger value="reports">
+                                                <FileText className="h-4 w-4 mr-2" />
+                                                Relatórios
+                                            </TabsTrigger>
+                                            <TabsTrigger value="alerts">
+                                                <AlertTriangle className="h-4 w-4 mr-2" />
+                                                Alertas
+                                            </TabsTrigger>
+                                            <TabsTrigger value="settings">
+                                                <Settings className="h-4 w-4 mr-2" />
+                                                Configurações
+                                            </TabsTrigger>
+                                        </TabsList>
+
+                                        {/* Visão Geral */}
+                                        <TabsContent value="overview">
+                                            <Card>
+                                                <CardHeader>
+                                                    <CardTitle>{selectedGroup.group_name}</CardTitle>
+                                                    <CardDescription>
+                                                        Instância: {selectedGroup.instance_name}
+                                                    </CardDescription>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                                        <div className="text-center p-4 bg-muted/50 rounded-lg">
+                                                            <MessageSquare className="h-6 w-6 mx-auto mb-2 text-blue-500" />
+                                                            <p className="text-2xl font-bold">{selectedGroup.total_messages || 0}</p>
+                                                            <p className="text-xs text-muted-foreground">Mensagens</p>
+                                                        </div>
+                                                        <div className="text-center p-4 bg-muted/50 rounded-lg">
+                                                            <Bell className="h-6 w-6 mx-auto mb-2 text-orange-500" />
+                                                            <p className="text-2xl font-bold">{alerts.length}</p>
+                                                            <p className="text-xs text-muted-foreground">Alertas</p>
+                                                        </div>
+                                                        <div className="text-center p-4 bg-muted/50 rounded-lg">
+                                                            <FileText className="h-6 w-6 mx-auto mb-2 text-green-500" />
+                                                            <p className="text-2xl font-bold">{reports.length}</p>
+                                                            <p className="text-xs text-muted-foreground">Relatórios</p>
+                                                        </div>
+                                                        <div className="text-center p-4 bg-muted/50 rounded-lg">
+                                                            <Clock className="h-6 w-6 mx-auto mb-2 text-purple-500" />
+                                                            <p className="text-2xl font-bold">{selectedGroup.report_time}</p>
+                                                            <p className="text-xs text-muted-foreground">Horário</p>
+                                                        </div>
                                                     </div>
-                                                    {group.is_active ? (
-                                                        <Badge className="bg-green-500/20 text-green-700 text-xs">Ativo</Badge>
-                                                    ) : (
-                                                        <Badge variant="destructive" className="text-xs">Pausado</Badge>
-                                                    )}
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    ))
-                                )}
-                            </CardContent>
-                        </Card>
-                    </div>
 
-                    {/* Detalhes do Grupo */}
-                    <div className="lg:col-span-2">
-                        {selectedGroup ? (
-                            <Tabs defaultValue="overview" className="space-y-4">
-                                <TabsList className="grid grid-cols-4 w-full">
-                                    <TabsTrigger value="overview">
-                                        <TrendingUp className="h-4 w-4 mr-2" />
-                                        Visão Geral
-                                    </TabsTrigger>
-                                    <TabsTrigger value="reports">
-                                        <FileText className="h-4 w-4 mr-2" />
-                                        Relatórios
-                                    </TabsTrigger>
-                                    <TabsTrigger value="alerts">
-                                        <AlertTriangle className="h-4 w-4 mr-2" />
-                                        Alertas
-                                    </TabsTrigger>
-                                    <TabsTrigger value="settings">
-                                        <Settings className="h-4 w-4 mr-2" />
-                                        Configurações
-                                    </TabsTrigger>
-                                </TabsList>
-
-                                {/* Visão Geral */}
-                                <TabsContent value="overview">
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle>{selectedGroup.group_name}</CardTitle>
-                                            <CardDescription>
-                                                Instância: {selectedGroup.instance_name}
-                                            </CardDescription>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                                                <div className="text-center p-4 bg-muted/50 rounded-lg">
-                                                    <MessageSquare className="h-6 w-6 mx-auto mb-2 text-blue-500" />
-                                                    <p className="text-2xl font-bold">{selectedGroup.total_messages || 0}</p>
-                                                    <p className="text-xs text-muted-foreground">Mensagens</p>
-                                                </div>
-                                                <div className="text-center p-4 bg-muted/50 rounded-lg">
-                                                    <Bell className="h-6 w-6 mx-auto mb-2 text-orange-500" />
-                                                    <p className="text-2xl font-bold">{alerts.length}</p>
-                                                    <p className="text-xs text-muted-foreground">Alertas</p>
-                                                </div>
-                                                <div className="text-center p-4 bg-muted/50 rounded-lg">
-                                                    <FileText className="h-6 w-6 mx-auto mb-2 text-green-500" />
-                                                    <p className="text-2xl font-bold">{reports.length}</p>
-                                                    <p className="text-xs text-muted-foreground">Relatórios</p>
-                                                </div>
-                                                <div className="text-center p-4 bg-muted/50 rounded-lg">
-                                                    <Clock className="h-6 w-6 mx-auto mb-2 text-purple-500" />
-                                                    <p className="text-2xl font-bold">{selectedGroup.report_time}</p>
-                                                    <p className="text-xs text-muted-foreground">Horário</p>
-                                                </div>
-                                            </div>
-
-                                            {/* Pesquisa */}
-                                            <div className="space-y-4">
-                                                <Label>Pesquisar neste grupo</Label>
-                                                <div className="flex gap-2">
-                                                    <Input
-                                                        placeholder="O que falaram sobre..."
-                                                        value={searchQuery}
-                                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                                    />
-                                                    <Button onClick={handleSearch} disabled={isSearching}>
-                                                        {isSearching ? (
-                                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                                        ) : (
-                                                            <Search className="h-4 w-4" />
-                                                        )}
-                                                    </Button>
-                                                </div>
-
-                                                {searchResults && (
-                                                    <Card className="bg-muted/30">
-                                                        <CardContent className="p-4">
-                                                            {searchResults.ai_summary && (
-                                                                <div className="mb-4">
-                                                                    <Label className="text-sm font-medium">Resposta da IA:</Label>
-                                                                    <p className="text-sm mt-1">{searchResults.ai_summary}</p>
-                                                                </div>
-                                                            )}
-                                                            {searchResults.messages?.length > 0 && (
-                                                                <div>
-                                                                    <Label className="text-sm font-medium">
-                                                                        {searchResults.messages.length} mensagens encontradas
-                                                                    </Label>
-                                                                </div>
-                                                            )}
-                                                        </CardContent>
-                                                    </Card>
-                                                )}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </TabsContent>
-
-                                {/* Relatórios */}
-                                <TabsContent value="reports">
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle>Relatórios Diários</CardTitle>
-                                            <CardDescription>Resumos gerados automaticamente pela IA</CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4">
-                                            {reports.length === 0 ? (
-                                                <p className="text-muted-foreground text-center py-8">
-                                                    Nenhum relatório gerado ainda
-                                                </p>
-                                            ) : (
-                                                reports.map((report) => (
-                                                    <Card key={report.id} className="bg-muted/30">
-                                                        <CardContent className="p-4">
-                                                            <div className="flex items-center justify-between mb-2">
-                                                                <Badge variant="outline">
-                                                                    {new Date(report.report_date).toLocaleDateString('pt-BR')}
-                                                                </Badge>
-                                                                <Badge variant="secondary">
-                                                                    {report.message_count} mensagens
-                                                                </Badge>
-                                                            </div>
-                                                            <p className="text-sm whitespace-pre-wrap">{report.content}</p>
-                                                            {report.topics?.length > 0 && (
-                                                                <div className="flex flex-wrap gap-1 mt-3">
-                                                                    {report.topics.map((topic, i) => (
-                                                                        <Badge key={i} variant="outline" className="text-xs">
-                                                                            {topic}
-                                                                        </Badge>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                        </CardContent>
-                                                    </Card>
-                                                ))
-                                            )}
-                                        </CardContent>
-                                    </Card>
-                                </TabsContent>
-
-                                {/* Alertas */}
-                                <TabsContent value="alerts">
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle>Alertas Disparados</CardTitle>
-                                            <CardDescription>
-                                                Palavras-chave: {selectedGroup.keywords?.join(', ') || 'Nenhuma'}
-                                            </CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="space-y-3">
-                                            {alerts.length === 0 ? (
-                                                <p className="text-muted-foreground text-center py-8">
-                                                    Nenhum alerta disparado ainda
-                                                </p>
-                                            ) : (
-                                                alerts.map((alert) => (
-                                                    <Card key={alert.id} className="border-orange-500/50 bg-orange-500/5">
-                                                        <CardContent className="p-3">
-                                                            <div className="flex items-start justify-between">
-                                                                <div>
-                                                                    <div className="flex items-center gap-2 mb-1">
-                                                                        <Badge className="bg-orange-500">
-                                                                            {alert.keyword}
-                                                                        </Badge>
-                                                                        <span className="text-xs text-muted-foreground">
-                                                                            {new Date(alert.triggered_at).toLocaleString('pt-BR')}
-                                                                        </span>
-                                                                    </div>
-                                                                    <p className="text-sm font-medium">{alert.sender_name}</p>
-                                                                    <p className="text-sm text-muted-foreground mt-1">
-                                                                        "{alert.message_content}"
-                                                                    </p>
-                                                                </div>
-                                                                {alert.was_sent && (
-                                                                    <Badge variant="outline" className="text-green-600">
-                                                                        Enviado
-                                                                    </Badge>
+                                                    {/* Pesquisa */}
+                                                    <div className="space-y-4">
+                                                        <Label>Pesquisar neste grupo</Label>
+                                                        <div className="flex gap-2">
+                                                            <Input
+                                                                placeholder="O que falaram sobre..."
+                                                                value={searchQuery}
+                                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                                            />
+                                                            <Button onClick={handleSearch} disabled={isSearching}>
+                                                                {isSearching ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <Search className="h-4 w-4" />
                                                                 )}
-                                                            </div>
-                                                        </CardContent>
-                                                    </Card>
-                                                ))
-                                            )}
-                                        </CardContent>
-                                    </Card>
-                                </TabsContent>
+                                                            </Button>
+                                                        </div>
 
-                                {/* Configurações */}
-                                <TabsContent value="settings">
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle>Configurações do Grupo</CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="space-y-6">
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <Label>Monitoramento Ativo</Label>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Capturar e armazenar mensagens
-                                                    </p>
-                                                </div>
-                                                <Switch
-                                                    checked={selectedGroup.is_active}
-                                                    onCheckedChange={(v) => toggleGroupSetting(selectedGroup.id, 'is_active', v)}
-                                                />
-                                            </div>
-
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <Label>Alertas por Palavra-chave</Label>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Receber alertas no WhatsApp
-                                                    </p>
-                                                </div>
-                                                <Switch
-                                                    checked={selectedGroup.alerts_enabled}
-                                                    onCheckedChange={(v) => toggleGroupSetting(selectedGroup.id, 'alerts_enabled', v)}
-                                                />
-                                            </div>
-
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <Label>Relatório Diário</Label>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Enviar resumo às {selectedGroup.report_time}
-                                                    </p>
-                                                </div>
-                                                <Switch
-                                                    checked={selectedGroup.report_enabled}
-                                                    onCheckedChange={(v) => toggleGroupSetting(selectedGroup.id, 'report_enabled', v)}
-                                                />
-                                            </div>
-
-                                            <div className="pt-4 border-t">
-                                                <Label>Palavras-chave para alertas</Label>
-                                                <div className="flex flex-wrap gap-1 mt-2">
-                                                    {selectedGroup.keywords?.map((kw, i) => (
-                                                        <Badge key={i} variant="secondary">{kw}</Badge>
-                                                    )) || (
-                                                            <span className="text-muted-foreground text-sm">Nenhuma configurada</span>
+                                                        {searchResults && (
+                                                            <Card className="bg-muted/30">
+                                                                <CardContent className="p-4">
+                                                                    {searchResults.ai_summary && (
+                                                                        <div className="mb-4">
+                                                                            <Label className="text-sm font-medium">Resposta da IA:</Label>
+                                                                            <p className="text-sm mt-1">{searchResults.ai_summary}</p>
+                                                                        </div>
+                                                                    )}
+                                                                    {searchResults.messages?.length > 0 && (
+                                                                        <div>
+                                                                            <Label className="text-sm font-medium">
+                                                                                {searchResults.messages.length} mensagens encontradas
+                                                                            </Label>
+                                                                        </div>
+                                                                    )}
+                                                                </CardContent>
+                                                            </Card>
                                                         )}
-                                                </div>
-                                            </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        </TabsContent>
+
+                                        {/* Relatórios */}
+                                        <TabsContent value="reports">
+                                            <Card>
+                                                <CardHeader>
+                                                    <CardTitle>Relatórios Diários</CardTitle>
+                                                    <CardDescription>Resumos gerados automaticamente pela IA</CardDescription>
+                                                </CardHeader>
+                                                <CardContent className="space-y-4">
+                                                    {reports.length === 0 ? (
+                                                        <p className="text-muted-foreground text-center py-8">
+                                                            Nenhum relatório gerado ainda
+                                                        </p>
+                                                    ) : (
+                                                        reports.map((report) => (
+                                                            <Card key={report.id} className="bg-muted/30">
+                                                                <CardContent className="p-4">
+                                                                    <div className="flex items-center justify-between mb-2">
+                                                                        <Badge variant="outline">
+                                                                            {new Date(report.report_date).toLocaleDateString('pt-BR')}
+                                                                        </Badge>
+                                                                        <Badge variant="secondary">
+                                                                            {report.message_count} mensagens
+                                                                        </Badge>
+                                                                    </div>
+                                                                    <p className="text-sm whitespace-pre-wrap">{report.content}</p>
+                                                                    {report.topics?.length > 0 && (
+                                                                        <div className="flex flex-wrap gap-1 mt-3">
+                                                                            {report.topics.map((topic, i) => (
+                                                                                <Badge key={i} variant="outline" className="text-xs">
+                                                                                    {topic}
+                                                                                </Badge>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </CardContent>
+                                                            </Card>
+                                                        ))
+                                                    )}
+                                                </CardContent>
+                                            </Card>
+                                        </TabsContent>
+
+                                        {/* Alertas */}
+                                        <TabsContent value="alerts">
+                                            <Card>
+                                                <CardHeader>
+                                                    <CardTitle>Alertas Disparados</CardTitle>
+                                                    <CardDescription>
+                                                        Palavras-chave: {selectedGroup.keywords?.join(', ') || 'Nenhuma'}
+                                                    </CardDescription>
+                                                </CardHeader>
+                                                <CardContent className="space-y-3">
+                                                    {alerts.length === 0 ? (
+                                                        <p className="text-muted-foreground text-center py-8">
+                                                            Nenhum alerta disparado ainda
+                                                        </p>
+                                                    ) : (
+                                                        alerts.map((alert) => (
+                                                            <Card key={alert.id} className="border-orange-500/50 bg-orange-500/5">
+                                                                <CardContent className="p-3">
+                                                                    <div className="flex items-start justify-between">
+                                                                        <div>
+                                                                            <div className="flex items-center gap-2 mb-1">
+                                                                                <Badge className="bg-orange-500">
+                                                                                    {alert.keyword}
+                                                                                </Badge>
+                                                                                <span className="text-xs text-muted-foreground">
+                                                                                    {new Date(alert.triggered_at).toLocaleString('pt-BR')}
+                                                                                </span>
+                                                                            </div>
+                                                                            <p className="text-sm font-medium">{alert.sender_name}</p>
+                                                                            <p className="text-sm text-muted-foreground mt-1">
+                                                                                "{alert.message_content}"
+                                                                            </p>
+                                                                        </div>
+                                                                        {alert.was_sent && (
+                                                                            <Badge variant="outline" className="text-green-600">
+                                                                                Enviado
+                                                                            </Badge>
+                                                                        )}
+                                                                    </div>
+                                                                </CardContent>
+                                                            </Card>
+                                                        ))
+                                                    )}
+                                                </CardContent>
+                                            </Card>
+                                        </TabsContent>
+
+                                        {/* Configurações */}
+                                        <TabsContent value="settings">
+                                            <Card>
+                                                <CardHeader>
+                                                    <CardTitle>Configurações do Grupo</CardTitle>
+                                                </CardHeader>
+                                                <CardContent className="space-y-6">
+                                                    <div className="flex items-center justify-between">
+                                                        <div>
+                                                            <Label>Monitoramento Ativo</Label>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                Capturar e armazenar mensagens
+                                                            </p>
+                                                        </div>
+                                                        <Switch
+                                                            checked={selectedGroup.is_active}
+                                                            onCheckedChange={(v) => toggleGroupSetting(selectedGroup.id, 'is_active', v)}
+                                                        />
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between">
+                                                        <div>
+                                                            <Label>Alertas por Palavra-chave</Label>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                Receber alertas no WhatsApp
+                                                            </p>
+                                                        </div>
+                                                        <Switch
+                                                            checked={selectedGroup.alerts_enabled}
+                                                            onCheckedChange={(v) => toggleGroupSetting(selectedGroup.id, 'alerts_enabled', v)}
+                                                        />
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between">
+                                                        <div>
+                                                            <Label>Relatório Diário</Label>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                Enviar resumo às {selectedGroup.report_time}
+                                                            </p>
+                                                        </div>
+                                                        <Switch
+                                                            checked={selectedGroup.report_enabled}
+                                                            onCheckedChange={(v) => toggleGroupSetting(selectedGroup.id, 'report_enabled', v)}
+                                                        />
+                                                    </div>
+
+                                                    <div className="pt-4 border-t">
+                                                        <Label>Palavras-chave para alertas</Label>
+                                                        <div className="flex flex-wrap gap-1 mt-2">
+                                                            {selectedGroup.keywords?.map((kw, i) => (
+                                                                <Badge key={i} variant="secondary">{kw}</Badge>
+                                                            )) || (
+                                                                    <span className="text-muted-foreground text-sm">Nenhuma configurada</span>
+                                                                )}
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        </TabsContent>
+                                    </Tabs>
+                                ) : (
+                                    <Card className="h-full flex items-center justify-center">
+                                        <CardContent className="text-center py-12">
+                                            <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                                            <h3 className="text-lg font-medium">Selecione um grupo</h3>
+                                            <p className="text-muted-foreground mt-1">
+                                                Escolha um grupo na lista para ver detalhes
+                                            </p>
                                         </CardContent>
                                     </Card>
-                                </TabsContent>
-                            </Tabs>
-                        ) : (
-                            <Card className="h-full flex items-center justify-center">
-                                <CardContent className="text-center py-12">
-                                    <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                                    <h3 className="text-lg font-medium">Selecione um grupo</h3>
-                                    <p className="text-muted-foreground mt-1">
-                                        Escolha um grupo na lista para ver detalhes
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        )}
+                                )}
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </main>
             </div>
-        </div>
+        </SidebarProvider>
     );
 };
 

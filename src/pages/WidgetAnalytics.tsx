@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useWidgetAnalytics } from '@/hooks/useWidgetAnalytics';
 import { useToast } from '@/hooks/use-toast';
 import AnalyticsDashboard from '@/components/widget/AnalyticsDashboard';
+import AppSidebar from '@/components/AppSidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
 const WidgetAnalytics = () => {
   const [searchParams] = useSearchParams();
@@ -19,7 +21,7 @@ const WidgetAnalytics = () => {
   const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('30d');
   const [generatingData, setGeneratingData] = useState(false);
   const { toast } = useToast();
-  
+
   const {
     analytics,
     sessions,
@@ -84,12 +86,12 @@ const WidgetAnalytics = () => {
 
     // Calcular duração média das sessões
     const validSessions = sessions.filter(s => s.end_time);
-    const avgDuration = validSessions.length > 0 
+    const avgDuration = validSessions.length > 0
       ? validSessions.reduce((acc, session) => {
-          const start = new Date(session.start_time);
-          const end = new Date(session.end_time!);
-          return acc + (end.getTime() - start.getTime());
-        }, 0) / validSessions.length / 1000 / 60 // convertir para minutos
+        const start = new Date(session.start_time);
+        const end = new Date(session.end_time!);
+        return acc + (end.getTime() - start.getTime());
+      }, 0) / validSessions.length / 1000 / 60 // convertir para minutos
       : 0;
 
     return {
@@ -126,10 +128,10 @@ const WidgetAnalytics = () => {
       });
       return;
     }
-    
+
     try {
       setGeneratingData(true);
-      
+
       const { error } = await supabase.functions.invoke('add-sample-analytics', {
         body: { assistantId: selectedAssistant }
       });
@@ -158,201 +160,205 @@ const WidgetAnalytics = () => {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/dashboard')} 
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar ao Dashboard
-          </Button>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Analytics do Widget
-          </h1>
-          <p className="text-muted-foreground">
-            Acompanhe o desempenho do seu widget de chat
-          </p>
-        </div>
-
-        {/* Seletores */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="pt-6">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Assistente</label>
-                <Select value={selectedAssistant} onValueChange={setSelectedAssistant}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um assistente" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {assistants.map((assistant) => (
-                      <SelectItem key={assistant.id} value={assistant.id}>
-                        {assistant.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Período</label>
-                <Select value={period} onValueChange={(value: '7d' | '30d' | '90d') => setPeriod(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="7d">Últimos 7 dias</SelectItem>
-                    <SelectItem value="30d">Últimos 30 dias</SelectItem>
-                    <SelectItem value="90d">Últimos 90 dias</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <Button onClick={handleExport} variant="outline" className="w-full mb-2">
-                <Download className="h-4 w-4 mr-2" />
-                Exportar Dados
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <Button 
-                onClick={generateSampleData} 
-                variant="outline" 
-                className="w-full"
-                disabled={generatingData || !selectedAssistant}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${generatingData ? 'animate-spin' : ''}`} />
-                {generatingData ? 'Gerando...' : 'Gerar Dados de Exemplo'}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {selectedAssistant && (
-          <>
-            {/* Cards de Resumo */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total de Conversas</CardTitle>
-                  <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{totals.totalConversations}</div>
-                  <Badge variant="secondary" className="mt-1">
-                    {period === '7d' ? '7 dias' : period === '30d' ? '30 dias' : '90 dias'}
-                  </Badge>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total de Mensagens</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{totals.totalMessages}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Média: {totals.totalConversations > 0 ? Math.round(totals.totalMessages / totals.totalConversations) : 0} por conversa
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Visitantes Únicos</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{totals.totalVisitors}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Taxa de conversão: {totals.totalVisitors > 0 ? Math.round((totals.totalConversations / totals.totalVisitors) * 100) : 0}%
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Duração Média</CardTitle>
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{totals.avgSessionDuration}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Por sessão
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Mensagem quando não há dados */}
-            {analytics.length === 0 && !loading && (
-              <Card className="mb-6 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
-                      <Calendar className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-1">
-                        Nenhum dado de analytics ainda
-                      </h3>
-                      <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
-                        Os dados aparecem automaticamente quando visitantes usam o chat no seu site.
-                      </p>
-                      <div className="text-sm text-amber-600 dark:text-amber-400 space-y-1">
-                        <p><strong>Para começar a coletar dados:</strong></p>
-                        <ol className="list-decimal list-inside space-y-1 ml-2">
-                          <li>Vá em "Chat Flutuante" e personalize seu widget</li>
-                          <li>Copie o código de incorporação</li>
-                          <li>Cole no seu site antes da tag &lt;/body&gt;</li>
-                          <li>Quando visitantes usarem o chat, os dados aparecerão aqui</li>
-                        </ol>
-                      </div>
-                    </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <AppSidebar />
+        <main className="flex-1 overflow-auto">
+          <div className="container mx-auto py-8 px-4">
+            <div className="max-w-7xl mx-auto">
+              <div className="mb-8">
+                <div className="flex items-center gap-4 mb-4">
+                  <SidebarTrigger />
+                  <div>
+                    <h1 className="text-3xl font-bold text-foreground">
+                      Analytics do Widget
+                    </h1>
+                    <p className="text-muted-foreground">
+                      Acompanhe o desempenho do seu widget de chat
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Dashboard de Analytics */}
-            <AnalyticsDashboard 
-              analytics={analytics}
-              sessions={sessions}
-              period={period}
-              loading={loading}
-            />
-          </>
-        )}
-
-        {!selectedAssistant && (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-12">
-                <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Selecione um assistente</h3>
-                <p className="text-muted-foreground">
-                  Escolha um assistente para ver as métricas de desempenho do widget
-                </p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+
+              {/* Seletores */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Assistente</label>
+                      <Select value={selectedAssistant} onValueChange={setSelectedAssistant}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um assistente" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {assistants.map((assistant) => (
+                            <SelectItem key={assistant.id} value={assistant.id}>
+                              {assistant.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Período</label>
+                      <Select value={period} onValueChange={(value: '7d' | '30d' | '90d') => setPeriod(value)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="7d">Últimos 7 dias</SelectItem>
+                          <SelectItem value="30d">Últimos 30 dias</SelectItem>
+                          <SelectItem value="90d">Últimos 90 dias</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <Button onClick={handleExport} variant="outline" className="w-full mb-2">
+                      <Download className="h-4 w-4 mr-2" />
+                      Exportar Dados
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <Button
+                      onClick={generateSampleData}
+                      variant="outline"
+                      className="w-full"
+                      disabled={generatingData || !selectedAssistant}
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${generatingData ? 'animate-spin' : ''}`} />
+                      {generatingData ? 'Gerando...' : 'Gerar Dados de Exemplo'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {selectedAssistant && (
+                <>
+                  {/* Cards de Resumo */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total de Conversas</CardTitle>
+                        <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{totals.totalConversations}</div>
+                        <Badge variant="secondary" className="mt-1">
+                          {period === '7d' ? '7 dias' : period === '30d' ? '30 dias' : '90 dias'}
+                        </Badge>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total de Mensagens</CardTitle>
+                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{totals.totalMessages}</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Média: {totals.totalConversations > 0 ? Math.round(totals.totalMessages / totals.totalConversations) : 0} por conversa
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Visitantes Únicos</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{totals.totalVisitors}</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Taxa de conversão: {totals.totalVisitors > 0 ? Math.round((totals.totalConversations / totals.totalVisitors) * 100) : 0}%
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Duração Média</CardTitle>
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{totals.avgSessionDuration}</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Por sessão
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Mensagem quando não há dados */}
+                  {analytics.length === 0 && !loading && (
+                    <Card className="mb-6 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+                      <CardContent className="pt-6">
+                        <div className="flex items-start gap-4">
+                          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
+                            <Calendar className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-1">
+                              Nenhum dado de analytics ainda
+                            </h3>
+                            <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+                              Os dados aparecem automaticamente quando visitantes usam o chat no seu site.
+                            </p>
+                            <div className="text-sm text-amber-600 dark:text-amber-400 space-y-1">
+                              <p><strong>Para começar a coletar dados:</strong></p>
+                              <ol className="list-decimal list-inside space-y-1 ml-2">
+                                <li>Vá em "Chat Flutuante" e personalize seu widget</li>
+                                <li>Copie o código de incorporação</li>
+                                <li>Cole no seu site antes da tag &lt;/body&gt;</li>
+                                <li>Quando visitantes usarem o chat, os dados aparecerão aqui</li>
+                              </ol>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Dashboard de Analytics */}
+                  <AnalyticsDashboard
+                    analytics={analytics}
+                    sessions={sessions}
+                    period={period}
+                    loading={loading}
+                  />
+                </>
+              )}
+
+              {!selectedAssistant && (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center py-12">
+                      <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">Selecione um assistente</h3>
+                      <p className="text-muted-foreground">
+                        Escolha um assistente para ver as métricas de desempenho do widget
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        </main>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
