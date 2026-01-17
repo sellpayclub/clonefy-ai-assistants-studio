@@ -22,7 +22,10 @@ import {
     TrendingUp,
     AlertTriangle,
     RefreshCw,
-    Loader2
+    Loader2,
+    QrCode,
+    Wifi,
+    WifiOff
 } from "lucide-react";
 
 interface WhatsAppGroup {
@@ -76,6 +79,12 @@ const GroupManagement = () => {
     const [newKeywords, setNewKeywords] = useState("");
     const [newReportTime, setNewReportTime] = useState("18:00");
 
+    // WhatsApp Connection State (isolated)
+    const [userId, setUserId] = useState<string | null>(null);
+    const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
+    const [qrCode, setQrCode] = useState<string | null>(null);
+    const [loadingConnection, setLoadingConnection] = useState(false);
+
     // Verificar autenticação
     useEffect(() => {
         const checkAuth = async () => {
@@ -84,7 +93,9 @@ const GroupManagement = () => {
                 navigate('/auth');
                 return;
             }
+            setUserId(user.id);
             loadGroups();
+            checkConnectionStatus(user.id);
         };
         checkAuth();
     }, [navigate]);
@@ -108,6 +119,74 @@ const GroupManagement = () => {
             });
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Verificar status de conexão
+    const checkConnectionStatus = async (uid?: string) => {
+        const currentUserId = uid || userId;
+        if (!currentUserId) return;
+
+        try {
+            const { data } = await supabase.functions.invoke('group-connection', {
+                body: { action: 'check_status', user_id: currentUserId }
+            });
+
+            if (data?.connected) {
+                setConnectionStatus('connected');
+                setQrCode(null);
+            } else {
+                setConnectionStatus('disconnected');
+            }
+        } catch (error) {
+            console.error('Erro ao verificar status:', error);
+        }
+    };
+
+    // Conectar WhatsApp (gerar QR)
+    const connectWhatsApp = async () => {
+        if (!userId) return;
+
+        setLoadingConnection(true);
+        setConnectionStatus('connecting');
+
+        try {
+            const { data, error } = await supabase.functions.invoke('group-connection', {
+                body: { action: 'get_qr', user_id: userId }
+            });
+
+            if (error) throw error;
+
+            if (data?.qr_code) {
+                setQrCode(data.qr_code);
+                // Iniciar polling para verificar conexão
+                const pollInterval = setInterval(async () => {
+                    const { data: statusData } = await supabase.functions.invoke('group-connection', {
+                        body: { action: 'check_status', user_id: userId }
+                    });
+
+                    if (statusData?.connected) {
+                        clearInterval(pollInterval);
+                        setConnectionStatus('connected');
+                        setQrCode(null);
+                        toast({ title: "WhatsApp conectado! ✅" });
+                        loadAvailableGroups();
+                    }
+                }, 3000);
+
+                // Limpar polling após 2 minutos
+                setTimeout(() => clearInterval(pollInterval), 120000);
+            }
+        } catch (error) {
+            console.error('Erro ao conectar:', error);
+            toast({
+                title: "Erro ao conectar",
+                description: "Tente novamente.",
+                variant: "destructive"
+            });
+            setConnectionStatus('disconnected');
+        } finally {
+            setLoadingConnection(false);
         }
     };
 
@@ -366,8 +445,65 @@ const GroupManagement = () => {
 
             <div className="container mx-auto px-4 py-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Lista de Grupos */}
-                    <div className="lg:col-span-1">
+                    {/* WhatsApp Connection + Lista de Grupos */}
+                    <div className="lg:col-span-1 space-y-4">
+                        {/* Card de Conexão WhatsApp */}
+                        <Card className={connectionStatus === 'connected' ? 'border-green-500/50 bg-green-500/5' : ''}>
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                    {connectionStatus === 'connected' ? (
+                                        <Wifi className="h-5 w-5 text-green-500" />
+                                    ) : (
+                                        <WifiOff className="h-5 w-5 text-muted-foreground" />
+                                    )}
+                                    Conexão WhatsApp
+                                </CardTitle>
+                                <CardDescription>
+                                    Conexão exclusiva para monitoramento de grupos
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {connectionStatus === 'connected' ? (
+                                    <div className="flex items-center gap-2">
+                                        <Badge className="bg-green-500">Conectado</Badge>
+                                        <span className="text-sm text-muted-foreground">
+                                            Pronto para monitorar grupos
+                                        </span>
+                                    </div>
+                                ) : qrCode ? (
+                                    <div className="text-center">
+                                        <p className="text-sm text-muted-foreground mb-3">
+                                            Escaneie o QR Code com seu WhatsApp
+                                        </p>
+                                        <div className="bg-white p-4 rounded-lg inline-block">
+                                            <img
+                                                src={qrCode.startsWith('data:') ? qrCode : `data:image/png;base64,${qrCode}`}
+                                                alt="QR Code WhatsApp"
+                                                className="w-48 h-48 mx-auto"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-3">
+                                            Aguardando conexão...
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <Button
+                                        onClick={connectWhatsApp}
+                                        disabled={loadingConnection}
+                                        className="w-full"
+                                    >
+                                        {loadingConnection ? (
+                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                        ) : (
+                                            <QrCode className="h-4 w-4 mr-2" />
+                                        )}
+                                        Conectar WhatsApp
+                                    </Button>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Lista de Grupos */}
                         <Card>
                             <CardHeader>
                                 <CardTitle className="text-lg">Grupos Monitorados</CardTitle>
@@ -389,8 +525,8 @@ const GroupManagement = () => {
                                         <Card
                                             key={group.id}
                                             className={`cursor-pointer transition-colors ${selectedGroup?.id === group.id
-                                                    ? 'bg-primary/10 border-primary'
-                                                    : 'hover:bg-muted/50'
+                                                ? 'bg-primary/10 border-primary'
+                                                : 'hover:bg-muted/50'
                                                 }`}
                                             onClick={() => loadGroupDetails(group)}
                                         >
