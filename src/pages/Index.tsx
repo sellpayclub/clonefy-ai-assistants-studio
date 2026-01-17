@@ -889,6 +889,12 @@ const Index = () => {
                     </div>
                     <span>Envio de fotos, vídeos e arquivos</span>
                   </li>
+                  <li className="flex items-center gap-3 text-purple-400 font-medium">
+                    <div className="w-5 h-5 rounded-full bg-purple-500/30 flex items-center justify-center flex-shrink-0">
+                      <Users className="w-3 h-3 text-purple-400" />
+                    </div>
+                    <span>🆕 Gestão de Grupos WhatsApp</span>
+                  </li>
                 </ul>
                 <a href="https://pay.kiwify.com.br/Z17cId5" target="_blank" rel="noopener noreferrer">
                   <Button className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white py-5 font-bold shadow-lg">
@@ -1003,6 +1009,12 @@ const Index = () => {
                       <Image className="w-3 h-3 text-emerald-400" />
                     </div>
                     <span>Envio de mídias ilimitado</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-purple-400 font-bold">
+                    <div className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                      <Users className="w-3 h-3 text-purple-400" />
+                    </div>
+                    <span>🆕 Gestão de Grupos WhatsApp</span>
                   </li>
                 </ul>
                 <a href="https://pay.kiwify.com.br/MvFo5AL" target="_blank" rel="noopener noreferrer">
