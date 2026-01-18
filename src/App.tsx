@@ -44,6 +44,13 @@ const LazyFollowupCampaignDetails = lazy(() => import("./pages/followup/Followup
 const LazyFollowupImportLeads = lazy(() => import("./pages/followup/FollowupImportLeads"));
 const LazyFollowupLeadsList = lazy(() => import("./pages/followup/FollowupLeadsList"));
 
+// Commerce System (WhatsApp E-commerce - isolated)
+const LazyCommerceStore = lazy(() => import("./pages/CommerceStore"));
+const LazyCommerceOrders = lazy(() => import("./pages/CommerceOrders"));
+const LazyCommerceConversations = lazy(() => import("./pages/CommerceConversations"));
+const LazyCommercePaymentSettings = lazy(() => import("./pages/CommercePaymentSettings"));
+const LazyCommerceConnectWhatsApp = lazy(() => import("./pages/CommerceConnectWhatsApp"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -167,6 +174,33 @@ const App = () => {
                 <Route path="/followup/import" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <LazyFollowupImportLeads />
+                  </Suspense>
+                } />
+
+                {/* Commerce System Routes (WhatsApp E-commerce - isolated) */}
+                <Route path="/commerce" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyCommerceStore />
+                  </Suspense>
+                } />
+                <Route path="/commerce/orders" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyCommerceOrders />
+                  </Suspense>
+                } />
+                <Route path="/commerce/conversations" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyCommerceConversations />
+                  </Suspense>
+                } />
+                <Route path="/commerce/payment-settings" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyCommercePaymentSettings />
+                  </Suspense>
+                } />
+                <Route path="/commerce/connect-whatsapp" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyCommerceConnectWhatsApp />
                   </Suspense>
                 } />
 
