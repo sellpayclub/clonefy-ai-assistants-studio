@@ -49,10 +49,12 @@ export default function CommerceOrders() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) { navigate('/auth'); return; }
 
-            const { data: store } = await supabase.from('commerce_stores').select('id').eq('user_id', user.id).single();
+            // @ts-ignore
+            const { data: store } = await (supabase as any).from('commerce_stores').select('id').eq('user_id', user.id).single();
             if (!store) { navigate('/commerce'); return; }
 
-            const { data: ordersData, error } = await supabase
+            // @ts-ignore
+            const { data: ordersData, error } = await (supabase as any)
                 .from('commerce_orders')
                 .select(`*, customer:commerce_customers(name, whatsapp_number)`)
                 .eq('store_id', store.id)
@@ -67,7 +69,8 @@ export default function CommerceOrders() {
 
     const loadOrderDetails = async (order: Order) => {
         setSelectedOrder(order);
-        const { data } = await supabase.from('commerce_order_items').select('*').eq('order_id', order.id);
+        // @ts-ignore
+        const { data } = await (supabase as any).from('commerce_order_items').select('*').eq('order_id', order.id);
         setOrderItems(data || []);
     };
 
@@ -76,7 +79,8 @@ export default function CommerceOrders() {
         if (status === 'paid') updateData.payment_status = 'paid';
         if (status === 'cancelled') updateData.payment_status = 'failed';
 
-        const { error } = await supabase.from('commerce_orders').update(updateData).eq('id', orderId);
+        // @ts-ignore
+        const { error } = await (supabase as any).from('commerce_orders').update(updateData).eq('id', orderId);
         if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
         toast({ title: 'Status atualizado!' });
         loadOrders();

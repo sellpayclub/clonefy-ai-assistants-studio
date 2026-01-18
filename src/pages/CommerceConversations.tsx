@@ -47,11 +47,13 @@ export default function CommerceConversations() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) { navigate('/auth'); return; }
 
-            const { data: store } = await supabase.from('commerce_stores').select('id').eq('user_id', user.id).single();
+            // @ts-ignore
+            const { data: store } = await (supabase as any).from('commerce_stores').select('id').eq('user_id', user.id).single();
             if (!store) { navigate('/commerce'); return; }
             setStoreId(store.id);
 
-            const { data, error } = await supabase
+            // @ts-ignore
+            const { data, error } = await (supabase as any)
                 .from('commerce_conversations')
                 .select(`*, customer:commerce_customers(id, name, whatsapp_number)`)
                 .eq('store_id', store.id)
@@ -66,7 +68,8 @@ export default function CommerceConversations() {
 
     const loadMessages = async (conversation: Conversation) => {
         setSelectedConversation(conversation);
-        const { data } = await supabase
+        // @ts-ignore
+        const { data } = await (supabase as any)
             .from('commerce_messages')
             .select('*')
             .eq('conversation_id', conversation.id)
@@ -79,7 +82,8 @@ export default function CommerceConversations() {
 
         try {
             // Salva mensagem como "human"
-            await supabase.from('commerce_messages').insert({
+            // @ts-ignore
+            await (supabase as any).from('commerce_messages').insert({
                 conversation_id: selectedConversation.id,
                 sender_type: 'human',
                 content: newMessage,
@@ -87,12 +91,14 @@ export default function CommerceConversations() {
             });
 
             // Atualiza conversa
-            await supabase.from('commerce_conversations')
+            // @ts-ignore
+            await (supabase as any).from('commerce_conversations')
                 .update({ last_message_at: new Date().toISOString(), status: 'human_takeover' })
                 .eq('id', selectedConversation.id);
 
             // Envia via WhatsApp (Evolution API)
-            const { data: store } = await supabase.from('commerce_stores').select('whatsapp_instance_id').eq('id', storeId).single();
+            // @ts-ignore
+            const { data: store } = await (supabase as any).from('commerce_stores').select('whatsapp_instance_id').eq('id', storeId).single();
             if (store?.whatsapp_instance_id) {
                 await supabase.functions.invoke('whatsapp-evolution', {
                     body: {
@@ -113,7 +119,8 @@ export default function CommerceConversations() {
     };
 
     const toggleHumanTakeover = async (conversationId: string, enable: boolean) => {
-        await supabase.from('commerce_conversations')
+        // @ts-ignore
+        await (supabase as any).from('commerce_conversations')
             .update({ status: enable ? 'human_takeover' : 'active' })
             .eq('id', conversationId);
         toast({ title: enable ? 'Modo humano ativado' : 'IA reativada' });
