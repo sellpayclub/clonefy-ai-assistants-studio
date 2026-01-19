@@ -84,7 +84,48 @@ const FollowupCampaignDetails = () => {
 
         setLoadingQR(true);
         try {
-            // Usar edge function em vez de chamada direta (evita CORS)
+            // Primeiro, verificar se a instância existe tentando buscar o status
+            const { data: statusData, error: statusError } = await supabase.functions.invoke('whatsapp-evolution', {
+                body: {
+                    action: 'check_status',
+                    instanceName: campaign.whatsapp_instance
+                }
+            });
+
+            // Se a instância não existe (404), criar automaticamente
+            if (statusError || (statusData && statusData.error && statusData.error.includes('does not exist'))) {
+                console.log('Instância não existe, criando...');
+                
+                // Criar a instância
+                const { data: createData, error: createError } = await supabase.functions.invoke('whatsapp-evolution', {
+                    body: {
+                        action: 'create',
+                        instanceName: campaign.whatsapp_instance,
+                        assistantId: campaign.openai_assistant_id || '',
+                        userEmail: (await supabase.auth.getUser()).data.user?.email || ''
+                    }
+                });
+
+                if (createError) {
+                    console.error('Erro ao criar instância:', createError);
+                    toast({
+                        title: "Erro ao criar instância WhatsApp",
+                        description: "Tente novamente",
+                        variant: "destructive"
+                    });
+                    setLoadingQR(false);
+                    return;
+                }
+
+                // Se a criação retornou QR code, usar
+                if (createData?.qrCode?.base64) {
+                    setQrCode(createData.qrCode.base64);
+                    setLoadingQR(false);
+                    return;
+                }
+            }
+
+            // Buscar QR Code
             const { data, error } = await supabase.functions.invoke('whatsapp-evolution', {
                 body: {
                     action: 'get_qr',
@@ -100,6 +141,13 @@ const FollowupCampaignDetails = () => {
                 } else if (data.qr_code) {
                     setQrCode(data.qr_code);
                 }
+            } else if (error) {
+                console.error('Erro na resposta:', error);
+                toast({
+                    title: "Erro ao gerar QR Code",
+                    description: "A instância pode não existir. Tente novamente.",
+                    variant: "destructive"
+                });
             }
         } catch (error) {
             console.error('Erro ao buscar QR Code:', error);
