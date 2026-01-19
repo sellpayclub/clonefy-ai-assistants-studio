@@ -243,11 +243,17 @@ const FollowupImportLeads = () => {
 
             if (error) throw error;
 
-            // Atualizar contador na campanha
+            // Atualizar contador na campanha (buscar valor atual e incrementar)
+            const { data: currentCampaign } = await (supabase as any)
+                .from('followup_campaigns')
+                .select('total_leads')
+                .eq('id', selectedCampaign)
+                .single();
+
             await (supabase as any)
                 .from('followup_campaigns')
                 .update({
-                    total_leads: (supabase as any).sql`total_leads + ${validLeads.length}`
+                    total_leads: (currentCampaign?.total_leads || 0) + validLeads.length
                 })
                 .eq('id', selectedCampaign);
 

@@ -105,13 +105,13 @@ const GroupManagement = () => {
     const loadGroups = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            const { data, error } = await (supabase as any)
                 .from('whatsapp_groups')
                 .select('*')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            setGroups(data || []);
+            setGroups((data || []) as WhatsAppGroup[]);
         } catch (error) {
             console.error('Erro ao carregar grupos:', error);
             toast({
@@ -196,24 +196,24 @@ const GroupManagement = () => {
         setSelectedGroup(group);
 
         // Carregar relatórios
-        const { data: reportsData } = await supabase
+        const { data: reportsData } = await (supabase as any)
             .from('group_reports')
             .select('*')
             .eq('group_id', group.id)
             .order('report_date', { ascending: false })
             .limit(10);
 
-        setReports(reportsData || []);
+        setReports((reportsData || []) as GroupReport[]);
 
         // Carregar alertas
-        const { data: alertsData } = await supabase
+        const { data: alertsData } = await (supabase as any)
             .from('group_alerts')
             .select('*')
             .eq('group_id', group.id)
             .order('triggered_at', { ascending: false })
             .limit(20);
 
-        setAlerts(alertsData || []);
+        setAlerts((alertsData || []) as GroupAlert[]);
     };
 
     const loadAvailableGroups = async () => {
@@ -221,7 +221,7 @@ const GroupManagement = () => {
         try {
             // Buscar instâncias do usuário
             const { data: { user } } = await supabase.auth.getUser();
-            const { data: instances } = await supabase
+            const { data: instances } = await (supabase as any)
                 .from('n8n_fluxogpt')
                 .select('nomeinstancia')
                 .eq('userId', user?.id);
@@ -303,7 +303,7 @@ const GroupManagement = () => {
 
     const toggleGroupSetting = async (groupId: string, field: string, value: boolean) => {
         try {
-            await supabase
+            await (supabase as any)
                 .from('whatsapp_groups')
                 .update({ [field]: value })
                 .eq('id', groupId);
