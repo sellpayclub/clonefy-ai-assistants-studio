@@ -202,7 +202,7 @@ const FollowupCampaignWizard = () => {
 
         setLoading(true);
         try {
-            // 1. Tentar criar instância WhatsApp via Evolution API (pode falhar por CORS)
+            // 1. Tentar criar instância WhatsApp via Edge Function (evita CORS)
             let whatsappInstanceKey = `followup-${campaignData.whatsapp_instance}-${user.id.substring(0, 8)}`;
 
             try {
@@ -211,22 +211,17 @@ const FollowupCampaignWizard = () => {
                     description: "Aguarde enquanto salvamos os dados",
                 });
 
-                const evolutionResponse = await fetch('https://api.cfroi.click/instance/create', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': '94805bfbb25f77f37a029f5a3dbfe62b'
-                    },
-                    body: JSON.stringify({
+                // Usar edge function em vez de chamada direta
+                const { data: evolutionData, error: evolutionError } = await supabase.functions.invoke('whatsapp-evolution', {
+                    body: {
+                        action: 'create',
                         instanceName: whatsappInstanceKey,
-                        qrcode: true,
-                        integration: 'WHATSAPP-BAILEYS'
-                    })
+                        userEmail: user.email
+                    }
                 });
 
-                if (evolutionResponse.ok) {
-                    const evolutionData = await evolutionResponse.json();
-                    whatsappInstanceKey = evolutionData.instance?.instanceName || whatsappInstanceKey;
+                if (!evolutionError && evolutionData?.instance) {
+                    whatsappInstanceKey = evolutionData.instance.instanceName || whatsappInstanceKey;
                 }
             } catch (evolutionError) {
                 console.log('Evolution API não disponível, continuando com salvamento local:', evolutionError);

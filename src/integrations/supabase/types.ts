@@ -583,6 +583,737 @@ export type Database = {
         }
         Relationships: []
       }
+      commerce_analytics: {
+        Row: {
+          created_at: string | null
+          customer_id: string | null
+          data: Json | null
+          event_type: string
+          id: string
+          order_id: string | null
+          product_id: string | null
+          store_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id?: string | null
+          data?: Json | null
+          event_type: string
+          id?: string
+          order_id?: string | null
+          product_id?: string | null
+          store_id: string
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string | null
+          data?: Json | null
+          event_type?: string
+          id?: string
+          order_id?: string | null
+          product_id?: string | null
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commerce_analytics_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commerce_analytics_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commerce_analytics_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commerce_analytics_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commerce_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          parent_id: string | null
+          sort_order: number | null
+          store_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          parent_id?: string | null
+          sort_order?: number | null
+          store_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          parent_id?: string | null
+          sort_order?: number | null
+          store_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commerce_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commerce_categories_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commerce_conversations: {
+        Row: {
+          ai_summary: string | null
+          assigned_to: string | null
+          context: Json | null
+          created_at: string | null
+          current_cart: Json | null
+          customer_id: string
+          id: string
+          last_message_at: string | null
+          status: string | null
+          store_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          ai_summary?: string | null
+          assigned_to?: string | null
+          context?: Json | null
+          created_at?: string | null
+          current_cart?: Json | null
+          customer_id: string
+          id?: string
+          last_message_at?: string | null
+          status?: string | null
+          store_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          ai_summary?: string | null
+          assigned_to?: string | null
+          context?: Json | null
+          created_at?: string | null
+          current_cart?: Json | null
+          customer_id?: string
+          id?: string
+          last_message_at?: string | null
+          status?: string | null
+          store_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commerce_conversations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commerce_conversations_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commerce_customers: {
+        Row: {
+          address: Json | null
+          cpf: string | null
+          created_at: string | null
+          email: string | null
+          first_contact_at: string | null
+          id: string
+          last_order_at: string | null
+          name: string | null
+          notes: string | null
+          store_id: string
+          tags: string[] | null
+          total_orders: number | null
+          total_spent: number | null
+          updated_at: string | null
+          whatsapp_number: string
+        }
+        Insert: {
+          address?: Json | null
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_contact_at?: string | null
+          id?: string
+          last_order_at?: string | null
+          name?: string | null
+          notes?: string | null
+          store_id: string
+          tags?: string[] | null
+          total_orders?: number | null
+          total_spent?: number | null
+          updated_at?: string | null
+          whatsapp_number: string
+        }
+        Update: {
+          address?: Json | null
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_contact_at?: string | null
+          id?: string
+          last_order_at?: string | null
+          name?: string | null
+          notes?: string | null
+          store_id?: string
+          tags?: string[] | null
+          total_orders?: number | null
+          total_spent?: number | null
+          updated_at?: string | null
+          whatsapp_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commerce_customers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commerce_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          media_url: string | null
+          message_type: string | null
+          metadata: Json | null
+          product_id: string | null
+          sender_type: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          media_url?: string | null
+          message_type?: string | null
+          metadata?: Json | null
+          product_id?: string | null
+          sender_type: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          media_url?: string | null
+          message_type?: string | null
+          metadata?: Json | null
+          product_id?: string | null
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commerce_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commerce_messages_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commerce_order_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_id: string
+          product_id: string | null
+          product_name: string
+          product_sku: string | null
+          quantity: number
+          total_price: number
+          unit_price: number
+          variant_id: string | null
+          variant_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_id: string
+          product_id?: string | null
+          product_name: string
+          product_sku?: string | null
+          quantity?: number
+          total_price: number
+          unit_price: number
+          variant_id?: string | null
+          variant_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_id?: string
+          product_id?: string | null
+          product_name?: string
+          product_sku?: string | null
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+          variant_id?: string | null
+          variant_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commerce_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commerce_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commerce_order_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commerce_orders: {
+        Row: {
+          created_at: string | null
+          created_via: string | null
+          customer_id: string
+          delivered_at: string | null
+          discount: number | null
+          id: string
+          internal_notes: string | null
+          notes: string | null
+          order_number: string
+          paid_at: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          payment_status: string | null
+          shipped_at: string | null
+          shipping_address: Json | null
+          shipping_cost: number | null
+          shipping_method: string | null
+          status: string
+          store_id: string
+          subtotal: number
+          total: number
+          tracking_code: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_via?: string | null
+          customer_id: string
+          delivered_at?: string | null
+          discount?: number | null
+          id?: string
+          internal_notes?: string | null
+          notes?: string | null
+          order_number: string
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
+          shipped_at?: string | null
+          shipping_address?: Json | null
+          shipping_cost?: number | null
+          shipping_method?: string | null
+          status?: string
+          store_id: string
+          subtotal: number
+          total: number
+          tracking_code?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_via?: string | null
+          customer_id?: string
+          delivered_at?: string | null
+          discount?: number | null
+          id?: string
+          internal_notes?: string | null
+          notes?: string | null
+          order_number?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
+          shipped_at?: string | null
+          shipping_address?: Json | null
+          shipping_cost?: number | null
+          shipping_method?: string | null
+          status?: string
+          store_id?: string
+          subtotal?: number
+          total?: number
+          tracking_code?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commerce_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commerce_orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commerce_payment_settings: {
+        Row: {
+          created_at: string | null
+          gateway_api_key: string | null
+          gateway_name: string | null
+          gateway_webhook_secret: string | null
+          id: string
+          is_enabled: boolean | null
+          payment_method: string
+          pix_holder_name: string | null
+          pix_key: string | null
+          pix_key_type: string | null
+          settings: Json | null
+          store_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          gateway_api_key?: string | null
+          gateway_name?: string | null
+          gateway_webhook_secret?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          payment_method: string
+          pix_holder_name?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          settings?: Json | null
+          store_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          gateway_api_key?: string | null
+          gateway_name?: string | null
+          gateway_webhook_secret?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          payment_method?: string
+          pix_holder_name?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          settings?: Json | null
+          store_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commerce_payment_settings_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commerce_product_images: {
+        Row: {
+          alt_text: string | null
+          created_at: string | null
+          id: string
+          is_primary: boolean | null
+          product_id: string
+          sort_order: number | null
+          url: string
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          product_id: string
+          sort_order?: number | null
+          url: string
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          product_id?: string
+          sort_order?: number | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commerce_product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commerce_product_variants: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          options: Json
+          price: number | null
+          product_id: string
+          sku: string | null
+          stock_quantity: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          options: Json
+          price?: number | null
+          product_id: string
+          sku?: string | null
+          stock_quantity?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          options?: Json
+          price?: number | null
+          product_id?: string
+          sku?: string | null
+          stock_quantity?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commerce_product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commerce_products: {
+        Row: {
+          ai_selling_points: string | null
+          allow_backorder: boolean | null
+          barcode: string | null
+          category_id: string | null
+          compare_at_price: number | null
+          cost_price: number | null
+          created_at: string | null
+          description: string | null
+          dimensions: Json | null
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          metadata: Json | null
+          name: string
+          price: number
+          short_description: string | null
+          sku: string | null
+          stock_quantity: number | null
+          store_id: string
+          tags: string[] | null
+          track_stock: boolean | null
+          updated_at: string | null
+          weight: number | null
+        }
+        Insert: {
+          ai_selling_points?: string | null
+          allow_backorder?: boolean | null
+          barcode?: string | null
+          category_id?: string | null
+          compare_at_price?: number | null
+          cost_price?: number | null
+          created_at?: string | null
+          description?: string | null
+          dimensions?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          metadata?: Json | null
+          name: string
+          price: number
+          short_description?: string | null
+          sku?: string | null
+          stock_quantity?: number | null
+          store_id: string
+          tags?: string[] | null
+          track_stock?: boolean | null
+          updated_at?: string | null
+          weight?: number | null
+        }
+        Update: {
+          ai_selling_points?: string | null
+          allow_backorder?: boolean | null
+          barcode?: string | null
+          category_id?: string | null
+          compare_at_price?: number | null
+          cost_price?: number | null
+          created_at?: string | null
+          description?: string | null
+          dimensions?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          metadata?: Json | null
+          name?: string
+          price?: number
+          short_description?: string | null
+          sku?: string | null
+          stock_quantity?: number | null
+          store_id?: string
+          tags?: string[] | null
+          track_stock?: boolean | null
+          updated_at?: string | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commerce_products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commerce_products_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "commerce_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commerce_stores: {
+        Row: {
+          ai_instructions: string | null
+          ai_personality: string | null
+          banner_url: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+          payment_instructions: string | null
+          updated_at: string | null
+          user_id: string
+          welcome_message: string | null
+          whatsapp_instance_id: string | null
+          whatsapp_number: string | null
+        }
+        Insert: {
+          ai_instructions?: string | null
+          ai_personality?: string | null
+          banner_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          payment_instructions?: string | null
+          updated_at?: string | null
+          user_id: string
+          welcome_message?: string | null
+          whatsapp_instance_id?: string | null
+          whatsapp_number?: string | null
+        }
+        Update: {
+          ai_instructions?: string | null
+          ai_personality?: string | null
+          banner_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          payment_instructions?: string | null
+          updated_at?: string | null
+          user_id?: string
+          welcome_message?: string | null
+          whatsapp_instance_id?: string | null
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           assistant_id: string
@@ -620,6 +1351,65 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "conversations_assistant_id_fkey"
+            columns: ["assistant_id"]
+            isOneToOne: false
+            referencedRelation: "assistants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_leads: {
+        Row: {
+          assistant_id: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          intent_summary: string | null
+          last_interaction: string | null
+          lead_score: number | null
+          name: string | null
+          source: string | null
+          status: string | null
+          tags: string[] | null
+          updated_at: string | null
+          user_id: string
+          whatsapp_number: string
+        }
+        Insert: {
+          assistant_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          intent_summary?: string | null
+          last_interaction?: string | null
+          lead_score?: number | null
+          name?: string | null
+          source?: string | null
+          status?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id: string
+          whatsapp_number: string
+        }
+        Update: {
+          assistant_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          intent_summary?: string | null
+          last_interaction?: string | null
+          lead_score?: number | null
+          name?: string | null
+          source?: string | null
+          status?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+          whatsapp_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_leads_assistant_id_fkey"
             columns: ["assistant_id"]
             isOneToOne: false
             referencedRelation: "assistants"
@@ -726,6 +1516,504 @@ export type Database = {
         }
         Relationships: []
       }
+      followup_campaigns: {
+        Row: {
+          assistant_id: string | null
+          business_description: string | null
+          business_name: string | null
+          common_objections: Json | null
+          created_at: string | null
+          description: string | null
+          end_hour: number | null
+          id: string
+          important_links: Json | null
+          is_connected: boolean | null
+          max_daily_messages: number | null
+          max_followups: number | null
+          message_sequence: Json | null
+          min_interval_minutes: number | null
+          name: string
+          openai_assistant_id: string | null
+          random_delay_seconds: number | null
+          start_hour: number | null
+          status: string | null
+          tone_of_voice: string | null
+          total_conversions: number | null
+          total_leads: number | null
+          total_messages_sent: number | null
+          total_responses: number | null
+          updated_at: string | null
+          user_id: string
+          value_proposition: string | null
+          whatsapp_instance: string | null
+          whatsapp_instance_key: string | null
+          whatsapp_qrcode: string | null
+          whatsapp_status: string | null
+          working_days: number[] | null
+        }
+        Insert: {
+          assistant_id?: string | null
+          business_description?: string | null
+          business_name?: string | null
+          common_objections?: Json | null
+          created_at?: string | null
+          description?: string | null
+          end_hour?: number | null
+          id?: string
+          important_links?: Json | null
+          is_connected?: boolean | null
+          max_daily_messages?: number | null
+          max_followups?: number | null
+          message_sequence?: Json | null
+          min_interval_minutes?: number | null
+          name: string
+          openai_assistant_id?: string | null
+          random_delay_seconds?: number | null
+          start_hour?: number | null
+          status?: string | null
+          tone_of_voice?: string | null
+          total_conversions?: number | null
+          total_leads?: number | null
+          total_messages_sent?: number | null
+          total_responses?: number | null
+          updated_at?: string | null
+          user_id: string
+          value_proposition?: string | null
+          whatsapp_instance?: string | null
+          whatsapp_instance_key?: string | null
+          whatsapp_qrcode?: string | null
+          whatsapp_status?: string | null
+          working_days?: number[] | null
+        }
+        Update: {
+          assistant_id?: string | null
+          business_description?: string | null
+          business_name?: string | null
+          common_objections?: Json | null
+          created_at?: string | null
+          description?: string | null
+          end_hour?: number | null
+          id?: string
+          important_links?: Json | null
+          is_connected?: boolean | null
+          max_daily_messages?: number | null
+          max_followups?: number | null
+          message_sequence?: Json | null
+          min_interval_minutes?: number | null
+          name?: string
+          openai_assistant_id?: string | null
+          random_delay_seconds?: number | null
+          start_hour?: number | null
+          status?: string | null
+          tone_of_voice?: string | null
+          total_conversions?: number | null
+          total_leads?: number | null
+          total_messages_sent?: number | null
+          total_responses?: number | null
+          updated_at?: string | null
+          user_id?: string
+          value_proposition?: string | null
+          whatsapp_instance?: string | null
+          whatsapp_instance_key?: string | null
+          whatsapp_qrcode?: string | null
+          whatsapp_status?: string | null
+          working_days?: number[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "followup_campaigns_assistant_id_fkey"
+            columns: ["assistant_id"]
+            isOneToOne: false
+            referencedRelation: "assistants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      followup_leads: {
+        Row: {
+          campaign_id: string | null
+          created_at: string | null
+          current_step: number | null
+          custom_data: Json | null
+          email: string | null
+          human_takeover_until: string | null
+          id: string
+          intent_summary: string | null
+          last_message_at: string | null
+          last_response_at: string | null
+          lead_score: number | null
+          name: string
+          next_followup_at: string | null
+          notes: string | null
+          openai_thread_id: string | null
+          source: string | null
+          status: string | null
+          tags: string[] | null
+          total_messages_sent: number | null
+          total_responses: number | null
+          updated_at: string | null
+          user_id: string
+          whatsapp_number: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string | null
+          current_step?: number | null
+          custom_data?: Json | null
+          email?: string | null
+          human_takeover_until?: string | null
+          id?: string
+          intent_summary?: string | null
+          last_message_at?: string | null
+          last_response_at?: string | null
+          lead_score?: number | null
+          name: string
+          next_followup_at?: string | null
+          notes?: string | null
+          openai_thread_id?: string | null
+          source?: string | null
+          status?: string | null
+          tags?: string[] | null
+          total_messages_sent?: number | null
+          total_responses?: number | null
+          updated_at?: string | null
+          user_id: string
+          whatsapp_number: string
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string | null
+          current_step?: number | null
+          custom_data?: Json | null
+          email?: string | null
+          human_takeover_until?: string | null
+          id?: string
+          intent_summary?: string | null
+          last_message_at?: string | null
+          last_response_at?: string | null
+          lead_score?: number | null
+          name?: string
+          next_followup_at?: string | null
+          notes?: string | null
+          openai_thread_id?: string | null
+          source?: string | null
+          status?: string | null
+          tags?: string[] | null
+          total_messages_sent?: number | null
+          total_responses?: number | null
+          updated_at?: string | null
+          user_id?: string
+          whatsapp_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "followup_leads_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "followup_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      followup_messages: {
+        Row: {
+          campaign_id: string
+          content: string
+          delivered_at: string | null
+          direction: string
+          id: string
+          intent_detected: string | null
+          lead_id: string
+          lead_score_change: number | null
+          read_at: string | null
+          sent_at: string | null
+          sentiment: string | null
+          status: string | null
+          step_number: number | null
+        }
+        Insert: {
+          campaign_id: string
+          content: string
+          delivered_at?: string | null
+          direction: string
+          id?: string
+          intent_detected?: string | null
+          lead_id: string
+          lead_score_change?: number | null
+          read_at?: string | null
+          sent_at?: string | null
+          sentiment?: string | null
+          status?: string | null
+          step_number?: number | null
+        }
+        Update: {
+          campaign_id?: string
+          content?: string
+          delivered_at?: string | null
+          direction?: string
+          id?: string
+          intent_detected?: string | null
+          lead_id?: string
+          lead_score_change?: number | null
+          read_at?: string | null
+          sent_at?: string | null
+          sentiment?: string | null
+          status?: string | null
+          step_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "followup_messages_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "followup_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "followup_messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "followup_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      followup_schedules: {
+        Row: {
+          attempts: number | null
+          campaign_id: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          lead_id: string
+          message_template: string | null
+          scheduled_at: string
+          sent_at: string | null
+          status: string | null
+          step_number: number
+        }
+        Insert: {
+          attempts?: number | null
+          campaign_id: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          lead_id: string
+          message_template?: string | null
+          scheduled_at: string
+          sent_at?: string | null
+          status?: string | null
+          step_number: number
+        }
+        Update: {
+          attempts?: number | null
+          campaign_id?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          lead_id?: string
+          message_template?: string | null
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string | null
+          step_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "followup_schedules_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "followup_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "followup_schedules_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "followup_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_alerts: {
+        Row: {
+          group_id: string
+          id: string
+          keyword: string
+          message_content: string
+          sender_jid: string
+          sender_name: string | null
+          sent_at: string | null
+          triggered_at: string | null
+          was_sent: boolean | null
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          keyword: string
+          message_content: string
+          sender_jid: string
+          sender_name?: string | null
+          sent_at?: string | null
+          triggered_at?: string | null
+          was_sent?: boolean | null
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          keyword?: string
+          message_content?: string
+          sender_jid?: string
+          sender_name?: string | null
+          sent_at?: string | null
+          triggered_at?: string | null
+          was_sent?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_alerts_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          group_id: string
+          id: string
+          message_id: string
+          message_timestamp: string
+          message_type: string | null
+          sender_jid: string
+          sender_name: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          group_id: string
+          id?: string
+          message_id: string
+          message_timestamp: string
+          message_type?: string | null
+          sender_jid: string
+          sender_name?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          group_id?: string
+          id?: string
+          message_id?: string
+          message_timestamp?: string
+          message_type?: string | null
+          sender_jid?: string
+          sender_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_participants: {
+        Row: {
+          created_at: string | null
+          group_id: string
+          id: string
+          is_admin: boolean | null
+          last_message_at: string | null
+          message_count: number | null
+          participant_jid: string
+          participant_name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          group_id: string
+          id?: string
+          is_admin?: boolean | null
+          last_message_at?: string | null
+          message_count?: number | null
+          participant_jid: string
+          participant_name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          group_id?: string
+          id?: string
+          is_admin?: boolean | null
+          last_message_at?: string | null
+          message_count?: number | null
+          participant_jid?: string
+          participant_name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_participants_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_reports: {
+        Row: {
+          active_participants: string[] | null
+          content: string
+          created_at: string | null
+          group_id: string
+          id: string
+          message_count: number | null
+          report_date: string
+          sent_at: string | null
+          topics: string[] | null
+          was_sent: boolean | null
+        }
+        Insert: {
+          active_participants?: string[] | null
+          content: string
+          created_at?: string | null
+          group_id: string
+          id?: string
+          message_count?: number | null
+          report_date: string
+          sent_at?: string | null
+          topics?: string[] | null
+          was_sent?: boolean | null
+        }
+        Update: {
+          active_participants?: string[] | null
+          content?: string
+          created_at?: string | null
+          group_id?: string
+          id?: string
+          message_count?: number | null
+          report_date?: string
+          sent_at?: string | null
+          topics?: string[] | null
+          was_sent?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_reports_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -769,9 +2057,12 @@ export type Database = {
           ApiELEVEN: string | null
           created_at: string | null
           emailuser: string | null
+          followup_count: number | null
           id: number
           idassistentgpt: string | null
           IDvoz: string | null
+          last_message_at: string | null
+          last_sender: string | null
           message: string | null
           nomeinstancia: string | null
           threadid: string | null
@@ -782,9 +2073,12 @@ export type Database = {
           ApiELEVEN?: string | null
           created_at?: string | null
           emailuser?: string | null
+          followup_count?: number | null
           id: number
           idassistentgpt?: string | null
           IDvoz?: string | null
+          last_message_at?: string | null
+          last_sender?: string | null
           message?: string | null
           nomeinstancia?: string | null
           threadid?: string | null
@@ -795,9 +2089,12 @@ export type Database = {
           ApiELEVEN?: string | null
           created_at?: string | null
           emailuser?: string | null
+          followup_count?: number | null
           id?: number
           idassistentgpt?: string | null
           IDvoz?: string | null
+          last_message_at?: string | null
+          last_sender?: string | null
           message?: string | null
           nomeinstancia?: string | null
           threadid?: string | null
@@ -1386,6 +2683,69 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_groups: {
+        Row: {
+          alerts_enabled: boolean | null
+          created_at: string | null
+          group_description: string | null
+          group_jid: string
+          group_name: string
+          group_picture_url: string | null
+          id: string
+          instance_name: string
+          is_active: boolean | null
+          keywords: string[] | null
+          last_message_at: string | null
+          last_report_at: string | null
+          report_enabled: boolean | null
+          report_time: string | null
+          total_messages: number | null
+          total_participants: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          alerts_enabled?: boolean | null
+          created_at?: string | null
+          group_description?: string | null
+          group_jid: string
+          group_name: string
+          group_picture_url?: string | null
+          id?: string
+          instance_name: string
+          is_active?: boolean | null
+          keywords?: string[] | null
+          last_message_at?: string | null
+          last_report_at?: string | null
+          report_enabled?: boolean | null
+          report_time?: string | null
+          total_messages?: number | null
+          total_participants?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          alerts_enabled?: boolean | null
+          created_at?: string | null
+          group_description?: string | null
+          group_jid?: string
+          group_name?: string
+          group_picture_url?: string | null
+          id?: string
+          instance_name?: string
+          is_active?: boolean | null
+          keywords?: string[] | null
+          last_message_at?: string | null
+          last_report_at?: string | null
+          report_enabled?: boolean | null
+          report_time?: string | null
+          total_messages?: number | null
+          total_participants?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       whatsapp_test_controls: {
         Row: {
           assistant_id: string | null
@@ -1729,6 +3089,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_group_messages: { Args: never; Returns: undefined }
+      disparar_followup_clonefy: { Args: never; Returns: undefined }
+      disparar_followups_automaticos: { Args: never; Returns: undefined }
+      find_or_create_customer: {
+        Args: { p_name?: string; p_store_id: string; p_whatsapp_number: string }
+        Returns: string
+      }
+      generate_order_number: { Args: { store_uuid: string }; Returns: string }
       get_user_email: { Args: { target_user_id: string }; Returns: string }
       get_user_usage_stats: {
         Args: { target_user_id?: string }
@@ -1749,6 +3117,27 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      search_store_products: {
+        Args: {
+          p_category_id?: string
+          p_limit?: number
+          p_query?: string
+          p_store_id: string
+        }
+        Returns: {
+          ai_selling_points: string
+          category_name: string
+          compare_at_price: number
+          description: string
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          primary_image_url: string
+          short_description: string
+          stock_quantity: number
+        }[]
       }
       upgrade_user_to_paid: {
         Args: { target_email: string }

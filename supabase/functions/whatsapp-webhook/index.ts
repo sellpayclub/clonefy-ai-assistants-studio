@@ -187,7 +187,7 @@ serve(async (req) => {
 
                                 if (mediaData.base64) {
                                     base64Audio = mediaData.base64;
-                                    console.log(`✅ Base64 obtido via Evolution API: ${base64Audio.length} caracteres`);
+                                    console.log(`✅ Base64 obtido via Evolution API: ${base64Audio?.length ?? 0} caracteres`);
                                 }
                             } else {
                                 console.log(`❌ Falha Evolution API: ${await mediaResponse.text()}`);

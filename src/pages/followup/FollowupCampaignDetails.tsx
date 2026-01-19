@@ -84,18 +84,21 @@ const FollowupCampaignDetails = () => {
 
         setLoadingQR(true);
         try {
-            const response = await fetch(`https://api.cfroi.click/instance/connect/${campaign.whatsapp_instance}`, {
-                headers: {
-                    'apikey': '94805bfbb25f77f37a029f5a3dbfe62b'
+            // Usar edge function em vez de chamada direta (evita CORS)
+            const { data, error } = await supabase.functions.invoke('whatsapp-evolution', {
+                body: {
+                    action: 'get_qr',
+                    instanceName: campaign.whatsapp_instance
                 }
             });
 
-            if (response.ok) {
-                const data = await response.json();
+            if (!error && data) {
                 if (data.base64) {
                     setQrCode(data.base64);
                 } else if (data.code) {
                     setQrCode(data.code);
+                } else if (data.qr_code) {
+                    setQrCode(data.qr_code);
                 }
             }
         } catch (error) {
@@ -114,15 +117,16 @@ const FollowupCampaignDetails = () => {
         if (!campaign?.whatsapp_instance) return;
 
         try {
-            const response = await fetch(`https://api.cfroi.click/instance/connectionState/${campaign.whatsapp_instance}`, {
-                headers: {
-                    'apikey': '94805bfbb25f77f37a029f5a3dbfe62b'
+            // Usar edge function em vez de chamada direta (evita CORS)
+            const { data, error } = await supabase.functions.invoke('whatsapp-evolution', {
+                body: {
+                    action: 'check_status',
+                    instanceName: campaign.whatsapp_instance
                 }
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                const isConnected = data.state === 'open' || data.instance?.state === 'open';
+            if (!error && data) {
+                const isConnected = data.connected || data.state === 'open' || data.instance?.state === 'open';
 
                 if (isConnected) {
                     // Update campaign status
