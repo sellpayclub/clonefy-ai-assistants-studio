@@ -197,15 +197,10 @@ export function useLiveChat() {
     }
   }, [selectedSessionId, loadMessages]);
 
-  // Play notification sound
+  // Play notification sound - simple beep
   const playNotificationSound = useCallback(() => {
-    try {
-      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1aW19dZGdvcnBzd3x8f4CCgoKDgoGAf359e3p4dnRycW9ubWxramlpaGdmZmVkZGNjYmJhYWBgX19eXl1dXFxbW1tbWlpaWVlZWFhYV1dXV1ZWVlVVVVRUVFNTU1JSUlFRUVBQUE9PT05OTk1NTUxMTEtLS0pKSklJSUhISEdHR0ZGRkVFRURERENDQ0JCQkFBQUBAQD8/Pz4+Pj09PTw8PDs7Ozo6Ojk5OTg4ODc3NzY2NjU1NTQ0NDMzMzIyMjExMTAwMC8vLy4uLi0tLSwsLCsrKyoqKikpKSgoKCcnJyYmJiUlJSQkJCMjIyIiIiEhISAgIB8fHx4eHh0dHRwcHBsbGxoaGhkZGRgYGBcXFxYWFhUVFRQUFBMTExISEhERERAQEA8PDw4ODg0NDQwMDAsLCwoKCgkJCQgICAcHBwYGBgUFBQQEBAMDAwICAgEBAQAAAA==');
-      audio.volume = 0.3;
-      audio.play().catch(() => {});
-    } catch (e) {
-      // Ignore audio errors
-    }
+    // Disabled notification sound to avoid annoying beeps
+    // Can be re-enabled with proper sound file if needed
   }, []);
 
   // Send message from human
