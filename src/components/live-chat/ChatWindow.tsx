@@ -194,16 +194,20 @@ export const ChatWindow = memo(function ChatWindow({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-semibold">
-                {session.contact_name || session.contact_number}
+                {session.contact_name || (session.source === 'widget' ? 'Visitante' : session.contact_number)}
               </h2>
               <Badge variant={isTakeover ? 'default' : 'secondary'} className="text-xs">
                 {isTakeover ? '👤 Você atendendo' : '🤖 IA Ativa'}
               </Badge>
             </div>
             <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-              <Phone className="h-3 w-3" />
-              <span>{session.contact_number}</span>
-              <span>•</span>
+              {session.source === 'whatsapp' && (
+                <>
+                  <Phone className="h-3 w-3" />
+                  <span>{session.contact_number}</span>
+                  <span>•</span>
+                </>
+              )}
               <span>{session.source === 'whatsapp' ? '📱 WhatsApp' : '💬 Widget'}</span>
               {session.assistant_name && (
                 <>
@@ -269,28 +273,30 @@ export const ChatWindow = memo(function ChatWindow({
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="flex flex-col gap-3">
+      <ScrollArea className="flex-1 p-6" ref={scrollRef}>
+        <div className="flex flex-col gap-6">
           {Object.entries(messagesByDate).map(([date, msgs]) => (
-            <div key={date}>
+            <div key={date} className="space-y-4">
               {/* Date separator */}
-              <div className="flex items-center justify-center my-4">
-                <div className="bg-muted px-3 py-1 rounded-full text-xs text-muted-foreground">
+              <div className="flex items-center justify-center my-2">
+                <div className="bg-muted px-4 py-1.5 rounded-full text-xs text-muted-foreground font-medium">
                   {date}
                 </div>
               </div>
               
               {/* Messages for this date */}
-              {msgs.map((message) => (
-                <MessageBubble key={message.id} message={message} />
-              ))}
+              <div className="flex flex-col gap-4">
+                {msgs.map((message) => (
+                  <MessageBubble key={message.id} message={message} />
+                ))}
+              </div>
             </div>
           ))}
 
           {messages.length === 0 && (
-            <div className="text-center text-muted-foreground py-8">
-              <p>Nenhuma mensagem ainda</p>
-              <p className="text-sm">As mensagens aparecerão aqui em tempo real</p>
+            <div className="text-center text-muted-foreground py-12">
+              <p className="text-base">Nenhuma mensagem ainda</p>
+              <p className="text-sm mt-1">As mensagens aparecerão aqui em tempo real</p>
             </div>
           )}
         </div>
