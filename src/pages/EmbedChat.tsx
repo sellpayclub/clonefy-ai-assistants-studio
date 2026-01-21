@@ -175,6 +175,57 @@ const EmbedChat = () => {
     initializeChat();
   }, [actualAgentId]);
 
+  // Subscribe to realtime messages from human operators
+  useEffect(() => {
+    if (!conversationId || !actualAgentId) return;
+
+    console.log('📺 Subscribing to human messages for conversation:', conversationId);
+
+    // Subscribe to live_chat_messages where contact_number matches our conversationId
+    const channel = supabase
+      .channel(`widget-human-messages-${conversationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'live_chat_messages',
+          filter: `contact_number=eq.${conversationId}`
+        },
+        (payload) => {
+          console.log('📩 Received realtime message:', payload);
+          const newMsg = payload.new as any;
+          
+          // Only add messages from human operator (not customer or AI which we already handle)
+          if (newMsg.sender_type === 'human') {
+            console.log('👤 Human operator message received:', newMsg.content);
+            const humanMessage: Message = {
+              id: newMsg.id || Date.now().toString(),
+              role: 'assistant', // Display as assistant message in chat
+              content: newMsg.content,
+              timestamp: new Date(newMsg.created_at)
+            };
+            setMessages(prev => {
+              // Avoid duplicates
+              if (prev.some(m => m.id === humanMessage.id)) return prev;
+              return [...prev, humanMessage];
+            });
+            
+            // Scroll to bottom after new message
+            setTimeout(() => scrollToBottom(), 100);
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('📺 Realtime subscription status:', status);
+      });
+
+    return () => {
+      console.log('📺 Unsubscribing from human messages');
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, actualAgentId, scrollToBottom]);
+
   // Escutar mensagens do widget pai
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
