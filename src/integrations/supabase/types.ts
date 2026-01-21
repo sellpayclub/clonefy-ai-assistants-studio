@@ -2038,6 +2038,125 @@ export type Database = {
           },
         ]
       }
+      live_chat_messages: {
+        Row: {
+          assistant_id: string | null
+          assistant_name: string | null
+          contact_name: string | null
+          contact_number: string
+          content: string
+          created_at: string | null
+          id: string
+          instance_name: string
+          is_read: boolean | null
+          media_url: string | null
+          message_type: string | null
+          sender_type: string
+          session_id: string | null
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          assistant_id?: string | null
+          assistant_name?: string | null
+          contact_name?: string | null
+          contact_number: string
+          content: string
+          created_at?: string | null
+          id?: string
+          instance_name: string
+          is_read?: boolean | null
+          media_url?: string | null
+          message_type?: string | null
+          sender_type: string
+          session_id?: string | null
+          source: string
+          user_id?: string | null
+        }
+        Update: {
+          assistant_id?: string | null
+          assistant_name?: string | null
+          contact_name?: string | null
+          contact_number?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          instance_name?: string
+          is_read?: boolean | null
+          media_url?: string | null
+          message_type?: string | null
+          sender_type?: string
+          session_id?: string | null
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_live_messages_session"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "live_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_chat_sessions: {
+        Row: {
+          assistant_id: string | null
+          assistant_name: string | null
+          contact_name: string | null
+          contact_number: string
+          created_at: string | null
+          human_takeover_until: string | null
+          id: string
+          instance_name: string
+          last_message_at: string | null
+          last_message_preview: string | null
+          last_sender_type: string | null
+          source: string
+          status: string | null
+          unread_count: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          assistant_id?: string | null
+          assistant_name?: string | null
+          contact_name?: string | null
+          contact_number: string
+          created_at?: string | null
+          human_takeover_until?: string | null
+          id?: string
+          instance_name: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          last_sender_type?: string | null
+          source: string
+          status?: string | null
+          unread_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          assistant_id?: string | null
+          assistant_name?: string | null
+          contact_name?: string | null
+          contact_number?: string
+          created_at?: string | null
+          human_takeover_until?: string | null
+          id?: string
+          instance_name?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          last_sender_type?: string | null
+          source?: string
+          status?: string | null
+          unread_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string

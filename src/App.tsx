@@ -36,6 +36,7 @@ const LazyVentasEspanol = lazy(() => import("./pages/VentasEspanol"));
 
 // Group Management System (isolated)
 const LazyGroupManagement = lazy(() => import("./pages/GroupManagement"));
+const LazyLiveChat = lazy(() => import("./pages/LiveChat"));
 
 // Follow-up System
 const LazyFollowupDashboard = lazy(() => import("./pages/followup/FollowupDashboard"));
@@ -147,6 +148,13 @@ const App = () => {
                 <Route path="/grupos" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <LazyGroupManagement />
+                  </Suspense>
+                } />
+
+                {/* Live Chat - Real-time monitoring */}
+                <Route path="/live-chat" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyLiveChat />
                   </Suspense>
                 } />
 
