@@ -77,19 +77,39 @@ async function updateAnalytics(assistantId: string, userId: string, type: 'user'
 }
 
 /**
- * Processa a conversa para extrair informações do Lead para o CRM (Widget)
+ * Processa a conversa para extrair informações COMPLETAS do Lead para o CRM (Widget)
+ * Agora busca todo o histórico da conversa e gera análise detalhada
  */
 async function processCRMLead(
   assistantId: string,
   userId: string,
   widgetSessionId: string,
-  conversation: string,
+  conversationId: string,
   apiKey: string
 ) {
-  if (!assistantId || !userId || !apiKey) return;
+  if (!assistantId || !userId || !apiKey || !conversationId) return;
 
   try {
-    console.log('🧠 [Widget] Extraindo dados do lead via IA...');
+    console.log('🧠 [Widget] Buscando histórico completo da conversa...');
+
+    // Buscar TODAS as mensagens da conversa (não só a última)
+    const { data: allMessages, error: msgError } = await supabase
+      .from('messages')
+      .select('role, content, created_at')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true });
+
+    if (msgError || !allMessages || allMessages.length === 0) {
+      console.log('⚠️ [Widget] Sem mensagens para processar');
+      return;
+    }
+
+    // Formatar conversa completa
+    const fullConversation = allMessages
+      .map(m => `${m.role === 'user' ? 'Cliente' : 'Assistente'}: ${m.content}`)
+      .join('\n\n');
+
+    console.log(`🧠 [Widget] Extraindo dados do lead via IA (${allMessages.length} mensagens)...`);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -98,20 +118,38 @@ async function processCRMLead(
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini', // Modelo rápido e barato para extração
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content: `Você é um analista de CRM. Sua tarefa é extrair informações de uma conversa de chat do site.
-            Retorne APENAS um JSON plano com as seguintes chaves:
-            - name: Nome do cliente (se identificado, senão deixe null)
-            - email: Email do cliente (se identificado, senão deixe null)
-            - lead_score: Um número de 0 a 100 baseado no interesse de compra (0=curioso, 100=pronto para comprar)
-            - intent_summary: Um resumo de 1 frase do que o cliente quer.`
+            content: `Você é um analista de CRM experiente. Analise a conversa completa e extraia informações detalhadas para o perfil do lead.
+
+Retorne APENAS um JSON com as seguintes chaves:
+{
+  "name": "Nome do cliente (null se não identificado)",
+  "email": "Email do cliente (null se não identificado)",
+  "lead_score": 0-100 baseado em interesse REAL de compra:
+    - 0-20: Apenas curioso, sem intenção clara
+    - 21-40: Interessado mas fazendo pesquisa
+    - 41-60: Interesse moderado, fazendo perguntas específicas
+    - 61-80: Alto interesse, discutindo detalhes/preços
+    - 81-100: Pronto para comprar, urgência clara,
+  "urgency_level": "baixa | média | alta | imediata",
+  "sentiment": "positivo | neutro | negativo | misto",
+  "intent_summary": "Resumo de 2-3 frases do objetivo principal do cliente",
+  "conversation_analysis": "Análise DETALHADA em 3-5 parágrafos: contexto da conversa, necessidades identificadas, comportamento do cliente, potencial de conversão, e recomendações para o vendedor",
+  "key_topics": ["lista", "de", "tópicos", "principais", "discutidos"],
+  "customer_questions": ["perguntas", "que", "o", "cliente", "fez"],
+  "objections": ["objeções", "ou", "preocupações", "levantadas"],
+  "products_mentioned": ["produtos", "ou", "serviços", "mencionados"],
+  "next_action": "Próximo passo recomendado para o vendedor (ex: 'Enviar proposta com desconto', 'Agendar demo', 'Esclarecer dúvida sobre X')"
+}
+
+IMPORTANTE: Seja detalhado na análise! O vendedor precisa entender completamente o contexto do lead.`
           },
           {
             role: 'user',
-            content: `Conversa:\n${conversation}`
+            content: `Conversa completa:\n\n${fullConversation}`
           }
         ],
         response_format: { type: 'json_object' }
@@ -123,9 +161,13 @@ async function processCRMLead(
     const data = await response.json();
     const profiling = JSON.parse(data.choices[0].message.content);
 
-    console.log('📊 [Widget] Dados extraídos p/ CRM:', profiling);
+    console.log('📊 [Widget] Dados COMPLETOS extraídos p/ CRM:', {
+      name: profiling.name,
+      score: profiling.lead_score,
+      urgency: profiling.urgency_level,
+      topics: profiling.key_topics?.length || 0
+    });
 
-    // Upsert na tabela crm_leads
     // Procurar lead existente pelo session ID do widget
     const { data: existingLead } = await supabase
       .from('crm_leads')
@@ -137,31 +179,42 @@ async function processCRMLead(
     const leadData: Record<string, unknown> = {
       user_id: userId,
       assistant_id: assistantId,
-      whatsapp_number: widgetSessionId, // Usamos este campo para armazenar o ID da sessão do widget
-      source: 'widget', // Novo campo para identificar a origem
+      whatsapp_number: widgetSessionId,
+      source: 'widget',
       last_interaction: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
+    // Campos básicos
     if (profiling.name) leadData.name = profiling.name;
     if (profiling.email) leadData.email = profiling.email;
     if (profiling.lead_score !== undefined) leadData.lead_score = profiling.lead_score;
     if (profiling.intent_summary) leadData.intent_summary = profiling.intent_summary;
 
+    // Novos campos de análise detalhada
+    if (profiling.conversation_analysis) leadData.conversation_analysis = profiling.conversation_analysis;
+    if (profiling.key_topics) leadData.key_topics = profiling.key_topics;
+    if (profiling.customer_questions) leadData.customer_questions = profiling.customer_questions;
+    if (profiling.objections) leadData.objections = profiling.objections;
+    if (profiling.products_mentioned) leadData.products_mentioned = profiling.products_mentioned;
+    if (profiling.urgency_level) leadData.urgency_level = profiling.urgency_level;
+    if (profiling.next_action) leadData.next_action = profiling.next_action;
+    if (profiling.sentiment) leadData.sentiment = profiling.sentiment;
+
     if (existingLead) {
-      console.log('📝 [Widget] Atualizando lead existente no CRM...');
+      console.log('📝 [Widget] Atualizando lead existente no CRM com análise completa...');
       await supabase
         .from('crm_leads')
         .update(leadData)
         .eq('id', existingLead.id);
     } else {
-      console.log('🆕 [Widget] Criando novo lead no CRM...');
+      console.log('🆕 [Widget] Criando novo lead no CRM com análise completa...');
       await supabase
         .from('crm_leads')
         .insert(leadData);
     }
 
-    console.log('✅ [Widget] Lead processado com sucesso no CRM!');
+    console.log('✅ [Widget] Lead processado com análise COMPLETA no CRM!');
 
   } catch (err) {
     console.error('⚠️ [Widget] Falha no profiling/CRM:', err);
@@ -455,13 +508,13 @@ serve(async (req) => {
           console.log('Assistant message saved to database');
         });
 
-        // 🧠 CRM: Processar lead em background (não bloqueia resposta)
-        console.log('📈 [Widget] Iniciando Profiling de Lead para o CRM...');
+        // 🧠 CRM: Processar lead em background com TODA a conversa (não bloqueia resposta)
+        console.log('📈 [Widget] Iniciando Profiling COMPLETO de Lead para o CRM...');
         processCRMLead(
           agentId,
           agent.user_id,
           `widget_${currentConversationId}`, // ID único da sessão do widget
-          `Usuário: ${message}\nAssistente: ${responseText}`,
+          currentConversationId, // Agora passa o ID da conversa para buscar histórico completo
           openAIApiKey!
         ).catch(e => console.error('❌ [Widget] Erro no background profiling:', e));
 

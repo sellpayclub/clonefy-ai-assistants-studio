@@ -1361,49 +1361,73 @@ export type Database = {
       crm_leads: {
         Row: {
           assistant_id: string | null
+          conversation_analysis: string | null
           created_at: string | null
+          customer_questions: string[] | null
           email: string | null
           id: string
           intent_summary: string | null
+          key_topics: string[] | null
           last_interaction: string | null
           lead_score: number | null
           name: string | null
+          next_action: string | null
+          objections: string[] | null
+          products_mentioned: string[] | null
+          sentiment: string | null
           source: string | null
           status: string | null
           tags: string[] | null
           updated_at: string | null
+          urgency_level: string | null
           user_id: string
           whatsapp_number: string
         }
         Insert: {
           assistant_id?: string | null
+          conversation_analysis?: string | null
           created_at?: string | null
+          customer_questions?: string[] | null
           email?: string | null
           id?: string
           intent_summary?: string | null
+          key_topics?: string[] | null
           last_interaction?: string | null
           lead_score?: number | null
           name?: string | null
+          next_action?: string | null
+          objections?: string[] | null
+          products_mentioned?: string[] | null
+          sentiment?: string | null
           source?: string | null
           status?: string | null
           tags?: string[] | null
           updated_at?: string | null
+          urgency_level?: string | null
           user_id: string
           whatsapp_number: string
         }
         Update: {
           assistant_id?: string | null
+          conversation_analysis?: string | null
           created_at?: string | null
+          customer_questions?: string[] | null
           email?: string | null
           id?: string
           intent_summary?: string | null
+          key_topics?: string[] | null
           last_interaction?: string | null
           lead_score?: number | null
           name?: string | null
+          next_action?: string | null
+          objections?: string[] | null
+          products_mentioned?: string[] | null
+          sentiment?: string | null
           source?: string | null
           status?: string | null
           tags?: string[] | null
           updated_at?: string | null
+          urgency_level?: string | null
           user_id?: string
           whatsapp_number?: string
         }
