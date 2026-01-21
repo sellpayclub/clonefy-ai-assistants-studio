@@ -3,19 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from '@supabase/supabase-js';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Search, Filter, MessageSquare, Phone, Mail, Calendar, Globe, Smartphone, X } from "lucide-react";
+import { Users, Search, Filter, MessageSquare, Phone, Mail, Calendar, Globe, Smartphone, Flame, Thermometer, Snowflake, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import AppSidebar from "@/components/AppSidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+import { LeadDetailsDrawer } from "@/components/crm/LeadDetailsDrawer";
 
 interface Lead {
     id: string;
@@ -28,6 +23,15 @@ interface Lead {
     source: 'whatsapp' | 'widget' | null;
     last_interaction: string;
     created_at: string;
+    // Novos campos de análise
+    conversation_analysis?: string | null;
+    key_topics?: string[] | null;
+    customer_questions?: string[] | null;
+    objections?: string[] | null;
+    products_mentioned?: string[] | null;
+    urgency_level?: string | null;
+    next_action?: string | null;
+    sentiment?: string | null;
 }
 
 const CRMLeads = () => {
@@ -36,13 +40,13 @@ const CRMLeads = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const { t } = useLanguage();
     const { toast } = useToast();
 
     const handleLeadClick = (lead: Lead) => {
         setSelectedLead(lead);
-        setIsDialogOpen(true);
+        setIsDrawerOpen(true);
     };
 
     useEffect(() => {
@@ -82,13 +86,26 @@ const CRMLeads = () => {
     const filteredLeads = leads.filter(lead =>
         lead.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         lead.whatsapp_number?.includes(searchTerm) ||
-        lead.intent_summary?.toLowerCase().includes(searchTerm.toLowerCase())
+        lead.intent_summary?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.key_topics?.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     const getScoreBadge = (score: number) => {
-        if (score >= 80) return <Badge className="bg-red-500 hover:bg-red-600">🔥 Quente ({score})</Badge>;
-        if (score >= 40) return <Badge className="bg-orange-400 hover:bg-orange-500">⛅ Morno ({score})</Badge>;
-        return <Badge className="bg-blue-400 hover:bg-blue-500">❄️ Frio ({score})</Badge>;
+        if (score >= 80) return (
+            <Badge className="bg-red-500 hover:bg-red-600 gap-1 text-xs">
+                <Flame className="h-3 w-3" /> Quente ({score})
+            </Badge>
+        );
+        if (score >= 40) return (
+            <Badge className="bg-orange-400 hover:bg-orange-500 gap-1 text-xs">
+                <Thermometer className="h-3 w-3" /> Morno ({score})
+            </Badge>
+        );
+        return (
+            <Badge className="bg-blue-400 hover:bg-blue-500 gap-1 text-xs">
+                <Snowflake className="h-3 w-3" /> Frio ({score})
+            </Badge>
+        );
     };
 
     const getSourceBadge = (source: string | null) => {
@@ -106,6 +123,16 @@ const CRMLeads = () => {
                 WhatsApp
             </Badge>
         );
+    };
+
+    const getUrgencyIndicator = (urgency: string | null) => {
+        const config: Record<string, string> = {
+            'imediata': '🚨',
+            'alta': '⚡',
+            'média': '⏳',
+            'baixa': ''
+        };
+        return config[urgency || 'baixa'] || '';
     };
 
     if (!user && !loading) return null;
@@ -128,7 +155,7 @@ const CRMLeads = () => {
                                 <div className="p-4 sm:p-6">
                                     <h1 className="text-2xl sm:text-3xl font-bold text-white">CRM Leads</h1>
                                     <p className="text-white/80 text-sm sm:text-base">
-                                        Gestão inteligente de contatos extraídos via IA
+                                        Gestão inteligente de contatos com análise detalhada via IA
                                     </p>
                                 </div>
                             </div>
@@ -145,12 +172,13 @@ const CRMLeads = () => {
                                     <CardTitle className="text-lg flex items-center gap-2">
                                         <Users className="h-5 w-5 text-primary" />
                                         Seus Leads
+                                        <Badge variant="secondary" className="ml-2">{leads.length}</Badge>
                                     </CardTitle>
                                     <div className="flex flex-1 max-w-md items-center gap-2">
                                         <div className="relative flex-1">
                                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                             <Input
-                                                placeholder="Buscar por nome, número ou interesse..."
+                                                placeholder="Buscar por nome, número, interesse ou tópico..."
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                                 className="pl-9 bg-background/50"
@@ -200,9 +228,11 @@ const CRMLeads = () => {
                                                     </div>
 
                                                     {/* Info */}
-                                                    <div className="flex-1 space-y-1">
+                                                    <div className="flex-1 space-y-1.5">
                                                         <div className="flex items-center gap-2 flex-wrap">
-                                                            <h4 className="font-semibold text-foreground">{lead.name || 'Desconhecido'}</h4>
+                                                            <h4 className="font-semibold text-foreground">
+                                                                {getUrgencyIndicator(lead.urgency_level)} {lead.name || 'Desconhecido'}
+                                                            </h4>
                                                             {getScoreBadge(lead.lead_score)}
                                                             <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-tight px-1.5 py-0">
                                                                 {lead.status}
@@ -232,10 +262,35 @@ const CRMLeads = () => {
                                                             </div>
                                                         </div>
 
-                                                        {lead.intent_summary && (
-                                                            <p className="text-xs text-muted-foreground/80 line-clamp-1 italic mt-1 max-w-2xl">
-                                                                "{lead.intent_summary}"
-                                                            </p>
+                                                        {/* Resumo e Próxima Ação */}
+                                                        <div className="space-y-1">
+                                                            {lead.intent_summary && (
+                                                                <p className="text-xs text-muted-foreground/80 line-clamp-1 italic max-w-2xl">
+                                                                    "{lead.intent_summary}"
+                                                                </p>
+                                                            )}
+                                                            {lead.next_action && (
+                                                                <p className="text-xs text-green-600 flex items-center gap-1">
+                                                                    <ArrowRight className="h-3 w-3" />
+                                                                    <span className="line-clamp-1">{lead.next_action}</span>
+                                                                </p>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Tópicos */}
+                                                        {lead.key_topics && lead.key_topics.length > 0 && (
+                                                            <div className="flex flex-wrap gap-1 mt-1">
+                                                                {lead.key_topics.slice(0, 4).map((topic, i) => (
+                                                                    <Badge key={i} variant="secondary" className="text-[10px] px-1.5 py-0">
+                                                                        {topic}
+                                                                    </Badge>
+                                                                ))}
+                                                                {lead.key_topics.length > 4 && (
+                                                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                                                        +{lead.key_topics.length - 4}
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
                                                         )}
                                                     </div>
 
@@ -243,7 +298,7 @@ const CRMLeads = () => {
                                                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 duration-300">
                                                         <Button variant="outline" size="sm" className="h-8 gap-2 bg-background/50">
                                                             <MessageSquare className="h-3.5 w-3.5" />
-                                                            Conversa
+                                                            Ver Detalhes
                                                         </Button>
                                                     </div>
                                                 </div>
@@ -259,122 +314,12 @@ const CRMLeads = () => {
                     </div>
                 </main>
 
-                {/* Dialog de Detalhes do Lead */}
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogContent className="sm:max-w-lg">
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border border-primary/20">
-                                    <span className="text-primary font-bold text-lg">
-                                        {selectedLead?.name ? selectedLead.name[0].toUpperCase() : '#'}
-                                    </span>
-                                </div>
-                                <div>
-                                    <span className="text-lg">{selectedLead?.name || 'Desconhecido'}</span>
-                                    <div className="flex gap-2 mt-1">
-                                        {selectedLead && getScoreBadge(selectedLead.lead_score)}
-                                        {selectedLead && getSourceBadge(selectedLead.source)}
-                                    </div>
-                                </div>
-                            </DialogTitle>
-                        </DialogHeader>
-
-                        {selectedLead && (
-                            <div className="space-y-4 mt-4">
-                                {/* Informações de Contato */}
-                                <div className="space-y-3">
-                                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Contato</h4>
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                                            <Phone className="h-4 w-4 text-green-500" />
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">WhatsApp</p>
-                                                <p className="font-medium">{selectedLead.whatsapp_number}</p>
-                                            </div>
-                                            <a
-                                                href={`https://wa.me/${selectedLead.whatsapp_number.replace(/\D/g, '')}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="ml-auto"
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                <Button size="sm" variant="outline" className="gap-2">
-                                                    <MessageSquare className="h-3.5 w-3.5" />
-                                                    Abrir
-                                                </Button>
-                                            </a>
-                                        </div>
-                                        {selectedLead.email && (
-                                            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                                                <Mail className="h-4 w-4 text-blue-500" />
-                                                <div>
-                                                    <p className="text-xs text-muted-foreground">E-mail</p>
-                                                    <p className="font-medium">{selectedLead.email}</p>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Status */}
-                                <div className="space-y-3">
-                                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Status</h4>
-                                    <div className="flex items-center gap-2">
-                                        <Badge variant="outline" className="text-sm uppercase font-bold">
-                                            {selectedLead.status}
-                                        </Badge>
-                                    </div>
-                                </div>
-
-                                {/* Interesse/Intenção */}
-                                {selectedLead.intent_summary && (
-                                    <div className="space-y-3">
-                                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Interesse Detectado pela IA</h4>
-                                        <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
-                                            <p className="text-sm italic">"{selectedLead.intent_summary}"</p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Datas */}
-                                <div className="space-y-3">
-                                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Histórico</h4>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="p-3 bg-muted/50 rounded-lg">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                                                <p className="text-xs text-muted-foreground">Última Interação</p>
-                                            </div>
-                                            <p className="font-medium text-sm">
-                                                {new Date(selectedLead.last_interaction).toLocaleDateString('pt-BR', {
-                                                    day: '2-digit',
-                                                    month: 'short',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                            </p>
-                                        </div>
-                                        <div className="p-3 bg-muted/50 rounded-lg">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                                                <p className="text-xs text-muted-foreground">Criado em</p>
-                                            </div>
-                                            <p className="font-medium text-sm">
-                                                {new Date(selectedLead.created_at).toLocaleDateString('pt-BR', {
-                                                    day: '2-digit',
-                                                    month: 'short',
-                                                    year: 'numeric'
-                                                })}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </DialogContent>
-                </Dialog>
-
+                {/* Drawer de Detalhes do Lead */}
+                <LeadDetailsDrawer
+                    lead={selectedLead}
+                    open={isDrawerOpen}
+                    onOpenChange={setIsDrawerOpen}
+                />
             </div>
         </SidebarProvider>
     );
