@@ -273,6 +273,8 @@ serve(async (req) => {
       let currentConversationId = conversationId;
       let threadId = '';
       let isNewConversation = false;
+      let liveChatSessionId: string | null = null;
+      const widgetSessionId = `widget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       if (!currentConversationId) {
         isNewConversation = true;
@@ -341,6 +343,74 @@ serve(async (req) => {
 
       // 📊 Analytics: Registrar mensagem do usuário
       updateAnalytics(agentId, agent.user_id, 'user').catch(e => console.error('Analytics error:', e));
+
+      // 📺 LIVE CHAT: Salvar mensagem do cliente e gerenciar sessão
+      try {
+        // Buscar ou criar sessão para widget
+        const { data: existingSession } = await supabase
+          .from('live_chat_sessions')
+          .select('id')
+          .eq('user_id', agent.user_id)
+          .eq('instance_name', 'widget')
+          .eq('contact_number', currentConversationId)
+          .maybeSingle();
+
+        if (existingSession) {
+          liveChatSessionId = existingSession.id;
+          await supabase
+            .from('live_chat_sessions')
+            .update({
+              last_message_at: new Date().toISOString(),
+              last_message_preview: message.substring(0, 100),
+              last_sender_type: 'customer',
+              unread_count: (existingSession as any).unread_count + 1 || 1
+            })
+            .eq('id', existingSession.id);
+        } else {
+          const { data: newSession } = await supabase
+            .from('live_chat_sessions')
+            .insert({
+              user_id: agent.user_id,
+              instance_name: 'widget',
+              contact_number: currentConversationId,
+              contact_name: 'Visitante Widget',
+              source: 'widget',
+              status: 'ai_active',
+              assistant_id: agentId,
+              assistant_name: agent.name,
+              last_message_at: new Date().toISOString(),
+              last_message_preview: message.substring(0, 100),
+              last_sender_type: 'customer',
+              unread_count: 1
+            })
+            .select('id')
+            .single();
+          
+          liveChatSessionId = newSession?.id || null;
+        }
+
+        // Salvar mensagem do cliente
+        if (liveChatSessionId) {
+          await supabase
+            .from('live_chat_messages')
+            .insert({
+              user_id: agent.user_id,
+              session_id: liveChatSessionId,
+              instance_name: 'widget',
+              contact_number: currentConversationId,
+              contact_name: 'Visitante Widget',
+              sender_type: 'customer',
+              content: message,
+              message_type: 'text',
+              source: 'widget',
+              assistant_id: agentId,
+              assistant_name: agent.name
+            });
+        }
+        console.log('📺 Widget Live Chat: Mensagem do cliente salva');
+      } catch (liveChatError) {
+        console.error('⚠️ Widget Live Chat error (non-blocking):', liveChatError);
+      }
 
       // Parallel operations for better performance
       const [messageResponse, dbInsertResponse] = await Promise.all([
@@ -497,6 +567,36 @@ serve(async (req) => {
 
         // 📊 Analytics: Registrar mensagem do assistente
         updateAnalytics(agentId, agent.user_id, 'assistant').catch(e => console.error('Analytics error:', e));
+
+        // 📺 LIVE CHAT: Salvar resposta da IA em background
+        if (liveChatSessionId) {
+          supabase
+            .from('live_chat_messages')
+            .insert({
+              user_id: agent.user_id,
+              session_id: liveChatSessionId,
+              instance_name: 'widget',
+              contact_number: currentConversationId,
+              contact_name: 'Visitante Widget',
+              sender_type: 'ai',
+              content: responseText,
+              message_type: 'text',
+              source: 'widget',
+              assistant_id: agentId,
+              assistant_name: agent.name
+            })
+            .then(() => console.log('📺 Widget Live Chat: Resposta IA salva'));
+
+          supabase
+            .from('live_chat_sessions')
+            .update({
+              last_message_at: new Date().toISOString(),
+              last_message_preview: responseText.substring(0, 100),
+              last_sender_type: 'ai'
+            })
+            .eq('id', liveChatSessionId)
+            .then(() => {});
+        }
 
         // Background save - não bloquear resposta (sem catch)
         supabase.from('messages').insert({

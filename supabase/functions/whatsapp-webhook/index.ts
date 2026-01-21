@@ -387,14 +387,89 @@ serve(async (req) => {
         // Buscar user_id do assistente para o Analytics
         const { data: assistantData } = await supabase
             .from('assistants')
-            .select('user_id')
+            .select('user_id, name')
             .eq('id', instanceConfig.idassistentgpt)
             .single();
 
         const userId = assistantData?.user_id || instanceConfig.userId || '';
 
+        // Buscar nome do assistente para Live Chat
+        const assistantName = assistantData?.name || 'Assistente';
+
         console.log('✅ Configuração da instância encontrada');
         console.log(`🤖 Assistant ID: ${instanceConfig.idassistentgpt}`);
+
+        // 📺 LIVE CHAT: Salvar mensagem do cliente e atualizar sessão
+        let liveChatSessionId: string | null = null;
+        try {
+            // Buscar ou criar sessão
+            const { data: existingSession } = await supabase
+                .from('live_chat_sessions')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('instance_name', instanceName)
+                .eq('contact_number', contactNumber)
+                .maybeSingle();
+
+            if (existingSession) {
+                liveChatSessionId = existingSession.id;
+                // Atualizar sessão existente
+                await supabase
+                    .from('live_chat_sessions')
+                    .update({
+                        last_message_at: new Date().toISOString(),
+                        last_message_preview: messageContent.substring(0, 100),
+                        last_sender_type: 'customer',
+                        unread_count: (existingSession as any).unread_count + 1 || 1,
+                        contact_name: contactName
+                    })
+                    .eq('id', existingSession.id);
+            } else if (userId) {
+                // Criar nova sessão
+                const { data: newSession } = await supabase
+                    .from('live_chat_sessions')
+                    .insert({
+                        user_id: userId,
+                        instance_name: instanceName,
+                        contact_number: contactNumber,
+                        contact_name: contactName,
+                        source: 'whatsapp',
+                        status: 'ai_active',
+                        assistant_id: instanceConfig.idassistentgpt,
+                        assistant_name: assistantName,
+                        last_message_at: new Date().toISOString(),
+                        last_message_preview: messageContent.substring(0, 100),
+                        last_sender_type: 'customer',
+                        unread_count: 1
+                    })
+                    .select('id')
+                    .single();
+                
+                liveChatSessionId = newSession?.id || null;
+            }
+
+            // Salvar mensagem do cliente
+            if (userId) {
+                await supabase
+                    .from('live_chat_messages')
+                    .insert({
+                        user_id: userId,
+                        session_id: liveChatSessionId,
+                        instance_name: instanceName,
+                        contact_number: contactNumber,
+                        contact_name: contactName,
+                        sender_type: 'customer',
+                        content: messageContent,
+                        message_type: messageType,
+                        source: 'whatsapp',
+                        assistant_id: instanceConfig.idassistentgpt,
+                        assistant_name: assistantName
+                    });
+            }
+            console.log('📺 Live Chat: Mensagem do cliente salva');
+        } catch (liveChatError) {
+            console.error('⚠️ Live Chat error (non-blocking):', liveChatError);
+        }
 
         // 2. Buscar ou criar registro para este contato
         // Verificar se já existe um registro com este contato
@@ -781,6 +856,41 @@ serve(async (req) => {
                 last_sender: 'bot'
             })
             .eq('id', existingContact?.id || instanceConfig.id);
+
+        // 📺 LIVE CHAT: Salvar resposta da IA
+        try {
+            if (userId && liveChatSessionId) {
+                await supabase
+                    .from('live_chat_messages')
+                    .insert({
+                        user_id: userId,
+                        session_id: liveChatSessionId,
+                        instance_name: instanceName,
+                        contact_number: contactNumber,
+                        contact_name: contactName,
+                        sender_type: 'ai',
+                        content: assistantResponse,
+                        message_type: 'text',
+                        source: 'whatsapp',
+                        assistant_id: instanceConfig.idassistentgpt,
+                        assistant_name: assistantName
+                    });
+
+                // Atualizar sessão
+                await supabase
+                    .from('live_chat_sessions')
+                    .update({
+                        last_message_at: new Date().toISOString(),
+                        last_message_preview: assistantResponse.substring(0, 100),
+                        last_sender_type: 'ai'
+                    })
+                    .eq('id', liveChatSessionId);
+
+                console.log('📺 Live Chat: Resposta da IA salva');
+            }
+        } catch (liveChatError) {
+            console.error('⚠️ Live Chat AI response error (non-blocking):', liveChatError);
+        }
 
         // 9. Verificar se deve converter para áudio (ElevenLabs)
         // Regra: Responde em áudio APENAS se o usuário mandou áudio E ElevenLabs está configurado
