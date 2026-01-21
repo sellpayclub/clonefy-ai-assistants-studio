@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut, Palette, BarChart3, Wrench, Zap, Link as LinkIcon, Code, Calculator, Users, Megaphone, UsersRound, Store } from "lucide-react";
+import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut, Palette, BarChart3, Wrench, Zap, Link as LinkIcon, Code, Calculator, Users, Megaphone, UsersRound, Store, Radio } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { cleanupAuthState, forceCleanReload } from "@/lib/auth-utils";
@@ -29,6 +29,7 @@ const menuItems = [
   { title: "dashboard.title", url: "/dashboard", icon: LayoutDashboard, description: "dashboard.description" },
   { title: "sidebar.agents.title", url: "/assistants", icon: Bot, description: "sidebar.agents.description" },
   { title: "sidebar.whatsapp.title", url: "/whatsapp", icon: Smartphone, description: "sidebar.whatsapp.description" },
+  { title: "Chat ao Vivo", url: "/live-chat", icon: Radio, description: "Monitore conversas em tempo real", highlight: true },
   { title: "sidebar.conversations.title", url: "/conversations", icon: MessageSquare, description: "sidebar.conversations.description" },
   { title: "Follow-up IA", url: "/followup", icon: Megaphone, description: "Campanhas de follow-up automatizado", highlight: true },
   { title: "Gestão de Grupos", url: "/grupos", icon: UsersRound, description: "Gerencie grupos de WhatsApp", highlight: true },
