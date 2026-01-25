@@ -7,8 +7,8 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Evolution API Config
-const EVOLUTION_API_URL = 'https://api.cfroi.click';
+// Evolution API Config - Usar mesma URL que outras funções
+const EVOLUTION_API_URL = 'https://evolutionapi.clonefyia.com';
 const EVOLUTION_API_KEY = '94805bfbb25f77f37a029f5a3dbfe62b';
 
 // Supabase Client
