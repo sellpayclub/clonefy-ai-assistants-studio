@@ -288,7 +288,14 @@ const EmbedChat = () => {
         throw new Error(data.error);
       }
 
-      if (data && data.response) {
+      // Se humano está atendendo, não esperar resposta da IA
+      if (data?.humanTakeover) {
+        console.log('👤 Human takeover ativo - aguardando resposta do operador');
+        // Não adicionar mensagem de erro, a resposta virá via Realtime
+        if (data.conversationId && !conversationId) {
+          setConversationId(data.conversationId);
+        }
+      } else if (data && data.response) {
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
@@ -316,7 +323,7 @@ const EmbedChat = () => {
             }, '*');
           }
         }
-      } else {
+      } else if (!data?.humanTakeover) {
         throw new Error('Resposta inválida do servidor');
       }
     } catch (err) {
