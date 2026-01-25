@@ -345,11 +345,12 @@ serve(async (req) => {
       updateAnalytics(agentId, agent.user_id, 'user').catch(e => console.error('Analytics error:', e));
 
       // 📺 LIVE CHAT: Salvar mensagem do cliente e gerenciar sessão
+      let isHumanTakeover = false;
       try {
         // Buscar ou criar sessão para widget
         const { data: existingSession } = await supabase
           .from('live_chat_sessions')
-          .select('id')
+          .select('id, status, human_takeover_until')
           .eq('user_id', agent.user_id)
           .eq('instance_name', 'widget')
           .eq('contact_number', currentConversationId)
@@ -357,6 +358,24 @@ serve(async (req) => {
 
         if (existingSession) {
           liveChatSessionId = existingSession.id;
+          
+          // 🛑 HUMAN TAKEOVER CHECK: Verificar se humano está atendendo
+          if (existingSession.status === 'human_takeover' && existingSession.human_takeover_until) {
+            const takeoverUntil = new Date(existingSession.human_takeover_until);
+            if (takeoverUntil > new Date()) {
+              isHumanTakeover = true;
+              const remainingMinutes = Math.ceil((takeoverUntil.getTime() - Date.now()) / (1000 * 60));
+              console.log(`⏸️ [Widget] HUMAN TAKEOVER ATIVO! IA pausada (${remainingMinutes} min restantes)`);
+            } else {
+              // Takeover expirou - resetar status
+              console.log('✅ [Widget] Human Takeover expirado - IA voltando a responder');
+              await supabase
+                .from('live_chat_sessions')
+                .update({ status: 'ai_active', human_takeover_until: null })
+                .eq('id', existingSession.id);
+            }
+          }
+          
           await supabase
             .from('live_chat_sessions')
             .update({
@@ -389,7 +408,7 @@ serve(async (req) => {
           liveChatSessionId = newSession?.id || null;
         }
 
-        // Salvar mensagem do cliente
+        // Salvar mensagem do cliente (SEMPRE, mesmo em takeover)
         if (liveChatSessionId) {
           await supabase
             .from('live_chat_messages')
@@ -410,6 +429,25 @@ serve(async (req) => {
         console.log('📺 Widget Live Chat: Mensagem do cliente salva');
       } catch (liveChatError) {
         console.error('⚠️ Widget Live Chat error (non-blocking):', liveChatError);
+      }
+
+      // 🛑 Se humano está atendendo, NÃO chamar a IA - retornar sem resposta automática
+      if (isHumanTakeover) {
+        // Salvar mensagem do usuário no banco mas não gerar resposta IA
+        await supabase.from('messages').insert({
+          conversation_id: currentConversationId,
+          role: 'user',
+          content: message
+        });
+        
+        return new Response(JSON.stringify({ 
+          response: null, 
+          conversationId: currentConversationId,
+          humanTakeover: true,
+          message: 'Um atendente humano está respondendo esta conversa'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       // Parallel operations for better performance
