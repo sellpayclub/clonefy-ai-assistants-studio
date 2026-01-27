@@ -70,7 +70,22 @@ serve(async (req) => {
         console.log('🚀 WhatsApp Webhook - Nova requisição recebida');
 
         const payload: EvolutionWebhookPayload = await req.json();
-        console.log('📥 Payload recebido:', JSON.stringify(payload, null, 2));
+        
+        // Log resumido para debug (evita explodir console)
+        const logSummary = {
+            event: payload.event,
+            instance: payload.instance,
+            fromMe: payload.data?.key?.fromMe,
+            remoteJid: payload.data?.key?.remoteJid,
+            messageType: payload.data?.message?.conversation ? 'text' : 
+                         payload.data?.message?.extendedTextMessage ? 'extendedText' :
+                         payload.data?.message?.audioMessage ? 'audio' :
+                         payload.data?.message?.imageMessage ? 'image' :
+                         payload.data?.message?.documentMessage ? 'document' :
+                         payload.data?.message?.videoMessage ? 'video' : 'other',
+            textPreview: (payload.data?.message?.conversation || payload.data?.message?.extendedTextMessage?.text || '').substring(0, 50)
+        };
+        console.log('📥 Payload resumido:', JSON.stringify(logSummary));
 
         // Filtrar apenas eventos de mensagem
         if (payload.event !== 'messages.upsert') {
@@ -395,28 +410,55 @@ serve(async (req) => {
             });
         }
 
-        // Buscar user_id do assistente para o Analytics
-        const { data: assistantData } = await supabase
+        // 🔧 CORREÇÃO CRÍTICA: Buscar assistente por openai_assistant_id (não por UUID)
+        // O campo idassistentgpt contém o OpenAI assistant ID (ex: asst_...)
+        // Precisamos do UUID interno (assistants.id) para CRM e Analytics
+        let assistantData: { id: string; user_id: string; name: string; openai_assistant_id: string } | null = null;
+        
+        // Primeiro: tentar buscar por openai_assistant_id
+        const { data: assistantByOpenAI } = await supabase
             .from('assistants')
-            .select('user_id, name')
-            .eq('id', instanceConfig.idassistentgpt)
+            .select('id, user_id, name, openai_assistant_id')
+            .eq('openai_assistant_id', instanceConfig.idassistentgpt)
             .single();
+        
+        if (assistantByOpenAI) {
+            assistantData = assistantByOpenAI;
+            console.log('✅ Assistente encontrado por openai_assistant_id');
+        } else {
+            // Fallback: tentar buscar por UUID (caso legado)
+            const { data: assistantByUUID } = await supabase
+                .from('assistants')
+                .select('id, user_id, name, openai_assistant_id')
+                .eq('id', instanceConfig.idassistentgpt)
+                .single();
+            
+            if (assistantByUUID) {
+                assistantData = assistantByUUID;
+                console.log('✅ Assistente encontrado por UUID (legado)');
+            }
+        }
 
+        // Variáveis normalizadas para uso em todo o código
+        const assistantUuid = assistantData?.id || '';  // UUID interno (para CRM e Analytics)
+        const openaiAssistantId = assistantData?.openai_assistant_id || instanceConfig.idassistentgpt;  // Para OpenAI API
         const userId = assistantData?.user_id || instanceConfig.userId || '';
-
-        // Buscar nome do assistente para Live Chat
         const assistantName = assistantData?.name || 'Assistente';
 
-        console.log('✅ Configuração da instância encontrada');
-        console.log(`🤖 Assistant ID: ${instanceConfig.idassistentgpt}`);
+        console.log('🤖 Mapeamento de assistente:', {
+            openaiId: openaiAssistantId,
+            uuid: assistantUuid || '(não encontrado)',
+            userId: userId || '(não encontrado)',
+            name: assistantName
+        });
 
         // 📺 LIVE CHAT: Salvar mensagem do cliente e atualizar sessão
         let liveChatSessionId: string | null = null;
         try {
-            // Buscar ou criar sessão
+            // Buscar ou criar sessão (inclui unread_count para incremento seguro)
             const { data: existingSession } = await supabase
                 .from('live_chat_sessions')
-                .select('id')
+                .select('id, unread_count')
                 .eq('user_id', userId)
                 .eq('instance_name', instanceName)
                 .eq('contact_number', contactNumber)
@@ -431,7 +473,7 @@ serve(async (req) => {
                         last_message_at: new Date().toISOString(),
                         last_message_preview: messageContent.substring(0, 100),
                         last_sender_type: 'customer',
-                        unread_count: (existingSession as any).unread_count + 1 || 1,
+                        unread_count: ((existingSession as any).unread_count || 0) + 1,
                         contact_name: contactName
                     })
                     .eq('id', existingSession.id);
@@ -446,7 +488,7 @@ serve(async (req) => {
                         contact_name: contactName,
                         source: 'whatsapp',
                         status: 'ai_active',
-                        assistant_id: instanceConfig.idassistentgpt,
+                        assistant_id: openaiAssistantId,
                         assistant_name: assistantName,
                         last_message_at: new Date().toISOString(),
                         last_message_preview: messageContent.substring(0, 100),
@@ -473,7 +515,7 @@ serve(async (req) => {
                         content: messageContent,
                         message_type: messageType,
                         source: 'whatsapp',
-                        assistant_id: instanceConfig.idassistentgpt,
+                        assistant_id: openaiAssistantId,
                         assistant_name: assistantName
                     });
             }
@@ -554,7 +596,7 @@ serve(async (req) => {
                 .eq('id', existingContact.id);
 
             // Registrar Analytics - Nova Mensagem do Usuário
-            await updateAnalytics(instanceConfig.idassistentgpt, userId, 'user');
+            await updateAnalytics(assistantUuid, userId, 'user');
 
             console.log('⏰ Aguardando mais mensagens por 10 segundos...');
 
@@ -604,8 +646,8 @@ serve(async (req) => {
                 .eq('id', instanceConfig.id);
 
             // Registrar Analytics - Nova Mensagem do Usuário e Novo Visitante
-            await updateAnalytics(instanceConfig.idassistentgpt, userId, 'user');
-            await updateAnalytics(instanceConfig.idassistentgpt, userId, 'visitor');
+            await updateAnalytics(assistantUuid, userId, 'user');
+            await updateAnalytics(assistantUuid, userId, 'visitor');
 
             // Aguardar buffer
             await new Promise(resolve => setTimeout(resolve, MESSAGE_BUFFER_SECONDS * 1000));
@@ -672,7 +714,7 @@ serve(async (req) => {
         }
 
         // Registrar Analytics - Nova Conversa (Início do processamento)
-        await updateAnalytics(instanceConfig.idassistentgpt, userId, 'conversation');
+        await updateAnalytics(assistantUuid, userId, 'conversation');
 
         // 4. Adicionar mensagem à thread
         console.log('📤 Enviando mensagem para OpenAI...');
@@ -706,7 +748,7 @@ serve(async (req) => {
                 'OpenAI-Beta': 'assistants=v2'
             },
             body: JSON.stringify({
-                assistant_id: instanceConfig.idassistentgpt
+                assistant_id: openaiAssistantId  // Usar OpenAI assistant ID (asst_...)
             })
         });
 
@@ -883,7 +925,7 @@ serve(async (req) => {
                         content: assistantResponse,
                         message_type: 'text',
                         source: 'whatsapp',
-                        assistant_id: instanceConfig.idassistentgpt,
+                        assistant_id: openaiAssistantId,
                         assistant_name: assistantName
                     });
 
@@ -953,7 +995,7 @@ serve(async (req) => {
                         sendAsAudio = true;
                         console.log('✅ Áudio enviado com sucesso');
                         // Registrar Analytics - Resposta do Bot
-                        await updateAnalytics(instanceConfig.idassistentgpt, userId, 'assistant');
+                        await updateAnalytics(assistantUuid, userId, 'assistant');
                     } else {
                         console.warn('⚠️ Falha ao enviar áudio, enviando como texto');
                     }
@@ -1059,7 +1101,7 @@ serve(async (req) => {
                     console.log(`✅ Mensagem ${i + 1}/${chunks.length} enviada`);
                     // Registrar Analytics - Resposta do Bot (apenas na primeira parte para não inflar métricas de conversação, 
                     // mas total_messages conta cada chunk como uma mensagem para refletir custo/uso)
-                    await updateAnalytics(instanceConfig.idassistentgpt, userId, 'assistant');
+                    await updateAnalytics(assistantUuid, userId, 'assistant');
                 }
 
                 // Delay curto entre mensagens (500ms-1s)
@@ -1074,7 +1116,7 @@ serve(async (req) => {
         // Não esperamos o profiling terminar para responder ao WhatsApp (velocidade é prioridade)
         console.log('📈 Iniciando Profiling de Lead para o CRM...');
         processCRMLead(
-            instanceConfig.idassistentgpt,
+            assistantUuid,  // UUID interno do assistente (para CRM)
             userId,
             contactNumber,
             instanceName,  // Novo parâmetro para buscar histórico completo
