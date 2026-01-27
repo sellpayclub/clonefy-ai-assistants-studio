@@ -347,8 +347,9 @@ const Admin = () => {
   }
 
   return (
-    <main className="flex-1 p-4 md:p-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+    <main className="flex-1 flex flex-col h-screen overflow-hidden">
+      <div className="flex-1 overflow-auto p-4 md:p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div>
@@ -736,6 +737,7 @@ const Admin = () => {
             </Card>
           </TabsContent>
         </Tabs>
+      </div>
     </main>
   );
 };

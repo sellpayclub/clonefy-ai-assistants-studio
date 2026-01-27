@@ -10,8 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import AppSidebar from "@/components/AppSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
     Users,
     MessageSquare,
@@ -350,26 +349,23 @@ const GroupManagement = () => {
     };
 
     return (
-        <SidebarProvider>
-            <div className="min-h-screen flex w-full bg-background">
-                <AppSidebar />
-                <main className="flex-1 overflow-auto">
-                    {/* Header */}
-                    <div className="border-b bg-gradient-to-r from-purple-500/10 to-blue-500/10">
-                        <div className="container mx-auto px-4 py-6">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <SidebarTrigger />
-                                    <div>
-                                        <h1 className="text-2xl font-bold flex items-center gap-2">
-                                            <Users className="h-6 w-6 text-purple-600" />
-                                            Gerenciamento de Grupos
-                                        </h1>
-                                        <p className="text-muted-foreground mt-1">
-                                            Monitore grupos, receba alertas e relatórios diários automáticos
-                                        </p>
-                                    </div>
-                                </div>
+        <main className="flex-1 flex flex-col h-screen overflow-hidden">
+            {/* Header */}
+            <div className="border-b bg-gradient-to-r from-primary/10 to-primary/5">
+                <div className="container mx-auto px-4 py-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <SidebarTrigger />
+                            <div>
+                                <h1 className="text-2xl font-bold flex items-center gap-2">
+                                    <Users className="h-6 w-6 text-primary" />
+                                    Gerenciamento de Grupos
+                                </h1>
+                                <p className="text-muted-foreground mt-1">
+                                    Monitore grupos, receba alertas e relatórios diários automáticos
+                                </p>
+                            </div>
+                        </div>
                                 <div className="flex gap-2">
                                     <Button variant="outline" onClick={loadGroups}>
                                         <RefreshCw className="h-4 w-4 mr-2" />
@@ -451,6 +447,8 @@ const GroupManagement = () => {
                         </div>
                     </div>
 
+                {/* Content */}
+                <div className="flex-1 overflow-auto">
                     <div className="container mx-auto px-4 py-6">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* WhatsApp Connection + Lista de Grupos */}
@@ -831,9 +829,8 @@ const GroupManagement = () => {
                             </div>
                         </div>
                     </div>
-                </main>
-            </div>
-        </SidebarProvider>
+                </div>
+        </main>
     );
 };
 
