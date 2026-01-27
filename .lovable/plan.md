@@ -1,144 +1,173 @@
 
-## Objetivo (o que vai ficar pronto)
-1) Quando você “assumir” (Human Takeover) no **Chat ao Vivo**, a IA **não vai mais responder no WhatsApp**, mesmo que o cliente mande mensagem.
-2) Melhorar performance geral: **menus, navegação e carregamento** muito mais rápidos, reduzindo chamadas repetidas ao Supabase e evitando remontar sidebar a cada página.
+
+## Objetivo
+Corrigir o espaçamento e layout de TODAS as páginas que ainda estão usando o padrão antigo (com `SidebarProvider` e `AppSidebar` redundantes), garantindo que usem corretamente o `AppLayout` centralizado.
 
 ---
 
-## 1) Correção definitiva: IA não pode responder quando você assumiu (WhatsApp)
-### Problema real (por que aconteceu)
-- O **Live Chat** já está marcando a sessão como `human_takeover` e setando `human_takeover_until` (isso aparece nos seus logs).
-- Porém o `whatsapp-webhook` estava decidindo “pausar IA” olhando o estado no `n8n_fluxogpt`.
-- Esse estado pode ficar inconsistente (ex.: `whatsapp-evolution` sobrescreve `whatsappuser` com “Conectado”, e o registro do contato pode não ser encontrado), então o webhook não detecta a pausa e responde mesmo assim.
+## Diagnóstico: Páginas que precisam de correção
 
-### Solução (sem nada “novo”, usando o que já existe)
-**Padronizar a fonte da verdade do takeover para WhatsApp: `live_chat_sessions`.**  
-(É exatamente o que o `widget-chat` já faz e funciona bem.)
+Após análise completa, identifiquei **15 páginas** que ainda têm o layout antigo:
 
-### Implementação
-No `supabase/functions/whatsapp-webhook/index.ts`:
-1) **Antes de iniciar a geração de resposta da IA**, buscar a sessão no `live_chat_sessions` por:
-   - `instance_name = payload.instance`
-   - `contact_number = contactNumber`
-2) Se encontrar:
-   - Se `status === 'human_takeover'` e `human_takeover_until` > agora:
-     - **Salvar mensagem do cliente no Live Chat** (isso já acontece)
-     - **Retornar early-exit** e **não chamar OpenAI** nem enviar resposta pelo Evolution.
-   - Se `human_takeover_until` expirou:
-     - atualizar sessão para `ai_active` e `human_takeover_until = null` e seguir normalmente.
+### Commerce (4 páginas)
+1. `src/pages/CommerceStore.tsx`
+2. `src/pages/CommerceOrders.tsx`
+3. `src/pages/CommerceConversations.tsx`
+4. `src/pages/CommercePaymentSettings.tsx`
+5. `src/pages/CommerceConnectWhatsApp.tsx`
 
-3) Manter o check no `n8n_fluxogpt` como fallback, mas **não depender mais dele** para bloquear IA.
+### Follow-up (4 páginas)
+6. `src/pages/followup/FollowupDashboard.tsx`
+7. `src/pages/followup/FollowupCampaignWizard.tsx`
+8. `src/pages/followup/FollowupCampaignDetails.tsx`
+9. `src/pages/followup/FollowupImportLeads.tsx`
+10. `src/pages/followup/FollowupLeadsList.tsx`
 
-### Resultado esperado
-- Se você apertar “Pausar IA” no Live Chat: qualquer mensagem do cliente no WhatsApp **entra no painel**, mas **a IA não responde**.
-- Quando você apertar “Reativar IA”: no próximo input do cliente, a IA volta a responder.
+### Outros
+11. `src/pages/GroupManagement.tsx`
+12. `src/pages/BrandingSettings.tsx`
+13. `src/pages/WidgetAnalytics.tsx`
+14. `src/pages/Calendar.tsx`
 
----
-
-## 2) Performance: “tudo lento” (menu, navegação, telas)
-Pelos network logs, está acontecendo **muita chamada repetida** para:
-- `GET /auth/v1/user` (várias vezes em sequência)
-- e vários componentes montando/desmontando juntos a cada troca de rota.
-
-### 2.1. Parar de remontar Sidebar / Layout em toda página (grande ganho)
-Hoje: quase toda página faz:
-- `<SidebarProvider><AppSidebar /> ...</SidebarProvider>`
-Isso significa que ao navegar:
-- Sidebar desmonta e monta de novo
-- Recria listeners
-- Rebusca usuário
-- Re-renderiza mais do que precisa
-
-**Solução**
-Criar um layout único (ex.: `AppLayout`) com:
-- `<SidebarProvider>`
-- `<AppSidebar />`
-- `<Outlet />` do React Router
-
-E no `App.tsx`:
-- agrupar rotas internas dentro desse layout
-- páginas “internas” (Dashboard, WhatsApp, LiveChat, etc.) passam a renderizar **só o conteúdo**, sem repetir sidebar.
-
-Impacto:
-- Sidebar fica estável
-- Navegação fica instantânea (principalmente “menu lento”)
+### Também o LoadingFallback
+15. `src/App.tsx` - Corrigir animação do loading para centralizar corretamente
 
 ---
 
-### 2.2. Centralizar autenticação (remover “spam” de getUser)
-Hoje vários lugares chamam `supabase.auth.getUser()` ao mesmo tempo:
-- AppSidebar
-- BrandingProvider
-- useLiveChat
-- useUserLimits
-- várias páginas com “checkAuth”
+## Padrão correto a ser aplicado
 
-Isso multiplica requests e deixa a UI pesada.
+Cada página deve seguir esta estrutura:
 
-**Solução**
-Criar um `AuthContext` (ex.: `src/contexts/AuthContext.tsx`) que:
-- chama `supabase.auth.getSession()` 1 vez ao iniciar
-- mantém `session` e `user` em memória
-- escuta `onAuthStateChange` para atualizar
-- fornece hook `useAuth()`
+```tsx
+// ANTES (errado - layout duplicado)
+return (
+  <SidebarProvider>
+    <div className="min-h-screen flex w-full">
+      <AppSidebar />
+      <main className="flex-1 overflow-auto">
+        {/* conteúdo */}
+      </main>
+    </div>
+  </SidebarProvider>
+);
 
-Então substituir `getUser()` por `useAuth()` nesses pontos:
-- `src/components/AppSidebar.tsx`
-- `src/contexts/BrandingContext.tsx`
-- `src/hooks/useLiveChat.ts`
-- `src/hooks/useUserLimits.ts`
-- guardas de páginas (trocar por um `ProtectedRoute`)
-
-Impacto:
-- reduz drasticamente requests
-- menos travadas ao abrir telas
-
----
-
-### 2.3. Live Chat mais leve (sem “travadas” ao selecionar sessão/enviar)
-Ajustes planejados no `src/hooks/useLiveChat.ts`:
-1) **Não recriar subscriptions** quando `selectedSessionId` muda:
-   - hoje o `useEffect` de realtime depende de `selectedSessionId`
-   - isso pode resubscrever e gerar custo extra
-   - vamos trocar para usar `useRef` do `selectedSessionId` (ou separar efeitos)
-2) `loadMessages()`:
-   - fazer `update is_read` e `update unread_count` em paralelo (não sequencial)
-   - opcional: debouncer para evitar spam de updates quando o usuário clica rápido
-3) `SessionsList`:
-   - `filteredSessions` virar `useMemo` (reduz CPU em listas maiores)
-
-Impacto:
-- menos “lag” ao trocar de conversa
-- UI mais fluida
+// DEPOIS (correto - usa AppLayout)
+return (
+  <main className="flex-1 flex flex-col h-screen overflow-hidden">
+    {/* Header com SidebarTrigger */}
+    <div className="p-4 border-b">
+      <SidebarTrigger />
+      {/* título da página */}
+    </div>
+    {/* Conteúdo scrollável */}
+    <div className="flex-1 overflow-auto p-4">
+      {/* conteúdo */}
+    </div>
+  </main>
+);
+```
 
 ---
 
-## 3) Passo a passo de implementação (ordem)
-1) Ajustar `whatsapp-webhook` para checar takeover no `live_chat_sessions` e bloquear OpenAI quando ativo.
-2) Criar `AuthContext` + `useAuth` + `ProtectedRoute`.
-3) Criar `AppLayout` (SidebarProvider + Sidebar + Outlet).
-4) Refatorar páginas principais para remover wrappers duplicados:
-   - Dashboard, Assistants, WhatsApp, Conversations, LiveChat, CRMLeads, Admin, Followup, Commerce etc.
-5) Otimizações no `useLiveChat` e `SessionsList`.
-6) Testes guiados:
-   - Navegar entre telas (menu) e verificar tempo/fluidez.
-   - Assumir conversa no Live Chat e mandar mensagem do cliente no WhatsApp:
-     - deve entrar no painel
-     - IA não pode responder
-   - Reativar IA e mandar nova mensagem:
-     - IA deve responder normalmente.
+## Mudanças por página
+
+### 1. CommerceStore.tsx
+- Remover `SidebarProvider` e `AppSidebar`
+- Remover `import AppSidebar` e `import { SidebarProvider }`
+- Ajustar container para `<main className="flex-1 flex flex-col h-screen overflow-hidden">`
+- Adicionar `SidebarTrigger` no header
+
+### 2. CommerceOrders.tsx
+- Mesma estrutura acima
+
+### 3. CommerceConversations.tsx
+- Mesma estrutura acima
+
+### 4. CommercePaymentSettings.tsx
+- Mesma estrutura acima
+
+### 5. CommerceConnectWhatsApp.tsx
+- Mesma estrutura acima
+
+### 6. FollowupDashboard.tsx
+- Mesma estrutura acima
+
+### 7. FollowupCampaignWizard.tsx
+- Mesma estrutura acima
+
+### 8. FollowupCampaignDetails.tsx
+- Este já não tem `SidebarProvider` visível no início, preciso verificar a renderização
+
+### 9. FollowupImportLeads.tsx
+- Mesma estrutura acima
+
+### 10. FollowupLeadsList.tsx
+- Mesma estrutura acima
+
+### 11. GroupManagement.tsx
+- Mesma estrutura acima
+
+### 12. BrandingSettings.tsx
+- Mesma estrutura acima
+
+### 13. WidgetAnalytics.tsx
+- Mesma estrutura acima
+
+### 14. Calendar.tsx
+- Mesma estrutura acima
+
+### 15. App.tsx - LoadingFallback
+- Corrigir o componente `LoadingFallback` para ter melhor centralização
+- Mudar de `min-h-screen` para estrutura que respeite o layout do AppLayout
 
 ---
 
-## Riscos e como vamos evitar quebrar
-- Refatorar layout pode quebrar padding/altura em algumas páginas.
-  - Vamos ajustar cada página para manter o mesmo visual (paddings e `h-screen` onde necessário).
-- Human takeover no WhatsApp precisa funcionar mesmo se houver inconsistências em `n8n_fluxogpt`.
-  - Por isso o bloqueio principal será `live_chat_sessions`.
+## Detalhes técnicos
+
+### Imports a remover de cada página:
+```tsx
+// REMOVER:
+import AppSidebar from '@/components/AppSidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
+```
+
+### Import a manter/adicionar:
+```tsx
+// MANTER (se precisar do trigger):
+import { SidebarTrigger } from '@/components/ui/sidebar';
+```
+
+### Classes CSS padrão para main:
+```tsx
+// Para páginas com scroll vertical:
+<main className="flex-1 flex flex-col h-screen overflow-hidden">
+  <div className="border-b p-4">/* header */</div>
+  <div className="flex-1 overflow-auto p-4">/* content */</div>
+</main>
+
+// Para páginas de chat (2 painéis):
+<main className="flex-1 flex flex-col h-screen overflow-hidden">
+  <div className="border-b p-4">/* header */</div>
+  <div className="flex-1 flex overflow-hidden">/* panels */</div>
+</main>
+```
 
 ---
 
-## Critérios de “deu certo”
-- Ao “assumir”, a IA não responde no WhatsApp até o término do `human_takeover_until` (ou até você reativar).
-- Network: requests repetidos para `/auth/v1/user` caem drasticamente (ideal: 1 no início, não dezenas).
-- Troca de página pelo menu fica perceptivelmente mais rápida (sidebar não remonta).
+## Ordem de implementação
+
+1. Primeiro corrigir as **5 páginas Commerce** (mais críticas para o usuário)
+2. Depois as **5 páginas Followup**
+3. Depois `GroupManagement.tsx`, `BrandingSettings.tsx`, `WidgetAnalytics.tsx`, `Calendar.tsx`
+4. Por fim, corrigir o `LoadingFallback` no `App.tsx`
+
+---
+
+## Resultado esperado
+
+- Navegação entre páginas instantânea (sidebar não remonta)
+- Espaçamento consistente em todas as páginas
+- Animação de loading centralizada corretamente
+- Sem barras de rolagem duplicadas
+- Layout uniforme em todo o sistema
+
