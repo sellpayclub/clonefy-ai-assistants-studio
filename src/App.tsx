@@ -39,6 +39,7 @@ const LazyMercadoDigital = lazy(() => import("./pages/MercadoDigital"));
 const LazyVentasEspanol = lazy(() => import("./pages/VentasEspanol"));
 const LazyGroupManagement = lazy(() => import("./pages/GroupManagement"));
 const LazyLiveChat = lazy(() => import("./pages/LiveChat"));
+const LazyCalendar = lazy(() => import("./pages/Calendar"));
 const LazyFollowupDashboard = lazy(() => import("./pages/followup/FollowupDashboard"));
 const LazyFollowupCampaignWizard = lazy(() => import("./pages/followup/FollowupCampaignWizard"));
 const LazyFollowupCampaignDetails = lazy(() => import("./pages/followup/FollowupCampaignDetails"));
@@ -66,12 +67,12 @@ const queryClient = new QueryClient({
 });
 
 const LoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center">
+  <main className="flex-1 flex items-center justify-center">
     <div className="text-center">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-      <p>Loading...</p>
+      <p className="text-muted-foreground">Carregando...</p>
     </div>
-  </div>
+  </main>
 );
 
 // Wrapper for lazy pages inside AppLayout
@@ -122,6 +123,7 @@ const App = () => {
                       <Route path="/widget-analytics" element={<LazyPage><LazyWidgetAnalytics /></LazyPage>} />
                       <Route path="/crm-leads" element={<LazyPage><LazyCRMLeads /></LazyPage>} />
                       <Route path="/grupos" element={<LazyPage><LazyGroupManagement /></LazyPage>} />
+                      <Route path="/calendar" element={<LazyPage><LazyCalendar /></LazyPage>} />
                       <Route path="/configuracoes/branding" element={<LazyPage><LazyBrandingSettings /></LazyPage>} />
                       
                       {/* Follow-up System */}
