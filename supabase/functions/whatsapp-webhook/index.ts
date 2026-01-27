@@ -1200,6 +1200,7 @@ serve(async (req) => {
             userId,
             contactNumber,
             instanceName,  // Novo parâmetro para buscar histórico completo
+            contactName,   // NOVO: Nome do WhatsApp (pushName) para usar como fallback
             `Usuário: ${currentMessages}\nAssistente: ${assistantResponse}`,
             openaiApiKey
         ).catch(e => console.error('❌ Erro no background profiling:', e));
@@ -1358,6 +1359,7 @@ async function processCRMLead(
     userId: string, 
     whatsappNumber: string, 
     instanceName: string,  // NOVO parâmetro para buscar histórico
+    whatsappName: string,  // NOVO: Nome do contato no WhatsApp (pushName)
     conversation: string, 
     apiKey: string
 ) {
@@ -1447,8 +1449,16 @@ SEJA DETALHADO! O vendedor vai usar essa análise para fechar a venda.`
             updated_at: new Date().toISOString()
         };
 
-        // Campos básicos
-        if (profiling.name) leadData.name = profiling.name;
+        // 🔑 NOME: Priorizar nome extraído pela IA, mas usar pushName do WhatsApp como fallback
+        // Isso evita leads "Desconhecido" quando o nome está disponível no WhatsApp
+        const extractedName = profiling.name;
+        const finalName = extractedName && extractedName !== 'null' && extractedName !== 'Cliente' 
+            ? extractedName 
+            : (whatsappName && whatsappName !== 'Cliente' ? whatsappName : null);
+        
+        if (finalName) leadData.name = finalName;
+        console.log(`📛 CRM Nome: IA="${extractedName}" | WhatsApp="${whatsappName}" | Final="${finalName}"`);
+
         if (profiling.email) leadData.email = profiling.email;
         if (profiling.lead_score !== undefined) leadData.lead_score = profiling.lead_score;
         if (profiling.intent_summary) leadData.intent_summary = profiling.intent_summary;

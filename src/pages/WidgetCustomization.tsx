@@ -15,8 +15,7 @@ import OptimizedWidgetPreview from '@/components/widget/OptimizedWidgetPreview';
 import ColorPicker from '@/components/widget/ColorPicker';
 import ImageUpload from '@/components/widget/ImageUpload';
 import { useOptimizedWidgetCustomization, WidgetTemplate, ActionButton } from '@/hooks/useOptimizedWidgetCustomization';
-import AppSidebar from '@/components/AppSidebar';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useDebounce } from '@/hooks/useDebounce';
 
 // Template options with visual cards
@@ -300,53 +299,49 @@ const WidgetCustomization = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
+    <main className="flex-1 p-3 sm:p-4 md:p-6">
+      <div className="flex items-center gap-4 mb-6">
+        <SidebarTrigger />
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+            Chat Flutuante para Site
+          </h1>
+          <p className="text-muted-foreground text-sm md:text-base">
+            Personalize o chat que aparecerá no seu site e gere o código para incorporar
+          </p>
+        </div>
+      </div>
 
-        <main className="flex-1 p-3 sm:p-4 md:p-6">
-          <div className="flex items-center gap-4 mb-6">
-            <SidebarTrigger />
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                Chat Flutuante para Site
-              </h1>
-              <p className="text-muted-foreground text-sm md:text-base">
-                Personalize o chat que aparecerá no seu site e gere o código para incorporar
-              </p>
-            </div>
-          </div>
+      <div className="max-w-6xl mx-auto">
+        {/* Seletor de Assistente */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Selecionar Assistente
+            </CardTitle>
+            <CardDescription>
+              Escolha qual assistente você quer personalizar
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Select value={selectedAssistant} onValueChange={setSelectedAssistant}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione um assistente" />
+              </SelectTrigger>
+              <SelectContent>
+                {assistants.map((assistant) => (
+                  <SelectItem key={assistant.id} value={assistant.id}>
+                    {assistant.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
 
-          <div className="max-w-6xl mx-auto">
-            {/* Seletor de Assistente */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Selecionar Assistente
-                </CardTitle>
-                <CardDescription>
-                  Escolha qual assistente você quer personalizar
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Select value={selectedAssistant} onValueChange={setSelectedAssistant}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione um assistente" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {assistants.map((assistant) => (
-                      <SelectItem key={assistant.id} value={assistant.id}>
-                        {assistant.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
-
-            {selectedAssistant && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {selectedAssistant && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Configurações */}
                 <div className="space-y-6">
                   <Tabs defaultValue="appearance" className="w-full">
@@ -781,9 +776,7 @@ const WidgetCustomization = () => {
             )}
           </div>
         </main>
-      </div>
-    </SidebarProvider>
-  );
-};
+      );
+    };
 
-export default WidgetCustomization;
+    export default WidgetCustomization;
