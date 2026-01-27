@@ -177,7 +177,10 @@ const AppSidebar = () => {
                           <div className="relative">
                             <item.icon className={`flex-shrink-0 ${collapsed ? "w-5 h-5" : "w-4 h-4"}`} />
                             {item.url === "/live-chat" && (
-                              <span className="absolute -top-1 -right-1 h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                              <>
+                                <span className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full animate-ping opacity-75" />
+                                <span className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full" />
+                              </>
                             )}
                           </div>
                           {!collapsed && <span className="text-sm font-medium">{t(item.title)}</span>}
