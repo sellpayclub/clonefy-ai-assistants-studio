@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Play, Pause, Trash2, Users, MessageSquare, Wifi, WifiOff, RefreshCw, QrCode, Settings, BarChart3, Edit, FileText } from "lucide-react";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import MessageSequenceEditor from "@/components/followup/MessageSequenceEditor";
 import CampaignSettingsModal from "@/components/followup/CampaignSettingsModal";
@@ -294,22 +295,24 @@ const FollowupCampaignDetails = () => {
 
     if (!campaign) {
         return (
-            <div className="container mx-auto p-6">
-                <p className="text-center text-muted-foreground">Campanha não encontrada</p>
-            </div>
+            <main className="flex-1 flex items-center justify-center">
+                <p className="text-muted-foreground">Campanha não encontrada</p>
+            </main>
         );
     }
 
     const isConnected = campaign.whatsapp_status === 'connected';
 
     return (
-        <div className="container mx-auto p-6 max-w-6xl">
+        <main className="flex-1 flex flex-col h-screen overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigate('/followup')}>
-                        <ArrowLeft className="h-5 w-5" />
-                    </Button>
+            <div className="border-b p-4 md:p-6">
+                <div className="max-w-6xl mx-auto flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <SidebarTrigger />
+                        <Button variant="ghost" size="icon" onClick={() => navigate('/followup')}>
+                            <ArrowLeft className="h-5 w-5" />
+                        </Button>
                     <div>
                         <h1 className="text-2xl font-bold">{campaign.name}</h1>
                         <p className="text-muted-foreground">{campaign.business_name}</p>
@@ -344,12 +347,16 @@ const FollowupCampaignDetails = () => {
                             </>
                         )}
                     </Button>
+                    </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Main Content */}
-                <div className="lg:col-span-2 space-y-6">
+            {/* Content */}
+            <div className="flex-1 overflow-auto p-4 md:p-6">
+                <div className="max-w-6xl mx-auto">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Main Content */}
+                        <div className="lg:col-span-2 space-y-6">
                     {/* Stats */}
                     <div className="grid grid-cols-3 gap-4">
                         <Card>
@@ -627,6 +634,8 @@ const FollowupCampaignDetails = () => {
                         </Card>
                     )}
                 </div>
+                    </div>
+                </div>
             </div>
 
             {/* Modals */}
@@ -673,7 +682,7 @@ const FollowupCampaignDetails = () => {
                 campaignId={campaign.id}
                 campaignName={campaign.name}
             />
-        </div>
+        </main>
     );
 };
 
