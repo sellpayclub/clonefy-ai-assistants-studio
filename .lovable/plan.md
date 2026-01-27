@@ -1,285 +1,132 @@
 
+## Diagnóstico (por que “na conexão antiga” não salvou nada)
+Você não precisa criar nada novo. O problema está no jeito que o `whatsapp-webhook` faz o “mapa” entre:
 
-# Plano de Implementação: WhatsApp → CRM + Chat ao Vivo
+- `n8n_fluxogpt.idassistentgpt` (que hoje guarda o **OpenAI assistant id**, tipo `asst_...`)
+- e as tabelas internas que precisam de **UUID** (`assistants.id`, `crm_leads.assistant_id`, `widget_analytics.assistant_id`, `live_chat_sessions.user_id`)
 
-## Objetivo
+Hoje o webhook está fazendo isso errado:
 
-Corrigir a integração para que leads do WhatsApp:
-- Sejam salvos no CRM com `source: 'whatsapp'`
-- Tenham análise completa igual aos leads do Widget
-- Apareçam no Chat ao Vivo em tempo real
-- Sincronizem status de Human Takeover
+- Ele tenta buscar o assistente assim: `assistants.id = instanceConfig.idassistentgpt`
+  - Só que `instanceConfig.idassistentgpt` é `asst_...`, então **não acha**.
+- Com isso:
+  - `userId` fica vazio ⇒ não cria sessão/mensagens no **Chat ao Vivo**
+  - `crm_leads.assistant_id` recebe `asst_...` (texto) mas a coluna é UUID ⇒ o insert/update falha (e hoje não está tratando esse erro de forma clara)
+  - `widget_analytics.assistant_id` também é UUID ⇒ analytics para WhatsApp falha
 
----
-
-## Modificações no Arquivo
-
-### Arquivo: `supabase/functions/whatsapp-webhook/index.ts`
-
----
-
-### Modificação 1: Sincronizar Human Takeover com Live Chat Sessions
-
-**Localização:** Linhas 99-108
-
-**O que faz:** Quando o humano envia mensagem pelo WhatsApp direto, além de atualizar `n8n_fluxogpt`, também atualiza `live_chat_sessions` para que o painel Chat ao Vivo mostre o status correto.
-
-**Código atual:**
-```javascript
-// Ativar pausa de 2 horas
-const takeoverUntil = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
-
-await supabase
-    .from('n8n_fluxogpt')
-    .update({ human_takeover_until: takeoverUntil })
-    .eq('id', existingContact.id);
-```
-
-**Código novo:**
-```javascript
-// Ativar pausa de 2 horas
-const takeoverUntil = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
-
-await supabase
-    .from('n8n_fluxogpt')
-    .update({ human_takeover_until: takeoverUntil })
-    .eq('id', existingContact.id);
-
-// 📺 Sincronizar com Live Chat Sessions
-await supabase
-    .from('live_chat_sessions')
-    .update({ 
-        status: 'human_takeover',
-        human_takeover_until: takeoverUntil 
-    })
-    .eq('instance_name', instanceName)
-    .eq('contact_number', contactNumber);
-
-console.log('📺 Live Chat: Status atualizado para human_takeover');
-```
+Isso explica perfeitamente seu cenário: “já tá conectado, já conversa, já tem IA”, mas “não salva no CRM e não aparece no chat ao vivo”.
 
 ---
 
-### Modificação 2: Atualizar Chamada da Função processCRMLead
-
-**Localização:** Linhas 1065-1071
-
-**O que faz:** Adiciona `instanceName` como parâmetro para permitir buscar histórico completo.
-
-**Código atual:**
-```javascript
-processCRMLead(
-    instanceConfig.idassistentgpt,
-    userId,
-    contactNumber,
-    `Usuário: ${currentMessages}\nAssistente: ${assistantResponse}`,
-    openaiApiKey
-).catch(e => console.error('❌ Erro no background profiling:', e));
-```
-
-**Código novo:**
-```javascript
-processCRMLead(
-    instanceConfig.idassistentgpt,
-    userId,
-    contactNumber,
-    instanceName,  // NOVO parâmetro
-    `Usuário: ${currentMessages}\nAssistente: ${assistantResponse}`,
-    openaiApiKey
-).catch(e => console.error('❌ Erro no background profiling:', e));
-```
+## Objetivo do ajuste (sem criar conexões novas)
+1) Continuar usando o que já existe (instâncias Evolution atuais + webhook atual).
+2) Corrigir o mapeamento: pegar o registro correto na tabela `assistants` usando `openai_assistant_id`.
+3) A partir daí:
+   - salvar no **CRM** (com `source='whatsapp'` + análise completa)
+   - salvar/criar sessão e mensagens no **Chat ao Vivo**
+   - manter o **human takeover** sincronizado (o que já começamos)
 
 ---
 
-### Modificação 3: Expandir Função processCRMLead
+## O que vou alterar (somente backend, com cuidado)
+### A) Corrigir “lookup” do assistente no `whatsapp-webhook`
+Arquivo: `supabase/functions/whatsapp-webhook/index.ts`
 
-**Localização:** Linhas 1218-1299
+Hoje ele faz:
+- `from('assistants').select('user_id, name').eq('id', instanceConfig.idassistentgpt)`
 
-**O que faz:** 
-- Adiciona parâmetro `instanceName`
-- Busca histórico completo de `live_chat_messages`
-- Usa prompt expandido com análise detalhada
-- Define `source: 'whatsapp'`
-- Inclui todos os campos avançados do CRM
+Vai passar a fazer (com fallback para compatibilidade):
+1. Tentar por OpenAI:
+   - `eq('openai_assistant_id', instanceConfig.idassistentgpt)`
+2. Se não achar (caso raro/legado), tentar por UUID:
+   - `eq('id', instanceConfig.idassistentgpt)`
 
-**Código novo completo:**
-```javascript
-async function processCRMLead(
-    assistantId: string, 
-    userId: string, 
-    whatsappNumber: string, 
-    instanceName: string,  // NOVO parâmetro
-    conversation: string, 
-    apiKey: string
-) {
-    if (!assistantId || !userId || !apiKey) return;
+E vai extrair **tudo que precisamos**:
+- `assistant_uuid` (assistants.id)
+- `openai_assistant_id` (assistants.openai_assistant_id)
+- `user_id`
+- `name`
 
-    try {
-        console.log('🧠 [WhatsApp CRM] Buscando histórico completo da conversa...');
+### B) Usar as variáveis corretas em cada lugar
+Após o ajuste, o webhook vai usar:
 
-        // Buscar TODAS as mensagens do Live Chat para este contato
-        const { data: allMessages } = await supabase
-            .from('live_chat_messages')
-            .select('sender_type, content, created_at')
-            .eq('instance_name', instanceName)
-            .eq('contact_number', whatsappNumber)
-            .order('created_at', { ascending: true })
-            .limit(50);
+- Para OpenAI (rodar o assistente):
+  - `assistant_id: openai_assistant_id`
+- Para Chat ao Vivo:
+  - `user_id: assistants.user_id` (agora sempre preenchido)
+  - `assistant_name: assistants.name`
+  - `assistant_id` (na `live_chat_sessions`) pode continuar sendo texto; manteremos o que já é usado hoje (provavelmente `openai_assistant_id`) para não quebrar nada.
+- Para CRM:
+  - `crm_leads.assistant_id = assistants.id` (UUID correto)
+  - `crm_leads.user_id = assistants.user_id`
+  - `source = 'whatsapp'`
+- Para Analytics (`widget_analytics`):
+  - `assistant_id = assistants.id` (UUID correto)
 
-        // Formatar conversa completa
-        let fullConversation = conversation;
-        if (allMessages && allMessages.length > 0) {
-            fullConversation = allMessages
-                .map(m => `${m.sender_type === 'customer' ? 'Cliente' : 'Assistente'}: ${m.content}`)
-                .join('\n\n');
-        }
+### C) Ajustar o `processCRMLead` para receber UUID do assistente (não `asst_...`)
+Hoje a chamada está passando `instanceConfig.idassistentgpt` (que é `asst_...`).
+Vamos mudar para passar `assistant_uuid`.
 
-        console.log(`🧠 [WhatsApp CRM] Analisando ${allMessages?.length || 0} mensagens via IA...`);
+Isso é essencial para o lead entrar no CRM.
 
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: 'gpt-4o-mini',
-                messages: [
-                    {
-                        role: 'system',
-                        content: `Você é um analista de CRM experiente. Analise a conversa completa de WhatsApp e extraia informações detalhadas para o time de vendas.
+### D) Melhorar logs sem “explodir” o console
+Hoje o webhook loga o payload inteiro (muito grande). Isso atrapalha ver erros reais.
+Vamos trocar para logar apenas:
+- `event`, `instance`, `fromMe`, `remoteJid`, `messageType`, e um preview do texto
 
-Retorne APENAS um JSON com as seguintes chaves:
-{
-  "name": "Nome do cliente (null se não identificado)",
-  "email": "Email do cliente (null se não identificado)",
-  "lead_score": 0-100 baseado em interesse REAL de compra (0=só curiosidade, 100=pronto para comprar AGORA),
-  "urgency_level": "baixa | média | alta | imediata",
-  "sentiment": "positivo | neutro | negativo | misto",
-  "intent_summary": "Resumo de 2-3 frases do objetivo principal do cliente",
-  "conversation_analysis": "Análise DETALHADA em 3-5 parágrafos sobre: contexto da conversa, comportamento do cliente, pontos de interesse, objeções levantadas, e recomendações para o vendedor",
-  "key_topics": ["lista", "de", "tópicos", "principais", "discutidos"],
-  "customer_questions": ["perguntas", "específicas", "que", "o", "cliente", "fez"],
-  "objections": ["objeções", "preocupações", "ou", "hesitações", "do", "cliente"],
-  "products_mentioned": ["produtos", "serviços", "ou", "planos", "mencionados"],
-  "next_action": "Próximo passo ESPECÍFICO recomendado para o vendedor (ex: ligar para confirmar, enviar proposta, agendar demo)"
-}
-
-SEJA DETALHADO! O vendedor vai usar essa análise para fechar a venda.`
-                    },
-                    {
-                        role: 'user',
-                        content: `Conversa completa do WhatsApp:\n\n${fullConversation}`
-                    }
-                ],
-                response_format: { type: 'json_object' }
-            })
-        });
-
-        if (!response.ok) throw new Error('Falha na extração GPT');
-
-        const data = await response.json();
-        const profiling = JSON.parse(data.choices[0].message.content);
-
-        console.log('📊 [WhatsApp CRM] Dados extraídos:', {
-            name: profiling.name,
-            score: profiling.lead_score,
-            urgency: profiling.urgency_level,
-            sentiment: profiling.sentiment
-        });
-
-        // Preparar dados do lead COM TODOS OS CAMPOS
-        const leadData: any = {
-            user_id: userId,
-            assistant_id: assistantId,
-            whatsapp_number: whatsappNumber,
-            source: 'whatsapp',  // ✅ CRÍTICO - Agora define corretamente
-            last_interaction: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-        };
-
-        // Campos básicos
-        if (profiling.name) leadData.name = profiling.name;
-        if (profiling.email) leadData.email = profiling.email;
-        if (profiling.lead_score !== undefined) leadData.lead_score = profiling.lead_score;
-        if (profiling.intent_summary) leadData.intent_summary = profiling.intent_summary;
-
-        // Campos avançados (NOVOS para WhatsApp)
-        if (profiling.conversation_analysis) leadData.conversation_analysis = profiling.conversation_analysis;
-        if (profiling.key_topics) leadData.key_topics = profiling.key_topics;
-        if (profiling.customer_questions) leadData.customer_questions = profiling.customer_questions;
-        if (profiling.objections) leadData.objections = profiling.objections;
-        if (profiling.products_mentioned) leadData.products_mentioned = profiling.products_mentioned;
-        if (profiling.urgency_level) leadData.urgency_level = profiling.urgency_level;
-        if (profiling.next_action) leadData.next_action = profiling.next_action;
-        if (profiling.sentiment) leadData.sentiment = profiling.sentiment;
-
-        // Upsert na tabela crm_leads
-        const { data: existingLead } = await supabase
-            .from('crm_leads')
-            .select('id')
-            .eq('user_id', userId)
-            .eq('whatsapp_number', whatsappNumber)
-            .maybeSingle();
-
-        if (existingLead) {
-            console.log('📝 [WhatsApp CRM] Atualizando lead existente...');
-            await supabase
-                .from('crm_leads')
-                .update(leadData)
-                .eq('id', existingLead.id);
-        } else {
-            console.log('🆕 [WhatsApp CRM] Criando novo lead...');
-            await supabase
-                .from('crm_leads')
-                .insert(leadData);
-        }
-
-        console.log('✅ [WhatsApp CRM] Lead salvo com sucesso! source: whatsapp');
-
-    } catch (err) {
-        console.error('⚠️ [WhatsApp CRM] Falha no profiling:', err);
-    }
-}
-```
+Isso não muda nada funcional, só deixa debug confiável.
 
 ---
 
-## Resumo das Mudanças
-
-| Linha | Ação | Descrição |
-|-------|------|-----------|
-| 99-108 | Adicionar | Sincronizar Human Takeover com `live_chat_sessions` |
-| 1065-1071 | Modificar | Adicionar `instanceName` na chamada da função |
-| 1218-1299 | Substituir | Nova versão expandida de `processCRMLead` |
-
----
-
-## Resultado Esperado
-
-Após as modificações:
-
-**CRM:**
-- Leads do WhatsApp aparecerão com ícone 📱 (source: 'whatsapp')
-- Número do cliente visível na lista
-- Análise completa: tópicos, objeções, urgência, próxima ação, sentimento
-- Mesmo nível de detalhe que leads do Widget
-
-**Chat ao Vivo:**
-- Conversas do WhatsApp visíveis em tempo real ✅ (já funciona)
-- Status Human Takeover sincronizado entre WhatsApp e painel
-- Quando humano envia mensagem direto no WhatsApp, painel mostra "Humano Atendendo"
-
-**Sincronização:**
-- Pausar IA pelo painel → funciona
-- Pausar IA pelo WhatsApp direto → funciona E atualiza painel
+## Passos de implementação (sequência)
+1) Editar `supabase/functions/whatsapp-webhook/index.ts`:
+   - corrigir query do assistente (usar `openai_assistant_id`)
+   - criar variáveis:
+     - `assistantUuid`, `openaiAssistantId`, `userId`, `assistantName`
+   - trocar em todos os pontos:
+     - OpenAI runs: usar `openaiAssistantId`
+     - Analytics: usar `assistantUuid`
+     - CRM lead: usar `assistantUuid`
+     - Live chat: usar `userId` correto
+2) Garantir que a criação/atualização de sessão do Live Chat incremente `unread_count` corretamente (hoje tem um `(existingSession as any).unread_count + 1` mas o select não traz `unread_count`; vamos ajustar para buscar esse campo ou usar fallback seguro).
+3) Re-deploy da função `whatsapp-webhook` (ambiente Live, porque é onde seu WhatsApp real está chamando).
+4) Teste guiado com sua conexão antiga (sem criar outra):
+   - Enviar uma mensagem do cliente para o WhatsApp
+   - Confirmar que:
+     - aparece sessão no **Chat ao Vivo** imediatamente
+     - aparece mensagens em tempo real
+     - CRM cria/atualiza lead com `source='whatsapp'`
+     - lead vem com número correto + resumo/análise da IA (campos avançados)
+5) Validar human takeover:
+   - enviar msg “do humano” (fromMe) e confirmar que `live_chat_sessions.status` vira `human_takeover` e que o painel reflete
 
 ---
 
-## Segurança
+## Checklist de validação (o que você vai ver)
+### No Chat ao Vivo
+- A conversa WhatsApp aparece na lista
+- Origem “WhatsApp” (source = whatsapp)
+- Mensagens entrando em tempo real
+- Bot e humano aparecendo como remetentes (quando aplicável)
 
-Todas as modificações mantêm:
-- Service Role Key para bypass de RLS (necessário para edge functions)
-- Validações existentes de `userId` e `assistantId`
-- Tratamento de erros não-bloqueantes (Live Chat errors são logados mas não interrompem fluxo principal)
+### No CRM
+- Lead com:
+  - `whatsapp_number` preenchido
+  - `source = 'whatsapp'`
+  - `conversation_analysis`, `key_topics`, `objections`, `urgency_level`, `sentiment`, `next_action` preenchidos (depois do profiling rodar)
 
+Observação: o profiling é “background”, então pode levar alguns segundos após a resposta do bot.
+
+---
+
+## Risco e cuidado para “não estragar nada”
+- Mudança isolada em 1 função (`whatsapp-webhook`)
+- Mantém compatibilidade:
+  - se `idassistentgpt` vier UUID ou `asst_...`, continua funcionando
+- Não altera schema e não cria tabela nova
+- Não mexe no chat do widget (só WhatsApp)
+
+---
+
+## Se ainda não aparecer após isso
+A próxima hipótese (menor chance) é a instância estar chamando outro endpoint (ex: `commerce-webhook`). Mas antes disso, com esse ajuste, o comportamento “IA conversa mas não salva nada” deve ser resolvido porque o bloqueio era o `userId` e o UUID do `assistant_id` no CRM.
