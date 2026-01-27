@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './AuthContext';
 
 // Default branding values (CLONEFY defaults)
 const DEFAULT_BRANDING = {
@@ -42,7 +43,6 @@ const BrandingContext = createContext<BrandingContextType | undefined>(undefined
 
 // Helper function to convert HEX to HSL
 const hexToHsl = (hex: string): string | null => {
-  // Remove # if present
   hex = hex.replace(/^#/, '');
   
   if (!/^[0-9A-Fa-f]{6}$/.test(hex)) {
@@ -84,14 +84,12 @@ const applyColors = (primaryColor: string | null, accentColor: string | null) =>
   const root = document.documentElement;
   
   if (primaryColor) {
-    // Check if it's HEX and convert to HSL
     const hslColor = primaryColor.startsWith('#') ? hexToHsl(primaryColor) : primaryColor;
     if (hslColor) {
       root.style.setProperty('--primary', hslColor);
       root.style.setProperty('--primary-glow', hslColor);
     }
   } else {
-    // Reset to default
     root.style.removeProperty('--primary');
     root.style.removeProperty('--primary-glow');
   }
@@ -109,22 +107,18 @@ const applyColors = (primaryColor: string | null, accentColor: string | null) =>
 export const BrandingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [branding, setBranding] = useState(DEFAULT_BRANDING);
   const [isLoading, setIsLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+  const { user } = useAuth();
 
   // Fetch branding from database
   const fetchBranding = useCallback(async () => {
+    if (!user) {
+      setBranding(DEFAULT_BRANDING);
+      applyColors(null, null);
+      setIsLoading(false);
+      return;
+    }
+    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        setBranding(DEFAULT_BRANDING);
-        applyColors(null, null);
-        setIsLoading(false);
-        return;
-      }
-      
-      setUserId(user.id);
-      
       const { data, error } = await supabase
         .from('user_branding')
         .select('*')
@@ -162,22 +156,21 @@ export const BrandingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [user]);
 
   // Update branding in database
   const updateBranding = useCallback(async (newBranding: Partial<UserBranding>) => {
-    if (!userId) return;
+    if (!user) return;
     
     try {
-      // Check if record exists
       const { data: existing } = await supabase
         .from('user_branding')
         .select('id')
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .maybeSingle();
       
       const brandingData = {
-        user_id: userId,
+        user_id: user.id,
         logo_light_url: newBranding.logo_light_url,
         logo_dark_url: newBranding.logo_dark_url,
         logo_icon_url: newBranding.logo_icon_url,
@@ -192,7 +185,7 @@ export const BrandingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const { error } = await supabase
           .from('user_branding')
           .update(brandingData)
-          .eq('user_id', userId);
+          .eq('user_id', user.id);
         
         if (error) throw error;
       } else {
@@ -203,17 +196,16 @@ export const BrandingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (error) throw error;
       }
       
-      // Refetch to update state
       await fetchBranding();
     } catch (error) {
       console.error('Error updating branding:', error);
       throw error;
     }
-  }, [userId, fetchBranding]);
+  }, [user, fetchBranding]);
 
   // Reset branding to defaults
   const resetBranding = useCallback(async () => {
-    if (!userId) return;
+    if (!user) return;
     
     try {
       const { error } = await supabase
@@ -222,7 +214,7 @@ export const BrandingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           is_active: false,
           updated_at: new Date().toISOString(),
         })
-        .eq('user_id', userId);
+        .eq('user_id', user.id);
       
       if (error) throw error;
       
@@ -232,23 +224,11 @@ export const BrandingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.error('Error resetting branding:', error);
       throw error;
     }
-  }, [userId]);
+  }, [user]);
 
-  // Listen for auth changes
+  // Fetch branding when user changes
   useEffect(() => {
     fetchBranding();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
-        fetchBranding();
-      } else if (event === 'SIGNED_OUT') {
-        setBranding(DEFAULT_BRANDING);
-        applyColors(null, null);
-        setUserId(null);
-      }
-    });
-    
-    return () => subscription.unsubscribe();
   }, [fetchBranding]);
 
   return (

@@ -9,8 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Send, Bot, User as UserIcon, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import AppSidebar from "@/components/AppSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useOptimizedConversations } from "@/hooks/useOptimizedConversations";
@@ -430,34 +429,32 @@ const Conversations = memo(() => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando conversas...</p>
+      <main className="flex-1 p-4">
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Carregando conversas...</p>
+          </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen w-full bg-background">
-        <AppSidebar />
-        
-        <div className="flex-1 flex flex-col">
-          <header className="border-b p-4">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger />
-              <h1 className="text-2xl font-bold flex items-center gap-2">
-                <MessageSquare className="h-6 w-6" />
-                Conversas
-              </h1>
-            </div>
-          </header>
+    <main className="flex-1 flex flex-col h-screen overflow-hidden">
+      <header className="border-b p-4">
+        <div className="flex items-center gap-4">
+          <SidebarTrigger />
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <MessageSquare className="h-6 w-6" />
+            Conversas
+          </h1>
+        </div>
+      </header>
 
-          <div className="flex flex-1 overflow-hidden">
-            {/* Sidebar de Conversas */}
-            <div className="w-80 border-r flex flex-col">
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar de Conversas */}
+        <div className="w-80 border-r flex flex-col">
               <div className="p-4 border-b space-y-4">
                 <Select
                   value={selectedAssistant}
@@ -546,9 +543,7 @@ const Conversations = memo(() => {
             </div>
           </div>
         </div>
-        
-      </div>
-    </SidebarProvider>
+      </main>
   );
 });
 

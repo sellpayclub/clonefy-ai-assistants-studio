@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface LiveChatSession {
   id: string;
@@ -44,17 +45,13 @@ export function useLiveChat() {
   const [messages, setMessages] = useState<LiveChatMessage[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const userId = user?.id || null;
 
-  // Get current user
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUserId(user?.id || null);
-    };
-    getUser();
-  }, []);
+  // Use ref to track selectedSessionId without causing re-subscriptions
+  const selectedSessionIdRef = useRef<string | null>(null);
+  selectedSessionIdRef.current = selectedSessionId;
 
   // Load initial sessions
   const loadSessions = useCallback(async () => {
@@ -69,8 +66,6 @@ export function useLiveChat() {
         .order('last_message_at', { ascending: false });
 
       if (error) throw error;
-      
-      // Type assertion since we know the structure
       setSessions((data || []) as unknown as LiveChatSession[]);
     } catch (err) {
       console.error('Error loading sessions:', err);
@@ -93,25 +88,25 @@ export function useLiveChat() {
       if (error) throw error;
       setMessages((data || []) as unknown as LiveChatMessage[]);
 
-      // Mark messages as read
-      await supabase
-        .from('live_chat_messages')
-        .update({ is_read: true })
-        .eq('session_id', sessionId)
-        .eq('is_read', false);
-
-      // Reset unread count on session
-      await supabase
-        .from('live_chat_sessions')
-        .update({ unread_count: 0 })
-        .eq('id', sessionId);
+      // Mark messages as read and reset unread count in parallel
+      await Promise.all([
+        supabase
+          .from('live_chat_messages')
+          .update({ is_read: true })
+          .eq('session_id', sessionId)
+          .eq('is_read', false),
+        supabase
+          .from('live_chat_sessions')
+          .update({ unread_count: 0 })
+          .eq('id', sessionId)
+      ]);
 
     } catch (err) {
       console.error('Error loading messages:', err);
     }
   }, [userId]);
 
-  // Subscribe to realtime updates
+  // Subscribe to realtime updates - only depends on userId
   useEffect(() => {
     if (!userId) return;
 
@@ -129,19 +124,13 @@ export function useLiveChat() {
           filter: `user_id=eq.${userId}`
         },
         (payload) => {
-          console.log('Session update:', payload);
-          
           if (payload.eventType === 'INSERT') {
             const newSession = payload.new as unknown as LiveChatSession;
             setSessions(prev => [newSession, ...prev]);
-            
-            // Play notification sound for new session
-            playNotificationSound();
           } else if (payload.eventType === 'UPDATE') {
             const updatedSession = payload.new as unknown as LiveChatSession;
             setSessions(prev => {
               const filtered = prev.filter(s => s.id !== updatedSession.id);
-              // Sort by last_message_at desc
               return [updatedSession, ...filtered].sort((a, b) => 
                 new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime()
               );
@@ -154,7 +143,7 @@ export function useLiveChat() {
       )
       .subscribe();
 
-    // Subscribe to messages changes
+    // Subscribe to messages changes - use ref to check selectedSessionId
     const messagesChannel = supabase
       .channel('live-messages')
       .on(
@@ -166,17 +155,19 @@ export function useLiveChat() {
           filter: `user_id=eq.${userId}`
         },
         (payload) => {
-          console.log('New message:', payload);
           const newMessage = payload.new as unknown as LiveChatMessage;
           
-          // Add message if it's for the selected session
-          if (newMessage.session_id === selectedSessionId) {
-            setMessages(prev => [...prev, newMessage]);
-          }
-
-          // Play sound for customer messages
-          if (newMessage.sender_type === 'customer') {
-            playNotificationSound();
+          // Add message if it's for the selected session (using ref)
+          if (newMessage.session_id === selectedSessionIdRef.current) {
+            setMessages(prev => {
+              // Avoid duplicates (from optimistic update)
+              if (prev.some(m => m.id === newMessage.id || (m.id.startsWith('temp-') && m.content === newMessage.content))) {
+                return prev.map(m => 
+                  m.id.startsWith('temp-') && m.content === newMessage.content ? newMessage : m
+                );
+              }
+              return [...prev, newMessage];
+            });
           }
         }
       )
@@ -186,7 +177,7 @@ export function useLiveChat() {
       supabase.removeChannel(sessionsChannel);
       supabase.removeChannel(messagesChannel);
     };
-  }, [userId, selectedSessionId, loadSessions]);
+  }, [userId, loadSessions]);
 
   // Load messages when session is selected
   useEffect(() => {
@@ -197,12 +188,6 @@ export function useLiveChat() {
     }
   }, [selectedSessionId, loadMessages]);
 
-  // Play notification sound - simple beep
-  const playNotificationSound = useCallback(() => {
-    // Disabled notification sound to avoid annoying beeps
-    // Can be re-enabled with proper sound file if needed
-  }, []);
-
   // Send message from human with optimistic update
   const sendMessage = useCallback(async (content: string) => {
     if (!selectedSessionId || !userId || !content.trim()) return false;
@@ -212,7 +197,7 @@ export function useLiveChat() {
 
     const trimmedContent = content.trim();
 
-    // Optimistic update - add message immediately to UI
+    // Optimistic update
     const optimisticMessage: LiveChatMessage = {
       id: `temp-${Date.now()}`,
       user_id: userId,
@@ -231,10 +216,9 @@ export function useLiveChat() {
       created_at: new Date().toISOString()
     };
 
-    // Add to messages immediately
     setMessages(prev => [...prev, optimisticMessage]);
 
-    // Send in background (non-blocking)
+    // Send in background
     supabase.functions.invoke('live-chat-send', {
       body: {
         session_id: selectedSessionId,
@@ -247,7 +231,6 @@ export function useLiveChat() {
     }).then(({ error }) => {
       if (error) {
         console.error('Error sending message:', error);
-        // Remove optimistic message on error
         setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
         toast({
           title: 'Erro ao enviar',
@@ -269,7 +252,6 @@ export function useLiveChat() {
       const isCurrentlyTakeover = session.status === 'human_takeover';
       
       if (isCurrentlyTakeover) {
-        // Reactivate AI
         await supabase
           .from('live_chat_sessions')
           .update({ 
@@ -278,12 +260,10 @@ export function useLiveChat() {
           })
           .eq('id', sessionId);
 
-        // Also update n8n_fluxogpt if it's WhatsApp
         if (session.source === 'whatsapp') {
-          // Use type assertion to handle columns not in generated types
           await supabase
             .from('n8n_fluxogpt')
-            .update({ last_sender: 'human' })
+            .update({ last_sender: 'human', human_takeover_until: null })
             .eq('nomeinstancia', session.instance_name)
             .eq('whatsappuser', session.contact_number);
         }
@@ -293,7 +273,6 @@ export function useLiveChat() {
           description: 'A IA voltará a responder automaticamente'
         });
       } else {
-        // Activate human takeover
         const takeoverUntil = new Date(Date.now() + duration * 60 * 60 * 1000).toISOString();
 
         await supabase
@@ -304,11 +283,10 @@ export function useLiveChat() {
           })
           .eq('id', sessionId);
 
-        // Also update n8n_fluxogpt if it's WhatsApp
         if (session.source === 'whatsapp') {
           await supabase
             .from('n8n_fluxogpt')
-            .update({ last_sender: 'human' })
+            .update({ last_sender: 'human', human_takeover_until: takeoverUntil })
             .eq('nomeinstancia', session.instance_name)
             .eq('whatsappuser', session.contact_number);
         }

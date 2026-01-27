@@ -14,8 +14,8 @@ import { Bot, Plus, Edit, Trash2, MessageSquare, Settings, RefreshCw, Code, Copy
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useUserLimits } from "@/hooks/useUserLimits";
-import AppSidebar from "@/components/AppSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/AuthContext";
 import AgentTutorial from "@/components/AgentTutorial";
 import { AssistantMediaUpload } from "@/components/AssistantMediaUpload";
 import { AssistantKnowledgeUpload } from "@/components/AssistantKnowledgeUpload";
@@ -430,21 +430,19 @@ const Assistants = () => {
 
   if (loading || assistantsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>{t('common.loading')}</p>
+      <main className="flex-1 p-3 sm:p-4 md:p-6">
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>{t('common.loading')}</p>
+          </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        
-        <main className="flex-1 p-3 sm:p-4 md:p-6">
+    <main className="flex-1 p-3 sm:p-4 md:p-6">
           <div className="flex flex-col space-y-4 lg:space-y-0 lg:flex-row lg:items-center justify-between mb-4 sm:mb-6">
             <div className="flex items-center gap-3 sm:gap-4">
               <SidebarTrigger />
@@ -1073,12 +1071,8 @@ const Assistants = () => {
               </div>
             </DialogContent>
           </Dialog>
-        </main>
-        
-        {/* Support Chat Widget for internal system */}
-        <OnboardingGuide />
-      </div>
-    </SidebarProvider>
+      <OnboardingGuide />
+    </main>
   );
 };
 
