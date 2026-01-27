@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from '@supabase/supabase-js';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Search, Filter, MessageSquare, Phone, Mail, Calendar, Globe, Smartphone, Flame, Thermometer, Snowflake, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import AppSidebar from "@/components/AppSidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { LeadDetailsDrawer } from "@/components/crm/LeadDetailsDrawer";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Lead {
     id: string;
@@ -35,7 +34,7 @@ interface Lead {
 }
 
 const CRMLeads = () => {
-    const [user, setUser] = useState<User | null>(null);
+    const { user } = useAuth();
     const [leads, setLeads] = useState<Lead[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -50,15 +49,11 @@ const CRMLeads = () => {
     };
 
     useEffect(() => {
-        const getSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            setUser(session?.user ?? null);
-            if (session?.user) {
-                fetchLeads(session.user.id);
-            }
-        };
-        getSession();
-    }, []);
+        if (user?.id) {
+            fetchLeads(user.id);
+        }
+    }, [user?.id]);
+
 
     const fetchLeads = async (userId: string) => {
         try {
@@ -138,14 +133,10 @@ const CRMLeads = () => {
     if (!user && !loading) return null;
 
     return (
-        <SidebarProvider>
-            <div className="min-h-screen flex w-full">
-                <AppSidebar />
-
-                <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden">
-                    {/* Header com imagem da empresa */}
-                    <div className="mb-6">
-                        <div className="relative w-full h-32 sm:h-40 md:h-48 rounded-xl overflow-hidden mb-4">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden">
+            {/* Header com imagem da empresa */}
+            <div className="mb-6">
+                <div className="relative w-full h-32 sm:h-40 md:h-48 rounded-xl overflow-hidden mb-4">
                             <img
                                 src="/clonefy-office.jpg"
                                 alt="Escritório Clonefy"
@@ -307,12 +298,11 @@ const CRMLeads = () => {
                                                 <div className="absolute left-0 bottom-0 top-0 w-1 bg-primary transform scale-y-0 group-hover:scale-y-100 transition-transform origin-top duration-300" />
                                             </div>
                                         ))}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </div>
-                </main>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
 
                 {/* Drawer de Detalhes do Lead */}
                 <LeadDetailsDrawer
@@ -320,8 +310,7 @@ const CRMLeads = () => {
                     open={isDrawerOpen}
                     onOpenChange={setIsDrawerOpen}
                 />
-            </div>
-        </SidebarProvider>
+            </main>
     );
 };
 
