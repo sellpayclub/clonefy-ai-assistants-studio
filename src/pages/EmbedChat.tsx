@@ -105,32 +105,30 @@ const EmbedChat = () => {
       try {
         console.log('Loading agent:', actualAgentId);
 
-        // Carregar agente e customização em paralelo
-        const [agentResponse, customizationResponse] = await Promise.all([
-          supabase.functions.invoke('widget-chat', {
-            body: {
-              action: 'get_agent',
-              agentId: actualAgentId
-            }
-          }),
-          supabase
-            .from('widget_customizations')
-            .select('*')
-            .eq('assistant_id', actualAgentId)
-            .eq('is_active', true)
-            .single()
-        ]);
+        // Timeout para evitar travamento infinito
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout ao carregar agente')), 15000)
+        );
 
-        console.log('Agent data received:', agentResponse.data);
-        console.log('Customization data received:', customizationResponse.data);
+        // Carregar agente com timeout
+        const agentPromise = supabase.functions.invoke('widget-chat', {
+          body: {
+            action: 'get_agent',
+            agentId: actualAgentId
+          }
+        });
 
-        if (agentResponse.error) {
-          console.error('Supabase error:', agentResponse.error);
-          throw agentResponse.error;
+        const agentResponse = await Promise.race([agentPromise, timeoutPromise]) as any;
+
+        console.log('Agent data received:', agentResponse?.data);
+
+        if (agentResponse?.error) {
+          console.error('Supabase function error:', agentResponse.error);
+          throw new Error(agentResponse.error.message || 'Erro ao carregar agente');
         }
 
         // Verificar se há erro na resposta
-        if (agentResponse.data?.error) {
+        if (agentResponse?.data?.error) {
           console.error('API error:', agentResponse.data.error);
           setError(agentResponse.data.error === 'Agent not found'
             ? 'Agente não encontrado'
@@ -138,16 +136,30 @@ const EmbedChat = () => {
           return;
         }
 
-        if (agentResponse.data && agentResponse.data.agent) {
+        if (agentResponse?.data?.agent) {
           setAgent(agentResponse.data.agent);
 
-          // Carregar customização se existir (ignorar erro se não houver customização)
-          if (customizationResponse.data && !customizationResponse.error) {
-            setCustomization(customizationResponse.data);
+          // Carregar customização em paralelo (não bloquear se falhar)
+          let loadedCustomization = null;
+          try {
+            const { data: customizationData } = await supabase
+              .from('widget_customizations')
+              .select('*')
+              .eq('assistant_id', actualAgentId)
+              .eq('is_active', true)
+              .maybeSingle();
+
+            if (customizationData) {
+              console.log('Customization loaded:', customizationData.widget_name);
+              loadedCustomization = customizationData;
+              setCustomization(customizationData);
+            }
+          } catch (custErr) {
+            console.warn('Could not load customization (non-blocking):', custErr);
           }
 
           // Add welcome message usando customização se disponível
-          const welcomeText = customizationResponse.data?.welcome_message ||
+          const welcomeText = loadedCustomization?.welcome_message ||
             `Olá! Eu sou ${agentResponse.data.agent.name}. ${agentResponse.data.agent.description || 'Como posso te ajudar hoje?'}`;
 
           const welcomeMessage = {
@@ -159,7 +171,7 @@ const EmbedChat = () => {
           setMessages([welcomeMessage]);
           console.log('Agent loaded successfully');
         } else {
-          console.error('No agent data in response');
+          console.error('No agent data in response:', agentResponse);
           setError('Agente não encontrado');
         }
       } catch (err) {
