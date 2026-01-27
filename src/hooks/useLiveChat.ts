@@ -203,38 +203,61 @@ export function useLiveChat() {
     // Can be re-enabled with proper sound file if needed
   }, []);
 
-  // Send message from human
+  // Send message from human with optimistic update
   const sendMessage = useCallback(async (content: string) => {
     if (!selectedSessionId || !userId || !content.trim()) return false;
 
     const session = sessions.find(s => s.id === selectedSessionId);
     if (!session) return false;
 
-    try {
-      // Call edge function to send message
-      const { data, error } = await supabase.functions.invoke('live-chat-send', {
-        body: {
-          session_id: selectedSessionId,
-          instance_name: session.instance_name,
-          contact_number: session.contact_number,
-          message: content.trim(),
-          source: session.source,
-          user_id: userId
-        }
-      });
+    const trimmedContent = content.trim();
 
-      if (error) throw error;
+    // Optimistic update - add message immediately to UI
+    const optimisticMessage: LiveChatMessage = {
+      id: `temp-${Date.now()}`,
+      user_id: userId,
+      session_id: selectedSessionId,
+      instance_name: session.instance_name,
+      contact_number: session.contact_number,
+      contact_name: session.contact_name,
+      sender_type: 'human',
+      content: trimmedContent,
+      message_type: 'text',
+      media_url: null,
+      source: session.source,
+      assistant_id: session.assistant_id,
+      assistant_name: session.assistant_name,
+      is_read: true,
+      created_at: new Date().toISOString()
+    };
 
-      return true;
-    } catch (err) {
-      console.error('Error sending message:', err);
-      toast({
-        title: 'Erro ao enviar',
-        description: 'Não foi possível enviar a mensagem',
-        variant: 'destructive'
-      });
-      return false;
-    }
+    // Add to messages immediately
+    setMessages(prev => [...prev, optimisticMessage]);
+
+    // Send in background (non-blocking)
+    supabase.functions.invoke('live-chat-send', {
+      body: {
+        session_id: selectedSessionId,
+        instance_name: session.instance_name,
+        contact_number: session.contact_number,
+        message: trimmedContent,
+        source: session.source,
+        user_id: userId
+      }
+    }).then(({ error }) => {
+      if (error) {
+        console.error('Error sending message:', error);
+        // Remove optimistic message on error
+        setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+        toast({
+          title: 'Erro ao enviar',
+          description: 'Não foi possível enviar a mensagem',
+          variant: 'destructive'
+        });
+      }
+    });
+
+    return true;
   }, [selectedSessionId, userId, sessions, toast]);
 
   // Toggle human takeover
