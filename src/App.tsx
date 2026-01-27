@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { BrandingProvider } from "@/contexts/BrandingContext";
 import ConditionalSupportWidget from "@/components/ConditionalSupportWidget";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -15,6 +16,9 @@ import EmbedChat from "./pages/EmbedChat";
 import NotFound from "./pages/NotFound";
 import ThankYou from "./pages/ThankYou";
 import LeadCapture from "./pages/LeadCapture";
+
+// Lazy load Branding Settings
+const LazyBrandingSettings = lazy(() => import("./pages/BrandingSettings"));
 
 // Lazy load heavy components for better performance
 const LazyAssistants = lazy(() => import("./pages/Assistants"));
@@ -80,11 +84,12 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        <ThemeProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+        <BrandingProvider>
+          <ThemeProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
               <ConditionalSupportWidget />
               <Routes>
                 <Route path="/" element={<Index />} />
@@ -244,14 +249,21 @@ const App = () => {
                 } />
                 <Route path="/thank-you" element={<ThankYou />} />
                 <Route path="/lead-capture" element={<LeadCapture />} />
+                {/* Branding Settings */}
+                <Route path="/configuracoes/branding" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyBrandingSettings />
+                  </Suspense>
+                } />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
         </ThemeProvider>
-      </LanguageProvider>
-    </QueryClientProvider>
+      </BrandingProvider>
+    </LanguageProvider>
+  </QueryClientProvider>
   );
 };
 

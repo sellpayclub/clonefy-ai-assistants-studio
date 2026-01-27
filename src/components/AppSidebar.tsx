@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut, Palette, BarChart3, Wrench, Zap, Link as LinkIcon, Code, Calculator, Users, Megaphone, UsersRound, Store, Radio } from "lucide-react";
+import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut, Palette, BarChart3, Wrench, Zap, Link as LinkIcon, Code, Calculator, Users, Megaphone, UsersRound, Store, Radio, Brush } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { cleanupAuthState, forceCleanReload } from "@/lib/auth-utils";
@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useBranding } from "@/contexts/BrandingContext";
 import { User } from "@supabase/supabase-js";
 
 import {
@@ -37,6 +38,7 @@ const menuItems = [
   { title: "Chat Flutuante", url: "/widget-customization", icon: Palette, description: "Personalize o chat para seu site" },
   { title: "CRM Leads", url: "/crm-leads", icon: Users, description: "Gestão inteligente de leads extraídos" },
   { title: "Analytics do Chat", url: "/widget-analytics", icon: BarChart3, description: "Analise o desempenho do chat" },
+  { title: "Personalização", url: "/configuracoes/branding", icon: Brush, description: "Personalize logo e cores do sistema" },
   { title: "sidebar.admin.title", url: "/admin", icon: Settings, description: "sidebar.admin.description" },
 ];
 
@@ -46,6 +48,7 @@ const AppSidebar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { logoLightUrl, logoDarkUrl, logoIconUrl, companyName } = useBranding();
   const [user, setUser] = useState<User | null>(null);
 
   const currentPath = location.pathname;
@@ -119,22 +122,22 @@ const AppSidebar = () => {
             <div className="flex items-center gap-3">
               {/* Logo para modo claro */}
               <img
-                src="/lovable-uploads/fbe6c7af-7d70-474d-af99-5f513f7a14dc.png"
-                alt="CLONEFY"
+                src={logoLightUrl}
+                alt={companyName}
                 className="h-16 w-auto dark:hidden md:h-20"
               />
               {/* Logo para modo escuro */}
               <img
-                src="/lovable-uploads/8f2944d9-660f-4eb7-bae6-e226176b6a6d.png"
-                alt="CLONEFY"
+                src={logoDarkUrl}
+                alt={companyName}
                 className="h-16 w-auto hidden dark:block md:h-20"
               />
             </div>
           ) : (
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow">
               <img
-                src="/lovable-uploads/59070bb1-9779-4bbb-a3d5-a65bacf38b70.png"
-                alt="CLONEFY"
+                src={logoIconUrl}
+                alt={companyName}
                 className="w-8 h-8"
               />
             </div>
