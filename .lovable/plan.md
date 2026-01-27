@@ -1,132 +1,144 @@
 
-## Diagnóstico (por que “na conexão antiga” não salvou nada)
-Você não precisa criar nada novo. O problema está no jeito que o `whatsapp-webhook` faz o “mapa” entre:
-
-- `n8n_fluxogpt.idassistentgpt` (que hoje guarda o **OpenAI assistant id**, tipo `asst_...`)
-- e as tabelas internas que precisam de **UUID** (`assistants.id`, `crm_leads.assistant_id`, `widget_analytics.assistant_id`, `live_chat_sessions.user_id`)
-
-Hoje o webhook está fazendo isso errado:
-
-- Ele tenta buscar o assistente assim: `assistants.id = instanceConfig.idassistentgpt`
-  - Só que `instanceConfig.idassistentgpt` é `asst_...`, então **não acha**.
-- Com isso:
-  - `userId` fica vazio ⇒ não cria sessão/mensagens no **Chat ao Vivo**
-  - `crm_leads.assistant_id` recebe `asst_...` (texto) mas a coluna é UUID ⇒ o insert/update falha (e hoje não está tratando esse erro de forma clara)
-  - `widget_analytics.assistant_id` também é UUID ⇒ analytics para WhatsApp falha
-
-Isso explica perfeitamente seu cenário: “já tá conectado, já conversa, já tem IA”, mas “não salva no CRM e não aparece no chat ao vivo”.
+## Objetivo (o que vai ficar pronto)
+1) Quando você “assumir” (Human Takeover) no **Chat ao Vivo**, a IA **não vai mais responder no WhatsApp**, mesmo que o cliente mande mensagem.
+2) Melhorar performance geral: **menus, navegação e carregamento** muito mais rápidos, reduzindo chamadas repetidas ao Supabase e evitando remontar sidebar a cada página.
 
 ---
 
-## Objetivo do ajuste (sem criar conexões novas)
-1) Continuar usando o que já existe (instâncias Evolution atuais + webhook atual).
-2) Corrigir o mapeamento: pegar o registro correto na tabela `assistants` usando `openai_assistant_id`.
-3) A partir daí:
-   - salvar no **CRM** (com `source='whatsapp'` + análise completa)
-   - salvar/criar sessão e mensagens no **Chat ao Vivo**
-   - manter o **human takeover** sincronizado (o que já começamos)
+## 1) Correção definitiva: IA não pode responder quando você assumiu (WhatsApp)
+### Problema real (por que aconteceu)
+- O **Live Chat** já está marcando a sessão como `human_takeover` e setando `human_takeover_until` (isso aparece nos seus logs).
+- Porém o `whatsapp-webhook` estava decidindo “pausar IA” olhando o estado no `n8n_fluxogpt`.
+- Esse estado pode ficar inconsistente (ex.: `whatsapp-evolution` sobrescreve `whatsappuser` com “Conectado”, e o registro do contato pode não ser encontrado), então o webhook não detecta a pausa e responde mesmo assim.
+
+### Solução (sem nada “novo”, usando o que já existe)
+**Padronizar a fonte da verdade do takeover para WhatsApp: `live_chat_sessions`.**  
+(É exatamente o que o `widget-chat` já faz e funciona bem.)
+
+### Implementação
+No `supabase/functions/whatsapp-webhook/index.ts`:
+1) **Antes de iniciar a geração de resposta da IA**, buscar a sessão no `live_chat_sessions` por:
+   - `instance_name = payload.instance`
+   - `contact_number = contactNumber`
+2) Se encontrar:
+   - Se `status === 'human_takeover'` e `human_takeover_until` > agora:
+     - **Salvar mensagem do cliente no Live Chat** (isso já acontece)
+     - **Retornar early-exit** e **não chamar OpenAI** nem enviar resposta pelo Evolution.
+   - Se `human_takeover_until` expirou:
+     - atualizar sessão para `ai_active` e `human_takeover_until = null` e seguir normalmente.
+
+3) Manter o check no `n8n_fluxogpt` como fallback, mas **não depender mais dele** para bloquear IA.
+
+### Resultado esperado
+- Se você apertar “Pausar IA” no Live Chat: qualquer mensagem do cliente no WhatsApp **entra no painel**, mas **a IA não responde**.
+- Quando você apertar “Reativar IA”: no próximo input do cliente, a IA volta a responder.
 
 ---
 
-## O que vou alterar (somente backend, com cuidado)
-### A) Corrigir “lookup” do assistente no `whatsapp-webhook`
-Arquivo: `supabase/functions/whatsapp-webhook/index.ts`
+## 2) Performance: “tudo lento” (menu, navegação, telas)
+Pelos network logs, está acontecendo **muita chamada repetida** para:
+- `GET /auth/v1/user` (várias vezes em sequência)
+- e vários componentes montando/desmontando juntos a cada troca de rota.
 
-Hoje ele faz:
-- `from('assistants').select('user_id, name').eq('id', instanceConfig.idassistentgpt)`
+### 2.1. Parar de remontar Sidebar / Layout em toda página (grande ganho)
+Hoje: quase toda página faz:
+- `<SidebarProvider><AppSidebar /> ...</SidebarProvider>`
+Isso significa que ao navegar:
+- Sidebar desmonta e monta de novo
+- Recria listeners
+- Rebusca usuário
+- Re-renderiza mais do que precisa
 
-Vai passar a fazer (com fallback para compatibilidade):
-1. Tentar por OpenAI:
-   - `eq('openai_assistant_id', instanceConfig.idassistentgpt)`
-2. Se não achar (caso raro/legado), tentar por UUID:
-   - `eq('id', instanceConfig.idassistentgpt)`
+**Solução**
+Criar um layout único (ex.: `AppLayout`) com:
+- `<SidebarProvider>`
+- `<AppSidebar />`
+- `<Outlet />` do React Router
 
-E vai extrair **tudo que precisamos**:
-- `assistant_uuid` (assistants.id)
-- `openai_assistant_id` (assistants.openai_assistant_id)
-- `user_id`
-- `name`
+E no `App.tsx`:
+- agrupar rotas internas dentro desse layout
+- páginas “internas” (Dashboard, WhatsApp, LiveChat, etc.) passam a renderizar **só o conteúdo**, sem repetir sidebar.
 
-### B) Usar as variáveis corretas em cada lugar
-Após o ajuste, o webhook vai usar:
-
-- Para OpenAI (rodar o assistente):
-  - `assistant_id: openai_assistant_id`
-- Para Chat ao Vivo:
-  - `user_id: assistants.user_id` (agora sempre preenchido)
-  - `assistant_name: assistants.name`
-  - `assistant_id` (na `live_chat_sessions`) pode continuar sendo texto; manteremos o que já é usado hoje (provavelmente `openai_assistant_id`) para não quebrar nada.
-- Para CRM:
-  - `crm_leads.assistant_id = assistants.id` (UUID correto)
-  - `crm_leads.user_id = assistants.user_id`
-  - `source = 'whatsapp'`
-- Para Analytics (`widget_analytics`):
-  - `assistant_id = assistants.id` (UUID correto)
-
-### C) Ajustar o `processCRMLead` para receber UUID do assistente (não `asst_...`)
-Hoje a chamada está passando `instanceConfig.idassistentgpt` (que é `asst_...`).
-Vamos mudar para passar `assistant_uuid`.
-
-Isso é essencial para o lead entrar no CRM.
-
-### D) Melhorar logs sem “explodir” o console
-Hoje o webhook loga o payload inteiro (muito grande). Isso atrapalha ver erros reais.
-Vamos trocar para logar apenas:
-- `event`, `instance`, `fromMe`, `remoteJid`, `messageType`, e um preview do texto
-
-Isso não muda nada funcional, só deixa debug confiável.
+Impacto:
+- Sidebar fica estável
+- Navegação fica instantânea (principalmente “menu lento”)
 
 ---
 
-## Passos de implementação (sequência)
-1) Editar `supabase/functions/whatsapp-webhook/index.ts`:
-   - corrigir query do assistente (usar `openai_assistant_id`)
-   - criar variáveis:
-     - `assistantUuid`, `openaiAssistantId`, `userId`, `assistantName`
-   - trocar em todos os pontos:
-     - OpenAI runs: usar `openaiAssistantId`
-     - Analytics: usar `assistantUuid`
-     - CRM lead: usar `assistantUuid`
-     - Live chat: usar `userId` correto
-2) Garantir que a criação/atualização de sessão do Live Chat incremente `unread_count` corretamente (hoje tem um `(existingSession as any).unread_count + 1` mas o select não traz `unread_count`; vamos ajustar para buscar esse campo ou usar fallback seguro).
-3) Re-deploy da função `whatsapp-webhook` (ambiente Live, porque é onde seu WhatsApp real está chamando).
-4) Teste guiado com sua conexão antiga (sem criar outra):
-   - Enviar uma mensagem do cliente para o WhatsApp
-   - Confirmar que:
-     - aparece sessão no **Chat ao Vivo** imediatamente
-     - aparece mensagens em tempo real
-     - CRM cria/atualiza lead com `source='whatsapp'`
-     - lead vem com número correto + resumo/análise da IA (campos avançados)
-5) Validar human takeover:
-   - enviar msg “do humano” (fromMe) e confirmar que `live_chat_sessions.status` vira `human_takeover` e que o painel reflete
+### 2.2. Centralizar autenticação (remover “spam” de getUser)
+Hoje vários lugares chamam `supabase.auth.getUser()` ao mesmo tempo:
+- AppSidebar
+- BrandingProvider
+- useLiveChat
+- useUserLimits
+- várias páginas com “checkAuth”
+
+Isso multiplica requests e deixa a UI pesada.
+
+**Solução**
+Criar um `AuthContext` (ex.: `src/contexts/AuthContext.tsx`) que:
+- chama `supabase.auth.getSession()` 1 vez ao iniciar
+- mantém `session` e `user` em memória
+- escuta `onAuthStateChange` para atualizar
+- fornece hook `useAuth()`
+
+Então substituir `getUser()` por `useAuth()` nesses pontos:
+- `src/components/AppSidebar.tsx`
+- `src/contexts/BrandingContext.tsx`
+- `src/hooks/useLiveChat.ts`
+- `src/hooks/useUserLimits.ts`
+- guardas de páginas (trocar por um `ProtectedRoute`)
+
+Impacto:
+- reduz drasticamente requests
+- menos travadas ao abrir telas
 
 ---
 
-## Checklist de validação (o que você vai ver)
-### No Chat ao Vivo
-- A conversa WhatsApp aparece na lista
-- Origem “WhatsApp” (source = whatsapp)
-- Mensagens entrando em tempo real
-- Bot e humano aparecendo como remetentes (quando aplicável)
+### 2.3. Live Chat mais leve (sem “travadas” ao selecionar sessão/enviar)
+Ajustes planejados no `src/hooks/useLiveChat.ts`:
+1) **Não recriar subscriptions** quando `selectedSessionId` muda:
+   - hoje o `useEffect` de realtime depende de `selectedSessionId`
+   - isso pode resubscrever e gerar custo extra
+   - vamos trocar para usar `useRef` do `selectedSessionId` (ou separar efeitos)
+2) `loadMessages()`:
+   - fazer `update is_read` e `update unread_count` em paralelo (não sequencial)
+   - opcional: debouncer para evitar spam de updates quando o usuário clica rápido
+3) `SessionsList`:
+   - `filteredSessions` virar `useMemo` (reduz CPU em listas maiores)
 
-### No CRM
-- Lead com:
-  - `whatsapp_number` preenchido
-  - `source = 'whatsapp'`
-  - `conversation_analysis`, `key_topics`, `objections`, `urgency_level`, `sentiment`, `next_action` preenchidos (depois do profiling rodar)
-
-Observação: o profiling é “background”, então pode levar alguns segundos após a resposta do bot.
-
----
-
-## Risco e cuidado para “não estragar nada”
-- Mudança isolada em 1 função (`whatsapp-webhook`)
-- Mantém compatibilidade:
-  - se `idassistentgpt` vier UUID ou `asst_...`, continua funcionando
-- Não altera schema e não cria tabela nova
-- Não mexe no chat do widget (só WhatsApp)
+Impacto:
+- menos “lag” ao trocar de conversa
+- UI mais fluida
 
 ---
 
-## Se ainda não aparecer após isso
-A próxima hipótese (menor chance) é a instância estar chamando outro endpoint (ex: `commerce-webhook`). Mas antes disso, com esse ajuste, o comportamento “IA conversa mas não salva nada” deve ser resolvido porque o bloqueio era o `userId` e o UUID do `assistant_id` no CRM.
+## 3) Passo a passo de implementação (ordem)
+1) Ajustar `whatsapp-webhook` para checar takeover no `live_chat_sessions` e bloquear OpenAI quando ativo.
+2) Criar `AuthContext` + `useAuth` + `ProtectedRoute`.
+3) Criar `AppLayout` (SidebarProvider + Sidebar + Outlet).
+4) Refatorar páginas principais para remover wrappers duplicados:
+   - Dashboard, Assistants, WhatsApp, Conversations, LiveChat, CRMLeads, Admin, Followup, Commerce etc.
+5) Otimizações no `useLiveChat` e `SessionsList`.
+6) Testes guiados:
+   - Navegar entre telas (menu) e verificar tempo/fluidez.
+   - Assumir conversa no Live Chat e mandar mensagem do cliente no WhatsApp:
+     - deve entrar no painel
+     - IA não pode responder
+   - Reativar IA e mandar nova mensagem:
+     - IA deve responder normalmente.
+
+---
+
+## Riscos e como vamos evitar quebrar
+- Refatorar layout pode quebrar padding/altura em algumas páginas.
+  - Vamos ajustar cada página para manter o mesmo visual (paddings e `h-screen` onde necessário).
+- Human takeover no WhatsApp precisa funcionar mesmo se houver inconsistências em `n8n_fluxogpt`.
+  - Por isso o bloqueio principal será `live_chat_sessions`.
+
+---
+
+## Critérios de “deu certo”
+- Ao “assumir”, a IA não responde no WhatsApp até o término do `human_takeover_until` (ou até você reativar).
+- Network: requests repetidos para `/auth/v1/user` caem drasticamente (ideal: 1 no início, não dezenas).
+- Troca de página pelo menu fica perceptivelmente mais rápida (sidebar não remonta).
