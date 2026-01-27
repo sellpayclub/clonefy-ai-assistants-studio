@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { performanceCache } from '@/utils/performance';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface UserLimits {
   max_assistants: number;
@@ -16,27 +17,24 @@ export const useUserLimits = () => {
   const [limits, setLimits] = useState<UserLimits | null>(null);
   const [loading, setLoading] = useState(true);
   const lastLoadRef = useRef<number>(0);
-  const userIdRef = useRef<string | null>(null);
+  const { user } = useAuth();
 
   const loadLimits = useCallback(async (forceRefresh = false) => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const now = Date.now();
       
-      // Rate limiting - prevent multiple calls within 500ms (reduced from 1s)
+      // Rate limiting
       if (!forceRefresh && (now - lastLoadRef.current) < 500) {
         return;
       }
       lastLoadRef.current = now;
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
-
-      userIdRef.current = user.id;
-
-      // Check cache first - reduced TTL to 1 minute for limits
+      // Check cache first
       const cacheKey = `user-limits-${user.id}`;
       if (!forceRefresh) {
         const cached = performanceCache.get(cacheKey) as UserLimits | null;
@@ -47,7 +45,7 @@ export const useUserLimits = () => {
         }
       }
 
-      // Execute all queries in parallel for better performance
+      // Execute all queries in parallel
       const [quotaResult, assistantsResult, whatsappResult, n8nResult] = await Promise.allSettled([
         supabase
           .from('user_quotas')
@@ -69,12 +67,10 @@ export const useUserLimits = () => {
           .eq('emailuser', user.email || '')
       ]);
 
-      // Handle quota data
       const quotaData = quotaResult.status === 'fulfilled' && !quotaResult.value.error
         ? quotaResult.value.data
         : { max_assistants: 5, max_whatsapp_connections: 3, plan_type: 'free' };
 
-      // Handle counts
       const currentAssistants = assistantsResult.status === 'fulfilled'
         ? (assistantsResult.value.count || 0)
         : 0;
@@ -100,8 +96,6 @@ export const useUserLimits = () => {
       };
 
       setLimits(newLimits);
-      
-      // Cache the result for only 1 minute (reduced from 15 min)
       performanceCache.set(cacheKey, newLimits, 1);
     } catch (error: any) {
       console.error('Erro ao carregar limites:', error);
@@ -117,62 +111,50 @@ export const useUserLimits = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const reloadLimits = useCallback(async () => {
-    // Clear cache when manually reloading
-    const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       const cacheKey = `user-limits-${user.id}`;
       performanceCache.invalidate(cacheKey);
     }
     setLoading(true);
     await loadLimits(true);
-  }, [loadLimits]);
+  }, [loadLimits, user]);
 
-  // Initial load
+  // Initial load when user changes
   useEffect(() => {
-    loadLimits();
-  }, [loadLimits]);
+    if (user) {
+      loadLimits();
+    }
+  }, [loadLimits, user]);
 
-  // Realtime subscription para atualizar limites quando admin alterar
+  // Realtime subscription
   useEffect(() => {
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    if (!user?.id) return;
 
-    const setupRealtimeSubscription = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) return;
-
-      // Subscribe to changes in user_quotas table for this user
-      channel = supabase
-        .channel(`user-quotas-${user.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'user_quotas',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            console.log('Limites atualizados pelo admin:', payload);
-            // Invalidar cache e recarregar
-            const cacheKey = `user-limits-${user.id}`;
-            performanceCache.invalidate(cacheKey);
-            loadLimits(true);
-          }
-        )
-        .subscribe();
-    };
-
-    setupRealtimeSubscription();
+    const channel = supabase
+      .channel(`user-quotas-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'user_quotas',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          const cacheKey = `user-limits-${user.id}`;
+          performanceCache.invalidate(cacheKey);
+          loadLimits(true);
+        }
+      )
+      .subscribe();
 
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
+      supabase.removeChannel(channel);
     };
-  }, [loadLimits]);
+  }, [loadLimits, user]);
 
   return { limits, loading, reloadLimits };
 };

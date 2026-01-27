@@ -391,6 +391,86 @@ serve(async (req) => {
 
         console.log(`💬 Mensagem (${messageType}): ${messageContent.substring(0, 200)}...`);
 
+        // 🔒 HUMAN TAKEOVER CHECK PRIMÁRIO: Verificar no live_chat_sessions (fonte da verdade)
+        // Isso garante que quando o operador pausar a IA no painel, ela realmente pare de responder
+        const { data: liveSession } = await supabase
+            .from('live_chat_sessions')
+            .select('id, status, human_takeover_until')
+            .eq('instance_name', instanceName)
+            .eq('contact_number', contactNumber)
+            .maybeSingle();
+
+        if (liveSession) {
+            const isHumanTakeover = liveSession.status === 'human_takeover';
+            const takeoverUntil = liveSession.human_takeover_until ? new Date(liveSession.human_takeover_until) : null;
+            
+            if (isHumanTakeover && takeoverUntil && takeoverUntil > new Date()) {
+                const remainingMinutes = Math.ceil((takeoverUntil.getTime() - Date.now()) / (1000 * 60));
+                console.log(`🔒 HUMAN TAKEOVER ATIVO (live_chat_sessions)! IA pausada até ${liveSession.human_takeover_until} (${remainingMinutes} min restantes)`);
+                console.log(`👤 Operador está atendendo o contato ${contactNumber} - IA NÃO responderá`);
+
+                // Ainda precisamos salvar a mensagem do cliente no Live Chat antes de sair
+                // Buscar config para obter userId
+                const { data: instanceConfigForMsg } = await supabase
+                    .from('n8n_fluxogpt')
+                    .select('userId')
+                    .eq('nomeinstancia', instanceName)
+                    .single();
+
+                if (instanceConfigForMsg?.userId) {
+                    // Salvar mensagem do cliente (mesmo com IA pausada)
+                    await supabase
+                        .from('live_chat_messages')
+                        .insert({
+                            user_id: instanceConfigForMsg.userId,
+                            session_id: liveSession.id,
+                            instance_name: instanceName,
+                            contact_number: contactNumber,
+                            contact_name: contactName,
+                            sender_type: 'customer',
+                            content: messageContent,
+                            message_type: messageType,
+                            source: 'whatsapp'
+                        });
+
+                    // Atualizar sessão com preview
+                    await supabase
+                        .from('live_chat_sessions')
+                        .update({
+                            last_message_at: new Date().toISOString(),
+                            last_message_preview: messageContent.substring(0, 100),
+                            last_sender_type: 'customer',
+                            unread_count: (liveSession as any).unread_count ? (liveSession as any).unread_count + 1 : 1
+                        })
+                        .eq('id', liveSession.id);
+
+                    console.log('📺 Live Chat: Mensagem salva mesmo com IA pausada');
+                }
+
+                return new Response(JSON.stringify({
+                    status: 'paused',
+                    reason: 'human_takeover_live_chat',
+                    contact: contactNumber,
+                    resumesAt: liveSession.human_takeover_until,
+                    remainingMinutes: remainingMinutes,
+                    message: 'IA pausada - operador está atendendo este contato'
+                }), {
+                    status: 200,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            } else if (isHumanTakeover && takeoverUntil && takeoverUntil <= new Date()) {
+                // Takeover expirou - reativar IA
+                console.log('✅ Human Takeover expirado - reativando IA automaticamente');
+                await supabase
+                    .from('live_chat_sessions')
+                    .update({ 
+                        status: 'ai_active',
+                        human_takeover_until: null 
+                    })
+                    .eq('id', liveSession.id);
+            }
+        }
+
         // 1. Buscar configuração da instância
         const { data: instanceConfig, error: instanceError } = await supabase
             .from('n8n_fluxogpt')

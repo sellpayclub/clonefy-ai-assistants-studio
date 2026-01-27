@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { useMemo, memo } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -48,15 +48,16 @@ export const SessionsList = memo(function SessionsList({
   searchQuery,
   onSearchChange
 }: SessionsListProps) {
-  const filteredSessions = sessions.filter(session => {
+  // Memoize filtered sessions
+  const filteredSessions = useMemo(() => {
     const query = searchQuery.toLowerCase();
-    return (
+    return sessions.filter(session => 
       session.contact_name?.toLowerCase().includes(query) ||
       session.contact_number.includes(query) ||
       session.assistant_name?.toLowerCase().includes(query) ||
       session.last_message_preview?.toLowerCase().includes(query)
     );
-  });
+  }, [sessions, searchQuery]);
 
   return (
     <div className="h-full flex flex-col border-r border-border">

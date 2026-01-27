@@ -11,8 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Smartphone, QrCode, Plus, Trash2, RefreshCw, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import AppSidebar from "@/components/AppSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
 import { useUserLimits } from "@/hooks/useUserLimits";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
@@ -650,21 +649,19 @@ const WhatsApp = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>{t('common.loading')}</p>
+      <main className="flex-1 p-4 md:p-6">
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>{t('common.loading')}</p>
+          </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        
-        <main className="flex-1 p-4 md:p-6">
+    <main className="flex-1 p-4 md:p-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
@@ -1230,11 +1227,7 @@ const WhatsApp = () => {
               </Card>
             </TabsContent>
           </Tabs>
-        </main>
-        
-        {/* Support Chat Widget for internal system */}
-      </div>
-    </SidebarProvider>
+    </main>
   );
 };
 

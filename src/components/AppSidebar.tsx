@@ -1,14 +1,11 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
-import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut, Palette, BarChart3, Wrench, Zap, Link as LinkIcon, Code, Calculator, Users, Megaphone, UsersRound, Store, Radio, Brush } from "lucide-react";
+import { useCallback, useMemo } from "react";
+import { Bot, MessageSquare, Smartphone, LayoutDashboard, Settings, LogOut, Palette, BarChart3, Zap, Link as LinkIcon, Code, Calculator, Users, Megaphone, UsersRound, Store, Radio, Brush } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { cleanupAuthState, forceCleanReload } from "@/lib/auth-utils";
-import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useBranding } from "@/contexts/BrandingContext";
-import { User } from "@supabase/supabase-js";
+import { useAuth } from "@/contexts/AuthContext";
 
 import {
   Sidebar,
@@ -24,7 +21,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 
 const menuItems = [
   { title: "dashboard.title", url: "/dashboard", icon: LayoutDashboard, description: "dashboard.description" },
@@ -45,31 +41,12 @@ const menuItems = [
 const AppSidebar = () => {
   const { state } = useSidebar();
   const location = useLocation();
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const { t } = useLanguage();
   const { logoLightUrl, logoDarkUrl, logoIconUrl, companyName } = useBranding();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, signOut } = useAuth();
 
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
-
-  useEffect(() => {
-    // Get current user
-    const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-
-    getCurrentUser();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   // Filter menu items based on user email
   const filteredMenuItems = useMemo(() => {
@@ -83,32 +60,6 @@ const AppSidebar = () => {
   }, [user?.email]);
 
   const isActive = useCallback((path: string) => currentPath === path, [currentPath]);
-
-  const handleSignOut = useCallback(async () => {
-    try {
-      // Clean up auth state first
-      cleanupAuthState();
-
-      // Attempt global sign out (ignore errors)
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        console.warn('Error during signOut:', err);
-      }
-
-      // Force clean page reload for a fresh state
-      forceCleanReload('/auth');
-    } catch (error: any) {
-      // Even if there are errors, clean up and redirect
-      cleanupAuthState();
-      toast({
-        title: t("auth.signOutError"),
-        description: error.message,
-        variant: "destructive",
-      });
-      forceCleanReload('/auth');
-    }
-  }, [toast]);
 
   return (
     <Sidebar
@@ -298,7 +249,7 @@ const AppSidebar = () => {
         <Button
           variant="ghost"
           size={collapsed ? "icon" : "sm"}
-          onClick={handleSignOut}
+          onClick={signOut}
           className={`w-full text-muted-foreground hover:text-foreground hover:bg-muted/50 ${collapsed ? 'h-10' : 'justify-start'}`}
         >
           <LogOut className={`${collapsed ? 'w-4 h-4' : 'w-4 h-4 mr-2'}`} />
