@@ -2676,6 +2676,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_branding: {
+        Row: {
+          accent_color: string | null
+          company_name: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          logo_dark_url: string | null
+          logo_icon_url: string | null
+          logo_light_url: string | null
+          primary_color: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accent_color?: string | null
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          logo_dark_url?: string | null
+          logo_icon_url?: string | null
+          logo_light_url?: string | null
+          primary_color?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accent_color?: string | null
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          logo_dark_url?: string | null
+          logo_icon_url?: string | null
+          logo_light_url?: string | null
+          primary_color?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           activity_level: string | null

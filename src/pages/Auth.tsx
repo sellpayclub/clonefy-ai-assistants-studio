@@ -22,6 +22,7 @@ const Auth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  // Note: Branding não é usado na tela de login pois o usuário ainda não está autenticado
 
   // Form states
   const [email, setEmail] = useState("");
