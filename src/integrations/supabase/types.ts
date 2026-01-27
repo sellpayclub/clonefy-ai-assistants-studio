@@ -2201,6 +2201,7 @@ export type Database = {
           created_at: string | null
           emailuser: string | null
           followup_count: number | null
+          human_takeover_until: string | null
           id: number
           idassistentgpt: string | null
           IDvoz: string | null
@@ -2217,6 +2218,7 @@ export type Database = {
           created_at?: string | null
           emailuser?: string | null
           followup_count?: number | null
+          human_takeover_until?: string | null
           id: number
           idassistentgpt?: string | null
           IDvoz?: string | null
@@ -2233,6 +2235,7 @@ export type Database = {
           created_at?: string | null
           emailuser?: string | null
           followup_count?: number | null
+          human_takeover_until?: string | null
           id?: number
           idassistentgpt?: string | null
           IDvoz?: string | null
