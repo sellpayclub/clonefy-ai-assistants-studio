@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import AppSidebar from '@/components/AppSidebar';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ArrowLeft, QrCode, Smartphone, CheckCircle, RefreshCw, Loader2 } from 'lucide-react';
 
 export default function CommerceConnectWhatsApp() {
@@ -117,20 +116,27 @@ export default function CommerceConnectWhatsApp() {
         setTimeout(() => clearInterval(interval), 120000);
     };
 
-    if (loading) return (<SidebarProvider><div className="min-h-screen flex w-full bg-background"><AppSidebar /><main className="flex-1 flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div></main></div></SidebarProvider>);
+    if (loading) return (
+        <main className="flex-1 flex flex-col h-screen overflow-hidden">
+            <div className="flex-1 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+            </div>
+        </main>
+    );
 
     return (
-        <SidebarProvider>
-            <div className="min-h-screen flex w-full bg-background"><AppSidebar /><main className="flex-1 overflow-y-auto">
-                <div className="bg-gradient-to-r from-primary/10 to-primary/5 border-b border-border p-6">
-                    <div className="flex items-center gap-4">
-                        <Button variant="ghost" onClick={() => navigate('/commerce')} className="text-muted-foreground"><ArrowLeft className="w-4 h-4 mr-2" />Voltar</Button>
-                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center"><Smartphone className="w-6 h-6 text-foreground" /></div>
-                        <div><h1 className="text-2xl font-bold text-foreground">Conectar WhatsApp</h1><p className="text-muted-foreground">Conecte sua loja ao WhatsApp</p></div>
-                    </div>
+        <main className="flex-1 flex flex-col h-screen overflow-hidden">
+            <div className="bg-gradient-to-r from-primary/10 to-primary/5 border-b border-border p-6">
+                <div className="flex items-center gap-4">
+                    <SidebarTrigger />
+                    <Button variant="ghost" onClick={() => navigate('/commerce')} className="text-muted-foreground"><ArrowLeft className="w-4 h-4 mr-2" />Voltar</Button>
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center"><Smartphone className="w-6 h-6 text-foreground" /></div>
+                    <div><h1 className="text-2xl font-bold text-foreground">Conectar WhatsApp</h1><p className="text-muted-foreground">Conecte sua loja ao WhatsApp</p></div>
                 </div>
+            </div>
 
-                <div className="p-6 max-w-xl mx-auto">
+            <div className="flex-1 overflow-auto p-6">
+                <div className="max-w-xl mx-auto">
                     {connected ? (
                         <Card className="bg-card border-border">
                             <CardContent className="py-12 text-center">
@@ -199,7 +205,7 @@ export default function CommerceConnectWhatsApp() {
                         </Card>
                     )}
                 </div>
-            </main></div>
-        </SidebarProvider>
+            </div>
+        </main>
     );
 }
