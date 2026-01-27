@@ -105,7 +105,18 @@ serve(async (req) => {
                     .update({ human_takeover_until: takeoverUntil })
                     .eq('id', existingContact.id);
 
+                // 📺 Sincronizar com Live Chat Sessions
+                await supabase
+                    .from('live_chat_sessions')
+                    .update({ 
+                        status: 'human_takeover',
+                        human_takeover_until: takeoverUntil 
+                    })
+                    .eq('instance_name', instanceName)
+                    .eq('contact_number', contactNumber);
+
                 console.log(`⏸️ HUMAN TAKEOVER ATIVADO! IA pausada até ${takeoverUntil} para contato ${contactNumber}`);
+                console.log('📺 Live Chat: Status atualizado para human_takeover');
 
                 return new Response(JSON.stringify({
                     status: 'takeover_activated',
@@ -1066,6 +1077,7 @@ serve(async (req) => {
             instanceConfig.idassistentgpt,
             userId,
             contactNumber,
+            instanceName,  // Novo parâmetro para buscar histórico completo
             `Usuário: ${currentMessages}\nAssistente: ${assistantResponse}`,
             openaiApiKey
         ).catch(e => console.error('❌ Erro no background profiling:', e));
@@ -1217,12 +1229,39 @@ async function updateAnalytics(assistantId: string, userId: string, type: 'user'
 
 /**
  * Processa a conversa para extrair informações do Lead para o CRM
+ * Versão expandida: busca histórico completo e extrai análise detalhada igual ao Widget
  */
-async function processCRMLead(assistantId: string, userId: string, whatsappNumber: string, conversation: string, apiKey: string) {
+async function processCRMLead(
+    assistantId: string, 
+    userId: string, 
+    whatsappNumber: string, 
+    instanceName: string,  // NOVO parâmetro para buscar histórico
+    conversation: string, 
+    apiKey: string
+) {
     if (!assistantId || !userId || !apiKey) return;
 
     try {
-        console.log('🧠 Extraindo dados do lead via IA...');
+        console.log('🧠 [WhatsApp CRM] Buscando histórico completo da conversa...');
+
+        // Buscar TODAS as mensagens do Live Chat para este contato
+        const { data: allMessages } = await supabase
+            .from('live_chat_messages')
+            .select('sender_type, content, created_at')
+            .eq('instance_name', instanceName)
+            .eq('contact_number', whatsappNumber)
+            .order('created_at', { ascending: true })
+            .limit(50);
+
+        // Formatar conversa completa
+        let fullConversation = conversation;
+        if (allMessages && allMessages.length > 0) {
+            fullConversation = allMessages
+                .map(m => `${m.sender_type === 'customer' ? 'Cliente' : 'Assistente'}: ${m.content}`)
+                .join('\n\n');
+        }
+
+        console.log(`🧠 [WhatsApp CRM] Analisando ${allMessages?.length || 0} mensagens via IA...`);
 
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -1231,20 +1270,33 @@ async function processCRMLead(assistantId: string, userId: string, whatsappNumbe
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'gpt-4o-mini', // Modelo rápido e barato para extração
+                model: 'gpt-4o-mini',
                 messages: [
                     {
                         role: 'system',
-                        content: `Você é um analista de CRM. Sua tarefa é extrair informações de uma conversa de WhatsApp.
-                        Retorne APENAS um JSON plano com as seguintes chaves:
-                        - name: Nome do cliente (se identificado, senão deixe null)
-                        - email: Email do cliente (se identificado, senão deixe null)
-                        - lead_score: Um número de 0 a 100 baseado no interesse de compra (0=curioso, 100=pronto para comprar)
-                        - intent_summary: Um resumo de 1 frase do que o cliente quer.`
+                        content: `Você é um analista de CRM experiente. Analise a conversa completa de WhatsApp e extraia informações detalhadas para o time de vendas.
+
+Retorne APENAS um JSON com as seguintes chaves:
+{
+  "name": "Nome do cliente (null se não identificado)",
+  "email": "Email do cliente (null se não identificado)",
+  "lead_score": 0-100 baseado em interesse REAL de compra (0=só curiosidade, 100=pronto para comprar AGORA),
+  "urgency_level": "baixa | média | alta | imediata",
+  "sentiment": "positivo | neutro | negativo | misto",
+  "intent_summary": "Resumo de 2-3 frases do objetivo principal do cliente",
+  "conversation_analysis": "Análise DETALHADA em 3-5 parágrafos sobre: contexto da conversa, comportamento do cliente, pontos de interesse, objeções levantadas, e recomendações para o vendedor",
+  "key_topics": ["lista", "de", "tópicos", "principais", "discutidos"],
+  "customer_questions": ["perguntas", "específicas", "que", "o", "cliente", "fez"],
+  "objections": ["objeções", "preocupações", "ou", "hesitações", "do", "cliente"],
+  "products_mentioned": ["produtos", "serviços", "ou", "planos", "mencionados"],
+  "next_action": "Próximo passo ESPECÍFICO recomendado para o vendedor (ex: ligar para confirmar, enviar proposta, agendar demo)"
+}
+
+SEJA DETALHADO! O vendedor vai usar essa análise para fechar a venda.`
                     },
                     {
                         role: 'user',
-                        content: `Conversa:\n${conversation}`
+                        content: `Conversa completa do WhatsApp:\n\n${fullConversation}`
                     }
                 ],
                 response_format: { type: 'json_object' }
@@ -1256,10 +1308,40 @@ async function processCRMLead(assistantId: string, userId: string, whatsappNumbe
         const data = await response.json();
         const profiling = JSON.parse(data.choices[0].message.content);
 
-        console.log('📊 Dados extraídos p/ CRM:', profiling);
+        console.log('📊 [WhatsApp CRM] Dados extraídos:', {
+            name: profiling.name,
+            score: profiling.lead_score,
+            urgency: profiling.urgency_level,
+            sentiment: profiling.sentiment
+        });
+
+        // Preparar dados do lead COM TODOS OS CAMPOS
+        const leadData: any = {
+            user_id: userId,
+            assistant_id: assistantId,
+            whatsapp_number: whatsappNumber,
+            source: 'whatsapp',  // ✅ CRÍTICO - Agora define corretamente
+            last_interaction: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+
+        // Campos básicos
+        if (profiling.name) leadData.name = profiling.name;
+        if (profiling.email) leadData.email = profiling.email;
+        if (profiling.lead_score !== undefined) leadData.lead_score = profiling.lead_score;
+        if (profiling.intent_summary) leadData.intent_summary = profiling.intent_summary;
+
+        // Campos avançados (NOVOS para WhatsApp)
+        if (profiling.conversation_analysis) leadData.conversation_analysis = profiling.conversation_analysis;
+        if (profiling.key_topics) leadData.key_topics = profiling.key_topics;
+        if (profiling.customer_questions) leadData.customer_questions = profiling.customer_questions;
+        if (profiling.objections) leadData.objections = profiling.objections;
+        if (profiling.products_mentioned) leadData.products_mentioned = profiling.products_mentioned;
+        if (profiling.urgency_level) leadData.urgency_level = profiling.urgency_level;
+        if (profiling.next_action) leadData.next_action = profiling.next_action;
+        if (profiling.sentiment) leadData.sentiment = profiling.sentiment;
 
         // Upsert na tabela crm_leads
-        // Procurar lead existente
         const { data: existingLead } = await supabase
             .from('crm_leads')
             .select('id')
@@ -1267,33 +1349,22 @@ async function processCRMLead(assistantId: string, userId: string, whatsappNumbe
             .eq('whatsapp_number', whatsappNumber)
             .maybeSingle();
 
-        const leadData: any = {
-            user_id: userId,
-            assistant_id: assistantId,
-            whatsapp_number: whatsappNumber,
-            last_interaction: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-        };
-
-        if (profiling.name) leadData.name = profiling.name;
-        if (profiling.email) leadData.email = profiling.email;
-        if (profiling.lead_score !== undefined) leadData.lead_score = profiling.lead_score;
-        if (profiling.intent_summary) leadData.intent_summary = profiling.intent_summary;
-
         if (existingLead) {
-            console.log('📝 Atualizando lead existente no CRM...');
+            console.log('📝 [WhatsApp CRM] Atualizando lead existente...');
             await supabase
                 .from('crm_leads')
                 .update(leadData)
                 .eq('id', existingLead.id);
         } else {
-            console.log('🆕 Criando novo lead no CRM...');
+            console.log('🆕 [WhatsApp CRM] Criando novo lead...');
             await supabase
                 .from('crm_leads')
                 .insert(leadData);
         }
 
+        console.log('✅ [WhatsApp CRM] Lead salvo com sucesso! source: whatsapp');
+
     } catch (err) {
-        console.error('⚠️ Falha no profiling/CRM:', err);
+        console.error('⚠️ [WhatsApp CRM] Falha no profiling:', err);
     }
 }
