@@ -540,10 +540,9 @@ const Conversations = memo(() => {
                   </div>
                 </div>
               )}
-            </div>
-          </div>
         </div>
-      </main>
+      </div>
+    </main>
   );
 });
 
