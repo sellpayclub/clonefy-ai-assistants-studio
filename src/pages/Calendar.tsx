@@ -12,8 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import AppSidebar from "@/components/AppSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useCalendar, type Appointment } from "@/hooks/useCalendar";
 import { useAssistants } from "@/hooks/useAssistants";
 import { supabase } from "@/integrations/supabase/client";
@@ -301,21 +300,35 @@ const CalendarPage = () => {
 
   if (assistantsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <main className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p>Carregando...</p>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        
-        <main className="flex-1 p-6">
+    <main className="flex-1 flex flex-col h-screen overflow-hidden">
+      {/* Header */}
+      <div className="border-b p-4">
+        <div className="flex items-center gap-4">
+          <SidebarTrigger />
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+              <CalendarIcon className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+              Calendário
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Gerencie agendamentos dos seus agentes
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-auto p-4 md:p-6">
           {/* Aviso de Construção */}
           <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
             <div className="flex items-center gap-3">
@@ -800,10 +813,9 @@ const CalendarPage = () => {
                 </div>
               </div>
             </div>
-          )}
-        </main>
+        )}
       </div>
-    </SidebarProvider>
+    </main>
   );
 };
 
