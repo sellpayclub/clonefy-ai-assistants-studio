@@ -174,7 +174,12 @@ const AppSidebar = () => {
                         )}
 
                         <div className={`flex items-center ${collapsed ? "" : "gap-3"}`}>
-                          <item.icon className={`flex-shrink-0 ${collapsed ? "w-5 h-5" : "w-4 h-4"}`} />
+                          <div className="relative">
+                            <item.icon className={`flex-shrink-0 ${collapsed ? "w-5 h-5" : "w-4 h-4"}`} />
+                            {item.url === "/live-chat" && (
+                              <span className="absolute -top-1 -right-1 h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                            )}
+                          </div>
                           {!collapsed && <span className="text-sm font-medium">{t(item.title)}</span>}
                         </div>
                       </NavLink>
