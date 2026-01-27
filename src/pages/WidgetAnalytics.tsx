@@ -4,13 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MessageCircle, Users, Clock, TrendingUp, Download, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Calendar, MessageCircle, Users, Clock, TrendingUp, Download, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useWidgetAnalytics } from '@/hooks/useWidgetAnalytics';
 import { useToast } from '@/hooks/use-toast';
 import AnalyticsDashboard from '@/components/widget/AnalyticsDashboard';
-import AppSidebar from '@/components/AppSidebar';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 const WidgetAnalytics = () => {
   const [searchParams] = useSearchParams();
@@ -160,25 +159,25 @@ const WidgetAnalytics = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar />
-        <main className="flex-1 overflow-auto">
-          <div className="container mx-auto py-8 px-4">
-            <div className="max-w-7xl mx-auto">
-              <div className="mb-8">
-                <div className="flex items-center gap-4 mb-4">
-                  <SidebarTrigger />
-                  <div>
-                    <h1 className="text-3xl font-bold text-foreground">
-                      Analytics do Widget
-                    </h1>
-                    <p className="text-muted-foreground">
-                      Acompanhe o desempenho do seu widget de chat
-                    </p>
-                  </div>
-                </div>
-              </div>
+    <main className="flex-1 flex flex-col h-screen overflow-hidden">
+      {/* Header */}
+      <div className="border-b p-4">
+        <div className="flex items-center gap-4">
+          <SidebarTrigger />
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+              Analytics do Widget
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Acompanhe o desempenho do seu widget de chat
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-auto p-4">
+        <div className="max-w-7xl mx-auto">
 
               {/* Seletores */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -357,8 +356,6 @@ const WidgetAnalytics = () => {
             </div>
           </div>
         </main>
-      </div>
-    </SidebarProvider>
   );
 };
 
