@@ -4,11 +4,11 @@ const SupportChatWidget = () => {
   useEffect(() => {
     // Usando a Julia - Assistente CLONEFY
     const assistantId = 'aeb677ad-3f58-4ecd-b414-79c1aa534d13';
-    // Usar versão local em desenvolvimento, produção usa clonefyia.com
+    // Usar versão local em desenvolvimento, produção usa domínio Lovable padrão
     const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const scriptUrl = isDev 
       ? '/embed-widget-v2.js' 
-      : 'https://clonefyia.com/embed-widget-v2.js';
+      : 'https://clonefy-ai-assistants-studio.lovable.app/embed-widget-v2.js';
 
     // Verifica se o script já foi carregado para evitar duplicatas
     // Verifica tanto por URL quanto por data-assistant-id
