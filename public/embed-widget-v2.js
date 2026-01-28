@@ -16,10 +16,11 @@
   const apiUrl = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1`;
   
   // Base URL para o iframe (onde o app está hospedado)
-  // Detectar se estamos em desenvolvimento ou produção
+  // Usar domínio padrão do Lovable para garantir funcionamento
+  const LOVABLE_BASE_URL = 'https://clonefy-ai-assistants-studio.lovable.app';
   const scriptSrc = currentScript ? currentScript.src : '';
-  const isClonefyApp = scriptSrc.includes('clonefyia.com');
-  const baseUrl = isClonefyApp ? 'https://clonefyia.com' : window.location.origin;
+  const isLovableApp = scriptSrc.includes('lovable.app') || scriptSrc.includes('clonefyia.com');
+  const baseUrl = isLovableApp ? LOVABLE_BASE_URL : window.location.origin;
 
   console.log('CLONEFY: Inicializando widget', {
     assistantId: assistantId,
@@ -27,7 +28,7 @@
     apiUrl: apiUrl,
     scriptOrigin: currentScript ? new URL(currentScript.src).origin : 'unknown',
     pageOrigin: window.location.origin,
-    isClonefyApp: isClonefyApp
+    isLovableApp: isLovableApp
   });
 
   // Widget object
