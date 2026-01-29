@@ -880,8 +880,51 @@ serve(async (req) => {
                     let output: any = { success: true };
 
                     try {
-                        // Mapear funções comuns de mídia para a Evolution API
-                        if (functionName.includes('image') || functionName.includes('imagem')) {
+                        // ======== AGENDIFY TOOL CALLS ========
+                        if (functionName.startsWith('agendify_')) {
+                            console.log(`📅 Executando ferramenta Agendify: ${functionName}`);
+                            
+                            // Mapear nome da função para action do proxy
+                            const actionMap: Record<string, string> = {
+                                'agendify_list_services': 'list_services',
+                                'agendify_list_professionals': 'list_professionals',
+                                'agendify_check_availability': 'check_availability',
+                                'agendify_create_appointment': 'create_appointment',
+                                'agendify_cancel_appointment': 'cancel_appointment',
+                                'agendify_list_appointments': 'list_appointments',
+                                'agendify_search_clients': 'search_clients',
+                            };
+                            
+                            const action = actionMap[functionName];
+                            if (action) {
+                                // Chamar o proxy do Agendify
+                                const proxyResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/agendify-proxy`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+                                    },
+                                    body: JSON.stringify({
+                                        action,
+                                        assistant_id: assistantUuid,
+                                        ...args
+                                    })
+                                });
+                                
+                                if (proxyResponse.ok) {
+                                    output = await proxyResponse.json();
+                                    console.log(`✅ Agendify ${action} executado com sucesso`);
+                                } else {
+                                    const errorText = await proxyResponse.text();
+                                    console.error(`❌ Agendify ${action} falhou:`, errorText);
+                                    output = { success: false, error: 'Erro ao processar solicitação de agendamento', message: 'Desculpe, ocorreu um erro ao acessar o sistema de agendamentos. Tente novamente.' };
+                                }
+                            } else {
+                                output = { success: false, error: `Função Agendify desconhecida: ${functionName}` };
+                            }
+                        }
+                        // ======== MEDIA TOOL CALLS ========
+                        else if (functionName.includes('image') || functionName.includes('imagem')) {
                             await fetch(`${EVOLUTION_API_URL}/message/sendMedia/${instanceName}`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json', 'apikey': EVOLUTION_API_KEY },

@@ -26,6 +26,7 @@ import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { AssistantTemplates } from "@/components/AssistantTemplates";
 import { OptimizedAssistantCard } from "@/components/OptimizedAssistantCard";
 import { useOptimizedAssistants } from "@/hooks/useOptimizedAssistants";
+import { AgendifyIntegration } from "@/components/AgendifyIntegration";
 
 interface Assistant {
   id: string;
@@ -583,8 +584,11 @@ const Assistants = () => {
               </DialogHeader>
               
               <Tabs defaultValue="config" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="config">Configurações</TabsTrigger>
+                  <TabsTrigger value="integrations" disabled={!editingAssistant}>
+                    Integrações
+                  </TabsTrigger>
                   <TabsTrigger value="files" disabled={!editingAssistant}>
                     Arquivos
                   </TabsTrigger>
@@ -782,6 +786,28 @@ const Assistants = () => {
                       </Button>
                     </div>
                   </form>
+                </TabsContent>
+
+                <TabsContent value="integrations" className="space-y-4">
+                  {editingAssistant && (
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-medium mb-2">Integrações Externas</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Conecte seu assistente a sistemas externos para ampliar suas funcionalidades.
+                        </p>
+                      </div>
+                      
+                      <AgendifyIntegration 
+                        assistantId={editingAssistant.id}
+                        session={session}
+                        onConfigChange={(enabled) => {
+                          console.log('Agendify integration changed:', enabled);
+                          // Podemos recarregar o assistente aqui se necessário
+                        }}
+                      />
+                    </div>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="files" className="space-y-4">
