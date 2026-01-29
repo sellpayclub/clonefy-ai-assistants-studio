@@ -1,173 +1,187 @@
 
+# Plano: Integração Agendify com Assistentes IA Clonefy
 
-## Objetivo
-Corrigir o espaçamento e layout de TODAS as páginas que ainda estão usando o padrão antigo (com `SidebarProvider` e `AppSidebar` redundantes), garantindo que usem corretamente o `AppLayout` centralizado.
+## Visão Geral
 
----
+O objetivo é permitir que usuários do Clonefy conectem seus assistentes de IA ao sistema Agendify (https://agendamento-agendify.com), de forma que a IA possa:
+- Listar serviços disponíveis
+- Buscar profissionais
+- Verificar horários disponíveis
+- Criar agendamentos
+- Cancelar/reagendar consultas
+- Buscar clientes
+- Consultar dados financeiros
 
-## Diagnóstico: Páginas que precisam de correção
+## Arquitetura Proposta
 
-Após análise completa, identifiquei **15 páginas** que ainda têm o layout antigo:
-
-### Commerce (4 páginas)
-1. `src/pages/CommerceStore.tsx`
-2. `src/pages/CommerceOrders.tsx`
-3. `src/pages/CommerceConversations.tsx`
-4. `src/pages/CommercePaymentSettings.tsx`
-5. `src/pages/CommerceConnectWhatsApp.tsx`
-
-### Follow-up (4 páginas)
-6. `src/pages/followup/FollowupDashboard.tsx`
-7. `src/pages/followup/FollowupCampaignWizard.tsx`
-8. `src/pages/followup/FollowupCampaignDetails.tsx`
-9. `src/pages/followup/FollowupImportLeads.tsx`
-10. `src/pages/followup/FollowupLeadsList.tsx`
-
-### Outros
-11. `src/pages/GroupManagement.tsx`
-12. `src/pages/BrandingSettings.tsx`
-13. `src/pages/WidgetAnalytics.tsx`
-14. `src/pages/Calendar.tsx`
-
-### Também o LoadingFallback
-15. `src/App.tsx` - Corrigir animação do loading para centralizar corretamente
-
----
-
-## Padrão correto a ser aplicado
-
-Cada página deve seguir esta estrutura:
-
-```tsx
-// ANTES (errado - layout duplicado)
-return (
-  <SidebarProvider>
-    <div className="min-h-screen flex w-full">
-      <AppSidebar />
-      <main className="flex-1 overflow-auto">
-        {/* conteúdo */}
-      </main>
-    </div>
-  </SidebarProvider>
-);
-
-// DEPOIS (correto - usa AppLayout)
-return (
-  <main className="flex-1 flex flex-col h-screen overflow-hidden">
-    {/* Header com SidebarTrigger */}
-    <div className="p-4 border-b">
-      <SidebarTrigger />
-      {/* título da página */}
-    </div>
-    {/* Conteúdo scrollável */}
-    <div className="flex-1 overflow-auto p-4">
-      {/* conteúdo */}
-    </div>
-  </main>
-);
+```text
++------------------+     +-------------------+     +------------------+
+|   Assistente IA  | --> | agendify-proxy    | --> |   API Agendify   |
+|   (WhatsApp/Web) |     | (Edge Function)   |     | (Sistema Externo)|
++------------------+     +-------------------+     +------------------+
+         |                       |
+         v                       v
++------------------+     +-------------------+
+| OpenAI Assistants|     | agendify_configs  |
+| (Tool Calling)   |     | (Tabela Supabase) |
++------------------+     +-------------------+
 ```
 
----
+## Componentes a Criar
 
-## Mudanças por página
+### 1. Tabela de Configuração (agendify_configs)
 
-### 1. CommerceStore.tsx
-- Remover `SidebarProvider` e `AppSidebar`
-- Remover `import AppSidebar` e `import { SidebarProvider }`
-- Ajustar container para `<main className="flex-1 flex flex-col h-screen overflow-hidden">`
-- Adicionar `SidebarTrigger` no header
+Nova tabela para armazenar as credenciais do Agendify por usuário/assistente:
 
-### 2. CommerceOrders.tsx
-- Mesma estrutura acima
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | UUID | PK |
+| user_id | UUID | FK para auth.users |
+| assistant_id | UUID | FK para assistants |
+| tenant_id | UUID | x-tenant-id do Agendify |
+| api_base_url | TEXT | URL base da API (default: https://agendamento-agendify.com) |
+| is_active | BOOLEAN | Se a integração está ativa |
+| created_at | TIMESTAMPTZ | Data de criação |
+| updated_at | TIMESTAMPTZ | Data de atualização |
 
-### 3. CommerceConversations.tsx
-- Mesma estrutura acima
+### 2. Edge Function: agendify-proxy
 
-### 4. CommercePaymentSettings.tsx
-- Mesma estrutura acima
+Nova função para fazer proxy das chamadas para a API do Agendify:
 
-### 5. CommerceConnectWhatsApp.tsx
-- Mesma estrutura acima
+**Ações suportadas:**
+- `list_services` - Listar serviços
+- `list_professionals` - Listar profissionais
+- `check_availability` - Verificar disponibilidade
+- `create_appointment` - Criar agendamento
+- `cancel_appointment` - Cancelar agendamento
+- `list_appointments` - Listar agendamentos
+- `search_clients` - Buscar clientes
+- `get_finance_stats` - Obter dados financeiros
 
-### 6. FollowupDashboard.tsx
-- Mesma estrutura acima
+### 3. Atualização do OpenAI Assistants
 
-### 7. FollowupCampaignWizard.tsx
-- Mesma estrutura acima
+Modificar a função `openai-assistants` para:
+- Adicionar flag `agendify_enabled`
+- Registrar as tools do Agendify quando habilitado
+- Passar o `tenant_id` nas chamadas
 
-### 8. FollowupCampaignDetails.tsx
-- Este já não tem `SidebarProvider` visível no início, preciso verificar a renderização
+**Novas Tools para OpenAI:**
 
-### 9. FollowupImportLeads.tsx
-- Mesma estrutura acima
-
-### 10. FollowupLeadsList.tsx
-- Mesma estrutura acima
-
-### 11. GroupManagement.tsx
-- Mesma estrutura acima
-
-### 12. BrandingSettings.tsx
-- Mesma estrutura acima
-
-### 13. WidgetAnalytics.tsx
-- Mesma estrutura acima
-
-### 14. Calendar.tsx
-- Mesma estrutura acima
-
-### 15. App.tsx - LoadingFallback
-- Corrigir o componente `LoadingFallback` para ter melhor centralização
-- Mudar de `min-h-screen` para estrutura que respeite o layout do AppLayout
-
----
-
-## Detalhes técnicos
-
-### Imports a remover de cada página:
-```tsx
-// REMOVER:
-import AppSidebar from '@/components/AppSidebar';
-import { SidebarProvider } from '@/components/ui/sidebar';
+```json
+{
+  "type": "function",
+  "function": {
+    "name": "agendify_list_services",
+    "description": "Lista os serviços disponíveis no sistema de agendamento"
+  }
+},
+{
+  "type": "function",
+  "function": {
+    "name": "agendify_check_availability",
+    "description": "Verifica horários disponíveis para agendamento",
+    "parameters": {
+      "date": "string (YYYY-MM-DD)",
+      "serviceId": "string",
+      "professionalId": "string (opcional)"
+    }
+  }
+},
+{
+  "type": "function",
+  "function": {
+    "name": "agendify_create_appointment",
+    "description": "Cria um novo agendamento",
+    "parameters": {
+      "clientPhone": "string",
+      "clientName": "string",
+      "serviceId": "string",
+      "professionalId": "string",
+      "date": "string (YYYY-MM-DD)",
+      "time": "string (HH:MM)",
+      "notes": "string (opcional)"
+    }
+  }
+}
 ```
 
-### Import a manter/adicionar:
-```tsx
-// MANTER (se precisar do trigger):
-import { SidebarTrigger } from '@/components/ui/sidebar';
-```
+### 4. Atualização do WhatsApp Webhook
 
-### Classes CSS padrão para main:
-```tsx
-// Para páginas com scroll vertical:
-<main className="flex-1 flex flex-col h-screen overflow-hidden">
-  <div className="border-b p-4">/* header */</div>
-  <div className="flex-1 overflow-auto p-4">/* content */</div>
-</main>
+Modificar `whatsapp-webhook` para:
+- Detectar quando o assistente chama funções `agendify_*`
+- Buscar configuração do Agendify
+- Chamar a edge function `agendify-proxy`
+- Retornar resultado para o assistente
 
-// Para páginas de chat (2 painéis):
-<main className="flex-1 flex flex-col h-screen overflow-hidden">
-  <div className="border-b p-4">/* header */</div>
-  <div className="flex-1 flex overflow-hidden">/* panels */</div>
-</main>
-```
+### 5. Interface de Configuração
 
----
+Adicionar na página de Assistentes:
+- Toggle para habilitar Agendify
+- Campo para inserir o Tenant ID
+- Botão para testar conexão
+- Link para documentação
 
-## Ordem de implementação
+## Fluxo de Funcionamento
 
-1. Primeiro corrigir as **5 páginas Commerce** (mais críticas para o usuário)
-2. Depois as **5 páginas Followup**
-3. Depois `GroupManagement.tsx`, `BrandingSettings.tsx`, `WidgetAnalytics.tsx`, `Calendar.tsx`
-4. Por fim, corrigir o `LoadingFallback` no `App.tsx`
+**Fluxo do Usuário (Configuração):**
+1. Usuário acessa seu Agendify em Configurações > Desenvolvedor
+2. Copia o Tenant ID (UUID)
+3. No Clonefy, edita o assistente
+4. Ativa "Integração Agendify"
+5. Cola o Tenant ID
+6. Salva
 
----
+**Fluxo de Conversa (Runtime):**
+1. Cliente manda mensagem: "Quero agendar um corte"
+2. WhatsApp Webhook recebe a mensagem
+3. OpenAI detecta intenção e chama `agendify_list_services`
+4. Webhook detecta tool call e chama `agendify-proxy`
+5. Proxy faz GET /api/v1/services com x-tenant-id
+6. Retorna serviços para o assistente
+7. Assistente pergunta qual serviço e data
+8. Processo continua até agendamento finalizado
 
-## Resultado esperado
+## Detalhes Técnicos
 
-- Navegação entre páginas instantânea (sidebar não remonta)
-- Espaçamento consistente em todas as páginas
-- Animação de loading centralizada corretamente
-- Sem barras de rolagem duplicadas
-- Layout uniforme em todo o sistema
+### Segurança
+- Tenant ID armazenado apenas no servidor
+- RLS para garantir que usuário só acessa suas configs
+- Validação de ownership do assistente
 
+### Tratamento de Erros
+- Timeout de 10s para chamadas ao Agendify
+- Retry automático em falhas temporárias
+- Mensagens amigáveis para o cliente
+
+### Cache
+- Cache de 5 min para lista de serviços
+- Cache de 5 min para lista de profissionais
+- Sem cache para disponibilidade (tempo real)
+
+## Arquivos a Modificar/Criar
+
+| Arquivo | Ação | Descrição |
+|---------|------|-----------|
+| `supabase/migrations/xxx-agendify-integration.sql` | Criar | Tabela e policies |
+| `supabase/functions/agendify-proxy/index.ts` | Criar | Edge function proxy |
+| `supabase/functions/openai-assistants/index.ts` | Modificar | Adicionar tools do Agendify |
+| `supabase/functions/whatsapp-webhook/index.ts` | Modificar | Processar tool calls do Agendify |
+| `src/pages/Assistants.tsx` | Modificar | Adicionar UI de configuração |
+| `src/hooks/useAgendifyConfig.ts` | Criar | Hook para gerenciar configs |
+
+## Estimativa de Implementação
+
+1. **Banco de Dados** - Tabela e policies
+2. **agendify-proxy** - Edge function completa
+3. **openai-assistants** - Adicionar tools
+4. **whatsapp-webhook** - Processar tool calls
+5. **Interface** - Toggle + campo Tenant ID
+
+## Próximos Passos (Pós-Aprovação)
+
+1. Criar a migração SQL
+2. Implementar edge function agendify-proxy
+3. Atualizar openai-assistants
+4. Atualizar whatsapp-webhook
+5. Criar interface de configuração
+6. Testar end-to-end
