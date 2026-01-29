@@ -104,6 +104,47 @@ export type Database = {
           },
         ]
       }
+      agendify_configs: {
+        Row: {
+          api_base_url: string
+          assistant_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_base_url?: string
+          assistant_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_base_url?: string
+          assistant_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendify_configs_assistant_id_fkey"
+            columns: ["assistant_id"]
+            isOneToOne: true
+            referencedRelation: "assistants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           appointment_date: string

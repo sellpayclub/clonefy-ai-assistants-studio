@@ -84,7 +84,7 @@ async function createAssistant(userId: string, data: any) {
   console.log('createAssistant called with data:', data);
   console.log('OpenAI API Key available:', !!openAIApiKey);
   
-  const { name, description, instructions, model = 'gpt-4o-mini', calendar_enabled = false } = data;
+  const { name, description, instructions, model = 'gpt-4o-mini', calendar_enabled = false, agendify_enabled = false } = data;
 
   console.log('Creating assistant with model:', model);
   
@@ -101,8 +101,172 @@ async function createAssistant(userId: string, data: any) {
     throw new Error('Já existe um agente com esse nome. Por favor, escolha um nome diferente.');
   }
   
-  // Prepare tools array for calendar function calling
+  // Prepare tools array for function calling
   const tools = [];
+  
+  // ======== AGENDIFY TOOLS ========
+  if (agendify_enabled) {
+    tools.push({
+      type: "function",
+      function: {
+        name: "agendify_list_services",
+        description: "Lista todos os serviços disponíveis no sistema de agendamento Agendify. Use para mostrar ao cliente quais serviços estão disponíveis.",
+        parameters: {
+          type: "object",
+          properties: {},
+          required: []
+        }
+      }
+    });
+
+    tools.push({
+      type: "function",
+      function: {
+        name: "agendify_list_professionals",
+        description: "Lista os profissionais disponíveis, opcionalmente filtrados por serviço.",
+        parameters: {
+          type: "object",
+          properties: {
+            serviceId: {
+              type: "string",
+              description: "ID do serviço para filtrar profissionais que o realizam (opcional)"
+            }
+          },
+          required: []
+        }
+      }
+    });
+
+    tools.push({
+      type: "function",
+      function: {
+        name: "agendify_check_availability",
+        description: "Verifica horários disponíveis para agendamento em uma data específica. SEMPRE use esta função antes de criar um agendamento para mostrar os horários disponíveis ao cliente.",
+        parameters: {
+          type: "object",
+          properties: {
+            date: {
+              type: "string",
+              description: "Data para verificar disponibilidade (formato YYYY-MM-DD, ex: 2024-02-20)"
+            },
+            serviceId: {
+              type: "string",
+              description: "ID do serviço desejado (obrigatório)"
+            },
+            professionalId: {
+              type: "string",
+              description: "ID do profissional específico (opcional, se não informado mostra todos)"
+            }
+          },
+          required: ["date", "serviceId"]
+        }
+      }
+    });
+
+    tools.push({
+      type: "function",
+      function: {
+        name: "agendify_create_appointment",
+        description: "Cria um novo agendamento no sistema. Use SOMENTE após confirmar com o cliente: nome, telefone, serviço, profissional, data e horário.",
+        parameters: {
+          type: "object",
+          properties: {
+            clientName: {
+              type: "string",
+              description: "Nome completo do cliente"
+            },
+            clientPhone: {
+              type: "string",
+              description: "Telefone do cliente com DDD (ex: 5511999999999)"
+            },
+            serviceId: {
+              type: "string",
+              description: "ID do serviço escolhido"
+            },
+            professionalId: {
+              type: "string",
+              description: "ID do profissional escolhido"
+            },
+            date: {
+              type: "string",
+              description: "Data do agendamento (formato YYYY-MM-DD)"
+            },
+            time: {
+              type: "string",
+              description: "Horário do agendamento (formato HH:MM, ex: 14:30)"
+            },
+            notes: {
+              type: "string",
+              description: "Observações adicionais do cliente (opcional)"
+            }
+          },
+          required: ["clientName", "clientPhone", "serviceId", "professionalId", "date", "time"]
+        }
+      }
+    });
+
+    tools.push({
+      type: "function",
+      function: {
+        name: "agendify_cancel_appointment",
+        description: "Cancela um agendamento existente.",
+        parameters: {
+          type: "object",
+          properties: {
+            appointmentId: {
+              type: "string",
+              description: "ID do agendamento a ser cancelado"
+            },
+            reason: {
+              type: "string",
+              description: "Motivo do cancelamento"
+            }
+          },
+          required: ["appointmentId"]
+        }
+      }
+    });
+
+    tools.push({
+      type: "function",
+      function: {
+        name: "agendify_list_appointments",
+        description: "Lista agendamentos existentes, podendo filtrar por data ou telefone do cliente.",
+        parameters: {
+          type: "object",
+          properties: {
+            date: {
+              type: "string",
+              description: "Data específica para buscar agendamentos (formato YYYY-MM-DD)"
+            },
+            clientPhone: {
+              type: "string",
+              description: "Telefone do cliente para buscar seus agendamentos"
+            }
+          },
+          required: []
+        }
+      }
+    });
+
+    tools.push({
+      type: "function",
+      function: {
+        name: "agendify_search_clients",
+        description: "Busca clientes cadastrados no sistema por nome, telefone ou email.",
+        parameters: {
+          type: "object",
+          properties: {
+            search: {
+              type: "string",
+              description: "Termo de busca (nome, telefone ou email)"
+            }
+          },
+          required: []
+        }
+      }
+    });
+  }
   if (calendar_enabled) {
     tools.push({
       type: "function",
@@ -358,7 +522,7 @@ async function getAssistant(userId: string, assistantId: string) {
 }
 
 async function updateAssistant(userId: string, assistantId: string, data: any) {
-  const { name, description, instructions, model, calendar_enabled = false } = data;
+  const { name, description, instructions, model, calendar_enabled = false, agendify_enabled = false } = data;
 
   // Get current assistant from database
   const { data: currentAssistant, error: fetchError } = await supabase
@@ -372,8 +536,111 @@ async function updateAssistant(userId: string, assistantId: string, data: any) {
     throw new Error(`Assistant not found: ${fetchError.message}`);
   }
 
-  // Prepare tools array for calendar function calling
+  // Prepare tools array for function calling
   const tools = [];
+  
+  // ======== AGENDIFY TOOLS ========
+  if (agendify_enabled) {
+    tools.push({
+      type: "function",
+      function: {
+        name: "agendify_list_services",
+        description: "Lista todos os serviços disponíveis no sistema de agendamento Agendify.",
+        parameters: { type: "object", properties: {}, required: [] }
+      }
+    });
+    tools.push({
+      type: "function",
+      function: {
+        name: "agendify_list_professionals",
+        description: "Lista os profissionais disponíveis.",
+        parameters: {
+          type: "object",
+          properties: { serviceId: { type: "string", description: "ID do serviço (opcional)" } },
+          required: []
+        }
+      }
+    });
+    tools.push({
+      type: "function",
+      function: {
+        name: "agendify_check_availability",
+        description: "Verifica horários disponíveis para agendamento.",
+        parameters: {
+          type: "object",
+          properties: {
+            date: { type: "string", description: "Data (YYYY-MM-DD)" },
+            serviceId: { type: "string", description: "ID do serviço" },
+            professionalId: { type: "string", description: "ID do profissional (opcional)" }
+          },
+          required: ["date", "serviceId"]
+        }
+      }
+    });
+    tools.push({
+      type: "function",
+      function: {
+        name: "agendify_create_appointment",
+        description: "Cria um novo agendamento.",
+        parameters: {
+          type: "object",
+          properties: {
+            clientName: { type: "string" },
+            clientPhone: { type: "string" },
+            serviceId: { type: "string" },
+            professionalId: { type: "string" },
+            date: { type: "string" },
+            time: { type: "string" },
+            notes: { type: "string" }
+          },
+          required: ["clientName", "clientPhone", "serviceId", "professionalId", "date", "time"]
+        }
+      }
+    });
+    tools.push({
+      type: "function",
+      function: {
+        name: "agendify_cancel_appointment",
+        description: "Cancela um agendamento.",
+        parameters: {
+          type: "object",
+          properties: {
+            appointmentId: { type: "string" },
+            reason: { type: "string" }
+          },
+          required: ["appointmentId"]
+        }
+      }
+    });
+    tools.push({
+      type: "function",
+      function: {
+        name: "agendify_list_appointments",
+        description: "Lista agendamentos.",
+        parameters: {
+          type: "object",
+          properties: {
+            date: { type: "string" },
+            clientPhone: { type: "string" }
+          },
+          required: []
+        }
+      }
+    });
+    tools.push({
+      type: "function",
+      function: {
+        name: "agendify_search_clients",
+        description: "Busca clientes cadastrados.",
+        parameters: {
+          type: "object",
+          properties: { search: { type: "string" } },
+          required: []
+        }
+      }
+    });
+  }
+  
   if (calendar_enabled) {
     // Add the same calendar functions as in create
     tools.push({
