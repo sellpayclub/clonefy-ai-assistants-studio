@@ -80,6 +80,40 @@ serve(async (req) => {
   }
 });
 
+// Instruções de contexto para o Agendify
+const AGENDIFY_INSTRUCTIONS = `
+
+=== SISTEMA DE AGENDAMENTO AGENDIFY ===
+
+Você tem acesso ao sistema de agendamento Agendify. Use as funções disponíveis para ajudar clientes a:
+- Verificar serviços disponíveis
+- Consultar horários livres
+- Agendar, cancelar ou remarcar compromissos
+
+**FLUXO DE AGENDAMENTO:**
+1. Quando o cliente quiser agendar, primeiro liste os SERVIÇOS (agendify_list_services)
+2. Após o cliente escolher o serviço, liste os PROFISSIONAIS disponíveis (agendify_list_professionals)
+3. Pergunte a DATA desejada
+4. Verifique os HORÁRIOS disponíveis (agendify_check_availability) - OBRIGATÓRIO antes de agendar
+5. Confirme NOME e TELEFONE do cliente
+6. Crie o agendamento (agendify_create_appointment)
+
+**REGRAS IMPORTANTES:**
+- SEMPRE verifique disponibilidade antes de criar agendamento
+- Formate datas como YYYY-MM-DD (ex: 2024-02-20)
+- Formate horários como HH:MM (ex: 14:30)
+- Telefone deve incluir código do país (ex: 5511999999999)
+- Se o cliente não especificar profissional, mostre todos disponíveis
+- Seja proativo em sugerir horários alternativos se o desejado não estiver disponível
+- Confirme todos os dados antes de finalizar o agendamento
+
+**EXEMPLOS DE USO:**
+- Cliente: "Quero agendar um corte" → Liste serviços primeiro
+- Cliente: "Tem horário amanhã?" → Pergunte qual serviço, depois verifique disponibilidade
+- Cliente: "Quero cancelar meu horário" → Busque agendamentos pelo telefone do cliente
+
+`;
+
 async function createAssistant(userId: string, data: any) {
   console.log('createAssistant called with data:', data);
   console.log('OpenAI API Key available:', !!openAIApiKey);
@@ -99,6 +133,12 @@ async function createAssistant(userId: string, data: any) {
     
   if (existingAssistant) {
     throw new Error('Já existe um agente com esse nome. Por favor, escolha um nome diferente.');
+  }
+  
+  // Build final instructions with Agendify context if enabled
+  let finalInstructions = instructions || '';
+  if (agendify_enabled) {
+    finalInstructions = finalInstructions + AGENDIFY_INSTRUCTIONS;
   }
   
   // Prepare tools array for function calling
@@ -413,7 +453,7 @@ async function createAssistant(userId: string, data: any) {
     body: JSON.stringify({
       name,
       description: description || null,
-      instructions: instructions || null,
+      instructions: finalInstructions || null,
       model,
       tools
     }),
@@ -534,6 +574,14 @@ async function updateAssistant(userId: string, assistantId: string, data: any) {
 
   if (fetchError) {
     throw new Error(`Assistant not found: ${fetchError.message}`);
+  }
+
+  // Build final instructions with Agendify context if enabled
+  let finalInstructions = instructions || '';
+  if (agendify_enabled) {
+    // Remove existing Agendify instructions if present (to avoid duplication)
+    finalInstructions = finalInstructions.replace(/\n=== SISTEMA DE AGENDAMENTO AGENDIFY ===[\s\S]*$/, '');
+    finalInstructions = finalInstructions + AGENDIFY_INSTRUCTIONS;
   }
 
   // Prepare tools array for function calling
@@ -740,7 +788,7 @@ async function updateAssistant(userId: string, assistantId: string, data: any) {
     body: JSON.stringify({
       name,
       description,
-      instructions,
+      instructions: finalInstructions,
       model,
       tools
     }),
