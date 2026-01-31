@@ -232,6 +232,163 @@ serve(async (req) => {
 
     console.log(`Widget Chat API - Action: ${action}, Agent: ${agentId}`);
 
+    if (action === 'upload_file') {
+      // Handle file uploads from widget
+      const { fileData, fileName, mimeType, conversationId: convId } = await req.json().then(r => r).catch(() => ({}));
+      
+      if (!fileData || !fileName || !agentId) {
+        return new Response(JSON.stringify({ error: 'Missing file data' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Get agent info for user_id
+      const { data: agent, error: agentError } = await supabase
+        .from('assistants')
+        .select('id, user_id')
+        .eq('id', agentId)
+        .single();
+
+      if (agentError || !agent) {
+        return new Response(JSON.stringify({ error: 'Agent not found' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const userId = agent.user_id;
+      const widgetSessionId = convId ? `widget_${convId}` : `widget_${Date.now()}`;
+
+      // Determine file type
+      const isImage = mimeType?.startsWith('image/');
+      const fileType = isImage ? 'image' : 'document';
+
+      // Convert base64 to bytes
+      const base64Data = fileData.replace(/^data:[^;]+;base64,/, '');
+      const binaryString = atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      // Find or create lead for this widget session
+      let leadId: string | null = null;
+      const { data: existingLead } = await supabase
+        .from('crm_leads')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('whatsapp_number', widgetSessionId)
+        .maybeSingle();
+
+      if (existingLead) {
+        leadId = existingLead.id;
+      } else {
+        const { data: newLead } = await supabase
+          .from('crm_leads')
+          .insert({
+            user_id: userId,
+            assistant_id: agentId,
+            whatsapp_number: widgetSessionId,
+            source: 'widget',
+            status: 'new',
+            lead_score: 0
+          })
+          .select('id')
+          .single();
+        leadId = newLead?.id || null;
+      }
+
+      if (!leadId) {
+        return new Response(JSON.stringify({ error: 'Could not create lead for attachment' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Upload to storage
+      const uniqueFileName = `${userId}/${leadId}/${Date.now()}_${fileName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('lead-files')
+        .upload(uniqueFileName, bytes, {
+          contentType: mimeType || 'application/octet-stream',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        return new Response(JSON.stringify({ error: 'Upload failed' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('lead-files')
+        .getPublicUrl(uniqueFileName);
+
+      const fileUrl = urlData?.publicUrl;
+
+      // Analyze image if applicable
+      let aiDescription: string | null = null;
+      if (isImage && openAIApiKey) {
+        try {
+          const visionResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openAIApiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [{
+                role: 'user',
+                content: [
+                  { type: 'text', text: 'Descreva esta imagem brevemente em português.' },
+                  { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Data}` } }
+                ]
+              }],
+              max_tokens: 150
+            })
+          });
+          if (visionResponse.ok) {
+            const visionData = await visionResponse.json();
+            aiDescription = visionData.choices[0]?.message?.content || null;
+          }
+        } catch (e) {
+          console.warn('Could not analyze image:', e);
+        }
+      }
+
+      // Save attachment metadata
+      await supabase
+        .from('crm_lead_attachments')
+        .insert({
+          lead_id: leadId,
+          user_id: userId,
+          file_name: fileName,
+          file_url: fileUrl,
+          file_type: fileType,
+          mime_type: mimeType,
+          file_size: bytes.length,
+          source: 'widget',
+          ai_description: aiDescription
+        });
+
+      console.log(`✅ Widget file uploaded: ${fileName}`);
+
+      return new Response(JSON.stringify({
+        success: true,
+        fileUrl,
+        fileType,
+        fileName,
+        aiDescription
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (action === 'get_agent') {
       // Get agent information for widget initialization - optimized query
       const { data: agent, error } = await supabase
