@@ -20,6 +20,124 @@ const supabase = createClient(
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
+// Helper para salvar arquivos no CRM
+interface SaveAttachmentParams {
+    supabase: any;
+    base64Data: string;
+    fileName: string;
+    mimeType: string;
+    fileType: 'image' | 'document';
+    source: 'whatsapp' | 'widget';
+    contactNumber: string;
+    instanceName: string;
+    aiDescription: string | null;
+}
+
+async function saveAttachmentToCRM(params: SaveAttachmentParams) {
+    const { supabase, base64Data, fileName, mimeType, fileType, source, contactNumber, instanceName, aiDescription } = params;
+
+    try {
+        // 1. Buscar lead pelo número e instância
+        const { data: instanceConfig } = await supabase
+            .from('n8n_fluxogpt')
+            .select('userId')
+            .eq('nomeinstancia', instanceName)
+            .single();
+
+        if (!instanceConfig?.userId) {
+            console.log('⚠️ Não foi possível identificar user_id para salvar anexo');
+            return;
+        }
+
+        const userId = instanceConfig.userId;
+
+        // 2. Buscar ou criar lead
+        const { data: existingLead } = await supabase
+            .from('crm_leads')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('whatsapp_number', contactNumber)
+            .maybeSingle();
+
+        let leadId = existingLead?.id;
+
+        if (!leadId) {
+            // Criar lead básico se não existir
+            const { data: newLead } = await supabase
+                .from('crm_leads')
+                .insert({
+                    user_id: userId,
+                    whatsapp_number: contactNumber,
+                    source: 'whatsapp',
+                    status: 'new',
+                    lead_score: 0
+                })
+                .select('id')
+                .single();
+
+            leadId = newLead?.id;
+        }
+
+        if (!leadId) {
+            console.log('⚠️ Não foi possível criar/encontrar lead para anexo');
+            return;
+        }
+
+        // 3. Converter base64 para Blob e fazer upload no storage
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        const fileExtension = fileName.split('.').pop() || 'bin';
+        const uniqueFileName = `${userId}/${leadId}/${Date.now()}_${fileName}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('lead-files')
+            .upload(uniqueFileName, bytes, {
+                contentType: mimeType,
+                upsert: false
+            });
+
+        if (uploadError) {
+            console.error('❌ Erro ao fazer upload do arquivo:', uploadError);
+            return;
+        }
+
+        // 4. Obter URL pública
+        const { data: urlData } = supabase.storage
+            .from('lead-files')
+            .getPublicUrl(uniqueFileName);
+
+        const fileUrl = urlData?.publicUrl;
+
+        // 5. Salvar metadados na tabela de anexos
+        const { error: insertError } = await supabase
+            .from('crm_lead_attachments')
+            .insert({
+                lead_id: leadId,
+                user_id: userId,
+                file_name: fileName,
+                file_url: fileUrl,
+                file_type: fileType,
+                mime_type: mimeType,
+                file_size: bytes.length,
+                source: source,
+                ai_description: aiDescription
+            });
+
+        if (insertError) {
+            console.error('❌ Erro ao salvar metadados do anexo:', insertError);
+            return;
+        }
+
+        console.log(`✅ Anexo salvo no CRM: ${fileName} (${fileType})`);
+    } catch (error) {
+        console.error('❌ Erro ao salvar anexo no CRM:', error);
+    }
+}
+
 interface EvolutionWebhookPayload {
     event: string;
     instance: string;
@@ -293,6 +411,7 @@ serve(async (req) => {
             const imageData = payload.data.message.imageMessage;
             const caption = imageData.caption || '';
             let base64Image = (imageData as any).base64 || null;
+            let aiDescription = '';
 
             // Descrever imagem com GPT-4 Vision
             if (openaiApiKey) {
@@ -354,8 +473,8 @@ serve(async (req) => {
 
                         if (visionResponse.ok) {
                             const visionData = await visionResponse.json();
-                            const description = visionData.choices[0].message.content;
-                            messageContent = `[USÚARIO ENVIOU UMA IMAGEM]\nLegenda: ${caption}\nDescrição da imagem: ${description}`;
+                            aiDescription = visionData.choices[0].message.content;
+                            messageContent = `[USÚARIO ENVIOU UMA IMAGEM]\nLegenda: ${caption}\nDescrição da imagem: ${aiDescription}`;
                             console.log('✅ Descrição da imagem obtida');
                         } else {
                             messageContent = `[USÚARIO ENVIOU UMA IMAGEM] Legenda: ${caption} (Erro ao analisar imagem)`;
@@ -370,10 +489,65 @@ serve(async (req) => {
             } else {
                 messageContent = `[USÚARIO ENVIOU UMA IMAGEM] Legenda: ${caption}`;
             }
+
+            // 📁 SALVAR IMAGEM NO CRM - Enviar para storage em background
+            if (base64Image) {
+                console.log('📁 Salvando imagem no CRM...');
+                saveAttachmentToCRM({
+                    supabase,
+                    base64Data: base64Image,
+                    fileName: `image_${Date.now()}.jpg`,
+                    mimeType: 'image/jpeg',
+                    fileType: 'image',
+                    source: 'whatsapp',
+                    contactNumber,
+                    instanceName,
+                    aiDescription
+                }).catch(e => console.error('❌ Erro ao salvar imagem no CRM:', e));
+            }
         } else if (payload.data.message?.documentMessage) {
             messageType = 'document';
             const doc = payload.data.message.documentMessage;
             messageContent = `[USUÁRIO ENVIOU UM DOCUMENTO]\nNome: ${doc.fileName}\nTipo: ${doc.mimetype}`;
+
+            // 📁 SALVAR DOCUMENTO NO CRM
+            console.log('📁 Processando documento para CRM...');
+            try {
+                // Buscar base64 do documento via Evolution API
+                const mediaResponse = await fetch(`${EVOLUTION_API_URL}/chat/getBase64FromMediaMessage/${instanceName}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': EVOLUTION_API_KEY
+                    },
+                    body: JSON.stringify({
+                        message: {
+                            key: payload.data.key,
+                            message: payload.data.message
+                        },
+                        convertToMp4: false
+                    })
+                });
+
+                if (mediaResponse.ok) {
+                    const mediaData = await mediaResponse.json();
+                    if (mediaData.base64) {
+                        saveAttachmentToCRM({
+                            supabase,
+                            base64Data: mediaData.base64,
+                            fileName: doc.fileName || `document_${Date.now()}`,
+                            mimeType: doc.mimetype || 'application/octet-stream',
+                            fileType: 'document',
+                            source: 'whatsapp',
+                            contactNumber,
+                            instanceName,
+                            aiDescription: null
+                        }).catch(e => console.error('❌ Erro ao salvar documento no CRM:', e));
+                    }
+                }
+            } catch (docError) {
+                console.error('❌ Erro ao processar documento para CRM:', docError);
+            }
         } else if (payload.data.message?.videoMessage) {
             messageType = 'video';
             const video = payload.data.message.videoMessage;

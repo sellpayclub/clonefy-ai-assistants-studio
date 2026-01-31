@@ -28,8 +28,10 @@ import {
   ThumbsUp,
   ThumbsDown,
   Minus,
-  Sparkles
+  Sparkles,
+  Paperclip
 } from "lucide-react";
+import { LeadAttachmentsTab } from "./LeadAttachmentsTab";
 
 interface Lead {
   id: string;
@@ -159,6 +161,9 @@ export function LeadDetailsDrawer({ lead, open, onOpenChange }: LeadDetailsDrawe
             </TabsTrigger>
             <TabsTrigger value="analysis" className="gap-2">
               <FileText className="h-4 w-4" /> Análise IA
+            </TabsTrigger>
+            <TabsTrigger value="attachments" className="gap-2">
+              <Paperclip className="h-4 w-4" /> Documentos
             </TabsTrigger>
             <TabsTrigger value="details" className="gap-2">
               <Target className="h-4 w-4" /> Detalhes
@@ -360,8 +365,13 @@ export function LeadDetailsDrawer({ lead, open, onOpenChange }: LeadDetailsDrawe
                       </div>
                     ))}
                   </CardContent>
-                </Card>
-              )}
+              </Card>
+            )}
+            </TabsContent>
+
+            {/* Aba Documentos */}
+            <TabsContent value="attachments" className="m-0">
+              <LeadAttachmentsTab leadId={lead.id} />
             </TabsContent>
 
             {/* Aba Detalhes */}

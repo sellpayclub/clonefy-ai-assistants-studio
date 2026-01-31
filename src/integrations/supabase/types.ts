@@ -1399,6 +1399,56 @@ export type Database = {
           },
         ]
       }
+      crm_lead_attachments: {
+        Row: {
+          ai_description: string | null
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          lead_id: string | null
+          mime_type: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          ai_description?: string | null
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          lead_id?: string | null
+          mime_type?: string | null
+          source?: string
+          user_id: string
+        }
+        Update: {
+          ai_description?: string | null
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          lead_id?: string | null
+          mime_type?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_attachments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_leads: {
         Row: {
           assistant_id: string | null

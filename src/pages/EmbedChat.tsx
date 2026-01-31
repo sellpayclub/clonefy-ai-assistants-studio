@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User, X } from "lucide-react";
+import { Send, Bot, User, X, Paperclip, Image, FileText, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import TypingMessage from "@/components/TypingMessage";
 import MediaRenderer, { hasMedia } from "@/components/MediaRenderer";
@@ -79,8 +79,12 @@ const EmbedChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const viewportHeight = useViewportHeight();
 
   const scrollToBottom = useCallback(() => {
@@ -363,6 +367,114 @@ const EmbedChat = () => {
     }
   };
 
+  // File upload handlers
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (10MB for images, 20MB for documents)
+    const maxSize = file.type.startsWith('image/') ? 10 * 1024 * 1024 : 20 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert(`Arquivo muito grande. Máximo: ${maxSize / (1024 * 1024)}MB`);
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf', 
+      'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Tipo de arquivo não suportado. Use imagens (JPG, PNG, GIF) ou documentos (PDF, DOC, XLS).');
+      return;
+    }
+
+    setSelectedFile(file);
+
+    // Create preview for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => setFilePreview(e.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const clearSelectedFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadFile = async () => {
+    if (!selectedFile || !actualAgentId) return;
+
+    setIsUploading(true);
+
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(selectedFile);
+      });
+
+      const fileData = await base64Promise;
+
+      // Upload via edge function
+      const { data, error } = await supabase.functions.invoke('widget-chat', {
+        body: {
+          action: 'upload_file',
+          agentId: actualAgentId,
+          fileData,
+          fileName: selectedFile.name,
+          mimeType: selectedFile.type,
+          conversationId
+        }
+      });
+
+      if (error) throw error;
+
+      // Add message showing the file was sent
+      const isImage = selectedFile.type.startsWith('image/');
+      const fileMessage: Message = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: isImage 
+          ? `[Imagem enviada: ${selectedFile.name}]${data?.fileUrl ? `\n${data.fileUrl}` : ''}`
+          : `[Documento enviado: ${selectedFile.name}]`,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, fileMessage]);
+      clearSelectedFile();
+
+      // Optionally send a text message about the file
+      if (data?.aiDescription) {
+        // The AI has analyzed the image, we can inform the assistant
+        const contextMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: `Recebi seu arquivo! ${isImage ? data.aiDescription : 'Documento salvo com sucesso.'}`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, contextMessage]);
+      }
+
+    } catch (err) {
+      console.error('Error uploading file:', err);
+      alert('Erro ao enviar arquivo. Tente novamente.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -618,7 +730,67 @@ const EmbedChat = () => {
             paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
           }}
         >
+          {/* File Preview */}
+          {selectedFile && (
+            <div className="mb-2 p-2 bg-muted rounded-lg flex items-center gap-2">
+              {filePreview ? (
+                <img src={filePreview} alt="Preview" className="w-12 h-12 object-cover rounded" />
+              ) : (
+                <div className="w-12 h-12 bg-primary/10 rounded flex items-center justify-center">
+                  <FileText className="h-6 w-6" style={{ color: primaryColor }} />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {(selectedFile.size / 1024).toFixed(1)} KB
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearSelectedFile}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                onClick={uploadFile}
+                disabled={isUploading}
+                style={{ backgroundColor: primaryColor, color: '#ffffff' }}
+              >
+                {isUploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          )}
+
           <div className="flex gap-2">
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+
+            {/* Attachment button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading || isUploading}
+              className="px-2 flex-shrink-0"
+              style={{ color: primaryColor }}
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
+
             <Input
               ref={inputRef}
               value={input}
@@ -629,7 +801,7 @@ const EmbedChat = () => {
                 setTimeout(scrollToBottom, 300);
               }}
               placeholder="Digite sua mensagem..."
-              disabled={isLoading}
+              disabled={isLoading || isUploading}
               className="flex-1 text-sm resize-none border-gray-300"
               style={{
                 backgroundColor: '#ffffff',
@@ -642,7 +814,7 @@ const EmbedChat = () => {
             />
             <Button
               onClick={sendMessage}
-              disabled={!input.trim() || isLoading}
+              disabled={!input.trim() || isLoading || isUploading}
               size="sm"
               className="px-3 transition-all duration-200 hover:scale-105 flex-shrink-0"
               style={{
