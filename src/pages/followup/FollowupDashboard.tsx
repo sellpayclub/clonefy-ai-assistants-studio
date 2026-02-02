@@ -123,13 +123,13 @@ const FollowupDashboard = () => {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'active':
-                return <Badge className="bg-green-500/20 text-green-600 border-green-500/30">🟢 Ativa</Badge>;
+                return <Badge className="bg-primary/20 text-primary border-primary/30">🟢 Ativa</Badge>;
             case 'paused':
                 return <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30">⏸️ Pausada</Badge>;
             case 'completed':
                 return <Badge className="bg-blue-500/20 text-blue-600 border-blue-500/30">✅ Concluída</Badge>;
             default:
-                return <Badge className="bg-gray-500/20 text-gray-600 border-gray-500/30">📝 Rascunho</Badge>;
+                return <Badge className="bg-muted text-muted-foreground border-border">📝 Rascunho</Badge>;
         }
     };
 
@@ -196,15 +196,15 @@ const FollowupDashboard = () => {
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20">
+                    <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
                         <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-xs text-muted-foreground">Taxa de Resposta</p>
-                                    <p className="text-2xl font-bold text-green-600">{stats.responseRate}%</p>
+                                    <p className="text-2xl font-bold text-primary">{stats.responseRate}%</p>
                                 </div>
-                                <div className="h-10 w-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                                    <MessageSquare className="h-5 w-5 text-green-500" />
+                                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                                    <MessageSquare className="h-5 w-5 text-primary" />
                                 </div>
                             </div>
                         </CardContent>
@@ -270,8 +270,8 @@ const FollowupDashboard = () => {
                                     <p className="text-xs text-muted-foreground">Upload CSV ou cadastro manual de contatos</p>
                                 </div>
                                 <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
-                                    <div className="h-8 w-8 rounded-lg bg-green-500/20 flex items-center justify-center mb-3">
-                                        <Zap className="h-4 w-4 text-green-500" />
+                                    <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center mb-3">
+                                        <Zap className="h-4 w-4 text-primary" />
                                     </div>
                                     <h4 className="font-medium text-sm mb-1">IA Especializada</h4>
                                     <p className="text-xs text-muted-foreground">Criada automaticamente para seu negócio</p>
