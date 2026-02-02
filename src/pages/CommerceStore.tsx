@@ -138,7 +138,7 @@ export default function CommerceStore() {
     if (loading) return (
         <main className="flex-1 flex flex-col h-screen overflow-hidden">
             <div className="flex-1 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
         </main>
     );
@@ -155,8 +155,8 @@ export default function CommerceStore() {
                 <div className="max-w-2xl mx-auto">
                     <Card className="bg-card border-border">
                         <CardHeader className="text-center">
-                            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-4">
-                                <Store className="w-8 h-8 text-foreground" />
+                            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center mb-4">
+                                <Store className="w-8 h-8 text-primary-foreground" />
                             </div>
                             <CardTitle className="text-2xl text-foreground">Criar sua Loja Virtual</CardTitle>
                             <CardDescription className="text-muted-foreground">Configure sua loja para vender via WhatsApp com IA</CardDescription>
@@ -166,7 +166,7 @@ export default function CommerceStore() {
                             <div className="space-y-2"><Label className="text-foreground">Descrição</Label><Textarea value={storeForm.description} onChange={(e) => setStoreForm({ ...storeForm, description: e.target.value })} className="bg-muted border-border text-foreground" /></div>
                             <div className="space-y-2"><Label className="text-foreground">WhatsApp</Label><Input value={storeForm.whatsapp_number} onChange={(e) => setStoreForm({ ...storeForm, whatsapp_number: e.target.value })} placeholder="5511999999999" className="bg-muted border-border text-foreground" /></div>
                             <div className="space-y-2"><Label className="text-foreground">Mensagem de Boas-Vindas</Label><Textarea value={storeForm.welcome_message} onChange={(e) => setStoreForm({ ...storeForm, welcome_message: e.target.value })} className="bg-muted border-border text-foreground" rows={3} /></div>
-                            <Button onClick={createStore} disabled={!storeForm.name} className="w-full bg-gradient-to-r from-green-500 to-emerald-600"><Store className="w-4 h-4 mr-2" />Criar Minha Loja</Button>
+                            <Button onClick={createStore} disabled={!storeForm.name} className="w-full bg-gradient-to-r from-primary to-primary/80"><Store className="w-4 h-4 mr-2" />Criar Minha Loja</Button>
                         </CardContent>
                     </Card>
                 </div>
@@ -180,7 +180,7 @@ export default function CommerceStore() {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <SidebarTrigger />
-                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center"><Store className="w-6 h-6 text-foreground" /></div>
+                        <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center"><Store className="w-6 h-6 text-primary-foreground" /></div>
                         <div><h1 className="text-2xl font-bold text-foreground">{store.name}</h1><p className="text-muted-foreground">Loja Virtual via WhatsApp</p></div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -188,7 +188,7 @@ export default function CommerceStore() {
                             <AlertTriangle className="h-3 w-3 mr-1" />
                             BETA - EM FASE DE TESTES
                         </Badge>
-                        <Badge className={store.is_active ? 'bg-green-500' : 'bg-gray-500'}>{store.is_active ? 'Ativa' : 'Inativa'}</Badge>
+                        <Badge className={store.is_active ? 'bg-primary' : 'bg-muted'}>{store.is_active ? 'Ativa' : 'Inativa'}</Badge>
                         <Button variant="outline" onClick={() => navigate('/commerce/orders')} className="border-border text-foreground"><ShoppingCart className="w-4 h-4 mr-2" />Pedidos</Button>
                         <Button variant="outline" onClick={() => navigate('/commerce/conversations')} className="border-border text-foreground"><MessageSquare className="w-4 h-4 mr-2" />Conversas</Button>
                     </div>
@@ -201,20 +201,20 @@ export default function CommerceStore() {
 
                     <TabsContent value="dashboard" className="mt-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                            <Card className="bg-card border-border"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-muted-foreground text-sm">Produtos</p><p className="text-3xl font-bold text-foreground">{stats.totalProducts}</p></div><div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center"><Package className="w-6 h-6 text-blue-400" /></div></div></CardContent></Card>
-                            <Card className="bg-card border-border"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-muted-foreground text-sm">Pedidos</p><p className="text-3xl font-bold text-foreground">{stats.totalOrders}</p>{stats.pendingOrders > 0 && <p className="text-yellow-400 text-xs">{stats.pendingOrders} pendentes</p>}</div><div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center"><ShoppingCart className="w-6 h-6 text-green-400" /></div></div></CardContent></Card>
-                            <Card className="bg-card border-border"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-muted-foreground text-sm">Faturamento</p><p className="text-3xl font-bold text-foreground">R$ {stats.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p></div><div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center"><DollarSign className="w-6 h-6 text-emerald-400" /></div></div></CardContent></Card>
-                            <Card className="bg-card border-border"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-muted-foreground text-sm">Clientes</p><p className="text-3xl font-bold text-foreground">{stats.totalCustomers}</p></div><div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center"><Users className="w-6 h-6 text-purple-400" /></div></div></CardContent></Card>
+                            <Card className="bg-card border-border"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-muted-foreground text-sm">Produtos</p><p className="text-3xl font-bold text-foreground">{stats.totalProducts}</p></div><div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center"><Package className="w-6 h-6 text-primary" /></div></div></CardContent></Card>
+                            <Card className="bg-card border-border"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-muted-foreground text-sm">Pedidos</p><p className="text-3xl font-bold text-foreground">{stats.totalOrders}</p>{stats.pendingOrders > 0 && <p className="text-yellow-500 text-xs">{stats.pendingOrders} pendentes</p>}</div><div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center"><ShoppingCart className="w-6 h-6 text-primary" /></div></div></CardContent></Card>
+                            <Card className="bg-card border-border"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-muted-foreground text-sm">Faturamento</p><p className="text-3xl font-bold text-foreground">R$ {stats.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p></div><div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center"><DollarSign className="w-6 h-6 text-primary" /></div></div></CardContent></Card>
+                            <Card className="bg-card border-border"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-muted-foreground text-sm">Clientes</p><p className="text-3xl font-bold text-foreground">{stats.totalCustomers}</p></div><div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center"><Users className="w-6 h-6 text-primary" /></div></div></CardContent></Card>
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <Card className="bg-card border-border"><CardHeader><CardTitle className="text-foreground flex items-center gap-2"><MessageSquare className="w-5 h-5 text-green-400" />Conversas Ativas</CardTitle></CardHeader><CardContent><div className="text-center py-8"><div className="text-4xl font-bold text-green-400">{stats.activeConversations}</div><p className="text-muted-foreground mt-2">conversas em andamento</p><Button onClick={() => navigate('/commerce/conversations')} variant="outline" className="mt-4 border-border">Ver Conversas</Button></div></CardContent></Card>
-                            <Card className="bg-card border-border"><CardHeader><CardTitle className="text-foreground flex items-center gap-2"><Smartphone className="w-5 h-5 text-green-400" />WhatsApp</CardTitle></CardHeader><CardContent><div className="text-center py-8">{store.whatsapp_instance_id ? <><div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><Smartphone className="w-8 h-8 text-green-400" /></div><p className="text-green-400 font-medium">Conectado</p><p className="text-muted-foreground text-sm mt-1">{store.whatsapp_number}</p></> : <><div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4"><QrCode className="w-8 h-8 text-muted-foreground" /></div><p className="text-muted-foreground">WhatsApp não conectado</p><Button onClick={() => navigate('/commerce/connect-whatsapp')} className="mt-4 bg-green-500 hover:bg-green-600"><QrCode className="w-4 h-4 mr-2" />Conectar WhatsApp</Button></>}</div></CardContent></Card>
+                            <Card className="bg-card border-border"><CardHeader><CardTitle className="text-foreground flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" />Conversas Ativas</CardTitle></CardHeader><CardContent><div className="text-center py-8"><div className="text-4xl font-bold text-primary">{stats.activeConversations}</div><p className="text-muted-foreground mt-2">conversas em andamento</p><Button onClick={() => navigate('/commerce/conversations')} variant="outline" className="mt-4 border-border">Ver Conversas</Button></div></CardContent></Card>
+                            <Card className="bg-card border-border"><CardHeader><CardTitle className="text-foreground flex items-center gap-2"><Smartphone className="w-5 h-5 text-primary" />WhatsApp</CardTitle></CardHeader><CardContent><div className="text-center py-8">{store.whatsapp_instance_id ? <><div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4"><Smartphone className="w-8 h-8 text-primary" /></div><p className="text-primary font-medium">Conectado</p><p className="text-muted-foreground text-sm mt-1">{store.whatsapp_number}</p></> : <><div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4"><QrCode className="w-8 h-8 text-muted-foreground" /></div><p className="text-muted-foreground">WhatsApp não conectado</p><Button onClick={() => navigate('/commerce/connect-whatsapp')} className="mt-4 bg-primary hover:bg-primary/90"><QrCode className="w-4 h-4 mr-2" />Conectar WhatsApp</Button></>}</div></CardContent></Card>
                         </div>
                     </TabsContent>
 
                     <TabsContent value="products" className="mt-6">
-                        <div className="flex items-center justify-between mb-6"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar produtos..." className="pl-10 bg-card border-border text-foreground w-80" /></div><Button onClick={() => { setProductForm({ name: '', description: '', short_description: '', price: '', compare_at_price: '', stock_quantity: '', category_id: '', is_active: true, is_featured: false, ai_selling_points: '' }); setEditingProduct(null); setShowProductModal(true); }} className="bg-green-500 hover:bg-green-600"><Plus className="w-4 h-4 mr-2" />Novo Produto</Button></div>
-                        {filteredProducts.length === 0 ? <Card className="bg-card border-border"><CardContent className="py-16 text-center"><Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" /><h3 className="text-xl font-medium text-foreground mb-2">Nenhum produto</h3><p className="text-muted-foreground mb-6">Adicione seu primeiro produto</p><Button onClick={() => setShowProductModal(true)} className="bg-green-500"><Plus className="w-4 h-4 mr-2" />Adicionar</Button></CardContent></Card> :
+                        <div className="flex items-center justify-between mb-6"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar produtos..." className="pl-10 bg-card border-border text-foreground w-80" /></div><Button onClick={() => { setProductForm({ name: '', description: '', short_description: '', price: '', compare_at_price: '', stock_quantity: '', category_id: '', is_active: true, is_featured: false, ai_selling_points: '' }); setEditingProduct(null); setShowProductModal(true); }} className="bg-primary hover:bg-primary/90"><Plus className="w-4 h-4 mr-2" />Novo Produto</Button></div>
+                        {filteredProducts.length === 0 ? <Card className="bg-card border-border"><CardContent className="py-16 text-center"><Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" /><h3 className="text-xl font-medium text-foreground mb-2">Nenhum produto</h3><p className="text-muted-foreground mb-6">Adicione seu primeiro produto</p><Button onClick={() => setShowProductModal(true)} className="bg-primary"><Plus className="w-4 h-4 mr-2" />Adicionar</Button></CardContent></Card> :
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {filteredProducts.map((product) => (
                                     <Card key={product.id} className="bg-card border-border">
@@ -229,10 +229,10 @@ export default function CommerceStore() {
                                             <h3 className="font-medium text-foreground mb-1">{product.name}</h3>
                                             <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{product.short_description || product.description}</p>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-lg font-bold text-green-400">R$ {product.price.toFixed(2)}</span>
+                                                <span className="text-lg font-bold text-primary">R$ {product.price.toFixed(2)}</span>
                                                 <div className="flex gap-1">
-                                                    {product.is_featured && <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30"><Tag className="w-3 h-3 mr-1" />Destaque</Badge>}
-                                                    <Badge className={product.is_active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}>{product.is_active ? 'Ativo' : 'Inativo'}</Badge>
+                                                    {product.is_featured && <Badge className="bg-yellow-500/20 text-yellow-500 border-yellow-500/30"><Tag className="w-3 h-3 mr-1" />Destaque</Badge>}
+                                                    <Badge className={product.is_active ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}>{product.is_active ? 'Ativo' : 'Inativo'}</Badge>
                                                 </div>
                                             </div>
                                         </CardContent>
@@ -245,7 +245,7 @@ export default function CommerceStore() {
                     <TabsContent value="categories" className="mt-6">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-xl font-semibold text-foreground">Categorias</h2>
-                            <Button onClick={() => setShowCategoryModal(true)} className="bg-green-500 hover:bg-green-600"><Plus className="w-4 h-4 mr-2" />Nova Categoria</Button>
+                            <Button onClick={() => setShowCategoryModal(true)} className="bg-primary hover:bg-primary/90"><Plus className="w-4 h-4 mr-2" />Nova Categoria</Button>
                         </div>
                         {categories.length === 0 ? <Card className="bg-card border-border"><CardContent className="py-16 text-center"><Layers className="w-16 h-16 text-muted-foreground mx-auto mb-4" /><h3 className="text-xl font-medium text-foreground mb-2">Nenhuma categoria</h3><p className="text-muted-foreground mb-6">Crie categorias para organizar seus produtos</p></CardContent></Card> :
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -268,7 +268,7 @@ export default function CommerceStore() {
                                 <div className="space-y-2"><Label className="text-foreground">Mensagem de Boas-Vindas</Label><Textarea value={storeForm.welcome_message} onChange={(e) => setStoreForm({ ...storeForm, welcome_message: e.target.value })} className="bg-muted border-border text-foreground" rows={3} /></div>
                                 <div className="space-y-2"><Label className="text-foreground">Personalidade da IA</Label><Textarea value={storeForm.ai_personality} onChange={(e) => setStoreForm({ ...storeForm, ai_personality: e.target.value })} className="bg-muted border-border text-foreground" rows={3} /></div>
                                 <div className="space-y-2"><Label className="text-foreground">Instruções da IA</Label><Textarea value={storeForm.ai_instructions} onChange={(e) => setStoreForm({ ...storeForm, ai_instructions: e.target.value })} className="bg-muted border-border text-foreground" rows={4} /></div>
-                                <Button onClick={updateStore} className="bg-green-500 hover:bg-green-600"><Settings className="w-4 h-4 mr-2" />Salvar Configurações</Button>
+                                <Button onClick={updateStore} className="bg-primary hover:bg-primary/90"><Settings className="w-4 h-4 mr-2" />Salvar Configurações</Button>
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -293,7 +293,7 @@ export default function CommerceStore() {
                             <div className="flex items-center justify-between"><div className="flex items-center gap-2"><Switch checked={productForm.is_active} onCheckedChange={(c) => setProductForm({ ...productForm, is_active: c })} /><Label className="text-foreground">Ativo</Label></div><div className="flex items-center gap-2"><Switch checked={productForm.is_featured} onCheckedChange={(c) => setProductForm({ ...productForm, is_featured: c })} /><Label className="text-foreground">Destaque</Label></div></div>
                             <div className="flex gap-2 pt-4">
                                 <Button onClick={() => { setShowProductModal(false); setEditingProduct(null); }} variant="outline" className="flex-1 border-border">Cancelar</Button>
-                                <Button onClick={createProduct} className="flex-1 bg-green-500 hover:bg-green-600">{editingProduct ? 'Atualizar' : 'Criar'}</Button>
+                                <Button onClick={createProduct} className="flex-1 bg-primary hover:bg-primary/90">{editingProduct ? 'Atualizar' : 'Criar'}</Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -310,7 +310,7 @@ export default function CommerceStore() {
                             <div className="space-y-2"><Label className="text-foreground">Descrição</Label><Textarea value={categoryForm.description} onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })} className="bg-muted border-border text-foreground" /></div>
                             <div className="flex gap-2 pt-4">
                                 <Button onClick={() => setShowCategoryModal(false)} variant="outline" className="flex-1 border-border">Cancelar</Button>
-                                <Button onClick={createCategory} className="flex-1 bg-green-500 hover:bg-green-600">Criar</Button>
+                                <Button onClick={createCategory} className="flex-1 bg-primary hover:bg-primary/90">Criar</Button>
                             </div>
                         </CardContent>
                     </Card>

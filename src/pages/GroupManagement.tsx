@@ -458,11 +458,11 @@ const GroupManagement = () => {
                             {/* WhatsApp Connection + Lista de Grupos */}
                             <div className="lg:col-span-1 space-y-4">
                                 {/* Card de Conexão WhatsApp */}
-                                <Card className={connectionStatus === 'connected' ? 'border-green-500/50 bg-green-500/5' : ''}>
+                                <Card className={connectionStatus === 'connected' ? 'border-primary/50 bg-primary/5' : ''}>
                                     <CardHeader className="pb-3">
                                         <CardTitle className="text-lg flex items-center gap-2">
                                             {connectionStatus === 'connected' ? (
-                                                <Wifi className="h-5 w-5 text-green-500" />
+                                                <Wifi className="h-5 w-5 text-primary" />
                                             ) : (
                                                 <WifiOff className="h-5 w-5 text-muted-foreground" />
                                             )}
@@ -475,7 +475,7 @@ const GroupManagement = () => {
                                     <CardContent>
                                         {connectionStatus === 'connected' ? (
                                             <div className="flex items-center gap-2">
-                                                <Badge className="bg-green-500">Conectado</Badge>
+                                                <Badge className="bg-primary">Conectado</Badge>
                                                 <span className="text-sm text-muted-foreground">
                                                     Pronto para monitorar grupos
                                                 </span>
@@ -558,7 +558,7 @@ const GroupManagement = () => {
                                                                 </div>
                                                             </div>
                                                             {group.is_active ? (
-                                                                <Badge className="bg-green-500/20 text-green-700 text-xs">Ativo</Badge>
+                                                                <Badge className="bg-primary/20 text-primary text-xs">Ativo</Badge>
                                                             ) : (
                                                                 <Badge variant="destructive" className="text-xs">Pausado</Badge>
                                                             )}
@@ -616,7 +616,7 @@ const GroupManagement = () => {
                                                             <p className="text-xs text-muted-foreground">Alertas</p>
                                                         </div>
                                                         <div className="text-center p-4 bg-muted/50 rounded-lg">
-                                                            <FileText className="h-6 w-6 mx-auto mb-2 text-green-500" />
+                                                            <FileText className="h-6 w-6 mx-auto mb-2 text-primary" />
                                                             <p className="text-2xl font-bold">{reports.length}</p>
                                                             <p className="text-xs text-muted-foreground">Relatórios</p>
                                                         </div>
@@ -745,9 +745,9 @@ const GroupManagement = () => {
                                                                                 "{alert.message_content}"
                                                                             </p>
                                                                         </div>
-                                                                        {alert.was_sent && (
-                                                                            <Badge variant="outline" className="text-green-600">
-                                                                                Enviado
+                                                        {alert.was_sent && (
+                                                            <Badge variant="outline" className="text-primary">
+                                                                Enviado
                                                                             </Badge>
                                                                         )}
                                                                     </div>
