@@ -14,7 +14,8 @@ import {
     BarChart3,
     Upload,
     Zap,
-    Clock
+    Clock,
+    AlertTriangle
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -149,6 +150,10 @@ const FollowupDashboard = () => {
                                 Campanhas de follow-up inteligente com IA
                             </p>
                         </div>
+                        <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30 animate-pulse flex items-center ml-4">
+                            <AlertTriangle className="h-3 w-3 mr-1" />
+                            BETA - EM FASE DE TESTES
+                        </Badge>
                     </div>
                     <Button
                         onClick={() => navigate('/followup/campaigns/new')}
