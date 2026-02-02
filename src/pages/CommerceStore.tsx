@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import {
     Store, Package, ShoppingCart, Users, MessageSquare, Settings, Plus,
-    DollarSign, BarChart3, QrCode, Smartphone, Trash2, Edit, Search, Image as ImageIcon, Tag, Layers,
+    DollarSign, BarChart3, QrCode, Smartphone, Trash2, Edit, Search, Image as ImageIcon, Tag, Layers, AlertTriangle,
 } from 'lucide-react';
 
 export default function CommerceStore() {
@@ -184,6 +184,10 @@ export default function CommerceStore() {
                         <div><h1 className="text-2xl font-bold text-foreground">{store.name}</h1><p className="text-muted-foreground">Loja Virtual via WhatsApp</p></div>
                     </div>
                     <div className="flex items-center gap-3">
+                        <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30 animate-pulse flex items-center">
+                            <AlertTriangle className="h-3 w-3 mr-1" />
+                            BETA - EM FASE DE TESTES
+                        </Badge>
                         <Badge className={store.is_active ? 'bg-green-500' : 'bg-gray-500'}>{store.is_active ? 'Ativa' : 'Inativa'}</Badge>
                         <Button variant="outline" onClick={() => navigate('/commerce/orders')} className="border-border text-foreground"><ShoppingCart className="w-4 h-4 mr-2" />Pedidos</Button>
                         <Button variant="outline" onClick={() => navigate('/commerce/conversations')} className="border-border text-foreground"><MessageSquare className="w-4 h-4 mr-2" />Conversas</Button>

@@ -365,12 +365,16 @@ const GroupManagement = () => {
                                     Monitore grupos, receba alertas e relatórios diários automáticos
                                 </p>
                             </div>
+                            <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30 animate-pulse">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                BETA - EM FASE DE TESTES
+                            </Badge>
                         </div>
-                                <div className="flex gap-2">
-                                    <Button variant="outline" onClick={loadGroups}>
-                                        <RefreshCw className="h-4 w-4 mr-2" />
-                                        Atualizar
-                                    </Button>
+                        <div className="flex gap-2">
+                            <Button variant="outline" onClick={loadGroups}>
+                                <RefreshCw className="h-4 w-4 mr-2" />
+                                Atualizar
+                            </Button>
                                     <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
                                         <DialogTrigger asChild>
                                             <Button onClick={loadAvailableGroups}>
