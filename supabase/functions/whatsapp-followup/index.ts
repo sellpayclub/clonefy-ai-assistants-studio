@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -170,26 +171,82 @@ serve(async (req) => {
         const followupMessage = assistantMessage.content[0].text.value;
         console.log(`🤖 Mensagem de follow-up: ${followupMessage}`);
 
-        // Enviar mensagem via WhatsApp
-        console.log('📤 Enviando follow-up via WhatsApp...');
+        // Enviar mensagem via WhatsApp (com áudio se ElevenLabs configurado)
+        let sentAsAudio = false;
 
-        const sendResponse = await fetch(`${EVOLUTION_API_URL}/message/sendText/${instanceName}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': EVOLUTION_API_KEY
-            },
-            body: JSON.stringify({
-                number: contactNumber,
-                text: followupMessage
-            })
-        });
+        if (elevenLabsApiKey && voiceId) {
+            console.log('🎙️ ElevenLabs configurado, gerando áudio...');
+            try {
+                const elevenLabsResponse = await fetch(
+                    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'xi-api-key': elevenLabsApiKey
+                        },
+                        body: JSON.stringify({
+                            text: followupMessage,
+                            model_id: 'eleven_multilingual_v2',
+                            voice_settings: {
+                                stability: 0.5,
+                                similarity_boost: 0.75
+                            }
+                        })
+                    }
+                );
 
-        if (!sendResponse.ok) {
-            const error = await sendResponse.text();
-            console.error('❌ Erro ao enviar follow-up:', error);
-        } else {
-            console.log('✅ Follow-up enviado com sucesso!');
+                if (elevenLabsResponse.ok) {
+                    const audioBuffer = await elevenLabsResponse.arrayBuffer();
+                    const audioBase64 = base64Encode(new Uint8Array(audioBuffer));
+
+                    const audioSendResponse = await fetch(`${EVOLUTION_API_URL}/message/sendWhatsAppAudio/${instanceName}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': EVOLUTION_API_KEY
+                        },
+                        body: JSON.stringify({
+                            number: contactNumber,
+                            audio: `data:audio/mpeg;base64,${audioBase64}`
+                        })
+                    });
+
+                    if (audioSendResponse.ok) {
+                        sentAsAudio = true;
+                        console.log('✅ Follow-up enviado como áudio!');
+                    } else {
+                        console.warn('⚠️ Falha ao enviar áudio, enviando como texto...');
+                    }
+                } else {
+                    console.warn('⚠️ Falha ao gerar áudio ElevenLabs, enviando como texto...');
+                }
+            } catch (audioError) {
+                console.warn('⚠️ Erro no ElevenLabs, enviando como texto:', audioError);
+            }
+        }
+
+        // Fallback: enviar como texto
+        if (!sentAsAudio) {
+            console.log('📤 Enviando follow-up como texto...');
+            const sendResponse = await fetch(`${EVOLUTION_API_URL}/message/sendText/${instanceName}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': EVOLUTION_API_KEY
+                },
+                body: JSON.stringify({
+                    number: contactNumber,
+                    text: followupMessage
+                })
+            });
+
+            if (!sendResponse.ok) {
+                const error = await sendResponse.text();
+                console.error('❌ Erro ao enviar follow-up:', error);
+            } else {
+                console.log('✅ Follow-up enviado com sucesso!');
+            }
         }
 
         // Atualizar last_message_at após enviar
