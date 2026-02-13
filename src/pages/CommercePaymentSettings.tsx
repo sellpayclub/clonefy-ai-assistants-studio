@@ -85,7 +85,7 @@ export default function CommercePaymentSettings() {
     if (loading) return (
         <main className="flex-1 flex flex-col h-screen overflow-hidden">
             <div className="flex-1 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
         </main>
     );
@@ -96,7 +96,7 @@ export default function CommercePaymentSettings() {
                 <div className="flex items-center gap-4">
                     <SidebarTrigger />
                     <Button variant="ghost" onClick={() => navigate('/commerce')} className="text-muted-foreground"><ArrowLeft className="w-4 h-4 mr-2" />Voltar</Button>
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center"><DollarSign className="w-6 h-6 text-foreground" /></div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center"><DollarSign className="w-6 h-6 text-primary-foreground" /></div>
                     <div><h1 className="text-2xl font-bold text-foreground">Configurações de Pagamento</h1><p className="text-muted-foreground">Configure suas formas de recebimento</p></div>
                 </div>
             </div>
@@ -148,7 +148,7 @@ export default function CommercePaymentSettings() {
                                 />
                             </div>
 
-                            <Button onClick={savePixSettings} className="w-full bg-green-500 hover:bg-green-600">
+                            <Button onClick={savePixSettings} className="w-full bg-primary hover:bg-primary/90">
                                 <CheckCircle className="w-4 h-4 mr-2" />Salvar Configurações PIX
                             </Button>
                         </CardContent>

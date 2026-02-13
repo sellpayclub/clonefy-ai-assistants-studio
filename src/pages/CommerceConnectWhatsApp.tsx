@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,8 +16,14 @@ export default function CommerceConnectWhatsApp() {
     const [connected, setConnected] = useState(false);
     const [storeId, setStoreId] = useState<string | null>(null);
     const [instanceId, setInstanceId] = useState<string | null>(null);
+    const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    useEffect(() => { checkConnection(); }, []);
+    useEffect(() => {
+        checkConnection();
+        return () => {
+            if (pollingRef.current) clearInterval(pollingRef.current);
+        };
+    }, []);
 
     const checkConnection = async () => {
         try {
@@ -32,7 +38,6 @@ export default function CommerceConnectWhatsApp() {
             setStoreId(store.id);
             if (store.whatsapp_instance_id) {
                 setInstanceId(store.whatsapp_instance_id);
-                // Verifica status da conexão
                 const { data } = await supabase.functions.invoke('whatsapp-evolution', {
                     body: { action: 'getStatus', instanceId: store.whatsapp_instance_id },
                 });
@@ -47,8 +52,6 @@ export default function CommerceConnectWhatsApp() {
         if (!storeId) return;
         try {
             setConnecting(true);
-
-            // Cria instância na Evolution API com webhook apontando para commerce-webhook
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ekfkrwueqwpqakpsrsjt.supabase.co';
             const { data, error } = await supabase.functions.invoke('whatsapp-evolution', {
                 body: {
@@ -59,22 +62,19 @@ export default function CommerceConnectWhatsApp() {
             });
 
             if (error) throw error;
-
             const newInstanceId = data?.instanceId;
             if (!newInstanceId) throw new Error('Falha ao criar instância');
 
-            // @ts-ignore - commerce_stores table
+            // @ts-ignore
             await (supabase as any).from('commerce_stores').update({ whatsapp_instance_id: newInstanceId }).eq('id', storeId);
             setInstanceId(newInstanceId);
-
-            // Busca QR Code
             await getQRCode(newInstanceId);
         } catch (error: any) {
             toast({ title: 'Erro', description: error.message, variant: 'destructive' });
         } finally { setConnecting(false); }
     };
 
-    const getQRCode = async (instId?: string) => {
+    const getQRCode = useCallback(async (instId?: string) => {
         const id = instId || instanceId;
         if (!id) return;
 
@@ -87,16 +87,17 @@ export default function CommerceConnectWhatsApp() {
             if (error) throw error;
             if (data?.qrcode) {
                 setQrCode(data.qrcode);
-                // Inicia polling para verificar conexão
                 startPolling(id);
             }
         } catch (error: any) {
             toast({ title: 'Erro', description: error.message, variant: 'destructive' });
         } finally { setConnecting(false); }
-    };
+    }, [instanceId]);
 
     const startPolling = (instId: string) => {
-        const interval = setInterval(async () => {
+        if (pollingRef.current) clearInterval(pollingRef.current);
+
+        pollingRef.current = setInterval(async () => {
             try {
                 const { data } = await supabase.functions.invoke('whatsapp-evolution', {
                     body: { action: 'getStatus', instanceId: instId },
@@ -104,7 +105,8 @@ export default function CommerceConnectWhatsApp() {
                 if (data?.connected) {
                     setConnected(true);
                     setQrCode(null);
-                    clearInterval(interval);
+                    if (pollingRef.current) clearInterval(pollingRef.current);
+                    pollingRef.current = null;
                     toast({ title: 'Conectado!', description: 'WhatsApp conectado com sucesso.' });
                 }
             } catch (e) {
@@ -112,14 +114,19 @@ export default function CommerceConnectWhatsApp() {
             }
         }, 3000);
 
-        // Para após 2 minutos
-        setTimeout(() => clearInterval(interval), 120000);
+        // Stop after 2 minutes
+        setTimeout(() => {
+            if (pollingRef.current) {
+                clearInterval(pollingRef.current);
+                pollingRef.current = null;
+            }
+        }, 120000);
     };
 
     if (loading) return (
         <main className="flex-1 flex flex-col h-screen overflow-hidden">
             <div className="flex-1 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
         </main>
     );
@@ -130,7 +137,7 @@ export default function CommerceConnectWhatsApp() {
                 <div className="flex items-center gap-4">
                     <SidebarTrigger />
                     <Button variant="ghost" onClick={() => navigate('/commerce')} className="text-muted-foreground"><ArrowLeft className="w-4 h-4 mr-2" />Voltar</Button>
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center"><Smartphone className="w-6 h-6 text-foreground" /></div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center"><Smartphone className="w-6 h-6 text-primary-foreground" /></div>
                     <div><h1 className="text-2xl font-bold text-foreground">Conectar WhatsApp</h1><p className="text-muted-foreground">Conecte sua loja ao WhatsApp</p></div>
                 </div>
             </div>
@@ -140,12 +147,12 @@ export default function CommerceConnectWhatsApp() {
                     {connected ? (
                         <Card className="bg-card border-border">
                             <CardContent className="py-12 text-center">
-                                <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <CheckCircle className="w-10 h-10 text-green-400" />
+                                <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <CheckCircle className="w-10 h-10 text-primary" />
                                 </div>
                                 <h2 className="text-2xl font-bold text-foreground mb-2">WhatsApp Conectado!</h2>
                                 <p className="text-muted-foreground mb-6">Sua loja está pronta para receber vendas via WhatsApp.</p>
-                                <Button onClick={() => navigate('/commerce')} className="bg-green-500 hover:bg-green-600">
+                                <Button onClick={() => navigate('/commerce')} className="bg-primary hover:bg-primary/90">
                                     Voltar para a Loja
                                 </Button>
                             </CardContent>
@@ -182,23 +189,23 @@ export default function CommerceConnectWhatsApp() {
                             <CardContent className="text-center">
                                 <div className="space-y-4 mb-6">
                                     <div className="flex items-center gap-3 text-left p-3 bg-muted/50 rounded-lg">
-                                        <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 font-bold">1</div>
+                                        <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold">1</div>
                                         <p className="text-foreground">Clique em "Gerar QR Code"</p>
                                     </div>
                                     <div className="flex items-center gap-3 text-left p-3 bg-muted/50 rounded-lg">
-                                        <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 font-bold">2</div>
+                                        <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold">2</div>
                                         <p className="text-foreground">Abra o WhatsApp no seu celular</p>
                                     </div>
                                     <div className="flex items-center gap-3 text-left p-3 bg-muted/50 rounded-lg">
-                                        <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 font-bold">3</div>
+                                        <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold">3</div>
                                         <p className="text-foreground">Vá em Configurações → Dispositivos Conectados</p>
                                     </div>
                                     <div className="flex items-center gap-3 text-left p-3 bg-muted/50 rounded-lg">
-                                        <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 font-bold">4</div>
+                                        <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold">4</div>
                                         <p className="text-foreground">Escaneie o QR Code</p>
                                     </div>
                                 </div>
-                                <Button onClick={instanceId ? () => getQRCode() : createInstance} disabled={connecting} className="w-full bg-green-500 hover:bg-green-600">
+                                <Button onClick={instanceId ? () => getQRCode() : createInstance} disabled={connecting} className="w-full bg-primary hover:bg-primary/90">
                                     {connecting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Gerando...</> : <><QrCode className="w-4 h-4 mr-2" />Gerar QR Code</>}
                                 </Button>
                             </CardContent>
