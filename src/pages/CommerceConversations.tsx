@@ -102,10 +102,10 @@ export default function CommerceConversations() {
             if (store?.whatsapp_instance_id) {
                 await supabase.functions.invoke('whatsapp-evolution', {
                     body: {
-                        action: 'sendMessage',
-                        instanceId: store.whatsapp_instance_id,
+                        action: 'sendText',
+                        instanceName: store.whatsapp_instance_id,
                         number: selectedConversation.customer.whatsapp_number,
-                        message: newMessage,
+                        text: newMessage,
                     },
                 });
             }
@@ -138,7 +138,7 @@ export default function CommerceConversations() {
     if (loading) return (
         <main className="flex-1 flex flex-col h-screen overflow-hidden">
             <div className="flex-1 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
         </main>
     );
@@ -149,7 +149,7 @@ export default function CommerceConversations() {
                 <div className="flex items-center gap-4">
                     <SidebarTrigger />
                     <Button variant="ghost" onClick={() => navigate('/commerce')} className="text-muted-foreground"><ArrowLeft className="w-4 h-4 mr-2" />Voltar</Button>
-                    <MessageSquare className="w-6 h-6 text-green-400" />
+                    <MessageSquare className="w-6 h-6 text-primary" />
                     <h1 className="text-xl font-bold text-foreground">Conversas</h1>
                     <Button onClick={loadConversations} variant="ghost" size="sm"><RefreshCw className="w-4 h-4" /></Button>
                 </div>
@@ -219,7 +219,7 @@ export default function CommerceConversations() {
                             <div className="p-4 border-t border-border">
                                 <div className="flex gap-2">
                                     <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && sendMessage()} placeholder="Digite sua mensagem..." className="bg-card border-border text-foreground" />
-                                    <Button onClick={sendMessage} className="bg-green-500 hover:bg-green-600"><Send className="w-4 h-4" /></Button>
+                                    <Button onClick={sendMessage} className="bg-primary hover:bg-primary/90"><Send className="w-4 h-4" /></Button>
                                 </div>
                                 {selectedConversation.status !== 'human_takeover' && (
                                     <p className="text-xs text-yellow-400 mt-2">⚠️ A IA está respondendo. Clique em "Assumir Conversa" para responder manualmente.</p>

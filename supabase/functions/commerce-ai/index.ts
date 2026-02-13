@@ -54,7 +54,7 @@ serve(async (req) => {
         const openaiApiKey = Deno.env.get("OPENAI_API_KEY")!;
         // Fallback para URLs hardcoded se env vars não existirem
         const evolutionApiUrl = Deno.env.get("EVOLUTION_API_URL") || 'https://evolutionapi.clonefyia.com';
-        const evolutionApiKey = Deno.env.get("EVOLUTION_API_KEY") || '94805bfbb25f77f37a029f5a3dbfe62b';
+        const evolutionApiKey = Deno.env.get("EVOLUTION_API_KEY") || '';
 
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -128,7 +128,7 @@ serve(async (req) => {
             .map(
                 (p: Product) =>
                     `- ${p.name} (R$ ${p.price.toFixed(2)})${p.stock_quantity > 0 ? "" : " [ESGOTADO]"}
-   ${p.short_description || p.description?.substring(0, 100) || ""}
+   ${p.short_description || p.description?.substring(0, 100) || ""}${p.ai_selling_points ? `\n   Diferenciais: ${p.ai_selling_points}` : ""}
    ID: ${p.id}`
             )
             .join("\n");

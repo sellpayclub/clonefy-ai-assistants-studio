@@ -40,7 +40,7 @@ export default function CommerceStore() {
 
     const [productForm, setProductForm] = useState({
         name: '', description: '', short_description: '', price: '', compare_at_price: '',
-        stock_quantity: '', category_id: '', is_active: true, is_featured: false, ai_selling_points: '',
+        stock_quantity: '', category_id: '', is_active: true, is_featured: false, ai_selling_points: '', primary_image_url: '',
     });
 
     const [categoryForm, setCategoryForm] = useState({ name: '', description: '' });
@@ -109,12 +109,29 @@ export default function CommerceStore() {
 
     const createProduct = async () => {
         if (!store) return;
-        const data = { store_id: store.id, name: productForm.name, description: productForm.description, short_description: productForm.short_description, price: parseFloat(productForm.price) || 0, compare_at_price: productForm.compare_at_price ? parseFloat(productForm.compare_at_price) : null, stock_quantity: parseInt(productForm.stock_quantity) || 0, category_id: productForm.category_id || null, is_active: productForm.is_active, is_featured: productForm.is_featured, ai_selling_points: productForm.ai_selling_points };
+        const data: any = { store_id: store.id, name: productForm.name, description: productForm.description, short_description: productForm.short_description, price: parseFloat(productForm.price) || 0, compare_at_price: productForm.compare_at_price ? parseFloat(productForm.compare_at_price) : null, stock_quantity: parseInt(productForm.stock_quantity) || 0, category_id: productForm.category_id || null, is_active: productForm.is_active, is_featured: productForm.is_featured, ai_selling_points: productForm.ai_selling_points };
         // @ts-ignore
         const { error } = editingProduct ? await (supabase as any).from('commerce_products').update(data).eq('id', editingProduct.id) : await (supabase as any).from('commerce_products').insert(data);
         if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
+        // Save image URL to commerce_product_images if provided
+        const savedProduct = editingProduct || (await (async () => {
+            // Get the last inserted product for this store
+            const { data: lastProduct } = await (supabase as any).from('commerce_products').select('id').eq('store_id', store.id).order('created_at', { ascending: false }).limit(1).single();
+            return lastProduct;
+        })());
+        if (productForm.primary_image_url && savedProduct?.id) {
+            // @ts-ignore
+            const { data: existingImg } = await (supabase as any).from('commerce_product_images').select('id').eq('product_id', savedProduct.id).eq('is_primary', true).single();
+            if (existingImg) {
+                // @ts-ignore
+                await (supabase as any).from('commerce_product_images').update({ url: productForm.primary_image_url }).eq('id', existingImg.id);
+            } else {
+                // @ts-ignore
+                await (supabase as any).from('commerce_product_images').insert({ product_id: savedProduct.id, url: productForm.primary_image_url, is_primary: true });
+            }
+        }
         toast({ title: editingProduct ? 'Produto atualizado!' : 'Produto criado!' });
-        setShowProductModal(false); setEditingProduct(null); setProductForm({ name: '', description: '', short_description: '', price: '', compare_at_price: '', stock_quantity: '', category_id: '', is_active: true, is_featured: false, ai_selling_points: '' });
+        setShowProductModal(false); setEditingProduct(null); setProductForm({ name: '', description: '', short_description: '', price: '', compare_at_price: '', stock_quantity: '', category_id: '', is_active: true, is_featured: false, ai_selling_points: '', primary_image_url: '' });
         loadStoreData(store.id);
     };
 
@@ -213,7 +230,7 @@ export default function CommerceStore() {
                     </TabsContent>
 
                     <TabsContent value="products" className="mt-6">
-                        <div className="flex items-center justify-between mb-6"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar produtos..." className="pl-10 bg-card border-border text-foreground w-80" /></div><Button onClick={() => { setProductForm({ name: '', description: '', short_description: '', price: '', compare_at_price: '', stock_quantity: '', category_id: '', is_active: true, is_featured: false, ai_selling_points: '' }); setEditingProduct(null); setShowProductModal(true); }} className="bg-primary hover:bg-primary/90"><Plus className="w-4 h-4 mr-2" />Novo Produto</Button></div>
+                        <div className="flex items-center justify-between mb-6"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar produtos..." className="pl-10 bg-card border-border text-foreground w-80" /></div><Button onClick={() => { setProductForm({ name: '', description: '', short_description: '', price: '', compare_at_price: '', stock_quantity: '', category_id: '', is_active: true, is_featured: false, ai_selling_points: '', primary_image_url: '' }); setEditingProduct(null); setShowProductModal(true); }} className="bg-primary hover:bg-primary/90"><Plus className="w-4 h-4 mr-2" />Novo Produto</Button></div>
                         {filteredProducts.length === 0 ? <Card className="bg-card border-border"><CardContent className="py-16 text-center"><Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" /><h3 className="text-xl font-medium text-foreground mb-2">Nenhum produto</h3><p className="text-muted-foreground mb-6">Adicione seu primeiro produto</p><Button onClick={() => setShowProductModal(true)} className="bg-primary"><Plus className="w-4 h-4 mr-2" />Adicionar</Button></CardContent></Card> :
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {filteredProducts.map((product) => (
@@ -222,7 +239,7 @@ export default function CommerceStore() {
                                             <div className="flex items-start justify-between mb-3">
                                                 <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center"><ImageIcon className="w-8 h-8 text-muted-foreground" /></div>
                                                 <div className="flex gap-1">
-                                                    <Button variant="ghost" size="icon" onClick={() => { setEditingProduct(product); setProductForm({ name: product.name, description: product.description || '', short_description: product.short_description || '', price: product.price.toString(), compare_at_price: product.compare_at_price?.toString() || '', stock_quantity: product.stock_quantity?.toString() || '', category_id: product.category_id || '', is_active: product.is_active, is_featured: product.is_featured, ai_selling_points: product.ai_selling_points || '' }); setShowProductModal(true); }}><Edit className="w-4 h-4" /></Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => { setEditingProduct(product); setProductForm({ name: product.name, description: product.description || '', short_description: product.short_description || '', price: product.price.toString(), compare_at_price: product.compare_at_price?.toString() || '', stock_quantity: product.stock_quantity?.toString() || '', category_id: product.category_id || '', is_active: product.is_active, is_featured: product.is_featured, ai_selling_points: product.ai_selling_points || '', primary_image_url: '' }); setShowProductModal(true); }}><Edit className="w-4 h-4" /></Button>
                                                     <Button variant="ghost" size="icon" onClick={() => deleteProduct(product.id)}><Trash2 className="w-4 h-4 text-red-400" /></Button>
                                                 </div>
                                             </div>
