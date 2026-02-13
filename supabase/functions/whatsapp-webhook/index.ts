@@ -350,12 +350,7 @@ serve(async (req) => {
                             const arrayBuffer = await audioResponse.arrayBuffer();
 
                             // Converter para base64
-                            const uint8Array = new Uint8Array(arrayBuffer);
-                            let binary = '';
-                            for (let i = 0; i < uint8Array.length; i++) {
-                                binary += String.fromCharCode(uint8Array[i]);
-                            }
-                            base64Audio = btoa(binary);
+                            base64Audio = base64Encode(new Uint8Array(arrayBuffer));
                         }
                     }
 
