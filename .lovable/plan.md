@@ -1,54 +1,84 @@
 
+# Plano: Corrigir Loja WhatsApp (Commerce)
 
-# Plano: Corrigir Ultimo Bug de Base64 no Webhook
+## Problemas e Correcoes
 
-## Problema
+### 1. API Key da Evolution exposta (commerce-ai) - CRITICO
+A chave da Evolution API esta hardcoded como fallback no codigo. Deve usar apenas `Deno.env.get()` sem fallback exposto.
 
-No `whatsapp-webhook/index.ts`, linhas 354-358, o Metodo 3 de download de audio do usuario ainda usa o padrao antigo de conversao base64:
+**Arquivo:** `supabase/functions/commerce-ai/index.ts` (linhas 56-57)
 
-```text
-let binary = '';
-for (let i = 0; i < uint8Array.length; i++) {
-    binary += String.fromCharCode(uint8Array[i]);
-}
-base64Audio = btoa(binary);
-```
+### 2. ai_selling_points nao incluso no catalogo da IA
+O campo `ai_selling_points` existe nos produtos mas nao aparece no catalogo formatado que a IA recebe. A IA nao consegue usar os argumentos de venda configurados pelo usuario.
 
-Embora nao cause stack overflow (usa loop em vez de spread), `btoa()` pode falhar com strings muito grandes e eh ineficiente (concatenacao de strings O(n^2)). O import do `base64Encode` ja existe no arquivo mas nao esta sendo usado aqui.
+**Arquivo:** `supabase/functions/commerce-ai/index.ts` (linhas 128-134)
+- Adicionar `ai_selling_points` na formatacao do catalogo quando disponivel
 
-## Correcao
+### 3. Envio de mensagem manual usa action errada
+O `CommerceConversations.tsx` usa `whatsapp-evolution` com `action: 'sendMessage'`, mas deveria enviar diretamente pela Evolution API (ou usar uma action que exista no edge function).
 
-Substituir as linhas 353-358 por:
+**Arquivo:** `src/pages/CommerceConversations.tsx` (linhas 99-111)
+- Criar chamada via `commerce-ai` ou usar a Evolution API diretamente via edge function
 
-```text
-base64Audio = base64Encode(new Uint8Array(arrayBuffer));
-```
+### 4. Falta upload de imagem nos produtos
+O modal de criacao/edicao de produto nao tem campo para imagem, mas a IA tenta enviar `primary_image_url`. Sem imagem, o comando `[SEND_IMAGE]` nunca funciona.
 
-Uma unica linha usando o mesmo `base64Encode` do Deno que ja foi importado no topo do arquivo.
+**Arquivo:** `src/pages/CommerceStore.tsx`
+- Adicionar campo de URL de imagem no formulario de produto (input simples para URL)
 
-## Verificacao Completa do Fluxo ElevenLabs
+### 5. Cores hardcoded (green-500)
+Varios componentes usam `green-500` em vez dos tokens do tema (`primary`).
 
-| Etapa | Status | Descricao |
-|-------|--------|-----------|
-| Configuracao (UI) | OK | WhatsApp.tsx permite configurar API Key e Voice ID |
-| Armazenamento | OK | Salvos em n8n_fluxogpt.ApiELEVEN e n8n_fluxogpt.IDvoz |
-| Deteccao de audio | OK | Webhook identifica messageType === 'audio' |
-| Transcricao (Whisper) | OK | Audio do usuario transcrito antes de enviar ao GPT |
-| Download audio fallback | BUG | Usa btoa() antigo - sera corrigido |
-| Resposta GPT | OK | Texto gerado normalmente |
-| TTS (ElevenLabs) | OK | Converte texto em audio com model eleven_multilingual_v2 |
-| Encoding resposta | OK | Usa base64Encode do Deno (corrigido anteriormente) |
-| Envio audio | OK | Envia via Evolution API sendWhatsAppAudio |
-| Fallback texto | OK | Se audio falhar, envia como texto |
-| Follow-up audio | OK | whatsapp-followup tambem envia audio quando configurado |
+**Arquivos:**
+- `src/pages/CommerceOrders.tsx` - spinner, header icon
+- `src/pages/CommerceConversations.tsx` - spinner, botao enviar
+- `src/pages/CommercePaymentSettings.tsx` - spinner, botao salvar
+- `src/pages/CommerceConnectWhatsApp.tsx` - spinner, botoes
 
-## Arquivo a Modificar
+### 6. Memory leak no polling do QR Code
+O `startPolling` no `CommerceConnectWhatsApp.tsx` nao limpa o interval quando o componente desmonta.
+
+**Arquivo:** `src/pages/CommerceConnectWhatsApp.tsx`
+- Guardar intervalId em ref e limpar no cleanup do useEffect
+
+## Resumo de Alteracoes
 
 | Arquivo | Alteracao |
 |---------|-----------|
-| `supabase/functions/whatsapp-webhook/index.ts` | Substituir btoa() por base64Encode() no Metodo 3 (linhas 353-358) |
+| `supabase/functions/commerce-ai/index.ts` | Remover API key hardcoded; incluir ai_selling_points no catalogo |
+| `src/pages/CommerceConversations.tsx` | Corrigir envio de mensagem manual; trocar cores |
+| `src/pages/CommerceStore.tsx` | Adicionar campo de URL de imagem no produto |
+| `src/pages/CommerceOrders.tsx` | Trocar cores hardcoded por tokens primary |
+| `src/pages/CommercePaymentSettings.tsx` | Trocar cores hardcoded por tokens primary |
+| `src/pages/CommerceConnectWhatsApp.tsx` | Corrigir memory leak do polling; trocar cores |
 
 ## Detalhes Tecnicos
 
-A correcao eh simples - substituir 5 linhas por 1 linha usando o `base64Encode` que ja esta importado no topo do arquivo (linha 4).
+### Remocao da API Key (commerce-ai)
+```text
+ANTES:
+  const evolutionApiKey = Deno.env.get("EVOLUTION_API_KEY") || '94805bfbb25f77f37a029f5a3dbfe62b';
 
+DEPOIS:
+  const evolutionApiKey = Deno.env.get("EVOLUTION_API_KEY") || '';
+```
+
+### Catalogo com selling points
+```text
+ANTES:
+  `- ${p.name} (R$ ${p.price.toFixed(2)})...
+     ${p.short_description || ...}
+     ID: ${p.id}`
+
+DEPOIS:
+  `- ${p.name} (R$ ${p.price.toFixed(2)})...
+     ${p.short_description || ...}
+     ${p.ai_selling_points ? `Diferenciais: ${p.ai_selling_points}` : ''}
+     ID: ${p.id}`
+```
+
+### Campo de imagem no produto
+Adicionar input de texto para URL da imagem principal (`primary_image_url`) no formulario de produto, antes do switch Ativo/Destaque.
+
+### Cleanup do polling
+Usar `useRef` para armazenar o intervalId e limpar com `useEffect` return cleanup.
