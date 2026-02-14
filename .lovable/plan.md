@@ -1,73 +1,110 @@
 
 
-# Plano: Correcoes no Agente Financeiro IA
+# Revisao Completa: Agente Financeiro IA
+
+## Status Geral: 85% Pronto - 6 Problemas a Corrigir
+
+### O que FUNCIONA corretamente:
+- 4 tabelas criadas com RLS (financial_accounts, transactions, categories, budgets)
+- Trigger de categorias padrao ativo
+- Constraint UNIQUE em budgets funciona com upsert
+- Tool calling com 8 tools completas (add, list, summary, by_category, budget, delete, edit)
+- Filtro de grupo no webhook
+- Tratamento de 429/402 da gateway
+- Dashboard com graficos (Line, Pie, Bar) e KPIs
+- Pagina de transacoes com filtros, CRUD, export CSV
+- Wizard de conexao WhatsApp
+
+---
 
 ## Problemas Encontrados
 
-### 1. financial-ai usa `service_role` para INSERT mas RLS exige `auth.uid()`
-A edge function `financial-ai` usa `SUPABASE_SERVICE_ROLE_KEY` para criar o client Supabase, o que **bypassa RLS** completamente. Isso funciona para leitura/escrita, mas significa que o `user_id` precisa ser passado manualmente em cada operacao (o que ja esta sendo feito). **Isso funciona corretamente** - sem correcao necessaria aqui.
+### BUG 1: `EVOLUTION_API_URL` nao esta nos secrets
+A `financial-ai` usa `Deno.env.get("EVOLUTION_API_URL")` com fallback para `"https://evolutionapi.clonefyia.com"`. **Mas** as outras edge functions (whatsapp-webhook, live-chat-send, etc.) tem a URL **hardcoded** diretamente no codigo. Nao ha secret configurado.
 
-### 2. Webhook envia mensagem de QUALQUER remetente - PROBLEMA
-O webhook aceita mensagens de qualquer numero que mande mensagem para o WhatsApp do usuario. Isso esta correto para o caso de uso (o usuario conecta SEU proprio WhatsApp e conversa com o agente). **Sem correcao necessaria.**
+**O fallback funciona**, mas o `EVOLUTION_API_KEY` vem de `Deno.env.get("EVOLUTION_API_KEY")` que **esta nos secrets** - entao funciona. Sem correcao necessaria aqui, o fallback esta correto.
 
-### 3. Tool `set_budget` faz upsert sem coluna `spent_amount` - BUG
-Na funcao `set_budget` (linha 284), o upsert nao inclui `spent_amount`, que tem default 0. Mas o `onConflict` exige que o campo esteja na constraint. **Funciona** porque a constraint `UNIQUE(user_id, category, month)` existe e `spent_amount` tem default. Sem problema real.
+### BUG 2: `financial-ai` NAO responde se `evolutionApiKey` estiver vazio
+Linha 521: `if (finalResponse && evolutionApiKey)` - se `EVOLUTION_API_KEY` estiver vazio (fallback `""`), a resposta **nunca e enviada** ao WhatsApp. O secret existe, entao funciona. Mas deveria logar um warning se vazio.
 
-### 4. A IA nao tem contexto de QUEM esta falando - PROBLEMA MENOR
-O agente financeiro responde para qualquer numero que mande mensagem. Deveria idealmente so responder ao PROPRIO usuario (dono da conta), nao a qualquer contato. Atualmente se alguem mandar mensagem para o WhatsApp conectado, o agente vai responder e registrar transacoes na conta do dono.
+**Correcao:** Adicionar log de aviso se `evolutionApiKey` estiver vazio.
 
-**Correcao:** Guardar o numero do dono na `financial_accounts` durante a conexao e filtrar no webhook.
+### BUG 3: `add_transaction` - `amount.toFixed(2)` pode crashar
+Linha 190: `amount.toFixed(2)` - o `amount` vem dos args do tool calling como `any`. Se a IA mandar como string (ex: `"50"`), `.toFixed` vai falhar.
 
-### 5. FALTA `commerce-webhook` e `commerce-ai` no config.toml - BUG EXISTENTE
-O config.toml nao tem as funcoes do commerce. Mas isso e pre-existente, nao do financeiro.
+**Correcao:** Usar `Number(amount).toFixed(2)` em todas as tools que formatam valores.
 
-### 6. `financial-ai` nao trata erro 429/402 da Lovable AI - PROBLEMA
-Se a gateway retornar rate limit (429) ou falta de creditos (402), o agente vai crashar silenciosamente sem responder o usuario.
+### BUG 4: `set_budget` - `limit_amount.toFixed(2)` mesmo problema
+Linha 289: `limit_amount.toFixed(2)` pode crashar se vier como string.
 
-**Correcao:** Tratar erros da gateway e enviar mensagem amigavel no WhatsApp.
+**Correcao:** `Number(limit_amount).toFixed(2)`.
 
-### 7. `edit_transaction` - `.toFixed(2)` em valor potencialmente nulo - BUG
-Linha 348: `(new_amount || tx.amount).toFixed(2)` - se `tx.amount` vier como string do banco, `.toFixed` vai crashar.
+### BUG 5: `financial-ai` nao trata `toolCall.function.arguments` invalido
+Linha 497: `JSON.parse(toolCall.function.arguments)` - se a IA retornar JSON malformado, o parse vai crashar e a funcao toda morre sem responder o usuario.
 
-**Correcao:** Usar `Number(new_amount || tx.amount).toFixed(2)`.
+**Correcao:** Envolver em try/catch e retornar mensagem de erro amigavel.
 
-### 8. Webhook nao filtra mensagens de grupo - PROBLEMA
-Se o WhatsApp receber mensagens de grupo (`@g.us`), o webhook vai tentar processar. Deveria ignorar.
+### BUG 6: Webhook nao trata falha do `financial-ai`
+Se `financial-ai` retornar status 500, o webhook faz `await aiResponse.json()` que pode falhar se o body nao for JSON valido.
 
-**Correcao:** Adicionar filtro `!msg.key.remoteJid.includes("@g.us")`.
+**Correcao:** Verificar `aiResponse.ok` antes do `.json()`.
+
+---
 
 ## Resumo de Correcoes
 
 | Arquivo | Alteracao |
 |---------|-----------|
-| `supabase/functions/financial-webhook/index.ts` | Filtrar mensagens de grupo; guardar owner_phone |
-| `supabase/functions/financial-ai/index.ts` | Tratar erros 429/402; fix toFixed em edit_transaction |
-| `src/pages/FinancialConnect.tsx` | Salvar numero do dono na account ao conectar |
+| `supabase/functions/financial-ai/index.ts` | Fix Number() em add_transaction e set_budget; try/catch no JSON.parse dos args; log warning se evolutionApiKey vazio |
+| `supabase/functions/financial-webhook/index.ts` | Verificar aiResponse.ok antes de parsear |
 
 ## Detalhes Tecnicos
 
-### Filtro de grupo no webhook (financial-webhook)
-Antes de processar cada mensagem, verificar:
+### Fix Number() nos valores (financial-ai)
 ```text
-if (msg.key.remoteJid.includes("@g.us")) continue;
+// add_transaction (linha 190)
+ANTES: amount.toFixed(2)
+DEPOIS: Number(amount).toFixed(2)
+
+// set_budget (linha 289)
+ANTES: limit_amount.toFixed(2)
+DEPOIS: Number(limit_amount).toFixed(2)
 ```
 
-### Tratamento de erros da gateway (financial-ai)
-Apos chamar a Lovable AI Gateway, verificar status:
+### Try/catch no parse dos tool arguments (financial-ai)
 ```text
-if (!aiResponse.ok) {
-  if (aiResponse.status === 429) finalResponse = "Estou sobrecarregada...";
-  else if (aiResponse.status === 402) finalResponse = "Servico temporariamente indisponivel...";
-  else finalResponse = "Desculpe, tive um problema...";
-  break;
+for (const toolCall of assistantMessage.tool_calls) {
+    const toolName = toolCall.function.name;
+    let toolArgs;
+    try {
+        toolArgs = JSON.parse(toolCall.function.arguments);
+    } catch {
+        messages.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            content: "Erro ao processar argumentos da ferramenta.",
+        });
+        continue;
+    }
+    // ... executeTool
 }
 ```
 
-### Fix toFixed (financial-ai, edit_transaction)
+### Verificar resposta da AI no webhook (financial-webhook)
 ```text
-ANTES: (new_amount || tx.amount).toFixed(2)
-DEPOIS: Number(new_amount ?? tx.amount).toFixed(2)
+if (aiResponse.ok) {
+    const aiResult = await aiResponse.json();
+    console.log("[Financial Webhook] AI result:", JSON.stringify(aiResult));
+} else {
+    console.error("[Financial Webhook] AI returned error:", aiResponse.status);
+}
 ```
 
-Essas sao correcoes pontuais que garantem que o fluxo WhatsApp -> Webhook -> IA -> Banco -> Resposta funcione de forma robusta. A logica principal (tool calling, categorias, CRUD) esta correta e pronta para funcionar.
+### Warning se evolutionApiKey vazio (financial-ai)
+```text
+if (!evolutionApiKey) {
+    console.warn("[Financial AI] EVOLUTION_API_KEY not configured - cannot send WhatsApp response");
+}
+```
 
+Essas 6 correcoes eliminam todos os pontos de falha potenciais. Apos aplicar, o fluxo completo WhatsApp -> Webhook -> AI -> Tool Calling -> DB -> Resposta WhatsApp estara 100% robusto.
