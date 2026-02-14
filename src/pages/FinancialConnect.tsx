@@ -35,21 +35,28 @@ export default function FinancialConnect() {
 
       const { data, error } = await supabase.functions.invoke("whatsapp-evolution", {
         body: {
-          action: "createInstance",
+          action: "create",
           instanceName,
+          assistantId: "financial-agent",
+          userEmail: (await supabase.auth.getUser()).data.user?.email || "",
           webhookUrl: `${supabaseUrl}/functions/v1/financial-webhook`,
         },
       });
 
       if (error) throw error;
-      if (!data?.instanceId) throw new Error("Falha ao criar instância");
+      if (!data?.success) throw new Error(data?.error || "Falha ao criar instância");
+
+      // QR code comes from the create response
+      if (data.qrCode) {
+        setQrCode(data.qrCode);
+      }
 
       await updateAccount.mutateAsync({
         id: account.id,
         whatsapp_instance_name: instanceName,
       });
 
-      await getQRCode(instanceName);
+      startPolling(instanceName);
     } catch (error: any) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } finally {
@@ -64,12 +71,12 @@ export default function FinancialConnect() {
     try {
       setConnecting(true);
       const { data, error } = await supabase.functions.invoke("whatsapp-evolution", {
-        body: { action: "getQRCode", instanceId: name },
+        body: { action: "get_qr", instanceName: name },
       });
 
       if (error) throw error;
-      if (data?.qrcode) {
-        setQrCode(data.qrcode);
+      if (data?.qrCode) {
+        setQrCode(data.qrCode);
         startPolling(name);
       }
     } catch (error: any) {
@@ -85,9 +92,9 @@ export default function FinancialConnect() {
     pollingRef.current = setInterval(async () => {
       try {
         const { data } = await supabase.functions.invoke("whatsapp-evolution", {
-          body: { action: "getStatus", instanceId: instName },
+          body: { action: "check_status", instanceName: instName },
         });
-        if (data?.connected) {
+        if (data?.instance?.state === "open" || data?.instance?.state === "connected") {
           setConnected(true);
           setQrCode(null);
           if (pollingRef.current) clearInterval(pollingRef.current);
