@@ -1,84 +1,131 @@
 
-# Plano: Corrigir Loja WhatsApp (Commerce)
 
-## Problemas e Correcoes
+# Plano: Agente Financeiro IA - 100% Isolado
 
-### 1. API Key da Evolution exposta (commerce-ai) - CRITICO
-A chave da Evolution API esta hardcoded como fallback no codigo. Deve usar apenas `Deno.env.get()` sem fallback exposto.
+## Principio de Isolamento
 
-**Arquivo:** `supabase/functions/commerce-ai/index.ts` (linhas 56-57)
+O modulo financeiro seguira o **mesmo padrao do Commerce**: webhook proprio, edge function propria, tabelas proprias, paginas proprias. **Zero alteracoes** no `whatsapp-webhook/index.ts` ou em qualquer outro arquivo existente (exceto `App.tsx`, `AppSidebar.tsx` e `config.toml` para adicionar rotas/menu).
 
-### 2. ai_selling_points nao incluso no catalogo da IA
-O campo `ai_selling_points` existe nos produtos mas nao aparece no catalogo formatado que a IA recebe. A IA nao consegue usar os argumentos de venda configurados pelo usuario.
+```text
+Commerce (referencia):                    Financeiro (novo):
+commerce-webhook  ──> commerce-ai         financial-webhook ──> financial-ai
+commerce_stores, commerce_orders...       financial_accounts, financial_transactions...
+CommerceStore.tsx, CommerceOrders.tsx      FinancialDashboard.tsx, FinancialTransactions.tsx
+CommerceConnectWhatsApp.tsx               FinancialConnect.tsx
+```
 
-**Arquivo:** `supabase/functions/commerce-ai/index.ts` (linhas 128-134)
-- Adicionar `ai_selling_points` na formatacao do catalogo quando disponivel
+## Banco de Dados (4 tabelas novas, isoladas)
 
-### 3. Envio de mensagem manual usa action errada
-O `CommerceConversations.tsx` usa `whatsapp-evolution` com `action: 'sendMessage'`, mas deveria enviar diretamente pela Evolution API (ou usar uma action que exista no edge function).
+| Tabela | Colunas Principais |
+|--------|-------------------|
+| `financial_accounts` | id, user_id, whatsapp_instance_name, whatsapp_connected, currency (BRL), monthly_income, created_at, updated_at |
+| `financial_transactions` | id, user_id, type (income/expense), amount, description, category, date, payment_method, notes, source (whatsapp/manual), created_at |
+| `financial_categories` | id, user_id, name, type (income/expense), icon, color, budget_limit, is_default |
+| `financial_budgets` | id, user_id, category, month (YYYY-MM), limit_amount, spent_amount |
 
-**Arquivo:** `src/pages/CommerceConversations.tsx` (linhas 99-111)
-- Criar chamada via `commerce-ai` ou usar a Evolution API diretamente via edge function
+Todas com **RLS**: `user_id = auth.uid()` para SELECT/INSERT/UPDATE/DELETE.
 
-### 4. Falta upload de imagem nos produtos
-O modal de criacao/edicao de produto nao tem campo para imagem, mas a IA tenta enviar `primary_image_url`. Sem imagem, o comando `[SEND_IMAGE]` nunca funciona.
+Categorias padrao criadas automaticamente via trigger ao inserir `financial_accounts`:
+- Gastos: Alimentacao, Transporte, Moradia, Saude, Educacao, Lazer, Contas, Outros
+- Receitas: Salario, Freelance, Investimentos, Vendas, Outros
 
-**Arquivo:** `src/pages/CommerceStore.tsx`
-- Adicionar campo de URL de imagem no formulario de produto (input simples para URL)
+## Edge Functions (2 novas, isoladas)
 
-### 5. Cores hardcoded (green-500)
-Varios componentes usam `green-500` em vez dos tokens do tema (`primary`).
+### 1. `financial-webhook` (verify_jwt = false)
+- Recebe mensagens do Evolution API (webhook proprio)
+- Identifica loja financeira pelo `instance_name`
+- Extrai texto da mensagem
+- Chama `financial-ai` passando user_id, mensagem, numero
+- **NAO toca** no whatsapp-webhook existente
 
-**Arquivos:**
-- `src/pages/CommerceOrders.tsx` - spinner, header icon
-- `src/pages/CommerceConversations.tsx` - spinner, botao enviar
-- `src/pages/CommercePaymentSettings.tsx` - spinner, botao salvar
-- `src/pages/CommerceConnectWhatsApp.tsx` - spinner, botoes
+### 2. `financial-ai` (verify_jwt = false)
+- Recebe mensagem do usuario
+- Usa **Lovable AI Gateway** (gemini-3-flash-preview) com tool calling
+- Tools disponiveis:
 
-### 6. Memory leak no polling do QR Code
-O `startPolling` no `CommerceConnectWhatsApp.tsx` nao limpa o interval quando o componente desmonta.
+| Tool | Descricao |
+|------|-----------|
+| `add_transaction` | Registrar gasto ou ganho com categoria automatica |
+| `list_transactions` | Listar transacoes com filtros (periodo, categoria, tipo) |
+| `get_summary` | Resumo financeiro do periodo (dia/semana/mes) |
+| `get_balance` | Saldo atual (receitas - gastos) |
+| `get_by_category` | Gastos agrupados por categoria |
+| `set_budget` | Definir orcamento mensal por categoria |
+| `delete_transaction` | Apagar transacao por descricao/valor |
+| `edit_transaction` | Editar transacao existente |
 
-**Arquivo:** `src/pages/CommerceConnectWhatsApp.tsx`
-- Guardar intervalId em ref e limpar no cleanup do useEffect
+- O agente interpreta linguagem natural:
+  - "Gastei 50 no mercado" -> add_transaction(expense, 50, Alimentacao)
+  - "Recebi 3000 de salario" -> add_transaction(income, 3000, Salario)
+  - "Quanto gastei esse mes?" -> get_summary(month)
+  - "Apaga o ultimo gasto" -> delete_transaction(last)
+- Responde via Evolution API (sendText) direto ao usuario
 
-## Resumo de Alteracoes
+## Frontend (3 paginas novas)
+
+### `/financeiro` - Dashboard Principal
+- Wizard de setup: se nao tem `financial_account`, mostra botao "Ativar Agente Financeiro"
+- Se conectado, exibe:
+  - **4 Cards KPI**: Saldo do mes, Receitas, Gastos, % Economizado
+  - **LineChart** (Recharts): Evolucao receitas vs gastos ultimos 30 dias
+  - **PieChart**: Distribuicao de gastos por categoria
+  - **BarChart**: Comparativo mensal (ultimos 6 meses)
+  - **Progress bars**: Orcamento por categoria vs gasto real
+- Filtro de periodo: 7d, 30d, 90d, ano
+
+### `/financeiro/transacoes` - Planilha Completa
+- Tabela com todas as transacoes
+- Filtros: periodo, categoria, tipo (gasto/ganho), valor min/max
+- Busca por descricao
+- Edicao inline (clicar para editar)
+- Adicionar transacao manual (botao + modal)
+- Exportar CSV
+- Paginacao
+
+### `/financeiro/conectar` - Conexao WhatsApp
+- Mesmo padrao do `CommerceConnectWhatsApp.tsx`
+- Cria instancia Evolution API dedicada (`financial_USERID`)
+- Webhook apontando para `financial-webhook`
+- QR Code + polling de status
+
+## Arquivos a Criar
+
+| Arquivo | Descricao |
+|---------|-----------|
+| `src/pages/FinancialDashboard.tsx` | Dashboard com graficos e KPIs |
+| `src/pages/FinancialTransactions.tsx` | Planilha/tabela de transacoes |
+| `src/pages/FinancialConnect.tsx` | Wizard de conexao WhatsApp |
+| `src/hooks/useFinancialData.ts` | Hook para queries financeiras |
+| `supabase/functions/financial-webhook/index.ts` | Webhook isolado |
+| `supabase/functions/financial-ai/index.ts` | Agente IA com tool calling |
+
+## Arquivos a Modificar (somente adicoes)
 
 | Arquivo | Alteracao |
 |---------|-----------|
-| `supabase/functions/commerce-ai/index.ts` | Remover API key hardcoded; incluir ai_selling_points no catalogo |
-| `src/pages/CommerceConversations.tsx` | Corrigir envio de mensagem manual; trocar cores |
-| `src/pages/CommerceStore.tsx` | Adicionar campo de URL de imagem no produto |
-| `src/pages/CommerceOrders.tsx` | Trocar cores hardcoded por tokens primary |
-| `src/pages/CommercePaymentSettings.tsx` | Trocar cores hardcoded por tokens primary |
-| `src/pages/CommerceConnectWhatsApp.tsx` | Corrigir memory leak do polling; trocar cores |
+| `src/App.tsx` | 3 rotas novas: /financeiro, /financeiro/transacoes, /financeiro/conectar |
+| `src/components/AppSidebar.tsx` | 1 item novo no menu: "Financeiro IA" (icone Wallet) |
+| `supabase/config.toml` | 2 funcoes novas: financial-webhook, financial-ai (verify_jwt = false) |
+
+**Nenhum arquivo existente sera alterado de forma destrutiva.** Somente adicoes de rotas, menu e config.
 
 ## Detalhes Tecnicos
 
-### Remocao da API Key (commerce-ai)
-```text
-ANTES:
-  const evolutionApiKey = Deno.env.get("EVOLUTION_API_KEY") || '94805bfbb25f77f37a029f5a3dbfe62b';
+### Prompt do Agente (system message no financial-ai)
+O agente sera instruido como consultor financeiro pessoal:
+- Fala em portugues, amigavel e profissional
+- Categoriza automaticamente cada transacao
+- Alerta quando gastos ultrapassam orcamento configurado
+- Da dicas de economia baseadas no perfil de gastos
+- Formata relatorios com emojis para WhatsApp
+- Confirma antes de apagar/editar transacoes
 
-DEPOIS:
-  const evolutionApiKey = Deno.env.get("EVOLUTION_API_KEY") || '';
-```
+### Lovable AI Gateway (nao OpenAI direto)
+Usa `https://ai.gateway.lovable.dev/v1/chat/completions` com `LOVABLE_API_KEY` (ja configurado). Modelo: `google/gemini-3-flash-preview` com tool calling para structured output.
 
-### Catalogo com selling points
-```text
-ANTES:
-  `- ${p.name} (R$ ${p.price.toFixed(2)})...
-     ${p.short_description || ...}
-     ID: ${p.id}`
+### Seguranca
+- RLS em todas as tabelas: `user_id = auth.uid()`
+- Edge functions usam `SUPABASE_SERVICE_ROLE_KEY` internamente
+- Webhook valida que a instancia pertence a um `financial_account` antes de processar
+- Dados financeiros nunca expostos sem autenticacao
 
-DEPOIS:
-  `- ${p.name} (R$ ${p.price.toFixed(2)})...
-     ${p.short_description || ...}
-     ${p.ai_selling_points ? `Diferenciais: ${p.ai_selling_points}` : ''}
-     ID: ${p.id}`
-```
-
-### Campo de imagem no produto
-Adicionar input de texto para URL da imagem principal (`primary_image_url`) no formulario de produto, antes do switch Ativo/Destaque.
-
-### Cleanup do polling
-Usar `useRef` para armazenar o intervalId e limpar com `useEffect` return cleanup.
