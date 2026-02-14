@@ -31,7 +31,7 @@ export default function FinancialConnect() {
     try {
       setConnecting(true);
       const instanceName = `financial_${account.user_id.substring(0, 8)}`;
-      const evolutionApiUrl = "https://evolutionapi.clonefyia.com";
+      
       const financialWebhookUrl = "https://ekfkrwueqwpqakpsrsjt.supabase.co/functions/v1/financial-webhook";
 
       // Create financial instance (simplified, no OpenAI assistant needed)

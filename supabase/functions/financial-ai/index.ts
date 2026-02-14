@@ -458,7 +458,7 @@ Receitas: Salário, Freelance, Investimentos, Vendas, Outros
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    model: "google/gemini-3-flash-preview",
+                    model: "gpt-4o-mini",
                     messages,
                     tools,
                     tool_choice: "auto",
