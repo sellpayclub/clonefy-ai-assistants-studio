@@ -265,10 +265,10 @@ export default function FinancialTransactions() {
             <SelectItem value="income">Receitas</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+        <Select value={categoryFilter || "all"} onValueChange={(v) => setCategoryFilter(v === "all" ? "" : v)}>
           <SelectTrigger className="w-36"><SelectValue placeholder="Categoria" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
             {[...new Set(transactions.map((t) => t.category))].map((c) => (
               <SelectItem key={c} value={c}>{c}</SelectItem>
             ))}
