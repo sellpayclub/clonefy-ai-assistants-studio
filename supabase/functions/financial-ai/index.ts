@@ -345,7 +345,7 @@ async function executeTool(
             if (new_category) updates.category = new_category;
 
             await supabase.from("financial_transactions").update(updates).eq("id", tx.id);
-            return `✏️ Transação editada: ${tx.description} → ${new_description || tx.description} | R$ ${(new_amount || tx.amount).toFixed(2)}`;
+            return `✏️ Transação editada: ${tx.description} → ${new_description || tx.description} | R$ ${Number(new_amount ?? tx.amount).toFixed(2)}`;
         }
 
         default:
@@ -466,6 +466,18 @@ Receitas: Salário, Freelance, Investimentos, Vendas, Outros
                     max_tokens: 1000,
                 }),
             });
+
+            if (!aiResponse.ok) {
+                if (aiResponse.status === 429) {
+                    finalResponse = "⏳ Estou sobrecarregada no momento. Tente novamente em alguns segundos!";
+                } else if (aiResponse.status === 402) {
+                    finalResponse = "⚠️ Serviço temporariamente indisponível. Tente mais tarde!";
+                } else {
+                    console.error("[Financial AI] Gateway error:", aiResponse.status, await aiResponse.text());
+                    finalResponse = "😔 Desculpe, tive um problema ao processar. Tente novamente!";
+                }
+                break;
+            }
 
             const aiData = await aiResponse.json();
             const choice = aiData.choices?.[0];
