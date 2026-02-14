@@ -70,6 +70,9 @@ serve(async (req) => {
         for (const msg of messages) {
             if (msg.key.fromMe) continue;
 
+            // Ignorar mensagens de grupo
+            if (msg.key.remoteJid.includes("@g.us")) continue;
+
             const senderPhone = msg.key.remoteJid.replace("@s.whatsapp.net", "");
             let messageContent = "";
 
