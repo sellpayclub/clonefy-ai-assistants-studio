@@ -102,8 +102,12 @@ serve(async (req) => {
                     }),
                 });
 
-                const aiResult = await aiResponse.json();
-                console.log("[Financial Webhook] AI result:", JSON.stringify(aiResult));
+                if (aiResponse.ok) {
+                    const aiResult = await aiResponse.json();
+                    console.log("[Financial Webhook] AI result:", JSON.stringify(aiResult));
+                } else {
+                    console.error("[Financial Webhook] AI returned error:", aiResponse.status, await aiResponse.text().catch(() => ""));
+                }
             } catch (aiError) {
                 console.error("[Financial Webhook] Error calling AI:", aiError);
             }
