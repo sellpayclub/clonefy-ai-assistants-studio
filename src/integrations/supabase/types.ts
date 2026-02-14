@@ -1631,6 +1631,156 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_accounts: {
+        Row: {
+          created_at: string
+          currency: string | null
+          id: string
+          monthly_income: number | null
+          updated_at: string
+          user_id: string
+          whatsapp_connected: boolean | null
+          whatsapp_instance_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          id?: string
+          monthly_income?: number | null
+          updated_at?: string
+          user_id: string
+          whatsapp_connected?: boolean | null
+          whatsapp_instance_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          id?: string
+          monthly_income?: number | null
+          updated_at?: string
+          user_id?: string
+          whatsapp_connected?: boolean | null
+          whatsapp_instance_name?: string | null
+        }
+        Relationships: []
+      }
+      financial_budgets: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          limit_amount: number
+          month: string
+          spent_amount: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          limit_amount: number
+          month: string
+          spent_amount?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          limit_amount?: number
+          month?: string
+          spent_amount?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      financial_categories: {
+        Row: {
+          budget_limit: number | null
+          color: string | null
+          created_at: string
+          icon: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          budget_limit?: number | null
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          budget_limit?: number | null
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      financial_transactions: {
+        Row: {
+          ai_categorized: boolean | null
+          amount: number
+          category: string
+          created_at: string
+          date: string
+          description: string
+          id: string
+          notes: string | null
+          payment_method: string | null
+          source: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_categorized?: boolean | null
+          amount: number
+          category?: string
+          created_at?: string
+          date?: string
+          description: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          source?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_categorized?: boolean | null
+          amount?: number
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          source?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       followup_campaigns: {
         Row: {
           assistant_id: string | null

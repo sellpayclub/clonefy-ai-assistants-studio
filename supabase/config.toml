@@ -20,3 +20,9 @@ verify_jwt = false
 
 [functions.agendify-proxy]
 verify_jwt = false
+
+[functions.financial-webhook]
+verify_jwt = false
+
+[functions.financial-ai]
+verify_jwt = false

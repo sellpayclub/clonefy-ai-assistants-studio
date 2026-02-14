@@ -50,6 +50,9 @@ const LazyCommerceOrders = lazy(() => import("./pages/CommerceOrders"));
 const LazyCommerceConversations = lazy(() => import("./pages/CommerceConversations"));
 const LazyCommercePaymentSettings = lazy(() => import("./pages/CommercePaymentSettings"));
 const LazyCommerceConnectWhatsApp = lazy(() => import("./pages/CommerceConnectWhatsApp"));
+const LazyFinancialDashboard = lazy(() => import("./pages/FinancialDashboard"));
+const LazyFinancialTransactions = lazy(() => import("./pages/FinancialTransactions"));
+const LazyFinancialConnect = lazy(() => import("./pages/FinancialConnect"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -139,6 +142,11 @@ const App = () => {
                       <Route path="/commerce/conversations" element={<LazyPage><LazyCommerceConversations /></LazyPage>} />
                       <Route path="/commerce/payment-settings" element={<LazyPage><LazyCommercePaymentSettings /></LazyPage>} />
                       <Route path="/commerce/connect-whatsapp" element={<LazyPage><LazyCommerceConnectWhatsApp /></LazyPage>} />
+                      
+                      {/* Financial Agent */}
+                      <Route path="/financeiro" element={<LazyPage><LazyFinancialDashboard /></LazyPage>} />
+                      <Route path="/financeiro/transacoes" element={<LazyPage><LazyFinancialTransactions /></LazyPage>} />
+                      <Route path="/financeiro/conectar" element={<LazyPage><LazyFinancialConnect /></LazyPage>} />
                       
                       {/* Tools */}
                       <Route path="/ferramentas/clickgo" element={<LazyPage><LazyClickGo /></LazyPage>} />
