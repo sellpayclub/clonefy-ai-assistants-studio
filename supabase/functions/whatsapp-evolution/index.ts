@@ -49,13 +49,13 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { action, instanceName, assistantId, userEmail, elevenLabsApiKey, voiceId } = body;
+    const { action, instanceName, assistantId, userEmail, elevenLabsApiKey, voiceId, webhookUrl } = body;
 
     console.log('WhatsApp Evolution: Action:', action);
 
     switch (action) {
       case 'create':
-        return await createWhatsAppInstanceSequential(instanceName!, assistantId!, userEmail!, supabaseClient, elevenLabsApiKey, voiceId);
+        return await createWhatsAppInstanceSequential(instanceName!, assistantId!, userEmail!, supabaseClient, elevenLabsApiKey, voiceId, webhookUrl);
       case 'list':
         return await listConnections(supabaseClient, user.email!);
       case 'delete':
@@ -92,7 +92,8 @@ async function createWhatsAppInstanceSequential(
   userEmail: string,
   supabaseClient: any,
   elevenLabsApiKey?: string,
-  voiceId?: string
+  voiceId?: string,
+  customWebhookUrl?: string
 ) {
   try {
     console.log('=== STEP 0: Checking if instance already exists ===');
@@ -153,7 +154,7 @@ async function createWhatsAppInstanceSequential(
     // 2. Configurar Webhook (Segunda chamada - só após sucesso da primeira)
     const webhookPayload = {
       webhook: {
-        url: WEBHOOK_URL,
+        url: customWebhookUrl || WEBHOOK_URL,
         enabled: true,
         events: ["MESSAGES_UPSERT"],
         webhook_by_events: false,
