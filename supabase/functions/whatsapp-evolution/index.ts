@@ -12,7 +12,7 @@ const EVOLUTION_API_KEY = '94805bfbb25f77f37a029f5a3dbfe62b';
 const WEBHOOK_URL = 'https://ekfkrwueqwpqakpsrsjt.supabase.co/functions/v1/whatsapp-webhook';
 
 interface CreateInstanceRequest {
-  action: 'create' | 'list' | 'delete' | 'test_api' | 'get_qr' | 'check_status';
+  action: 'create' | 'create_financial' | 'list' | 'delete' | 'test_api' | 'get_qr' | 'check_status';
   instanceName?: string;
   assistantId?: string;
   userEmail?: string;
