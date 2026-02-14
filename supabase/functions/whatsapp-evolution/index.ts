@@ -56,6 +56,8 @@ serve(async (req) => {
     switch (action) {
       case 'create':
         return await createWhatsAppInstanceSequential(instanceName!, assistantId!, userEmail!, supabaseClient, elevenLabsApiKey, voiceId, webhookUrl);
+      case 'create_financial':
+        return await createFinancialInstance(instanceName!, supabaseClient, webhookUrl);
       case 'list':
         return await listConnections(supabaseClient, user.email!);
       case 'delete':
@@ -304,6 +306,107 @@ async function createWhatsAppInstanceSequential(
 
   } catch (error: any) {
     console.error('createWhatsAppInstanceSequential error:', error);
+    throw error;
+  }
+}
+
+// Simplified instance creation for Financial Agent (no OpenAI assistant needed)
+async function createFinancialInstance(
+  instanceName: string,
+  supabaseClient: any,
+  customWebhookUrl?: string
+) {
+  try {
+    const webhookUrl = customWebhookUrl || 'https://ekfkrwueqwpqakpsrsjt.supabase.co/functions/v1/financial-webhook';
+    
+    console.log('=== FINANCIAL: Creating instance:', instanceName, '===');
+
+    // 1. Create Instance
+    const createResponse = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': EVOLUTION_API_KEY },
+      body: JSON.stringify({
+        instanceName,
+        integration: "WHATSAPP-BAILEYS",
+        reject_call: false,
+        groupsIgnore: true,
+        alwaysOnline: true,
+        readMessages: true,
+        readStatus: false,
+        syncFullHistory: false
+      }),
+    });
+
+    if (!createResponse.ok) {
+      const errorData = await createResponse.text();
+      console.error('Financial: Create failed:', errorData);
+      if (errorData.includes('already in use') || errorData.includes('já está em uso')) {
+        // Instance already exists, try to just get QR
+        console.log('Financial: Instance exists, getting QR...');
+      } else {
+        throw new Error(`Falha ao criar instância: ${errorData}`);
+      }
+    } else {
+      console.log('Financial: Instance created');
+    }
+
+    // 2. Wait and set webhook
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const webhookPayload = {
+      webhook: {
+        url: webhookUrl,
+        enabled: true,
+        events: ["MESSAGES_UPSERT"],
+        webhook_by_events: false,
+        webhook_base64: true
+      }
+    };
+
+    const webhookResponse = await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': EVOLUTION_API_KEY },
+      body: JSON.stringify(webhookPayload),
+    });
+
+    if (!webhookResponse.ok) {
+      console.warn('Financial: Webhook config failed, continuing...');
+    } else {
+      console.log('Financial: Webhook configured');
+    }
+
+    // 3. Connect and get QR
+    const connectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
+      method: 'GET',
+      headers: { 'apikey': EVOLUTION_API_KEY },
+    });
+
+    if (!connectResponse.ok) {
+      const errorData = await connectResponse.text();
+      throw new Error(`Failed to connect instance: ${errorData}`);
+    }
+
+    const connectData = await connectResponse.json();
+    const qrCode = connectData.base64;
+
+    if (!qrCode || !qrCode.startsWith('data:image/')) {
+      throw new Error('QR Code not generated');
+    }
+
+    console.log('Financial: QR Code generated successfully');
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        instanceName,
+        qrCode,
+        message: 'Instância financeira criada! QR Code expira em 45 segundos.'
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error: any) {
+    console.error('createFinancialInstance error:', error);
     throw error;
   }
 }

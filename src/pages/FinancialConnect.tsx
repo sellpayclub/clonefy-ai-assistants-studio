@@ -30,27 +30,28 @@ export default function FinancialConnect() {
     if (!account) return;
     try {
       setConnecting(true);
-      const supabaseUrl = "https://ekfkrwueqwpqakpsrsjt.supabase.co";
       const instanceName = `financial_${account.user_id.substring(0, 8)}`;
+      const evolutionApiUrl = "https://evolutionapi.clonefyia.com";
+      const financialWebhookUrl = "https://ekfkrwueqwpqakpsrsjt.supabase.co/functions/v1/financial-webhook";
 
-      const { data, error } = await supabase.functions.invoke("whatsapp-evolution", {
+      // Create financial instance (simplified, no OpenAI assistant needed)
+      const { data: createData, error: createError } = await supabase.functions.invoke("whatsapp-evolution", {
         body: {
-          action: "create",
+          action: "create_financial",
           instanceName,
-          assistantId: "financial-agent",
-          userEmail: (await supabase.auth.getUser()).data.user?.email || "",
-          webhookUrl: `${supabaseUrl}/functions/v1/financial-webhook`,
+          webhookUrl: financialWebhookUrl,
         },
       });
 
-      if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || "Falha ao criar instância");
+      if (createError) throw createError;
+      if (!createData?.success) throw new Error(createData?.error || "Falha ao criar instância");
 
-      // QR code comes from the create response
-      if (data.qrCode) {
-        setQrCode(data.qrCode);
+      // The create function returns qrCode on success
+      if (createData?.qrCode) {
+        setQrCode(createData.qrCode);
       }
 
+      // Save instance name to financial account
       await updateAccount.mutateAsync({
         id: account.id,
         whatsapp_instance_name: instanceName,
@@ -58,7 +59,8 @@ export default function FinancialConnect() {
 
       startPolling(instanceName);
     } catch (error: any) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      console.error("Create instance error:", error);
+      toast({ title: "Erro", description: error.message || "Falha ao criar instância", variant: "destructive" });
     } finally {
       setConnecting(false);
     }
@@ -75,8 +77,10 @@ export default function FinancialConnect() {
       });
 
       if (error) throw error;
-      if (data?.qrCode) {
-        setQrCode(data.qrCode);
+      // get_qr returns base64 field
+      const qr = data?.base64 || data?.qrCode;
+      if (qr) {
+        setQrCode(qr);
         startPolling(name);
       }
     } catch (error: any) {
@@ -94,7 +98,8 @@ export default function FinancialConnect() {
         const { data } = await supabase.functions.invoke("whatsapp-evolution", {
           body: { action: "check_status", instanceName: instName },
         });
-        if (data?.instance?.state === "open" || data?.instance?.state === "connected") {
+        // check_status returns state and isConnected
+        if (data?.isConnected || data?.state === "open" || data?.state === "connected") {
           setConnected(true);
           setQrCode(null);
           if (pollingRef.current) clearInterval(pollingRef.current);
