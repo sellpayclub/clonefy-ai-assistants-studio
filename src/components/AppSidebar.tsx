@@ -18,6 +18,7 @@ import {
   Store,
   Radio,
   Brush,
+  Wallet,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -73,6 +74,7 @@ const menuItems = [
     highlight: true,
   },
   { title: "Loja WhatsApp", url: "/commerce", icon: Store, description: "Venda via WhatsApp com IA", highlight: true },
+  { title: "Financeiro IA", url: "/financeiro", icon: Wallet, description: "Controle financeiro pelo WhatsApp", highlight: true },
   {
     title: "Chat Flutuante",
     url: "/widget-customization",
