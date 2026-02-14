@@ -187,7 +187,7 @@ async function executeTool(
             });
             if (error) return `Erro ao registrar: ${error.message}`;
             const emoji = type === "income" ? "💰" : "💸";
-            return `${emoji} ${type === "income" ? "Receita" : "Gasto"} registrado: R$ ${amount.toFixed(2)} - ${description} (${category})`;
+            return `${emoji} ${type === "income" ? "Receita" : "Gasto"} registrado: R$ ${Number(amount).toFixed(2)} - ${description} (${category})`;
         }
 
         case "list_transactions": {
@@ -286,7 +286,7 @@ async function executeTool(
                 { onConflict: "user_id,category,month" }
             );
             if (error) return `Erro: ${error.message}`;
-            return `✅ Orçamento definido: ${category} → R$ ${limit_amount.toFixed(2)}/mês (${m})`;
+            return `✅ Orçamento definido: ${category} → R$ ${Number(limit_amount).toFixed(2)}/mês (${m})`;
         }
 
         case "delete_transaction": {
@@ -494,7 +494,18 @@ Receitas: Salário, Freelance, Investimentos, Vendas, Outros
             if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
                 for (const toolCall of assistantMessage.tool_calls) {
                     const toolName = toolCall.function.name;
-                    const toolArgs = JSON.parse(toolCall.function.arguments);
+                    let toolArgs: any;
+                    try {
+                        toolArgs = JSON.parse(toolCall.function.arguments);
+                    } catch (parseError) {
+                        console.error(`[Financial AI] Failed to parse tool args for ${toolName}:`, toolCall.function.arguments);
+                        messages.push({
+                            role: "tool",
+                            tool_call_id: toolCall.id,
+                            content: "Erro ao processar argumentos da ferramenta.",
+                        });
+                        continue;
+                    }
                     console.log(`[Financial AI] Tool call: ${toolName}`, toolArgs);
 
                     const result = await executeTool(supabase, request.user_id, toolName, toolArgs);
@@ -518,6 +529,9 @@ Receitas: Salário, Freelance, Investimentos, Vendas, Outros
         console.log("[Financial AI] Final response:", finalResponse);
 
         // Send response via Evolution API
+        if (!evolutionApiKey) {
+            console.warn("[Financial AI] EVOLUTION_API_KEY not configured - cannot send WhatsApp response");
+        }
         if (finalResponse && evolutionApiKey) {
             try {
                 await fetch(`${evolutionApiUrl}/message/sendText/${request.instance_name}`, {
