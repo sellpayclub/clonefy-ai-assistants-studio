@@ -1,146 +1,83 @@
 
 
-# CRM Melhorado - Plano Seguro (Sem Quebrar Nada)
+# IA Classifica Etapas Automaticamente + Remover Chat Flutuante
 
-## Principio de seguranca
+## Resumo
 
-Todas as mudancas sao **aditivas**. Nenhuma coluna existente sera renomeada ou removida. Nenhuma edge function sera modificada. Os dados da IA continuam fluindo normalmente.
-
----
-
-## O que muda no banco de dados
-
-### Novas colunas em `crm_leads` (todas opcionais, sem afetar dados existentes)
-- `company` (text) - empresa
-- `position` (text) - cargo
-- `address` (text) - endereco
-- `cpf_cnpj` (text) - documento
-- `pipeline_stage` (text, default 'novo') - etapa do funil
-- `custom_fields` (jsonb, default '{}') - campos extras
-
-### Nova tabela `crm_pipeline_stages`
-Etapas configuraveis do pipeline por usuario:
-- id, user_id, name, color, sort_order, created_at
-- RLS: usuario gerencia suas proprias etapas
-- Etapas padrao criadas automaticamente: Novo, Contato Feito, Qualificado, Proposta, Negociacao, Fechado, Perdido
-
-### Nova tabela `crm_lead_notes`
-Historico de anotacoes (usuario + IA):
-- id, lead_id, user_id, content, created_by ('user'/'ai'), created_at
-- RLS: usuario gerencia suas proprias notas
-
-### RLS adicional em `crm_leads`
-- Adicionar politica INSERT (para criar leads manualmente)
-- Adicionar politica DELETE (para excluir leads)
-- As politicas existentes de SELECT e UPDATE continuam intactas
+Duas mudancas simples e seguras:
+1. A IA que ja analisa cada conversa passa a tambem classificar a **etapa do pipeline** automaticamente
+2. Remover o chat flutuante de suporte da plataforma
 
 ---
 
-## O que muda no frontend
+## 1. IA classifica pipeline_stage automaticamente
 
-### Pagina CRM (`CRMLeads.tsx`)
-- Toggle no topo: Lista (atual) / Kanban (novo)
-- Botao "+ Novo Lead" que abre modal de criacao
-- Painel de filtros avancados (substituindo o botao de filtro vazio atual)
-- A lista existente continua identica, apenas com coluna de pipeline_stage visivel
+### Como funciona hoje
+A IA ja analisa cada conversa (WhatsApp e Widget) e extrai: `lead_score`, `urgency_level`, `sentiment`, `next_action`, `key_topics`, etc. Mas **nao classifica a etapa do pipeline** — todos os leads ficam como "novo".
 
-### Kanban (`LeadKanban.tsx` - NOVO)
-- Colunas = etapas do pipeline do usuario
-- Drag-and-drop nativo (HTML5, sem biblioteca extra)
-- Cards com: nome, score badge, tags, ultima interacao
-- Arrastar entre colunas atualiza `pipeline_stage`
+### O que muda
+Adicionar `"pipeline_stage"` ao JSON que a IA retorna na analise. A IA vai escolher a etapa com base na conversa:
 
-### Formulario de Lead (`LeadForm.tsx` - NOVO)
-- Modal para criar lead manualmente
-- Campos: nome, whatsapp, email, empresa, cargo, endereco, documento, tags, etapa do pipeline, notas
-- Tambem usado para edicao no drawer
+```text
+"pipeline_stage": "novo | contato feito | qualificado | proposta | negociacao | fechado | perdido"
+```
 
-### Drawer de detalhes (`LeadDetailsDrawer.tsx`)
-- Nova aba "Editar" com formulario completo
-- Nova secao de notas na aba "Detalhes"
-- As abas existentes (Visao Geral, Analise IA, Documentos, Detalhes) continuam iguais
+### Regras para a IA classificar
+Vamos adicionar instrucoes claras no prompt:
+- **novo**: Primeiro contato, sem conversa relevante ainda
+- **contato feito**: Ja houve troca de mensagens, cliente respondeu
+- **qualificado**: Cliente demonstrou interesse real, fez perguntas especificas
+- **proposta**: Preco/proposta foi discutido ou enviado
+- **negociacao**: Cliente esta comparando, pedindo desconto, negociando condicoes
+- **fechado**: Cliente confirmou compra ou aceitou proposta
+- **perdido**: Cliente recusou, sumiu, ou disse que nao quer
 
-### Filtros (`LeadFilters.tsx` - NOVO)
-- Filtro por etapa do pipeline, score, fonte, tags, urgencia, periodo
+### Arquivos modificados
 
-### Config de Pipeline (`PipelineSettings.tsx` - NOVO)
-- Modal para gerenciar etapas: adicionar, renomear, mudar cor, reordenar, excluir
+| Arquivo | Alteracao |
+|---------|-----------|
+| `supabase/functions/whatsapp-webhook/index.ts` | Adicionar `pipeline_stage` no prompt JSON e no mapeamento de dados |
+| `supabase/functions/widget-chat/index.ts` | Mesma alteracao |
 
-### Tags (`TagInput.tsx` - NOVO)
-- Componente de chips com autocomplete de tags existentes
-
-### Notas (`LeadNotesSection.tsx` - NOVO)
-- Timeline de notas com campo para adicionar
-- Indicador visual: usuario vs IA
-
-### Hook centralizado (`useCRMLeads.ts` - NOVO)
-- useQuery para listar leads com filtros
-- useMutation para criar, editar, excluir leads
-- useMutation para notas
-- useMutation para mover no pipeline
+### Seguranca
+- E apenas uma linha a mais no prompt da IA (que ja funciona)
+- E apenas uma linha a mais no mapeamento de dados (mesmo padrao das outras)
+- Se a IA nao retornar o campo, o default "novo" continua (coluna tem DEFAULT)
+- Se o usuario moveu manualmente para outra etapa, a IA pode atualizar na proxima analise (comportamento desejado — IA sempre reflete o estado real da conversa)
 
 ---
 
-## O que NAO muda (garantia de seguranca)
+## 2. Remover chat flutuante de suporte
 
-- **Edge functions**: `whatsapp-webhook` e `widget-chat` continuam gravando leads normalmente. Eles usam `service_role` e nao sao afetados por novas colunas (colunas novas sao todas nullable com defaults).
-- **Colunas existentes**: nenhuma coluna e renomeada, removida ou tem tipo alterado.
-- **RLS existente**: as policies "Leads View" (SELECT) e "Leads Update" (UPDATE) continuam intactas. Apenas adicionamos INSERT e DELETE.
-- **Analise IA**: os campos `conversation_analysis`, `key_topics`, `customer_questions`, `objections`, `products_mentioned`, `urgency_level`, `next_action`, `sentiment` continuam sendo preenchidos pela IA sem alteracao.
-- **Drawer atual**: as 4 abas existentes permanecem identicas. So adicionamos uma 5a aba "Editar".
+### Alteracoes
+
+| Arquivo | Alteracao |
+|---------|-----------|
+| `src/App.tsx` | Remover import e uso de `ConditionalSupportWidget` |
+| `src/components/ConditionalSupportWidget.tsx` | Deletar arquivo |
+| `src/components/SupportChatWidget.tsx` | Deletar arquivo |
+
+### O que NAO sera removido
+- `ChatWidget.tsx` (usado na pagina de vendas Espanol)
+- `embed-widget.js` / `embed-widget-v2.js` (usados pelos clientes nos seus sites)
 
 ---
 
 ## Detalhes tecnicos
 
-### Migration SQL
+### Mudanca no prompt (whatsapp-webhook, ~linha 1629)
+Adicionar ao JSON schema do prompt:
 ```text
--- Novas colunas (todas opcionais, sem quebrar nada)
-ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS company text;
-ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS position text;
-ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS address text;
-ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS cpf_cnpj text;
-ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS pipeline_stage text DEFAULT 'novo';
-ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS custom_fields jsonb DEFAULT '{}';
-
--- Politicas que faltam
-CREATE POLICY "Leads Insert" ON crm_leads FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Leads Delete" ON crm_leads FOR DELETE USING (auth.uid() = user_id);
-
--- Pipeline stages configuravel
-CREATE TABLE crm_pipeline_stages (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  name text NOT NULL,
-  color text DEFAULT '#6366f1',
-  sort_order integer DEFAULT 0,
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE crm_pipeline_stages ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "pipeline_stages_all" ON crm_pipeline_stages FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
--- Notas do lead
-CREATE TABLE crm_lead_notes (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  lead_id uuid REFERENCES crm_leads(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL,
-  content text NOT NULL,
-  created_by text DEFAULT 'user',
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE crm_lead_notes ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "lead_notes_all" ON crm_lead_notes FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+"pipeline_stage": "novo | contato feito | qualificado | proposta | negociacao | fechado | perdido - classifique baseado no estagio REAL da negociacao na conversa"
 ```
 
-### Sequencia de implementacao
-1. Migration SQL (schema aditivo)
-2. Hook `useCRMLeads.ts` (logica centralizada)
-3. Componentes novos: TagInput, LeadForm, LeadFilters, LeadNotesSection, PipelineSettings, LeadKanban
-4. Atualizar LeadDetailsDrawer (adicionar aba Editar + notas)
-5. Atualizar CRMLeads.tsx (toggle kanban, filtros, botao novo lead)
+### Mudanca no mapeamento (whatsapp-webhook, ~linha 1687)
+Adicionar apos `if (profiling.sentiment)`:
+```text
+if (profiling.pipeline_stage) leadData.pipeline_stage = profiling.pipeline_stage;
+```
 
-### Kanban: drag-and-drop nativo
-Usando `draggable`, `onDragStart`, `onDragOver`, `onDrop` do HTML5. Zero dependencias extras.
+### Mesmas duas mudancas no widget-chat (~linhas 145 e 202)
 
-### Interface Lead atualizada
-A interface TypeScript do Lead ganha os novos campos opcionais (`company?`, `position?`, etc.), mantendo todos os existentes.
+Totalizando: 4 linhas adicionadas em 2 edge functions + limpeza do chat flutuante.
+
