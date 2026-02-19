@@ -1449,11 +1449,50 @@ export type Database = {
           },
         ]
       }
+      crm_lead_notes: {
+        Row: {
+          content: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          lead_id: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          lead_id?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          lead_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_notes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_leads: {
         Row: {
+          address: string | null
           assistant_id: string | null
+          company: string | null
           conversation_analysis: string | null
+          cpf_cnpj: string | null
           created_at: string | null
+          custom_fields: Json | null
           customer_questions: string[] | null
           email: string | null
           id: string
@@ -1464,6 +1503,8 @@ export type Database = {
           name: string | null
           next_action: string | null
           objections: string[] | null
+          pipeline_stage: string | null
+          position: string | null
           products_mentioned: string[] | null
           sentiment: string | null
           source: string | null
@@ -1475,9 +1516,13 @@ export type Database = {
           whatsapp_number: string
         }
         Insert: {
+          address?: string | null
           assistant_id?: string | null
+          company?: string | null
           conversation_analysis?: string | null
+          cpf_cnpj?: string | null
           created_at?: string | null
+          custom_fields?: Json | null
           customer_questions?: string[] | null
           email?: string | null
           id?: string
@@ -1488,6 +1533,8 @@ export type Database = {
           name?: string | null
           next_action?: string | null
           objections?: string[] | null
+          pipeline_stage?: string | null
+          position?: string | null
           products_mentioned?: string[] | null
           sentiment?: string | null
           source?: string | null
@@ -1499,9 +1546,13 @@ export type Database = {
           whatsapp_number: string
         }
         Update: {
+          address?: string | null
           assistant_id?: string | null
+          company?: string | null
           conversation_analysis?: string | null
+          cpf_cnpj?: string | null
           created_at?: string | null
+          custom_fields?: Json | null
           customer_questions?: string[] | null
           email?: string | null
           id?: string
@@ -1512,6 +1563,8 @@ export type Database = {
           name?: string | null
           next_action?: string | null
           objections?: string[] | null
+          pipeline_stage?: string | null
+          position?: string | null
           products_mentioned?: string[] | null
           sentiment?: string | null
           source?: string | null
@@ -1531,6 +1584,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      crm_pipeline_stages: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          id: string
+          name: string
+          sort_order: number | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          sort_order?: number | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          sort_order?: number | null
+          user_id?: string
+        }
+        Relationships: []
       }
       customers: {
         Row: {
