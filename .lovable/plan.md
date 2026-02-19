@@ -1,64 +1,146 @@
 
 
-# Pente Fino Final: Agente Financeiro IA
+# CRM Melhorado - Plano Seguro (Sem Quebrar Nada)
 
-## Problemas Encontrados
+## Principio de seguranca
 
-### PROBLEMA 1 (CRITICO): Modelo AI potencialmente invalido
-A `financial-ai` usa `google/gemini-3-flash-preview` enquanto **todas as outras 7 edge functions** do sistema usam `gpt-4o-mini` ou `gpt-4o` na Lovable AI Gateway. Esse modelo pode nao existir ou nao suportar tool calling corretamente na gateway, o que faria o agente inteiro nao funcionar.
-
-**Correcao:** Trocar para `gpt-4o-mini` que ja funciona em todas as outras funcoes e suporta tool calling.
-
-### PROBLEMA 2 (MEDIO): `check_status` tenta atualizar tabela errada
-O polling de status chama `checkConnectionStatus` que atualiza a tabela `n8n_fluxogpt` (linha 716-719). Instancias financeiras NAO tem registro nessa tabela - sao armazenadas em `financial_accounts`. O update falha silenciosamente (0 rows affected), mas nao causa erro visivel.
-
-O frontend ja trata isso corretamente - apos detectar conexao, ele proprio atualiza `financial_accounts` via `updateAccount.mutateAsync`. Entao funciona, mas gera logs de warning desnecessarios.
-
-**Sem correcao necessaria** - o fluxo funciona porque o frontend faz o update correto.
-
-### PROBLEMA 3 (MENOR): Interface TypeScript desatualizada
-A interface `CreateInstanceRequest` (linha 14) nao inclui `'create_financial'` no union type do `action`. Em runtime Deno isso nao causa erro, mas e codigo incorreto.
-
-**Correcao:** Adicionar `'create_financial'` ao tipo.
-
-### PROBLEMA 4 (MENOR): Variavel `evolutionApiUrl` nao usada no FinancialConnect
-Linha 34 do `FinancialConnect.tsx` declara `const evolutionApiUrl = "https://evolutionapi.clonefyia.com"` mas nunca e usada (toda comunicacao vai pela edge function). Codigo morto.
-
-**Correcao:** Remover a variavel.
-
-### PROBLEMA 5 (OBSERVACAO): Race condition na primeira mensagem
-Apos escanear o QR Code, o Evolution API pode enviar o primeiro webhook ANTES do frontend polling detectar a conexao e setar `whatsapp_connected = true` na `financial_accounts`. Se isso acontecer, o webhook nao encontra a account (porque filtra por `whatsapp_connected: true`) e ignora a mensagem.
-
-**Impacto:** O usuario pode perder a primeira mensagem enviada. Basta reenviar.
-
-**Sem correcao necessaria** - e um edge case raro e inofensivo.
+Todas as mudancas sao **aditivas**. Nenhuma coluna existente sera renomeada ou removida. Nenhuma edge function sera modificada. Os dados da IA continuam fluindo normalmente.
 
 ---
 
-## Resumo de Correcoes
+## O que muda no banco de dados
 
-| Arquivo | Alteracao | Prioridade |
-|---------|-----------|------------|
-| `supabase/functions/financial-ai/index.ts` | Trocar modelo de `google/gemini-3-flash-preview` para `gpt-4o-mini` | CRITICA |
-| `supabase/functions/whatsapp-evolution/index.ts` | Adicionar `'create_financial'` na interface | Menor |
-| `src/pages/FinancialConnect.tsx` | Remover variavel `evolutionApiUrl` nao usada | Menor |
+### Novas colunas em `crm_leads` (todas opcionais, sem afetar dados existentes)
+- `company` (text) - empresa
+- `position` (text) - cargo
+- `address` (text) - endereco
+- `cpf_cnpj` (text) - documento
+- `pipeline_stage` (text, default 'novo') - etapa do funil
+- `custom_fields` (jsonb, default '{}') - campos extras
 
-## Detalhes Tecnicos
+### Nova tabela `crm_pipeline_stages`
+Etapas configuraveis do pipeline por usuario:
+- id, user_id, name, color, sort_order, created_at
+- RLS: usuario gerencia suas proprias etapas
+- Etapas padrao criadas automaticamente: Novo, Contato Feito, Qualificado, Proposta, Negociacao, Fechado, Perdido
 
-### Troca de modelo (financial-ai, linha 461)
+### Nova tabela `crm_lead_notes`
+Historico de anotacoes (usuario + IA):
+- id, lead_id, user_id, content, created_by ('user'/'ai'), created_at
+- RLS: usuario gerencia suas proprias notas
+
+### RLS adicional em `crm_leads`
+- Adicionar politica INSERT (para criar leads manualmente)
+- Adicionar politica DELETE (para excluir leads)
+- As politicas existentes de SELECT e UPDATE continuam intactas
+
+---
+
+## O que muda no frontend
+
+### Pagina CRM (`CRMLeads.tsx`)
+- Toggle no topo: Lista (atual) / Kanban (novo)
+- Botao "+ Novo Lead" que abre modal de criacao
+- Painel de filtros avancados (substituindo o botao de filtro vazio atual)
+- A lista existente continua identica, apenas com coluna de pipeline_stage visivel
+
+### Kanban (`LeadKanban.tsx` - NOVO)
+- Colunas = etapas do pipeline do usuario
+- Drag-and-drop nativo (HTML5, sem biblioteca extra)
+- Cards com: nome, score badge, tags, ultima interacao
+- Arrastar entre colunas atualiza `pipeline_stage`
+
+### Formulario de Lead (`LeadForm.tsx` - NOVO)
+- Modal para criar lead manualmente
+- Campos: nome, whatsapp, email, empresa, cargo, endereco, documento, tags, etapa do pipeline, notas
+- Tambem usado para edicao no drawer
+
+### Drawer de detalhes (`LeadDetailsDrawer.tsx`)
+- Nova aba "Editar" com formulario completo
+- Nova secao de notas na aba "Detalhes"
+- As abas existentes (Visao Geral, Analise IA, Documentos, Detalhes) continuam iguais
+
+### Filtros (`LeadFilters.tsx` - NOVO)
+- Filtro por etapa do pipeline, score, fonte, tags, urgencia, periodo
+
+### Config de Pipeline (`PipelineSettings.tsx` - NOVO)
+- Modal para gerenciar etapas: adicionar, renomear, mudar cor, reordenar, excluir
+
+### Tags (`TagInput.tsx` - NOVO)
+- Componente de chips com autocomplete de tags existentes
+
+### Notas (`LeadNotesSection.tsx` - NOVO)
+- Timeline de notas com campo para adicionar
+- Indicador visual: usuario vs IA
+
+### Hook centralizado (`useCRMLeads.ts` - NOVO)
+- useQuery para listar leads com filtros
+- useMutation para criar, editar, excluir leads
+- useMutation para notas
+- useMutation para mover no pipeline
+
+---
+
+## O que NAO muda (garantia de seguranca)
+
+- **Edge functions**: `whatsapp-webhook` e `widget-chat` continuam gravando leads normalmente. Eles usam `service_role` e nao sao afetados por novas colunas (colunas novas sao todas nullable com defaults).
+- **Colunas existentes**: nenhuma coluna e renomeada, removida ou tem tipo alterado.
+- **RLS existente**: as policies "Leads View" (SELECT) e "Leads Update" (UPDATE) continuam intactas. Apenas adicionamos INSERT e DELETE.
+- **Analise IA**: os campos `conversation_analysis`, `key_topics`, `customer_questions`, `objections`, `products_mentioned`, `urgency_level`, `next_action`, `sentiment` continuam sendo preenchidos pela IA sem alteracao.
+- **Drawer atual**: as 4 abas existentes permanecem identicas. So adicionamos uma 5a aba "Editar".
+
+---
+
+## Detalhes tecnicos
+
+### Migration SQL
 ```text
-ANTES: model: "google/gemini-3-flash-preview"
-DEPOIS: model: "gpt-4o-mini"
+-- Novas colunas (todas opcionais, sem quebrar nada)
+ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS company text;
+ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS position text;
+ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS address text;
+ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS cpf_cnpj text;
+ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS pipeline_stage text DEFAULT 'novo';
+ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS custom_fields jsonb DEFAULT '{}';
+
+-- Politicas que faltam
+CREATE POLICY "Leads Insert" ON crm_leads FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Leads Delete" ON crm_leads FOR DELETE USING (auth.uid() = user_id);
+
+-- Pipeline stages configuravel
+CREATE TABLE crm_pipeline_stages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  name text NOT NULL,
+  color text DEFAULT '#6366f1',
+  sort_order integer DEFAULT 0,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE crm_pipeline_stages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "pipeline_stages_all" ON crm_pipeline_stages FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- Notas do lead
+CREATE TABLE crm_lead_notes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id uuid REFERENCES crm_leads(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL,
+  content text NOT NULL,
+  created_by text DEFAULT 'user',
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE crm_lead_notes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "lead_notes_all" ON crm_lead_notes FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 ```
-O `gpt-4o-mini` ja esta validado em 7 outras edge functions do projeto e suporta tool calling perfeitamente.
 
-### Interface atualizada (whatsapp-evolution, linha 15)
-```text
-ANTES: action: 'create' | 'list' | 'delete' | 'test_api' | 'get_qr' | 'check_status';
-DEPOIS: action: 'create' | 'create_financial' | 'list' | 'delete' | 'test_api' | 'get_qr' | 'check_status';
-```
+### Sequencia de implementacao
+1. Migration SQL (schema aditivo)
+2. Hook `useCRMLeads.ts` (logica centralizada)
+3. Componentes novos: TagInput, LeadForm, LeadFilters, LeadNotesSection, PipelineSettings, LeadKanban
+4. Atualizar LeadDetailsDrawer (adicionar aba Editar + notas)
+5. Atualizar CRMLeads.tsx (toggle kanban, filtros, botao novo lead)
 
-### Remover codigo morto (FinancialConnect.tsx, linha 34)
-Remover `const evolutionApiUrl = "https://evolutionapi.clonefyia.com";` que nao e usada.
+### Kanban: drag-and-drop nativo
+Usando `draggable`, `onDragStart`, `onDragOver`, `onDrop` do HTML5. Zero dependencias extras.
 
-Apos essas correcoes (especialmente a troca do modelo), o sistema estara 100% pronto para producao.
+### Interface Lead atualizada
+A interface TypeScript do Lead ganha os novos campos opcionais (`company?`, `position?`, etc.), mantendo todos os existentes.
