@@ -1626,7 +1626,8 @@ Retorne APENAS um JSON com as seguintes chaves:
   "customer_questions": ["perguntas", "específicas", "que", "o", "cliente", "fez"],
   "objections": ["objeções", "preocupações", "ou", "hesitações", "do", "cliente"],
   "products_mentioned": ["produtos", "serviços", "ou", "planos", "mencionados"],
-  "next_action": "Próximo passo ESPECÍFICO recomendado para o vendedor (ex: ligar para confirmar, enviar proposta, agendar demo)"
+  "next_action": "Próximo passo ESPECÍFICO recomendado para o vendedor (ex: ligar para confirmar, enviar proposta, agendar demo)",
+  "pipeline_stage": "novo | contato feito | qualificado | proposta | negociacao | fechado | perdido - classifique baseado no estágio REAL da negociação: novo=primeiro contato, contato feito=já conversaram, qualificado=interesse real demonstrado, proposta=preço discutido, negociacao=comparando/pedindo desconto, fechado=compra confirmada, perdido=recusou ou sumiu"
 }
 
 SEJA DETALHADO! O vendedor vai usar essa análise para fechar a venda.`
@@ -1685,6 +1686,7 @@ SEJA DETALHADO! O vendedor vai usar essa análise para fechar a venda.`
         if (profiling.urgency_level) leadData.urgency_level = profiling.urgency_level;
         if (profiling.next_action) leadData.next_action = profiling.next_action;
         if (profiling.sentiment) leadData.sentiment = profiling.sentiment;
+        if (profiling.pipeline_stage) leadData.pipeline_stage = profiling.pipeline_stage;
 
         // Upsert na tabela crm_leads
         const { data: existingLead } = await supabase

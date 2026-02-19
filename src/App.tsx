@@ -8,7 +8,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BrandingProvider } from "@/contexts/BrandingContext";
-import ConditionalSupportWidget from "@/components/ConditionalSupportWidget";
+
 import AppLayout from "@/components/AppLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -96,7 +96,7 @@ const App = () => {
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
-                  <ConditionalSupportWidget />
+                  
                   <Routes>
                     {/* Public routes */}
                     <Route path="/" element={<Index />} />

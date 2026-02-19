@@ -142,7 +142,8 @@ Retorne APENAS um JSON com as seguintes chaves:
   "customer_questions": ["perguntas", "que", "o", "cliente", "fez"],
   "objections": ["objeções", "ou", "preocupações", "levantadas"],
   "products_mentioned": ["produtos", "ou", "serviços", "mencionados"],
-  "next_action": "Próximo passo recomendado para o vendedor (ex: 'Enviar proposta com desconto', 'Agendar demo', 'Esclarecer dúvida sobre X')"
+  "next_action": "Próximo passo recomendado para o vendedor (ex: 'Enviar proposta com desconto', 'Agendar demo', 'Esclarecer dúvida sobre X')",
+  "pipeline_stage": "novo | contato feito | qualificado | proposta | negociacao | fechado | perdido - classifique baseado no estágio REAL da negociação: novo=primeiro contato, contato feito=já conversaram, qualificado=interesse real demonstrado, proposta=preço discutido, negociacao=comparando/pedindo desconto, fechado=compra confirmada, perdido=recusou ou sumiu"
 }
 
 IMPORTANTE: Seja detalhado na análise! O vendedor precisa entender completamente o contexto do lead.`
@@ -200,6 +201,7 @@ IMPORTANTE: Seja detalhado na análise! O vendedor precisa entender completament
     if (profiling.urgency_level) leadData.urgency_level = profiling.urgency_level;
     if (profiling.next_action) leadData.next_action = profiling.next_action;
     if (profiling.sentiment) leadData.sentiment = profiling.sentiment;
+    if (profiling.pipeline_stage) leadData.pipeline_stage = profiling.pipeline_stage;
 
     if (existingLead) {
       console.log('📝 [Widget] Atualizando lead existente no CRM com análise completa...');
