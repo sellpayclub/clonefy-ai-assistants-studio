@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +21,7 @@ interface LeadFormProps {
 export function LeadForm({ open, onOpenChange, onSubmit, lead, pipelineStages, allTags, isLoading }: LeadFormProps) {
   const isEdit = !!lead;
 
-  const [form, setForm] = useState(() => ({
+  const buildForm = () => ({
     name: lead?.name || '',
     whatsapp_number: lead?.whatsapp_number || '',
     email: lead?.email || '',
@@ -34,7 +34,14 @@ export function LeadForm({ open, onOpenChange, onSubmit, lead, pipelineStages, a
     status: lead?.status || 'aberto',
     lead_score: lead?.lead_score || 0,
     urgency_level: lead?.urgency_level || 'baixa',
-  }));
+  });
+
+  const [form, setForm] = useState(buildForm);
+
+  // Reset form when lead changes or dialog opens
+  useEffect(() => {
+    if (open) setForm(buildForm());
+  }, [open, lead?.id]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
