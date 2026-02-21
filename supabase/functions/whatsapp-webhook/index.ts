@@ -776,7 +776,7 @@ serve(async (req) => {
 
         // 2. Buscar ou criar registro para este contato
         // Verificar se já existe um registro com este contato
-        const { data: existingContact } = await supabase
+        let { data: existingContact } = await supabase
             .from('n8n_fluxogpt')
             .select('*')
             .eq('nomeinstancia', instanceName)
@@ -816,7 +816,7 @@ serve(async (req) => {
 
         const now = Date.now().toString();
         let currentMessages = messageContent;
-        let threadId = instanceConfig.threadid;
+        let threadId = null; // NUNCA herdar thread da instancia - cada contato tem sua propria thread
 
         // Se já existe um registro para este contato específico
         if (existingContact) {
@@ -880,20 +880,30 @@ serve(async (req) => {
             threadId = latestData?.threadid || threadId;
 
         } else {
-            // Novo contato - criar registro de conversa
-            // Não vamos duplicar o registro da instância, vamos usar o existente
-            // e apenas atualizar com os dados do contato
-            await supabase
+            // Novo contato - INSERIR nova linha isolada (nunca sobrescrever a config da instancia)
+            console.log(`🆕 Novo contato ${contactNumber} - criando registro isolado`);
+            const { data: newContactData, error: insertError } = await supabase
                 .from('n8n_fluxogpt')
-                .update({
+                .insert({
+                    nomeinstancia: instanceName,
+                    idassistentgpt: instanceConfig.idassistentgpt,
+                    whatsappuser: contactNumber,
                     message: currentMessages,
                     timeout: now,
-                    whatsappuser: contactNumber,
                     last_message_at: new Date().toISOString(),
                     last_sender: 'user',
-                    followup_count: 3  // Encerra o ciclo para novos contatos também após a primeira resposta
+                    followup_count: 3
                 })
-                .eq('id', instanceConfig.id);
+                .select()
+                .single();
+
+            if (insertError) {
+                console.error('❌ Erro ao inserir novo contato:', insertError);
+                throw new Error(`Erro ao criar registro do contato: ${insertError.message}`);
+            }
+
+            const newContactId = newContactData.id;
+            console.log(`✅ Registro criado para contato ${contactNumber} com id ${newContactId}`);
 
             // Registrar Analytics - Nova Mensagem do Usuário e Novo Visitante
             await updateAnalytics(assistantUuid, userId, 'user');
@@ -902,11 +912,11 @@ serve(async (req) => {
             // Aguardar buffer
             await new Promise(resolve => setTimeout(resolve, MESSAGE_BUFFER_SECONDS * 1000));
 
-            // Verificar se ainda somos a última mensagem
+            // Verificar se ainda somos a última mensagem - agora na linha do CONTATO
             const { data: latestData } = await supabase
                 .from('n8n_fluxogpt')
                 .select('*')
-                .eq('id', instanceConfig.id)
+                .eq('id', newContactId)
                 .single();
 
             if (latestData && latestData.timeout !== now) {
@@ -922,6 +932,9 @@ serve(async (req) => {
 
             currentMessages = latestData?.message || currentMessages;
             threadId = latestData?.threadid || threadId;
+
+            // Guardar referencia para salvar threadId depois
+            existingContact = newContactData;
         }
 
         console.log(`📨 Processando mensagem completa: ${currentMessages}`);
