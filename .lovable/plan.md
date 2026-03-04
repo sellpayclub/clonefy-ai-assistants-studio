@@ -1,70 +1,54 @@
 
-## Ideia do Usuário: Botão Flutuante Telegram no Site do Cliente
+## Problems Found
 
-A ideia é ótima e simples de implementar. O cliente coloca um script no site dele e aparece um botão flutuante azul do Telegram que, ao clicar, abre o link `t.me/seubot` diretamente no Telegram.
+### 1. Type mismatch — `LiveChatSession.source`
+In `src/hooks/useLiveChat.ts` line 12, `source` is typed as `'whatsapp' | 'widget'`. Telegram sessions have `source: 'telegram'` in the DB but the TypeScript type doesn't include it. This causes the source filter `sourceFilter !== 'all' && session.source !== sourceFilter` to silently fail for Telegram sessions when the filter is set to `'telegram'` — because TypeScript would not match. More critically, the filter `(session.source as string) === 'telegram'` workarounds in ChatWindow/SessionsList are band-aids.
 
-### Como vai funcionar
+### 2. Source filter dropdown missing Telegram
+`LiveChat.tsx` line 122-125: the source filter has only `whatsapp` and `widget`. No `telegram` option, so users can't filter by Telegram.
 
-O cliente já tem o `embed-widget-v2.js` para o chat da IA. Vamos criar um segundo script embeddable: **`telegram-widget.js`** — um botão flutuante Telegram que o cliente cola no site com 1 linha de código:
+### 3. Stats header missing Telegram counter
+No Telegram stat shown in the header stats section. Only Bot (AI) and Human counters exist.
 
-```html
-<script src="https://clonefy-ai-assistants-studio.lovable.app/telegram-widget.js?bot=seubot"></script>
+### 4. CRM upsert broken in telegram-webhook
+Line 256-263 of `telegram-webhook/index.ts`:
+```js
+supabase.from('crm_leads').upsert({
+  ...
+  status: 'new'   ← this column does NOT exist
+}, { onConflict: 'user_id,whatsapp_number' })
 ```
+The `crm_leads` table uses `pipeline_stage` (not `status`). The field `status` in crm_leads is `'aberto'/'fechado'`, not `'new'`. Also missing `assistant_id` linkage. This upsert likely silently fails or inserts with wrong data.
 
-Ao clicar, abre `https://t.me/seubot` numa nova aba (no mobile abre o app Telegram direto).
+### 5. Telegram sessions filtered OUT when sourceFilter='telegram'
+The filter in `LiveChat.tsx` compares `session.source !== sourceFilter`. Because `source` is typed `'whatsapp' | 'widget'`, when a telegram session comes in from DB with `source='telegram'`, the TypeScript type narrowing may discard it in strict comparisons.
 
-### O que será criado
+---
 
-**1. `public/telegram-widget.js`** — script embeddable com:
-- Botão fixo azul (`#0088cc`) no canto inferior direito
-- Ícone oficial do Telegram em SVG
-- Tooltip "Fale conosco no Telegram"
-- Ao clicar: abre `https://t.me/{bot}` em nova aba
-- Responsivo (mobile e desktop)
-- Animação suave de hover/pulse
+## Fixes
 
-**2. Seção "Embed no seu site" na página `/telegram`** — para cada bot conectado, exibir:
-- Código HTML pronto para copiar (1 linha de script)
-- Preview visual do botão que aparecerá no site
-- Opções: posição (esquerda/direita), cor customizável via parâmetro
+### Files to change:
 
-### Parâmetros do script
+**`src/hooks/useLiveChat.ts`**
+- Add `'telegram'` to `source` in both `LiveChatSession` and `LiveChatMessage` interfaces
 
-```
-?bot=username          → username do bot (obrigatório)
-&position=left/right   → posição do botão (padrão: right)
-&color=%230088cc       → cor hex customizada (padrão: azul Telegram)
-&tooltip=Texto         → texto do tooltip (padrão: "Fale conosco no Telegram")
-```
+**`src/pages/LiveChat.tsx`**
+- Add `✈️ Telegram` option to source filter Select
+- Add Telegram stats counter (with send/plane icon) in header stats
 
-### Alternativa adicional (bonus)
+**`src/components/live-chat/SessionsList.tsx`**
+- Remove `(session.source as string)` casts — now that type is fixed they're clean
 
-Além do botão flutuante, exibir também um **botão inline** que o cliente pode colocar dentro do conteúdo do site:
+**`src/components/live-chat/ChatWindow.tsx`**
+- Remove `(session.source as string)` casts — same cleanup
 
-```html
-<a href="https://t.me/seubot" class="telegram-btn">💬 Falar no Telegram</a>
-<script src=".../telegram-widget.js?bot=seubot&mode=inline"></script>
-```
+**`supabase/functions/telegram-webhook/index.ts`**
+- Fix CRM upsert: change `status: 'new'` → `pipeline_stage: 'novo'`, add `assistant_id`, fix field names
 
-### Arquivos a criar/editar
+### Visual result
 
-| Arquivo | Ação |
-|---|---|
-| `public/telegram-widget.js` | Criar — script embeddable completo |
-| `src/pages/Telegram.tsx` | Editar — adicionar seção "Embed no seu site" com código pronto para copiar |
-
-### Visual do botão no site do cliente
-
-```
-┌────────────────────────────┐
-│  (site do cliente)         │
-│                            │
-│                            │
-│                   ┌──────┐ │
-│  ← tooltip        │  ✈  │ │  ← botão azul Telegram
-│  "Fale no         └──────┘ │
-│   Telegram"                │
-└────────────────────────────┘
-```
-
-Simples, eficaz e o cliente implementa em 30 segundos colando 1 linha no site.
+The Live Chat page will show:
+- Filter dropdown with ✈️ Telegram option
+- Telegram stat counter in the header  
+- All Telegram conversations visible and filterable
+- CRM entries correctly created for Telegram contacts with proper pipeline stage
