@@ -201,14 +201,17 @@ export const ChatWindow = memo(function ChatWindow({
               </Badge>
             </div>
             <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-              {session.source === 'whatsapp' && (
+              {(session.source === 'whatsapp' || (session.source as string) === 'telegram') && (
                 <>
                   <Phone className="h-3 w-3" />
                   <span>{session.contact_number}</span>
                   <span>•</span>
                 </>
               )}
-              <span>{session.source === 'whatsapp' ? '📱 WhatsApp' : '💬 Widget'}</span>
+              <span>
+                {session.source === 'whatsapp' ? '📱 WhatsApp' :
+                 (session.source as string) === 'telegram' ? '✈️ Telegram' : '💬 Widget'}
+              </span>
               {session.assistant_name && (
                 <>
                   <span>•</span>

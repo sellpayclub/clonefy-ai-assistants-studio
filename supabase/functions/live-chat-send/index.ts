@@ -77,16 +77,22 @@ serve(async (req) => {
     if (source === 'telegram') {
       console.log('📱 Enviando via Telegram API...');
 
-      // Get bot token for this session
-      const { data: tgConn } = await supabase
+      // Extract bot_username from instance_name (format: telegram_{bot_username})
+      const botUsername = instance_name.replace(/^telegram_/, '');
+
+      // Get bot token — match by bot_username first, fallback to any active bot
+      let tgQuery = supabase
         .from('telegram_connections')
         .select('bot_token')
         .eq('user_id', user_id)
-        .eq('is_active', true)
-        .limit(1)
-        .single();
+        .eq('is_active', true);
 
-      // Get the actual chat_id (contact_number stores it)
+      if (botUsername) {
+        tgQuery = tgQuery.eq('bot_username', botUsername);
+      }
+
+      const { data: tgConn } = await tgQuery.limit(1).single();
+
       if (tgConn && contact_number) {
         const tgRes = await fetch(`https://api.telegram.org/bot${tgConn.bot_token}/sendMessage`, {
           method: 'POST',
@@ -100,6 +106,8 @@ serve(async (req) => {
           await tgRes.text();
           console.log('✅ Mensagem enviada via Telegram');
         }
+      } else {
+        console.warn('⚠️ Bot Telegram não encontrado para instance_name:', instance_name);
       }
     }
 
