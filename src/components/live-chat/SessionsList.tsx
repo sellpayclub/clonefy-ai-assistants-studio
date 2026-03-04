@@ -128,7 +128,7 @@ export const SessionsList = memo(function SessionsList({
                       {/* Meta */}
                       <div className="flex items-center gap-2 mt-2">
                         <Badge variant="outline" className="text-xs h-5">
-                          {session.source === 'whatsapp' ? '📱 WhatsApp' : '💬 Widget'}
+                          {(session.source as string) === 'telegram' ? '✈️ Telegram' : session.source === 'whatsapp' ? '📱 WhatsApp' : '💬 Widget'}
                         </Badge>
                         
                         {session.assistant_name && (
