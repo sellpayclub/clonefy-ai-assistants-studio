@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import LazyImage from "@/components/LazyImage";
+import ChatWidget from "@/components/ChatWidget";
 
 const MercadoDigital = () => {
     const { setTheme } = useTheme();
@@ -928,6 +929,7 @@ const MercadoDigital = () => {
                     </div>
                 </div>
             </footer >
+        <ChatWidget />
         </div >
     );
 };

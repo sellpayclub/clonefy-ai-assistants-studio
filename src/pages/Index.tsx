@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import LazyImage from "@/components/LazyImage";
+import ChatWidget from "@/components/ChatWidget";
 
 const Index = () => {
   const { setTheme } = useTheme();
@@ -1198,6 +1199,7 @@ const Index = () => {
           </div>
         </div>
       </footer>
+      <ChatWidget />
     </div>
   );
 };

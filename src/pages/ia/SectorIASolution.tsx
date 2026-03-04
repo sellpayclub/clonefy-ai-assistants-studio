@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Bot, Mic, Calendar, Check, X, ArrowRight, Zap, ChevronDown, ChevronUp, MessageCircle, Clock, DollarSign, Sparkles, Calculator } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import LazyImage from "@/components/LazyImage";
+import ChatWidget from "@/components/ChatWidget";
 import aiNichesData from "@/data/ai-niches.json";
 
 interface SectorData {
@@ -538,6 +539,7 @@ const SectorIASolution = () => {
                     </div>
                 </div>
             )}
+        <ChatWidget />
         </div>
     );
 };
