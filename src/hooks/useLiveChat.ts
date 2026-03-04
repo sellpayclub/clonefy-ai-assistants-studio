@@ -106,15 +106,22 @@ export function useLiveChat() {
     }
   }, [userId]);
 
-  // Subscribe to realtime updates - only depends on userId
+  // Subscribe to realtime updates + polling fallback
   useEffect(() => {
     if (!userId) return;
 
     loadSessions();
 
+    // Polling fallback every 30s in case Realtime drops
+    const pollInterval = setInterval(() => loadSessions(), 30000);
+
+    // Refresh on window focus
+    const handleFocus = () => loadSessions();
+    window.addEventListener('focus', handleFocus);
+
     // Subscribe to sessions changes
     const sessionsChannel = supabase
-      .channel('live-sessions')
+      .channel(`live-sessions-${userId}`)
       .on(
         'postgres_changes',
         {
@@ -145,7 +152,7 @@ export function useLiveChat() {
 
     // Subscribe to messages changes - use ref to check selectedSessionId
     const messagesChannel = supabase
-      .channel('live-messages')
+      .channel(`live-messages-${userId}`)
       .on(
         'postgres_changes',
         {
@@ -169,11 +176,15 @@ export function useLiveChat() {
               return [...prev, newMessage];
             });
           }
+          // Refresh sessions to update unread count / last message preview
+          loadSessions();
         }
       )
       .subscribe();
 
     return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('focus', handleFocus);
       supabase.removeChannel(sessionsChannel);
       supabase.removeChannel(messagesChannel);
     };
