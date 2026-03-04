@@ -53,6 +53,12 @@ const steps = [
     description: "O BotFather vai enviar um token como '1234567890:AAF...'. Cole abaixo, selecione um assistente e clique em Conectar.",
     command: null,
   },
+  {
+    number: 4,
+    title: "Compartilhe o link com seus clientes",
+    description: "Após conectar, copie o link t.me/seubot e envie para seus clientes. Qualquer pessoa que acessar esse link poderá conversar com a IA automaticamente.",
+    command: null,
+  },
 ];
 
 export default function Telegram() {
@@ -301,44 +307,70 @@ export default function Telegram() {
           <div className="space-y-3">
             {connections.map((conn) => (
               <Card key={conn.id} className="border border-border/60">
-                <CardContent className="flex items-center justify-between py-4 px-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#0088cc]/10 flex items-center justify-center flex-shrink-0">
-                      <TelegramIcon className="w-5 h-5 text-[#0088cc]" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm text-foreground">
-                          {conn.bot_name ?? "Bot Telegram"}
-                        </span>
-                        {conn.bot_username && (
-                          <span className="text-xs text-muted-foreground">@{conn.bot_username}</span>
-                        )}
-                        {conn.is_active ? (
-                          <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-[10px] px-1.5 py-0">
-                            <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />
-                            Ativo
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Inativo</Badge>
-                        )}
+                <CardContent className="py-4 px-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <TelegramIcon className="w-5 h-5 text-[#0088cc]" />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Assistente: {conn.assistants?.name ?? (
-                          <span className="text-amber-500">Nenhum configurado</span>
-                        )}
-                      </p>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm text-foreground">
+                            {conn.bot_name ?? "Bot Telegram"}
+                          </span>
+                          {conn.bot_username && (
+                            <span className="text-xs text-muted-foreground">@{conn.bot_username}</span>
+                          )}
+                          {conn.is_active ? (
+                            <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-[10px] px-1.5 py-0">
+                              <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />
+                              Ativo
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Inativo</Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Assistente: {conn.assistants?.name ?? (
+                            <span className="text-amber-500">Nenhum configurado</span>
+                          )}
+                        </p>
+                      </div>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-destructive h-8 w-8"
+                      onClick={() => deleteMutation.mutate(conn.id)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-destructive h-8 w-8"
-                    onClick={() => deleteMutation.mutate(conn.id)}
-                    disabled={deleteMutation.isPending}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+
+                  {conn.bot_username && (
+                    <div className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2 gap-2">
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground mb-0.5">Link para compartilhar com seus clientes</p>
+                        <a
+                          href={`https://t.me/${conn.bot_username}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-mono text-[#0088cc] hover:underline flex items-center gap-1 truncate"
+                        >
+                          t.me/{conn.bot_username}
+                          <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                        </a>
+                      </div>
+                      <button
+                        onClick={() => copyCommand(`https://t.me/${conn.bot_username}`)}
+                        className="flex items-center gap-1.5 text-xs bg-background border border-border hover:bg-muted px-2.5 py-1.5 rounded-md transition-colors flex-shrink-0"
+                      >
+                        <Copy className="w-3 h-3" />
+                        Copiar link
+                      </button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -354,9 +386,10 @@ export default function Telegram() {
             <div className="space-y-1">
               <p className="text-xs font-medium text-foreground">Como funciona</p>
               <p className="text-xs text-muted-foreground">
-                Quando alguém envia uma mensagem ao seu bot no Telegram, o assistente de IA responde automaticamente.
-                A conversa aparece no <strong>Chat ao Vivo</strong> com badge "Telegram" — você pode assumir o controle a qualquer momento.
-                Todos os contatos são salvos no <strong>CRM</strong> com fonte "telegram".
+                Funciona igual ao WhatsApp: <strong>qualquer cliente</strong> que mandar mensagem para o seu bot recebe resposta automática da IA — não só você.
+                Basta compartilhar o link <strong>t.me/seubot</strong> com seus clientes (WhatsApp, Instagram, site, etc.) e eles já começam a conversar.
+                As conversas aparecem no <strong>Chat ao Vivo</strong> com badge "Telegram" — você pode assumir o controle a qualquer momento.
+                Todos os contatos são salvos no <strong>CRM</strong> automaticamente.
               </p>
             </div>
           </div>
