@@ -9,7 +9,7 @@ export interface LiveChatSession {
   instance_name: string;
   contact_number: string;
   contact_name: string | null;
-  source: 'whatsapp' | 'widget';
+  source: 'whatsapp' | 'widget' | 'telegram';
   status: 'ai_active' | 'human_takeover' | 'waiting' | 'closed';
   assistant_id: string | null;
   assistant_name: string | null;
@@ -33,7 +33,7 @@ export interface LiveChatMessage {
   content: string;
   message_type: 'text' | 'audio' | 'image' | 'document' | 'video';
   media_url: string | null;
-  source: 'whatsapp' | 'widget';
+  source: 'whatsapp' | 'widget' | 'telegram';
   assistant_id: string | null;
   assistant_name: string | null;
   is_read: boolean;
@@ -359,12 +359,15 @@ export function useLiveChat() {
     const waiting = sessions.filter(s => s.status === 'waiting').length;
     const totalUnread = sessions.reduce((sum, s) => sum + (s.unread_count || 0), 0);
 
+    const telegram = sessions.filter(s => s.source === 'telegram').length;
+
     return {
       total: sessions.length,
       aiActive,
       humanTakeover,
       waiting,
-      totalUnread
+      totalUnread,
+      telegram
     };
   }, [sessions]);
 
