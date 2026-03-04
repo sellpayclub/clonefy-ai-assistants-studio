@@ -3437,7 +3437,7 @@ export type Database = {
       widget_analytics: {
         Row: {
           assistant_id: string
-          avg_session_duration: unknown
+          avg_session_duration: string | null
           created_at: string
           date: string
           id: string
@@ -3451,7 +3451,7 @@ export type Database = {
         }
         Insert: {
           assistant_id: string
-          avg_session_duration?: unknown
+          avg_session_duration?: string | null
           created_at?: string
           date?: string
           id?: string
@@ -3465,7 +3465,7 @@ export type Database = {
         }
         Update: {
           assistant_id?: string
-          avg_session_duration?: unknown
+          avg_session_duration?: string | null
           created_at?: string
           date?: string
           id?: string
