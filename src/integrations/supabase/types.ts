@@ -2540,7 +2540,7 @@ export type Database = {
           emailuser?: string | null
           followup_count?: number | null
           human_takeover_until?: string | null
-          id: number
+          id?: number
           idassistentgpt?: string | null
           IDvoz?: string | null
           last_message_at?: string | null
