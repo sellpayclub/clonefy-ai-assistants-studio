@@ -9,7 +9,7 @@
       "destination": "/robots.txt"
     },
     {
-      "source": "/((?!api|embed-widget.*\\.js|.*\\..*).*)",
+      "source": "/((?!api|embed-widget.*\\.js|telegram-widget\\.js|.*\\..*).*)",
       "destination": "/index.html"
     }
   ],
@@ -47,6 +47,19 @@
     },
     {
       "source": "/embed-widget.js",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/telegram-widget.js",
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
