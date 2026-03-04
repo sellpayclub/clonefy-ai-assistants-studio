@@ -173,7 +173,7 @@ serve(async (req) => {
     // Find the connection for this bot token
     const { data: conn } = await supabase
       .from('telegram_connections')
-      .select('*, assistants(openai_assistant_id)')
+      .select('*, assistants(openai_assistant_id, name)')
       .eq('bot_token', botToken)
       .eq('is_active', true)
       .single();
@@ -193,29 +193,58 @@ serve(async (req) => {
     }
 
     // Save incoming message to live_chat_messages
-    const sessionId = `tg_${chatId}_${botToken.slice(-8)}`;
+    const instanceName = `telegram_${conn.bot_username ?? 'bot'}`;
+    const contactNumberStr = String(chatId);
 
-    // Upsert live_chat_session
-    await supabase.from('live_chat_sessions').upsert({
-      id: sessionId,
-      user_id: userId,
-      instance_name: `telegram_${conn.bot_username ?? 'bot'}`,
-      contact_number: String(chatId),
-      contact_name: contactName,
-      source: 'telegram',
-      status: 'ai_active',
-      last_message_at: new Date().toISOString(),
-      last_message_preview: text.substring(0, 100),
-      last_sender_type: 'customer',
-      unread_count: 1
-    }, { onConflict: 'id' });
+    // Find or create live_chat_session by user_id + instance_name + contact_number
+    const { data: existingSession } = await supabase
+      .from('live_chat_sessions')
+      .select('id, unread_count')
+      .eq('user_id', userId)
+      .eq('instance_name', instanceName)
+      .eq('contact_number', contactNumberStr)
+      .maybeSingle();
+
+    let sessionId: string;
+
+    if (existingSession) {
+      sessionId = existingSession.id;
+      await supabase.from('live_chat_sessions').update({
+        last_message_at: new Date().toISOString(),
+        last_message_preview: text.substring(0, 100),
+        last_sender_type: 'customer',
+        contact_name: contactName,
+        unread_count: (existingSession.unread_count || 0) + 1
+      }).eq('id', sessionId);
+    } else {
+      const { data: newSession } = await supabase
+        .from('live_chat_sessions')
+        .insert({
+          user_id: userId,
+          instance_name: instanceName,
+          contact_number: contactNumberStr,
+          contact_name: contactName,
+          source: 'telegram',
+          status: 'ai_active',
+          assistant_id: conn.assistant_id,
+          assistant_name: conn.assistants?.name ?? null,
+          last_message_at: new Date().toISOString(),
+          last_message_preview: text.substring(0, 100),
+          last_sender_type: 'customer',
+          unread_count: 1
+        })
+        .select('id')
+        .single();
+      sessionId = newSession?.id ?? crypto.randomUUID();
+    }
 
     // Save customer message
     await supabase.from('live_chat_messages').insert({
       user_id: userId,
       session_id: sessionId,
-      instance_name: `telegram_${conn.bot_username ?? 'bot'}`,
-      contact_number: String(chatId),
+      instance_name: instanceName,
+      contact_number: contactNumberStr,
+      contact_name: contactName,
       sender_type: 'customer',
       content: text,
       message_type: 'text',
@@ -226,24 +255,24 @@ serve(async (req) => {
     // Upsert CRM lead
     await supabase.from('crm_leads').upsert({
       user_id: userId,
-      whatsapp_number: String(chatId),
+      whatsapp_number: contactNumberStr,
       name: contactName,
       source: 'telegram',
       last_interaction: new Date().toISOString(),
       status: 'new'
     }, { onConflict: 'user_id,whatsapp_number' });
 
-    // Check if human takeover is active for this session
-    const { data: session } = await supabase
+    // Check if human takeover is active for this session (re-read after insert)
+    const { data: liveSession } = await supabase
       .from('live_chat_sessions')
       .select('status, human_takeover_until')
       .eq('id', sessionId)
       .single();
 
     const now = new Date();
-    const isHumanTakeover = session?.status === 'human_takeover' &&
-      session?.human_takeover_until &&
-      new Date(session.human_takeover_until) > now;
+    const isHumanTakeover = liveSession?.status === 'human_takeover' &&
+      liveSession?.human_takeover_until &&
+      new Date(liveSession.human_takeover_until) > now;
 
     if (isHumanTakeover) {
       console.log('Human takeover active, skipping AI response');
@@ -263,8 +292,9 @@ serve(async (req) => {
     await supabase.from('live_chat_messages').insert({
       user_id: userId,
       session_id: sessionId,
-      instance_name: `telegram_${conn.bot_username ?? 'bot'}`,
-      contact_number: String(chatId),
+      instance_name: instanceName,
+      contact_number: contactNumberStr,
+      contact_name: contactName,
       sender_type: 'ai',
       content: aiReply,
       message_type: 'text',
@@ -276,7 +306,7 @@ serve(async (req) => {
     await supabase.from('live_chat_sessions').update({
       last_message_at: new Date().toISOString(),
       last_message_preview: aiReply.substring(0, 100),
-      last_sender_type: 'bot'
+      last_sender_type: 'ai'
     }).eq('id', sessionId);
 
     return new Response('ok', { status: 200 });
