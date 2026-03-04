@@ -1,71 +1,90 @@
 
-## Root Cause
+## Root Cause Found
 
-The data IS in the database — sessions and messages are saved correctly (confirmed: session `964a6f5f` with Daniel Paixão has messages from 17:34-17:36). The Live Chat page **loads but shows nothing** because of a Realtime filter issue.
+Looking at the network requests, the API IS working perfectly — it's returning sessions with status 200. The sessions ARE loading. But the user says conversations don't appear.
 
-The Supabase Realtime subscription in `useLiveChat` uses:
+**The real issue**: The network request shows the sessions query returning data at `17:47:27Z`, but the user is seeing nothing. 
+
+Looking at `LiveChat.tsx` line 42-46: sessions are filtered by `statusFilter` (default `'all'`) and `sourceFilter` (default `'all'`). These filters should show everything.
+
+BUT then at line 145-151, `filteredSessions` is passed to `SessionsList`. Inside `SessionsList`, line 52-60 there's ANOTHER filter by `searchQuery`. The `searchQuery` filter requires:
 ```
-filter: `user_id=eq.${userId}`
-```
-
-For this **column-level filter to work on Realtime**, the table needs `REPLICA IDENTITY FULL`. Without it, Postgres only sends the primary key on UPDATE events — Realtime can't filter by `user_id` and the frontend receives nothing. The initial `loadSessions()` call on mount SHOULD still work however — so there are TWO bugs:
-
-### Bug 1 — Realtime filter not working (no live updates)
-Tables `live_chat_sessions` and `live_chat_messages` are missing `ALTER TABLE ... REPLICA IDENTITY FULL`.
-
-### Bug 2 — Sessions load correctly but possibly user is seeing empty due to stale auth state
-Looking at the `useLiveChat` hook: `loadSessions` is called on mount with `userId`. If the user is on the Live Chat page and `userId` is null briefly (auth loading), `loadSessions` returns early and never re-runs because `loadSessions` is in the dependency array but `userId` changes don't trigger a new `loadSessions` call after initial mount — the `useEffect` only runs once per `userId` change.
-
-Actually re-reading the code: the `useEffect` depends on `[userId, loadSessions]`. When `userId` becomes non-null, `loadSessions` changes (because it depends on `userId`), so `useEffect` re-runs. This should work.
-
-**The real bug**: The `loadSessions` query uses `.neq('status', 'closed')` and the sessions ARE `ai_active` — so they should show. But the hook uses `.eq('user_id', userId)` and `userId = user?.id`. If the user is `86efbdbf-defa-47a4-8f26-9f7b51cb1f20` and sessions exist with that user_id — they should load.
-
-**Most likely cause**: A **RLS policy conflict**. The migration creates policies but there might be a duplicate or conflicting policy. Let me check what policies actually exist on `live_chat_sessions`.
-
-Actually from the migration SQL I can see:
-```sql
-CREATE POLICY "Service role can manage all sessions"
-ON public.live_chat_sessions FOR ALL
-USING (true)
-WITH CHECK (true);
+session.contact_name?.toLowerCase().includes(query) ||
+session.contact_number.includes(query) || ...
 ```
 
-The service role policy is fine — it's for the edge function. The user policy is `auth.uid() = user_id`. This should work.
+When `searchQuery` is empty string `''`, `''.toLowerCase()` = `''`, and `includes('')` is ALWAYS `true`. So that's not the bug.
 
-**Most likely actual cause**: The `live_chat_sessions` table doesn't have `REPLICA IDENTITY FULL`, which means Realtime UPDATE events don't carry the full row data including `user_id`. When the edge function creates/updates sessions, the Realtime event fires but the filter `user_id=eq.${userId}` can't match because `user_id` isn't in the CDC event payload.
+Wait — the real problem is simpler. Let me re-read the network request. The API returned sessions including one with `contact_number: "5515991573135"` (Evelyn) and `instance_name: "ia_escola"`. The sessions ARE coming back in the response.
 
-But wait — the initial `loadSessions()` is a regular Supabase query (not Realtime), so it SHOULD load existing sessions even without REPLICA IDENTITY FULL.
+So **sessions ARE loading** — but the user says they don't see them. This means the UI component rendering is broken somehow.
 
-**The actual fix needed**: Two changes:
+The "Rendered more hooks than during the previous render" error means the component was CRASHING on render. Even though it was "fixed," there may still be a rendering issue in the `useLiveChat` hook that was partially fixed.
 
-1. Add `REPLICA IDENTITY FULL` to both Live Chat tables (migration) — fixes real-time updates
-2. Add a **manual refresh button** that's more visible AND ensure `loadSessions` is called when the component mounts properly
+Looking at the current hook code (from the last diff), the issue is that the `useEffect` for auth was **moved** to be AFTER `loadMessages` — but `loadSessions` useCallback comes before `loadMessages` useCallback. The order of hooks is:
 
-But there's another issue I noticed: the `useLiveChat` hook calls `loadSessions` inside a `useEffect` that runs when `userId` changes. If the user navigates TO `/live-chat` after already being authenticated, `userId` doesn't change → `useEffect` doesn't re-run → `loadSessions` is not called again.
+1. useState (sessions)
+2. useState (messages) 
+3. useState (selectedSessionId)
+4. useState (loading)
+5. useToast
+6. useAuth
+7. useRef (selectedSessionIdRef)
+8. useCallback (loadSessions)
+9. useCallback (loadMessages)
+10. **useEffect (auth check)** ← moved here
+11. useEffect (realtime + polling)
+12. useEffect (selectedSession messages)
+13. useCallback (sendMessage)
+14. useCallback (toggleHumanTakeover)
+15. useCallback (closeSession)
+16. useMemo (selectedSession)
+17. useMemo (stats)
 
-Wait no — when the component MOUNTS, the effect runs once for the current `userId`. That should be fine.
+This IS a stable order now. The hook error should be fixed.
 
-**Let me re-read the hook more carefully**: `useEffect` depends on `[userId, loadSessions]`. `loadSessions` is a `useCallback` that depends on `[userId]`. So when `userId` is set → `loadSessions` changes → `useEffect` runs → `loadSessions()` is called. This is correct.
+**So what's the actual rendering problem?** Let me look at whether the page is loading forever. The `loading` state starts as `true`, and is only set to `false` inside `loadSessions` (in the `finally` block). If `loadSessions` is called and completes, loading becomes false.
 
-**I think the real issue is simpler**: Looking at the RLS policies in the migration file — there are two policies for SELECT on `live_chat_sessions`:
-1. `Users can view their own sessions` — `USING (auth.uid() = user_id)`  
-2. `Service role can manage all sessions` — `USING (true)`
+But wait — there's a catch. Looking at the auth flow: `authLoading` starts as `true`. The `useEffect` with `[userId, loadSessions]` runs on mount. Since `userId` might be null during auth loading, `loadSessions` returns early (line: `if (!userId) return;`) WITHOUT setting `loading` to false.
 
-These should be fine. But the **INSERT** policy has `WITH CHECK (auth.uid() = user_id)` — the edge function uses the SERVICE ROLE key, so it bypasses RLS. Sessions are inserted correctly.
+Then the auth check `useEffect` runs: `if (!authLoading && !userId) setLoading(false)` — but if `authLoading` is still `true`, this also doesn't fire.
 
-**THE ACTUAL FIX**: 
+When auth finishes and `userId` becomes available, `loadSessions` callback changes (dependency on userId), so the `useEffect([userId, loadSessions])` fires again and calls `loadSessions()` which sets loading=false in finally.
 
-After reviewing everything — the data is in DB, RLS should be fine, the hook should load data. The most likely explanation: **REPLICA IDENTITY is not set to FULL** causing Realtime to drop the `user_id` filter. More importantly, since sessions ARE in the DB, the initial load should work unless there's a timing issue.
+This should work. But the network logs CONFIRM that `loadSessions` IS being called and returning data — I can see the GET requests at 17:47:27, 17:47:57, 17:48:15.
 
-**I'll fix both**: 
-1. Add `REPLICA IDENTITY FULL` via migration (fixes Realtime)
-2. Add a `useEffect` in the hook that re-runs `loadSessions` when the component becomes visible / when `userId` is confirmed (belt-and-suspenders)
-3. Add auto-refresh every 30 seconds as fallback
+**The actual problem must be in the UI rendering after data loads.**
 
-## Files to change
+Wait — I notice the user said "meu numero e a conversa continua não aparecendo" — perhaps they mean the SESSION with THEIR number (5515991573135 which is Evelyn) IS in the list but they're looking for TODAY's session. The most recent session for `5515991573135` with `ia_escola` has `last_message_at: "2026-02-28T21:12:39"` — that's from February 28, NOT from today (March 4). 
 
-**Migration**: `ALTER TABLE live_chat_sessions REPLICA IDENTITY FULL; ALTER TABLE live_chat_messages REPLICA IDENTITY FULL;`
+So maybe the issue is that TODAY's conversation with the IA is NOT being saved to `live_chat_sessions` at all! The conversation is happening (AI is responding), but the webhook might not be creating a new session entry for today's messages.
 
-**`src/hooks/useLiveChat.ts`**: 
-- Add polling fallback (30s interval) to ensure sessions always show even if Realtime fails
-- Ensure `loadSessions` is called on mount even if `userId` was already set (add window focus listener or polling)
+OR: the session exists but isn't getting a new entry today because the webhook is updating an existing session (the Feb 28 one) with the last message timestamp but the last_message_at is still old because the update isn't working.
+
+Actually looking more carefully: `updated_at: "2026-03-04T17:40:31"` — the session WAS updated today at 17:40. But `last_message_at: "2026-02-28"`. This means the `updated_at` gets bumped (probably by the polling refresh query which does UPDATE with unread_count=0) but `last_message_at` is NOT being updated when new messages come in.
+
+**THE REAL BUG**: The `whatsapp-webhook` edge function is NOT updating `last_message_at` and `last_message_preview` when it inserts new messages into `live_chat_messages`. The session record is stale.
+
+But wait — the user says "minha conversa NÃO aparece" (my conversation doesn't appear). Not "appears but with old date."
+
+Let me reconsider. The user's number is 5515991573135 (Evelyn) and they're talking to `ia_escola` (instance). Session `b2fb6a0f` IS in the list. So it IS appearing! 
+
+Maybe the user is confused and means: when they click a session, the messages from TODAY don't show up (because `last_message_at` is stale from Feb 28 and new messages from today aren't appearing in the chat window).
+
+Or perhaps the user literally cannot see the sessions list panel — maybe a CSS/layout issue where the left panel is hidden.
+
+The fix needed is:
+1. Ensure the webhook properly updates `last_message_at` and `last_message_preview` in `live_chat_sessions` when new messages arrive — this is likely the real bug
+2. Check the whatsapp-webhook to confirm it's updating the session properly
+
+Let me check the whatsapp-webhook edge function.
+
+Actually I need to check the whatsapp-webhook to see if it's updating live_chat_sessions properly.
+
+Plan:
+1. Read whatsapp-webhook to check session update logic
+2. Fix any issues with session update (last_message_at not being updated)
+
+The key issue to investigate and fix: the whatsapp-webhook may not be updating `last_message_at` on the `live_chat_sessions` table when new messages arrive, causing the UI to show sessions with old dates and new messages to not appear at the top.
+
+Let me read the webhook.
