@@ -24,8 +24,7 @@
     baseUrl: baseUrl,
     apiUrl: apiUrl,
     scriptOrigin: currentScript ? new URL(currentScript.src).origin : 'unknown',
-    pageOrigin: window.location.origin,
-    isLovableApp: isLovableApp
+    pageOrigin: window.location.origin
   });
 
   // Widget object
