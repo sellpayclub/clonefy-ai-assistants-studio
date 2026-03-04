@@ -119,6 +119,22 @@ serve(async (req) => {
   }
 
   try {
+    // Health check / re-register webhook utility
+    const url = new URL(req.url);
+    if (req.method === 'GET' && url.searchParams.get('action') === 'reregister') {
+      const tokenParam = url.searchParams.get('token');
+      if (!tokenParam) return new Response(JSON.stringify({ error: 'token required' }), { status: 400, headers: corsHeaders });
+      const webhookUrl = `${SUPABASE_URL}/functions/v1/telegram-webhook?token=${encodeURIComponent(tokenParam)}`;
+      const res = await fetch(`https://api.telegram.org/bot${tokenParam}/setWebhook`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: webhookUrl })
+      });
+      const result = await res.json();
+      console.log('Re-register webhook result:', JSON.stringify(result));
+      return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const update = await req.json();
     const message = update?.message;
 
@@ -145,7 +161,6 @@ serve(async (req) => {
     // OR: register webhook per bot with ?token=xxx in URL and read it here.
     
     // We'll extract from URL query param if present, else scan all connections.
-    const url = new URL(req.url);
     let botToken = url.searchParams.get('token') ?? '';
 
     if (!botToken) {
@@ -250,7 +265,7 @@ serve(async (req) => {
       session_id: sessionId,
       instance_name: `telegram_${conn.bot_username ?? 'bot'}`,
       contact_number: String(chatId),
-      sender_type: 'bot',
+      sender_type: 'ai',
       content: aiReply,
       message_type: 'text',
       source: 'telegram',
