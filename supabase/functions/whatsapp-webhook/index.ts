@@ -43,7 +43,9 @@ async function saveAttachmentToCRM(params: SaveAttachmentParams) {
             .from('n8n_fluxogpt')
             .select('userId')
             .eq('nomeinstancia', instanceName)
-            .single();
+            .not('emailuser', 'is', null)
+            .limit(1)
+            .maybeSingle();
 
         if (!instanceConfig?.userId) {
             console.log('⚠️ Não foi possível identificar user_id para salvar anexo');
@@ -228,7 +230,7 @@ serve(async (req) => {
                 .select('id')
                 .eq('nomeinstancia', instanceName)
                 .eq('whatsappuser', contactNumber)
-                .single();
+                .maybeSingle();
 
             if (existingContact) {
                 // Ativar pausa de 2 horas
@@ -585,7 +587,9 @@ serve(async (req) => {
                     .from('n8n_fluxogpt')
                     .select('userId')
                     .eq('nomeinstancia', instanceName)
-                    .single();
+                    .not('emailuser', 'is', null)
+                    .limit(1)
+                    .maybeSingle();
 
                 if (instanceConfigForMsg?.userId) {
                     // Salvar mensagem do cliente (mesmo com IA pausada)
@@ -641,12 +645,14 @@ serve(async (req) => {
             }
         }
 
-        // 1. Buscar configuração da instância
+        // 1. Buscar configuração da instância (registro base com emailuser preenchido)
         const { data: instanceConfig, error: instanceError } = await supabase
             .from('n8n_fluxogpt')
             .select('*')
             .eq('nomeinstancia', instanceName)
-            .single();
+            .not('emailuser', 'is', null)
+            .limit(1)
+            .maybeSingle();
 
         if (instanceError || !instanceConfig) {
             console.error('❌ Instância não encontrada:', instanceName, instanceError);
@@ -781,7 +787,7 @@ serve(async (req) => {
             .select('*')
             .eq('nomeinstancia', instanceName)
             .eq('whatsappuser', contactNumber)
-            .single();
+            .maybeSingle();
 
         // 🛑 HUMAN TAKEOVER CHECK: Verificar se a IA está pausada para este contato
         if (existingContact?.human_takeover_until) {
