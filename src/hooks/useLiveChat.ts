@@ -53,13 +53,6 @@ export function useLiveChat() {
   const selectedSessionIdRef = useRef<string | null>(null);
   selectedSessionIdRef.current = selectedSessionId;
 
-  // If auth finishes but no user, stop loading
-  useEffect(() => {
-    if (!authLoading && !userId) {
-      setLoading(false);
-    }
-  }, [authLoading, userId]);
-
   // Load initial sessions
   const loadSessions = useCallback(async () => {
     if (!userId) return;
@@ -113,6 +106,13 @@ export function useLiveChat() {
     }
   }, [userId]);
 
+  // When auth finishes with no user, stop loading spinner
+  useEffect(() => {
+    if (!authLoading && !userId) {
+      setLoading(false);
+    }
+  }, [authLoading, userId]);
+
   // Subscribe to realtime updates + polling fallback
   useEffect(() => {
     if (!userId) return;
@@ -145,7 +145,7 @@ export function useLiveChat() {
             const updatedSession = payload.new as unknown as LiveChatSession;
             setSessions(prev => {
               const filtered = prev.filter(s => s.id !== updatedSession.id);
-              return [updatedSession, ...filtered].sort((a, b) => 
+              return [updatedSession, ...filtered].sort((a, b) =>
                 new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime()
               );
             });
@@ -157,7 +157,7 @@ export function useLiveChat() {
       )
       .subscribe();
 
-    // Subscribe to messages changes - use ref to check selectedSessionId
+    // Subscribe to messages changes
     const messagesChannel = supabase
       .channel(`live-messages-${userId}`)
       .on(
@@ -170,13 +170,11 @@ export function useLiveChat() {
         },
         (payload) => {
           const newMessage = payload.new as unknown as LiveChatMessage;
-          
-          // Add message if it's for the selected session (using ref)
+
           if (newMessage.session_id === selectedSessionIdRef.current) {
             setMessages(prev => {
-              // Avoid duplicates (from optimistic update)
               if (prev.some(m => m.id === newMessage.id || (m.id.startsWith('temp-') && m.content === newMessage.content))) {
-                return prev.map(m => 
+                return prev.map(m =>
                   m.id.startsWith('temp-') && m.content === newMessage.content ? newMessage : m
                 );
               }
@@ -215,7 +213,6 @@ export function useLiveChat() {
 
     const trimmedContent = content.trim();
 
-    // Optimistic update
     const optimisticMessage: LiveChatMessage = {
       id: `temp-${Date.now()}`,
       user_id: userId,
@@ -236,7 +233,6 @@ export function useLiveChat() {
 
     setMessages(prev => [...prev, optimisticMessage]);
 
-    // Send in background
     supabase.functions.invoke('live-chat-send', {
       body: {
         session_id: selectedSessionId,
@@ -268,13 +264,13 @@ export function useLiveChat() {
       if (!session) return false;
 
       const isCurrentlyTakeover = session.status === 'human_takeover';
-      
+
       if (isCurrentlyTakeover) {
         await supabase
           .from('live_chat_sessions')
-          .update({ 
+          .update({
             status: 'ai_active',
-            human_takeover_until: null 
+            human_takeover_until: null
           })
           .eq('id', sessionId);
 
@@ -295,9 +291,9 @@ export function useLiveChat() {
 
         await supabase
           .from('live_chat_sessions')
-          .update({ 
+          .update({
             status: 'human_takeover',
-            human_takeover_until: takeoverUntil 
+            human_takeover_until: takeoverUntil
           })
           .eq('id', sessionId);
 
