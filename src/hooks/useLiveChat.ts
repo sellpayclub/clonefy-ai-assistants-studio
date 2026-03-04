@@ -46,12 +46,19 @@ export function useLiveChat() {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const userId = user?.id || null;
 
   // Use ref to track selectedSessionId without causing re-subscriptions
   const selectedSessionIdRef = useRef<string | null>(null);
   selectedSessionIdRef.current = selectedSessionId;
+
+  // If auth finishes but no user, stop loading
+  useEffect(() => {
+    if (!authLoading && !userId) {
+      setLoading(false);
+    }
+  }, [authLoading, userId]);
 
   // Load initial sessions
   const loadSessions = useCallback(async () => {
