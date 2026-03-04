@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import LazyImage from "@/components/LazyImage";
+import ChatWidget from "@/components/ChatWidget";
 
 const VentasEspanol = () => {
   const { setTheme } = useTheme();
@@ -1003,6 +1004,7 @@ const VentasEspanol = () => {
           </div>
         </div>
       </footer>
+      <ChatWidget />
     </div>
   );
 };
