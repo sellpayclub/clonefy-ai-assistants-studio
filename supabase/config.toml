@@ -26,3 +26,9 @@ verify_jwt = false
 
 [functions.financial-ai]
 verify_jwt = false
+
+[functions.telegram-webhook]
+verify_jwt = false
+
+[functions.telegram-setup]
+verify_jwt = false

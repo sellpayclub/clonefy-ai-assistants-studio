@@ -3000,6 +3000,80 @@ export type Database = {
         }
         Relationships: []
       }
+      telegram_connections: {
+        Row: {
+          assistant_id: string | null
+          bot_name: string | null
+          bot_token: string
+          bot_username: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          user_id: string
+        }
+        Insert: {
+          assistant_id?: string | null
+          bot_name?: string | null
+          bot_token: string
+          bot_username?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          user_id: string
+        }
+        Update: {
+          assistant_id?: string | null
+          bot_name?: string | null
+          bot_token?: string
+          bot_username?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_connections_assistant_id_fkey"
+            columns: ["assistant_id"]
+            isOneToOne: false
+            referencedRelation: "assistants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      telegram_threads: {
+        Row: {
+          assistant_id: string | null
+          bot_token: string
+          contact_name: string | null
+          created_at: string
+          id: string
+          openai_thread_id: string
+          telegram_chat_id: number
+          user_id: string
+        }
+        Insert: {
+          assistant_id?: string | null
+          bot_token: string
+          contact_name?: string | null
+          created_at?: string
+          id?: string
+          openai_thread_id: string
+          telegram_chat_id: number
+          user_id: string
+        }
+        Update: {
+          assistant_id?: string | null
+          bot_token?: string
+          contact_name?: string | null
+          created_at?: string
+          id?: string
+          openai_thread_id?: string
+          telegram_chat_id?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_branding: {
         Row: {
           accent_color: string | null

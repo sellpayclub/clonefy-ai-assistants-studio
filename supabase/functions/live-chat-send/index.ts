@@ -73,7 +73,37 @@ serve(async (req) => {
       })
       .eq('id', session_id);
 
-    // 3. Send via WhatsApp if source is whatsapp
+    // 3a. Send via Telegram if source is telegram
+    if (source === 'telegram') {
+      console.log('📱 Enviando via Telegram API...');
+
+      // Get bot token for this session
+      const { data: tgConn } = await supabase
+        .from('telegram_connections')
+        .select('bot_token')
+        .eq('user_id', user_id)
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+
+      // Get the actual chat_id (contact_number stores it)
+      if (tgConn && contact_number) {
+        const tgRes = await fetch(`https://api.telegram.org/bot${tgConn.bot_token}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: parseInt(contact_number), text: message })
+        });
+        if (!tgRes.ok) {
+          const errText = await tgRes.text();
+          console.error('❌ Erro ao enviar Telegram:', errText);
+        } else {
+          await tgRes.text();
+          console.log('✅ Mensagem enviada via Telegram');
+        }
+      }
+    }
+
+    // 3b. Send via WhatsApp if source is whatsapp
     if (source === 'whatsapp') {
       console.log('📱 Enviando via WhatsApp Evolution API...');
 
