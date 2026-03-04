@@ -650,25 +650,25 @@ const WidgetCustomization = () => {
                             Use este link para testar o chat ou compartilhar com sua equipe:
                           </p>
                           <div className="flex gap-2">
-                            <Input
-                              value={`${window.location.origin}/embed-chat/${selectedAssistant}`}
-                              readOnly
-                              className="flex-1 text-sm font-mono"
-                            />
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                navigator.clipboard.writeText(`${window.location.origin}/embed-chat/${selectedAssistant}`);
-                                toast({ title: 'Link copiado!' });
-                              }}
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              onClick={() => window.open(`/embed-chat/${selectedAssistant}`, '_blank')}
-                            >
-                              Abrir Chat
-                            </Button>
+                             <Input
+                               value={`https://clonefy-ai-assistants-studio.lovable.app/embed-chat/${selectedAssistant}`}
+                               readOnly
+                               className="flex-1 text-sm font-mono"
+                             />
+                             <Button
+                               variant="outline"
+                               onClick={() => {
+                                 navigator.clipboard.writeText(`https://clonefy-ai-assistants-studio.lovable.app/embed-chat/${selectedAssistant}`);
+                                 toast({ title: 'Link copiado!' });
+                               }}
+                             >
+                               <Copy className="h-4 w-4" />
+                             </Button>
+                             <Button
+                               onClick={() => window.open(`https://clonefy-ai-assistants-studio.lovable.app/embed-chat/${selectedAssistant}`, '_blank')}
+                             >
+                               Abrir Chat
+                             </Button>
                           </div>
                         </CardContent>
                       </Card>
