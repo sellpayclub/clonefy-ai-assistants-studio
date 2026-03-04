@@ -16,7 +16,8 @@ import {
   Bot, 
   User, 
   Radio,
-  RefreshCw
+  RefreshCw,
+  Send
 } from 'lucide-react';
 
 export default function LiveChat() {
@@ -93,6 +94,10 @@ export default function LiveChat() {
                 <User className="h-4 w-4" />
                 <span className="font-medium">{stats.humanTakeover}</span>
               </div>
+              <div className="flex items-center gap-1 text-sky-500">
+                <Send className="h-4 w-4" />
+                <span className="font-medium">{stats.telegram}</span>
+              </div>
               {stats.totalUnread > 0 && (
                 <Badge variant="destructive" className="animate-pulse">
                   {stats.totalUnread} não lidas
@@ -122,6 +127,7 @@ export default function LiveChat() {
                   <SelectItem value="all">Todas</SelectItem>
                   <SelectItem value="whatsapp">📱 WhatsApp</SelectItem>
                   <SelectItem value="widget">💬 Widget</SelectItem>
+                  <SelectItem value="telegram">✈️ Telegram</SelectItem>
                 </SelectContent>
               </Select>
 

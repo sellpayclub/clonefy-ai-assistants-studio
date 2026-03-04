@@ -259,7 +259,9 @@ serve(async (req) => {
       name: contactName,
       source: 'telegram',
       last_interaction: new Date().toISOString(),
-      status: 'new'
+      pipeline_stage: 'novo',
+      status: 'aberto',
+      assistant_id: assistantId || null
     }, { onConflict: 'user_id,whatsapp_number' });
 
     // Check if human takeover is active for this session (re-read after insert)
