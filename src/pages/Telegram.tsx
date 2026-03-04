@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Bot, Trash2, CheckCircle2, ExternalLink, Copy, AlertCircle } from "lucide-react";
+import { Bot, Trash2, CheckCircle2, ExternalLink, Copy, AlertCircle, Code2, AlignLeft, AlignRight } from "lucide-react";
 
 // Telegram blue icon as SVG
 const TelegramIcon = ({ className }: { className?: string }) => (
@@ -60,6 +60,125 @@ const steps = [
     command: null,
   },
 ];
+
+const BASE_URL = "https://clonefy-ai-assistants-studio.lovable.app";
+
+function EmbedSection({ connections }: { connections: TelegramConnection[] }) {
+  const [position, setPosition] = useState<"right" | "left">("right");
+  const [selectedBot, setSelectedBot] = useState<string>("");
+
+  const bot = selectedBot || connections[0]?.bot_username || "";
+  const scriptSrc = `${BASE_URL}/telegram-widget.js?bot=${bot}&position=${position}`;
+  const embedCode = `<script src="${scriptSrc}"></script>`;
+
+  const copyEmbed = () => {
+    navigator.clipboard.writeText(embedCode);
+    toast({ title: "Código copiado!" });
+  };
+
+  if (connections.length === 0) return null;
+
+  return (
+    <div>
+      <h2 className="text-base font-semibold text-foreground mb-4 flex items-center gap-2">
+        <Code2 className="w-4 h-4 text-primary" />
+        Embed no seu site
+      </h2>
+      <Card className="border border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium">Botão flutuante Telegram</CardTitle>
+          <CardDescription className="text-xs">
+            Cole 1 linha de código no seu site e o botão aparece automaticamente para seus clientes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Config */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Bot</Label>
+              <Select value={selectedBot || connections[0]?.bot_username || ""} onValueChange={setSelectedBot}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {connections.filter(c => c.bot_username).map(c => (
+                    <SelectItem key={c.id} value={c.bot_username!} className="text-xs">
+                      @{c.bot_username}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Posição</Label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPosition("right")}
+                  className={`flex-1 h-8 flex items-center justify-center gap-1.5 text-xs rounded-md border transition-colors ${position === "right" ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}
+                >
+                  <AlignRight className="w-3 h-3" /> Direita
+                </button>
+                <button
+                  onClick={() => setPosition("left")}
+                  className={`flex-1 h-8 flex items-center justify-center gap-1.5 text-xs rounded-md border transition-colors ${position === "left" ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}
+                >
+                  <AlignLeft className="w-3 h-3" /> Esquerda
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Code block */}
+          <div className="space-y-1.5">
+            <Label className="text-xs">Código para colar no seu site</Label>
+            <div className="relative group">
+              <pre className="bg-muted/60 border border-border rounded-lg px-4 py-3 text-xs font-mono text-foreground overflow-x-auto whitespace-pre-wrap break-all leading-relaxed">
+                {embedCode}
+              </pre>
+              <button
+                onClick={copyEmbed}
+                className="absolute top-2 right-2 flex items-center gap-1 text-[10px] bg-background border border-border hover:bg-muted px-2 py-1 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+              >
+                <Copy className="w-2.5 h-2.5" /> Copiar
+              </button>
+            </div>
+          </div>
+
+          {/* Visual preview */}
+          <div className="space-y-1.5">
+            <Label className="text-xs">Preview</Label>
+            <div className="relative bg-muted/30 border border-border/60 rounded-lg h-28 overflow-hidden">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <p className="text-[10px] text-muted-foreground/50">Prévia do seu site</p>
+              </div>
+              {/* Simulated floating button */}
+              <div
+                className={`absolute bottom-4 ${position === "right" ? "right-4" : "left-4"} flex items-center gap-2 ${position === "left" ? "flex-row" : "flex-row-reverse"}`}
+              >
+                <div className="text-[10px] bg-foreground/80 text-background px-2 py-1 rounded-md whitespace-nowrap">
+                  Fale conosco no Telegram
+                </div>
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center shadow-lg flex-shrink-0"
+                  style={{ background: "#0088cc" }}
+                >
+                  <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5">
+                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Button onClick={copyEmbed} className="w-full" size="sm">
+            <Copy className="w-3.5 h-3.5 mr-2" />
+            Copiar código
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 export default function Telegram() {
   const { user } = useAuth();
@@ -377,6 +496,9 @@ export default function Telegram() {
           </div>
         )}
       </div>
+
+      {/* Embed section */}
+      <EmbedSection connections={connections} />
 
       {/* Info box */}
       <Card className="border border-border/40 bg-muted/30">
