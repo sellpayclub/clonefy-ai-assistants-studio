@@ -161,7 +161,7 @@ const ChatWidget = () => {
         {isLoaded && (
           <iframe
             ref={iframeRef}
-            src={`${window.location.origin}/embed/chat/7a218984-6ada-4581-b1b6-2119b4771260`}
+            src={`https://clonefy-ai-assistants-studio.lovable.app/embed/chat/7a218984-6ada-4581-b1b6-2119b4771260`}
             className={`border-none ${isMobile ? '' : 'rounded-xl'}`}
             title="Clonefy Chat Support"
             aria-label="Widget de chat Clonefy - Suporte ao cliente"
