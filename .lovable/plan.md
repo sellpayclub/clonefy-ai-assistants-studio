@@ -1,54 +1,57 @@
 
-## Problems Found
+## Root Cause Found
 
-### 1. Type mismatch — `LiveChatSession.source`
-In `src/hooks/useLiveChat.ts` line 12, `source` is typed as `'whatsapp' | 'widget'`. Telegram sessions have `source: 'telegram'` in the DB but the TypeScript type doesn't include it. This causes the source filter `sourceFilter !== 'all' && session.source !== sourceFilter` to silently fail for Telegram sessions when the filter is set to `'telegram'` — because TypeScript would not match. More critically, the filter `(session.source as string) === 'telegram'` workarounds in ChatWindow/SessionsList are band-aids.
-
-### 2. Source filter dropdown missing Telegram
-`LiveChat.tsx` line 122-125: the source filter has only `whatsapp` and `widget`. No `telegram` option, so users can't filter by Telegram.
-
-### 3. Stats header missing Telegram counter
-No Telegram stat shown in the header stats section. Only Bot (AI) and Human counters exist.
-
-### 4. CRM upsert broken in telegram-webhook
-Line 256-263 of `telegram-webhook/index.ts`:
+The `telegram-webhook` function does:
 ```js
-supabase.from('crm_leads').upsert({
+const { data: conn } = await supabase
+  .from('telegram_connections')
+  .select('*, assistants(openai_assistant_id, name)')
   ...
-  status: 'new'   ← this column does NOT exist
-}, { onConflict: 'user_id,whatsapp_number' })
 ```
-The `crm_leads` table uses `pipeline_stage` (not `status`). The field `status` in crm_leads is `'aberto'/'fechado'`, not `'new'`. Also missing `assistant_id` linkage. This upsert likely silently fails or inserts with wrong data.
 
-### 5. Telegram sessions filtered OUT when sourceFilter='telegram'
-The filter in `LiveChat.tsx` compares `session.source !== sourceFilter`. Because `source` is typed `'whatsapp' | 'widget'`, when a telegram session comes in from DB with `source='telegram'`, the TypeScript type narrowing may discard it in strict comparisons.
+**The `telegram_connections` table has NO foreign key to `assistants`**, so the nested `.select('*, assistants(...)')` returns `conn.assistants = null`. This means `openAIAssistantId` is `undefined`, triggering the early return:
+```js
+if (!openAIAssistantId) {
+  await sendTelegramMessage(botToken, chatId, 'Bot não configurado...');
+  return new Response('ok', { status: 200 });  // ← exits WITHOUT saving to live_chat
+}
+```
 
----
+Confirmed by the DB query: `telegram_connections.assistant_id` is a UUID pointing to `assistants.id`, but there's no declared FK constraint, so Supabase's relational join doesn't work.
 
-## Fixes
+## Fix
 
-### Files to change:
+Replace the broken nested join with a **two-step query**: first fetch the connection, then separately fetch the assistant:
 
-**`src/hooks/useLiveChat.ts`**
-- Add `'telegram'` to `source` in both `LiveChatSession` and `LiveChatMessage` interfaces
+```js
+// Step 1: get connection
+const { data: conn } = await supabase
+  .from('telegram_connections')
+  .select('*')
+  .eq('bot_token', botToken)
+  .eq('is_active', true)
+  .single();
 
-**`src/pages/LiveChat.tsx`**
-- Add `✈️ Telegram` option to source filter Select
-- Add Telegram stats counter (with send/plane icon) in header stats
+// Step 2: get assistant separately
+const { data: assistantData } = await supabase
+  .from('assistants')
+  .select('openai_assistant_id, name')
+  .eq('id', conn.assistant_id)
+  .single();
+```
 
-**`src/components/live-chat/SessionsList.tsx`**
-- Remove `(session.source as string)` casts — now that type is fixed they're clean
+Then use `assistantData?.openai_assistant_id` and `assistantData?.name` in place of `conn.assistants?.openai_assistant_id` and `conn.assistants?.name`.
 
-**`src/components/live-chat/ChatWindow.tsx`**
-- Remove `(session.source as string)` casts — same cleanup
+## Files to Change
 
-**`supabase/functions/telegram-webhook/index.ts`**
-- Fix CRM upsert: change `status: 'new'` → `pipeline_stage: 'novo'`, add `assistant_id`, fix field names
+| File | Change |
+|---|---|
+| `supabase/functions/telegram-webhook/index.ts` | Replace nested join with two-step query |
 
-### Visual result
+After fixing, redeploy the function. All Telegram messages will then correctly:
+1. Create/update `live_chat_sessions` with `source: 'telegram'`
+2. Save messages to `live_chat_messages`  
+3. Upsert CRM leads
+4. Respond via OpenAI
 
-The Live Chat page will show:
-- Filter dropdown with ✈️ Telegram option
-- Telegram stat counter in the header  
-- All Telegram conversations visible and filterable
-- CRM entries correctly created for Telegram contacts with proper pipeline stage
+No frontend changes needed — the UI already has the Telegram filter and badge from previous fixes.
