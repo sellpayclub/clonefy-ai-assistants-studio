@@ -897,7 +897,7 @@ const Assistants = () => {
                             💡 Demonstração
                           </span>
                           <a 
-                            href={`${window.location.origin}/embed/chat/${selectedAgentForEmbed.id}`}
+                            href={`https://clonefy-ai-assistants-studio.lovable.app/embed/chat/${selectedAgentForEmbed.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs text-blue-600 hover:text-blue-700 underline"
@@ -920,11 +920,7 @@ const Assistants = () => {
                         size="sm" 
                         variant="outline"
                         onClick={() => {
-                          // Usar domínio customizado CLONEFY
-                          const baseUrl = window.location.hostname.includes('lovable') 
-                            ? window.location.origin 
-                            : 'https://clonefyia.com'; // Domínio customizado CLONEFY
-                          
+                          const baseUrl = 'https://clonefy-ai-assistants-studio.lovable.app';
                           const code = `<!-- Chat Flutuante CLONEFY -->
 <!-- IMPORTANTE: Este código carrega o chat dinamicamente. 
      As atualizações do agente (instruções, customização, templates, etc.) aparecem automaticamente
@@ -945,9 +941,7 @@ const Assistants = () => {
                     <div className="p-4 bg-muted rounded-lg overflow-auto">
                       <code className="text-xs text-muted-foreground break-all whitespace-pre-wrap">
                         {(() => {
-                          const exampleBaseUrl = window.location.hostname.includes('lovable') 
-                            ? window.location.origin 
-                            : 'https://clonefyia.com';
+                          const exampleBaseUrl = 'https://clonefy-ai-assistants-studio.lovable.app';
                           return `<!-- Chat Flutuante CLONEFY -->
 <!-- IMPORTANTE: Este código carrega o chat dinamicamente. 
      As atualizações do agente (instruções, customização, templates, etc.) aparecem automaticamente
@@ -1006,7 +1000,7 @@ const Assistants = () => {
                     <Label className="text-sm font-medium">Link Direto do Chat (Responsivo)</Label>
                     <div className="flex flex-col sm:flex-row gap-2 mt-2">
                       <Input 
-                        value={`${window.location.origin}/embed/chat/${selectedAgentForEmbed.id}`}
+                        value={`https://clonefy-ai-assistants-studio.lovable.app/embed/chat/${selectedAgentForEmbed.id}`}
                         readOnly
                         className="flex-1 text-xs sm:text-sm"
                       />
@@ -1015,7 +1009,7 @@ const Assistants = () => {
                         variant="outline"
                         className="w-full sm:w-auto"
                         onClick={() => {
-                          const url = `${window.location.origin}/embed/chat/${selectedAgentForEmbed.id}`;
+                          const url = `https://clonefy-ai-assistants-studio.lovable.app/embed/chat/${selectedAgentForEmbed.id}`;
                           navigator.clipboard.writeText(url);
                           toast({
                             title: "Link copiado!",
@@ -1032,7 +1026,7 @@ const Assistants = () => {
                         Link direto para teste ou compartilhamento - totalmente responsivo
                       </p>
                       <a 
-                        href={`${window.location.origin}/embed/chat/${selectedAgentForEmbed.id}`}
+                        href={`https://clonefy-ai-assistants-studio.lovable.app/embed/chat/${selectedAgentForEmbed.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs text-blue-600 hover:text-blue-700 underline"

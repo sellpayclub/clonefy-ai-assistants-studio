@@ -460,7 +460,7 @@ const MercadoDigital = () => {
                             </div>
                         )}
                         <iframe
-                            src={`/embed-chat/${CHAT_ASSISTANT_ID}`}
+                            src={`https://clonefy-ai-assistants-studio.lovable.app/embed-chat/${CHAT_ASSISTANT_ID}`}
                             className="w-full"
                             style={{
                                 height: '480px',
