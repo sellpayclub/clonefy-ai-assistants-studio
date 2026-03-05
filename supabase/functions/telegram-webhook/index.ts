@@ -170,10 +170,10 @@ serve(async (req) => {
       return new Response('ok', { status: 200 });
     }
 
-    // Find the connection for this bot token
+    // Step 1: Find the connection for this bot token
     const { data: conn } = await supabase
       .from('telegram_connections')
-      .select('*, assistants(openai_assistant_id, name)')
+      .select('*')
       .eq('bot_token', botToken)
       .eq('is_active', true)
       .single();
@@ -185,11 +185,24 @@ serve(async (req) => {
 
     const userId = conn.user_id;
     const assistantId = conn.assistant_id;
-    const openAIAssistantId = conn.assistants?.openai_assistant_id;
+
+    // Step 2: Fetch assistant separately (no FK constraint on telegram_connections)
+    let openAIAssistantId: string | null = null;
+    let assistantName: string | null = null;
+
+    if (assistantId) {
+      const { data: assistantData } = await supabase
+        .from('assistants')
+        .select('openai_assistant_id, name')
+        .eq('id', assistantId)
+        .single();
+      openAIAssistantId = assistantData?.openai_assistant_id ?? null;
+      assistantName = assistantData?.name ?? null;
+    }
 
     if (!openAIAssistantId) {
-      await sendTelegramMessage(botToken, chatId, 'Bot não configurado com um assistente. Por favor, configure no painel.');
-      return new Response('ok', { status: 200 });
+      console.log('No assistant configured for this bot, saving message without AI response');
+      // Still save to live_chat even without AI — don't early return
     }
 
     // Save incoming message to live_chat_messages
@@ -227,7 +240,7 @@ serve(async (req) => {
           source: 'telegram',
           status: 'ai_active',
           assistant_id: conn.assistant_id,
-          assistant_name: conn.assistants?.name ?? null,
+          assistant_name: assistantName,
           last_message_at: new Date().toISOString(),
           last_message_preview: text.substring(0, 100),
           last_sender_type: 'customer',
@@ -278,6 +291,12 @@ serve(async (req) => {
 
     if (isHumanTakeover) {
       console.log('Human takeover active, skipping AI response');
+      return new Response('ok', { status: 200 });
+    }
+
+    // Only run AI if assistant is configured and no human takeover
+    if (!openAIAssistantId) {
+      console.log('No OpenAI assistant configured, message saved to live_chat only');
       return new Response('ok', { status: 200 });
     }
 
