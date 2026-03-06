@@ -1,8 +1,18 @@
 import { useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { Outlet, useNavigate, Navigate } from 'react-router-dom';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import { useAuth } from '@/contexts/AuthContext';
+
+const ADMIN_EMAIL = 'personaldann@gmail.com';
+
+export const RestrictedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  if (user?.email !== ADMIN_EMAIL) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <>{children}</>;
+};
 
 const AppLayout = () => {
   const { user, loading } = useAuth();

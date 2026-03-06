@@ -18,9 +18,9 @@ export default {
     titleEnd: "com IA!",
     subtitle: "Tenha Agentes IA treinados para sua empresa, atendendo no WhatsApp, 24 horas por dia.",
     subtitleBold: "100% automática e humanizada!",
-    createAssistant: "Criar Meu Primeiro Clone de IA",
+    createAssistant: "Criar Meu Primeiro Agente de IA",
     watchDemo: "Ver Demonstração",
-    description1: "Ensine seu Clone a Seguir o Seu Script de Vendas ou Seu atendimento e Automatize 100% seu WhatsApp",
+    description1: "Ensine seu Agente a Seguir o Seu Script de Vendas ou Seu atendimento e Automatize 100% seu WhatsApp",
     description2: "Seu Funcionário Disponível 24horas por dia, sem descanso e pagando 10% de um salário."
   },
 
@@ -30,7 +30,7 @@ export default {
     subtitle: "Tudo que você precisa para automatizar e escalar seu atendimento",
     salesAgent: {
       title: "Agente de Vendas",
-      description: "SDR, Closer, Vendedor profissional! Ensine seu Clone a vender o seu Produto/Serviço e crie um vendedor profissional que se ajusta e melhora a cada conversa, enviando links personalizados, vídeos e muito mais."
+      description: "SDR, Closer, Vendedor profissional! Ensine seu Agente a vender o seu Produto/Serviço e crie um vendedor profissional que se ajusta e melhora a cada conversa, enviando links personalizados, vídeos e muito mais."
     },
     scheduling: {
       title: "Agendamentos",
@@ -38,11 +38,11 @@ export default {
     },
     multiService: {
       title: "Multi-Atendimento",
-      description: "Seu Clone terá um histórico de conversa, atendendo de forma personalizada cada cliente, lembrando de todos eles e criando um atendimento 100% personalizado."
+      description: "Seu Agente terá um histórico de conversa, atendendo de forma personalizada cada cliente, lembrando de todos eles e criando um atendimento 100% personalizado."
     },
     support: {
       title: "Suporte e Atendimento",
-      description: "Use seu clone para automatizar seu suporte e atendimento ao cliente, inclua todas as informações sobre seu negócio e deixe ele disponível para ajudar seus clientes."
+      description: "Use seu agente para automatizar seu suporte e atendimento ao cliente, inclua todas as informações sobre seu negócio e deixe ele disponível para ajudar seus clientes."
     },
     naturalConversations: {
       title: "Conversas Naturais",
@@ -141,7 +141,7 @@ export default {
       },
       startChat: {
         title: "Iniciar Chat",
-        description: "Teste seus clones de IA em uma conversa",
+        description: "Teste seus agentes de IA em uma conversa",
         button: "Chat de Teste"
       }
     }
@@ -155,7 +155,7 @@ export default {
   // Auth Pages
   auth: {
     title: "CLONEFY",
-    subtitle: "Plataforma de Clones de IA para WhatsApp",
+    subtitle: "Plataforma de Agentes de IA para WhatsApp",
     signin: "Login",
     signup: "Cadastro",
     email: "Email",
@@ -183,7 +183,7 @@ export default {
       description: "Visão geral do sistema"
     },
     agents: {
-      title: "Clones de IA",
+      title: "Agentes de IA",
       description: "Seus Agentes"
     },
     whatsapp: {
@@ -204,7 +204,7 @@ export default {
   // Navigation
   nav: {
     dashboard: "Dashboard",
-    assistants: "Clones de IA", 
+    assistants: "Agentes de IA", 
     conversations: "Conversas",
     whatsapp: "WhatsApp",
     settings: "Configurações",
@@ -405,7 +405,7 @@ export default {
         price: "97",
         period: "por mês",
         features: [
-          "1 Clone de IA",
+          "1 Agente de IA",
           "1.000 mensagens/mês",
           "Suporte por email",
           "Integração WhatsApp"
@@ -418,7 +418,7 @@ export default {
         period: "por mês",
         recommended: "Recomendado",
         features: [
-          "3 Clones de IA",
+          "3 Agentes de IA",
           "5.000 mensagens/mês",
           "Suporte prioritário",
           "Integração WhatsApp",
@@ -433,7 +433,7 @@ export default {
         period: "por mês",
         installment: "ou 12x de R$ 49,70",
         features: [
-          "Clones ilimitados",
+          "Agentes ilimitados",
           "20.000 mensagens/mês",
           "Suporte VIP 24/7",
           "Todas as integrações",

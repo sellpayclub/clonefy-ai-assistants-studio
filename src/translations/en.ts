@@ -18,9 +18,9 @@ export default {
     titleEnd: "with AI!",
     subtitle: "Have AI Agents trained for your company, serving on WhatsApp, 24 hours a day.",
     subtitleBold: "100% automatic and humanized!",
-    createAssistant: "Create My First AI Clone",
+    createAssistant: "Create My First AI Agent",
     watchDemo: "Watch Demo",
-    description1: "Teach your Clone to Follow Your Sales Script or Your service and Automate 100% of your WhatsApp",
+    description1: "Teach your Agent to Follow Your Sales Script or Your service and Automate 100% of your WhatsApp",
     description2: "Your Employee Available 24 hours a day, without rest and paying 10% of a salary."
   },
 
@@ -30,7 +30,7 @@ export default {
     subtitle: "Everything you need to automate and scale your customer service",
     salesAgent: {
       title: "Sales Agent",
-      description: "SDR, Closer, Professional Salesperson! Teach your Clone to sell your Product/Service and create a professional salesperson that adjusts and improves with each conversation, sending personalized links, videos and much more."
+      description: "SDR, Closer, Professional Salesperson! Teach your Agent to sell your Product/Service and create a professional salesperson that adjusts and improves with each conversation, sending personalized links, videos and much more."
     },
     scheduling: {
       title: "Scheduling",
@@ -38,11 +38,11 @@ export default {
     },
     multiService: {
       title: "Multi-Service",
-      description: "Your Clone will have a conversation history, serving each client in a personalized way, remembering all of them and creating 100% personalized service."
+      description: "Your Agent will have a conversation history, serving each client in a personalized way, remembering all of them and creating 100% personalized service."
     },
     support: {
       title: "Support & Service",
-      description: "Use your clone to automate your customer support and service, include all information about your business and make it available to help your customers."
+      description: "Use your agent to automate your customer support and service, include all information about your business and make it available to help your customers."
     },
     naturalConversations: {
       title: "Natural Conversations",
@@ -71,7 +71,7 @@ export default {
   // Auth Pages
   auth: {
     title: "CLONEFY",
-    subtitle: "AI Clones Platform for WhatsApp",
+    subtitle: "AI Agents Platform for WhatsApp",
     signin: "Sign In",
     signup: "Sign Up",
     email: "Email",
@@ -116,7 +116,7 @@ export default {
       },
       startChat: {
         title: "Start Chat",
-        description: "Test your AI clones in a conversation",
+        description: "Test your AI agents in a conversation",
         button: "Test Chat"
       }
     }
@@ -130,7 +130,7 @@ export default {
       description: "System overview"
     },
     agents: {
-      title: "AI Clones",
+      title: "AI Agents",
       description: "Your Agents"
     },
     whatsapp: {
@@ -151,7 +151,7 @@ export default {
   // Navigation
   nav: {
     dashboard: "Dashboard",
-    assistants: "AI Clones", 
+    assistants: "AI Agents", 
     conversations: "Conversations",
     whatsapp: "WhatsApp",
     settings: "Settings",
@@ -384,7 +384,7 @@ export default {
         price: "97",
         period: "per month",
         features: [
-          "1 AI Clone",
+          "1 AI Agent",
           "1,000 messages/month",
           "Email support",
           "WhatsApp integration"
@@ -397,7 +397,7 @@ export default {
         period: "per month",
         recommended: "Recommended",
         features: [
-          "3 AI Clones",
+          "3 AI Agents",
           "5,000 messages/month",
           "Priority support",
           "WhatsApp integration",
@@ -412,7 +412,7 @@ export default {
         period: "per month",
         installment: "or 12x $49.70",
         features: [
-          "Unlimited clones",
+          "Unlimited agents",
           "20,000 messages/month",
           "VIP support 24/7",
           "All integrations",

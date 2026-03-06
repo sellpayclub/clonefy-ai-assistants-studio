@@ -81,6 +81,7 @@ const menuItems = [
     icon: Megaphone,
     description: "Campanhas de follow-up automatizado",
     highlight: true,
+    adminOnly: true,
   },
   {
     title: "Gestão de Grupos",
@@ -89,7 +90,7 @@ const menuItems = [
     description: "Gerencie grupos de WhatsApp",
     highlight: true,
   },
-  { title: "Loja WhatsApp", url: "/commerce", icon: Store, description: "Venda via WhatsApp com IA", highlight: true },
+  { title: "Loja WhatsApp", url: "/commerce", icon: Store, description: "Venda via WhatsApp com IA", highlight: true, adminOnly: true },
   { title: "Financeiro IA", url: "/financeiro", icon: Wallet, description: "Controle financeiro pelo WhatsApp", highlight: true },
   {
     title: "Chat Flutuante",
@@ -124,15 +125,16 @@ const AppSidebar = () => {
   const collapsed = state === "collapsed";
 
   // Filter menu items based on user email
+  const isAdmin = user?.email === "personaldann@gmail.com";
+
   const filteredMenuItems = useMemo(() => {
     return menuItems.filter((item) => {
-      // Only show admin for personaldann@gmail.com
-      if (item.url === "/admin") {
-        return user?.email === "personaldann@gmail.com";
+      if (item.url === "/admin" || (item as any).adminOnly) {
+        return isAdmin;
       }
       return true;
     });
-  }, [user?.email]);
+  }, [isAdmin]);
 
   const isActive = useCallback((path: string) => currentPath === path, [currentPath]);
 
