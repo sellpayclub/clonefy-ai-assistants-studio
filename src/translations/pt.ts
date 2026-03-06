@@ -405,7 +405,7 @@ export default {
         price: "97",
         period: "por mês",
         features: [
-          "1 Clone de IA",
+          "1 Agente de IA",
           "1.000 mensagens/mês",
           "Suporte por email",
           "Integração WhatsApp"
@@ -418,7 +418,7 @@ export default {
         period: "por mês",
         recommended: "Recomendado",
         features: [
-          "3 Clones de IA",
+          "3 Agentes de IA",
           "5.000 mensagens/mês",
           "Suporte prioritário",
           "Integração WhatsApp",
