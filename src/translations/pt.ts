@@ -155,7 +155,7 @@ export default {
   // Auth Pages
   auth: {
     title: "CLONEFY",
-    subtitle: "Plataforma de Clones de IA para WhatsApp",
+    subtitle: "Plataforma de Agentes de IA para WhatsApp",
     signin: "Login",
     signup: "Cadastro",
     email: "Email",
