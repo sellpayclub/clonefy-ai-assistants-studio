@@ -81,6 +81,7 @@ const menuItems = [
     icon: Megaphone,
     description: "Campanhas de follow-up automatizado",
     highlight: true,
+    adminOnly: true,
   },
   {
     title: "Gestão de Grupos",
@@ -89,7 +90,7 @@ const menuItems = [
     description: "Gerencie grupos de WhatsApp",
     highlight: true,
   },
-  { title: "Loja WhatsApp", url: "/commerce", icon: Store, description: "Venda via WhatsApp com IA", highlight: true },
+  { title: "Loja WhatsApp", url: "/commerce", icon: Store, description: "Venda via WhatsApp com IA", highlight: true, adminOnly: true },
   { title: "Financeiro IA", url: "/financeiro", icon: Wallet, description: "Controle financeiro pelo WhatsApp", highlight: true },
   {
     title: "Chat Flutuante",

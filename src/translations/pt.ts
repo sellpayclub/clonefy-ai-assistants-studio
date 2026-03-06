@@ -18,9 +18,9 @@ export default {
     titleEnd: "com IA!",
     subtitle: "Tenha Agentes IA treinados para sua empresa, atendendo no WhatsApp, 24 horas por dia.",
     subtitleBold: "100% automática e humanizada!",
-    createAssistant: "Criar Meu Primeiro Clone de IA",
+    createAssistant: "Criar Meu Primeiro Agente de IA",
     watchDemo: "Ver Demonstração",
-    description1: "Ensine seu Clone a Seguir o Seu Script de Vendas ou Seu atendimento e Automatize 100% seu WhatsApp",
+    description1: "Ensine seu Agente a Seguir o Seu Script de Vendas ou Seu atendimento e Automatize 100% seu WhatsApp",
     description2: "Seu Funcionário Disponível 24horas por dia, sem descanso e pagando 10% de um salário."
   },
 

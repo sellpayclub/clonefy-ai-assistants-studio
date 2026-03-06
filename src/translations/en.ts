@@ -18,9 +18,9 @@ export default {
     titleEnd: "with AI!",
     subtitle: "Have AI Agents trained for your company, serving on WhatsApp, 24 hours a day.",
     subtitleBold: "100% automatic and humanized!",
-    createAssistant: "Create My First AI Clone",
+    createAssistant: "Create My First AI Agent",
     watchDemo: "Watch Demo",
-    description1: "Teach your Clone to Follow Your Sales Script or Your service and Automate 100% of your WhatsApp",
+    description1: "Teach your Agent to Follow Your Sales Script or Your service and Automate 100% of your WhatsApp",
     description2: "Your Employee Available 24 hours a day, without rest and paying 10% of a salary."
   },
 
