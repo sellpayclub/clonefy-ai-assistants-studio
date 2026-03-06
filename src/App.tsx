@@ -9,7 +9,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BrandingProvider } from "@/contexts/BrandingContext";
 
-import AppLayout from "@/components/AppLayout";
+import AppLayout, { RestrictedRoute } from "@/components/AppLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
