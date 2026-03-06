@@ -25,6 +25,7 @@ const LazyBrandingSettings = lazy(() => import("./pages/BrandingSettings"));
 const LazyAssistants = lazy(() => import("./pages/Assistants"));
 const LazyWhatsApp = lazy(() => import("./pages/WhatsApp"));
 const LazyTelegram = lazy(() => import("./pages/Telegram"));
+const LazyTelegram = lazy(() => import("./pages/Telegram"));
 const LazyConversations = lazy(() => import("./pages/Conversations"));
 const LazyAdmin = lazy(() => import("./pages/Admin"));
 const LazyEspanol = lazy(() => import("./pages/Espanol"));
