@@ -1,57 +1,62 @@
 
-## Root Cause Found
+## Summary of Changes Needed
 
-The `telegram-webhook` function does:
-```js
-const { data: conn } = await supabase
-  .from('telegram_connections')
-  .select('*, assistants(openai_assistant_id, name)')
-  ...
-```
+### 1. Block "Follow-up IA" and "Loja WhatsApp" routes for non-admin users
 
-**The `telegram_connections` table has NO foreign key to `assistants`**, so the nested `.select('*, assistants(...)')` returns `conn.assistants = null`. This means `openAIAssistantId` is `undefined`, triggering the early return:
-```js
-if (!openAIAssistantId) {
-  await sendTelegramMessage(botToken, chatId, 'Bot não configurado...');
-  return new Response('ok', { status: 200 });  // ← exits WITHOUT saving to live_chat
-}
-```
+The `AppSidebar.tsx` already has a pattern for admin-only filtering using `user?.email === "personaldann@gmail.com"`. I need to extend this same pattern to block `Follow-up IA` (`/followup`) and `Loja WhatsApp` (`/commerce`) items from the sidebar AND the actual pages.
 
-Confirmed by the DB query: `telegram_connections.assistant_id` is a UUID pointing to `assistants.id`, but there's no declared FK constraint, so Supabase's relational join doesn't work.
+**Sidebar (`src/components/AppSidebar.tsx`):**
+- Add `adminOnly: true` flag to the Follow-up IA and Loja WhatsApp menu items
+- Extend `filteredMenuItems` useMemo to also filter out `adminOnly` items for non-admin users
 
-## Fix
+**Route protection (`src/components/AppLayout.tsx`):**
+- Add a `RestrictedRoute` wrapper that checks if the current user's email is `personaldann@gmail.com`. If not, redirect to `/dashboard` with a toast explaining the feature is coming soon.
+- Wrap `/followup/*` and `/commerce/*` routes with it.
 
-Replace the broken nested join with a **two-step query**: first fetch the connection, then separately fetch the assistant:
+### 2. Replace "Clone"/"Clones" with "Agente"/"Agentes" in pt.ts
 
-```js
-// Step 1: get connection
-const { data: conn } = await supabase
-  .from('telegram_connections')
-  .select('*')
-  .eq('bot_token', botToken)
-  .eq('is_active', true)
-  .single();
+The word "Clone/Clones" appears as visible UI text in `src/translations/pt.ts` in several places:
+- `hero.createAssistant`: "Criar Meu Primeiro Clone de IA" → "Criar Meu Primeiro Agente de IA"
+- `hero.description1`: "Ensine seu Clone a Seguir..." → "Ensine seu Agente a Seguir..."
+- `features.salesAgent.description`: "Ensine seu Clone a vender..." → "Ensine seu Agente a vender..."
+- `features.multiService.description`: "Seu Clone terá um histórico..." → "Seu Agente terá um histórico..."
+- `features.support.description`: "Use seu clone para automatizar..." → "Use seu agente para automatizar..."
+- `dashboard.quickActions.startChat.description`: "Teste seus clones de IA..." → "Teste seus agentes de IA..."
+- `auth.subtitle`: "Plataforma de Clones de IA para WhatsApp" → "Plataforma de Agentes de IA para WhatsApp"
+- `sidebar.agents.title`: "Clones de IA" → "Agentes de IA"
+- `nav.assistants`: "Clones de IA" → "Agentes de IA"
+- `pricing.plans.basic.features[0]`: "1 Clone de IA" → "1 Agente de IA"
+- `pricing.plans.professional.features[0]`: "3 Clones de IA" → "3 Agentes de IA"
+- `pricing.plans.enterprise.features[0]`: "Clones ilimitados" → "Agentes ilimitados"
 
-// Step 2: get assistant separately
-const { data: assistantData } = await supabase
-  .from('assistants')
-  .select('openai_assistant_id, name')
-  .eq('id', conn.assistant_id)
-  .single();
-```
+The same in `src/translations/en.ts` for the English equivalents.
 
-Then use `assistantData?.openai_assistant_id` and `assistantData?.name` in place of `conn.assistants?.openai_assistant_id` and `conn.assistants?.name`.
+**NOTE:** "CLONEFY" brand name, URLs, and technical strings (like `clonefy:config`) are NOT changed — only visible user-facing labels.
 
-## Files to Change
+---
 
-| File | Change |
+## Files to Edit
+
+| File | What Changes |
 |---|---|
-| `supabase/functions/telegram-webhook/index.ts` | Replace nested join with two-step query |
+| `src/components/AppSidebar.tsx` | Add `adminOnly` flag to Follow-up IA and Loja WhatsApp items; extend filter logic |
+| `src/components/AppLayout.tsx` | Add `RestrictedRoute` component to protect `/followup/*` and `/commerce/*` |
+| `src/translations/pt.ts` | Replace "Clone/Clones" with "Agente/Agentes" in visible UI text |
+| `src/translations/en.ts` | Replace "Clone/Clones" with "Agent/Agents" in visible UI text |
 
-After fixing, redeploy the function. All Telegram messages will then correctly:
-1. Create/update `live_chat_sessions` with `source: 'telegram'`
-2. Save messages to `live_chat_messages`  
-3. Upsert CRM leads
-4. Respond via OpenAI
+---
 
-No frontend changes needed — the UI already has the Telegram filter and badge from previous fixes.
+## Technical Detail
+
+**RestrictedRoute** (inside AppLayout.tsx):
+```tsx
+const RestrictedRoute = ({ children }) => {
+  const { user } = useAuth();
+  if (user?.email !== "personaldann@gmail.com") {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+};
+```
+
+This keeps the feature completely invisible (sidebar hidden) AND unreachable (route blocked) for all non-admin users, while remaining fully accessible to `personaldann@gmail.com`.
