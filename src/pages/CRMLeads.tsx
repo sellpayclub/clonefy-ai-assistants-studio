@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Search, Plus, MessageSquare, Phone, Mail, Calendar, Globe, Smartphone, Flame, Thermometer, Snowflake, ArrowRight, LayoutList, Kanban, Settings2 } from "lucide-react";
@@ -25,6 +26,20 @@ const CRMLeads = () => {
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
   const [showFilters, setShowFilters] = useState(false);
   const [showPipelineSettings, setShowPipelineSettings] = useState(false);
+
+  // Load Converteai SDK only on this page
+  useEffect(() => {
+    const s = document.createElement("script");
+    s.src = "https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js";
+    s.async = true;
+    s.id = "converteai-sdk";
+    if (!document.getElementById("converteai-sdk")) {
+      document.head.appendChild(s);
+    }
+    return () => {
+      document.getElementById("converteai-sdk")?.remove();
+    };
+  }, []);
 
   // Init default stages if none exist
   useEffect(() => {
