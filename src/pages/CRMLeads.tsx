@@ -27,19 +27,6 @@ const CRMLeads = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showPipelineSettings, setShowPipelineSettings] = useState(false);
 
-  // Load Converteai SDK only on this page
-  useEffect(() => {
-    const s = document.createElement("script");
-    s.src = "https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js";
-    s.async = true;
-    s.id = "converteai-sdk";
-    if (!document.getElementById("converteai-sdk")) {
-      document.head.appendChild(s);
-    }
-    return () => {
-      document.getElementById("converteai-sdk")?.remove();
-    };
-  }, []);
 
   // Init default stages if none exist
   useEffect(() => {
@@ -81,32 +68,6 @@ const CRMLeads = () => {
             <div className="p-4 sm:p-6">
               <h1 className="text-2xl sm:text-3xl font-bold text-white">CRM Leads</h1>
               <p className="text-white/80 text-sm sm:text-base">Gestão inteligente de contatos com análise detalhada via IA</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Video de apresentação do CRM */}
-        <div className="rounded-xl overflow-hidden border border-border/50 shadow-md bg-card/50 backdrop-blur-sm mb-2">
-          <div className="p-3 sm:p-4 border-b border-border/40">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">🎬 Veja o CRM por dentro</h2>
-          </div>
-          <div id="ifr_69ab17dc715cadaa9a5a0577_wrapper" style={{ margin: '0 auto', width: '100%' }}>
-            <div style={{ position: 'relative', paddingTop: '60.416666666666664%' }} id="ifr_69ab17dc715cadaa9a5a0577_aspect">
-              <iframe
-                frameBorder={0}
-                allowFullScreen
-                src="about:blank"
-                id="ifr_69ab17dc715cadaa9a5a0577"
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-                referrerPolicy="origin"
-                onLoad={(e) => {
-                  const el = e.currentTarget;
-                  el.onload = null;
-                  el.src = 'https://scripts.converteai.net/ceaefeeb-feef-4b52-8911-9ec9de0d5b6b/players/69ab17dc715cadaa9a5a0577/v4/embed.html'
-                    + (location.search || '?')
-                    + '&vl=' + encodeURIComponent(location.href);
-                }}
-              />
             </div>
           </div>
         </div>
