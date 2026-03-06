@@ -39,6 +39,15 @@ const CRMSales = () => {
       fbq('track', 'PageView');
     `;
         document.head.appendChild(script);
+
+        // SmartPlayer ConverteAI
+        if (!document.getElementById("converteai-script")) {
+            const smartplayerScript = document.createElement("script");
+            smartplayerScript.id = "converteai-script";
+            smartplayerScript.src = "https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js";
+            smartplayerScript.async = true;
+            document.head.appendChild(smartplayerScript);
+        }
     }, [setTheme]);
 
     return (
@@ -217,11 +226,35 @@ const CRMSales = () => {
                         </div>
 
                         {/* Transition */}
-                        <div className="text-center">
+                        <div className="text-center mb-10">
                             <p className="text-lg sm:text-xl font-bold text-emerald-700 bg-emerald-100 inline-block px-6 sm:px-10 py-3 sm:py-4 rounded-2xl shadow-sm border border-emerald-200">
                                 Seu negócio merece previsibilidade. O primeiro CRM IA que organiza a casa por você.
                             </p>
                         </div>
+
+                        {/* VSL / Video Section */}
+                        <div
+                            className="max-w-4xl mx-auto rounded-xl overflow-hidden shadow-2xl border-4 border-slate-100 bg-black"
+                            dangerouslySetInnerHTML={{
+                                __html: `
+                                    <div id="ifr_69ab17dc715cadaa9a5a0577_wrapper" style="margin: 0 auto; width: 100%;">
+                                        <div style="position: relative; padding: 60.416666666666664% 0 0 0;" id="ifr_69ab17dc715cadaa9a5a0577_aspect">
+                                            <iframe 
+                                                frameborder="0" 
+                                                allowfullscreen 
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                src="about:blank" 
+                                                id="ifr_69ab17dc715cadaa9a5a0577" 
+                                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+                                                referrerpolicy="origin" 
+                                                onload="this.onload=null, this.src='https://scripts.converteai.net/ceaefeeb-feef-4b52-8911-9ec9de0d5b6b/players/69ab17dc715cadaa9a5a0577/v4/embed.html' + (location.search || '?') + '&vl=' + encodeURIComponent(location.href)"
+                                            ></iframe>
+                                        </div>
+                                    </div>
+                                `
+                            }}
+                        />
+
                     </div>
                 </div>
             </section>
