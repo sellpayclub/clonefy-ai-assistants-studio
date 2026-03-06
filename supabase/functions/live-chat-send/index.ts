@@ -21,11 +21,11 @@ serve(async (req) => {
   }
 
   try {
-    const { 
+    const {
       session_id,
-      instance_name, 
-      contact_number, 
-      message, 
+      instance_name,
+      contact_number,
+      message,
       source,
       user_id
     } = await req.json();
@@ -61,7 +61,7 @@ serve(async (req) => {
 
     // 2. Update session
     const takeoverUntil = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
-    
+
     await supabase
       .from('live_chat_sessions')
       .update({
@@ -118,7 +118,7 @@ serve(async (req) => {
       // Also update n8n_fluxogpt for human takeover
       await supabase
         .from('n8n_fluxogpt')
-        .update({ 
+        .update({
           human_takeover_until: takeoverUntil,
           last_message_at: new Date().toISOString(),
           last_sender: 'human'
@@ -149,10 +149,47 @@ serve(async (req) => {
       console.log('✅ Mensagem enviada via WhatsApp');
     }
 
+    // 3b. Send via Telegram if source is telegram
+    if (source === 'telegram') {
+      console.log('✈️ Enviando via Telegram Bot API...');
+
+      // instance_name format: tg_botusername
+      const botUsername = instance_name.replace('tg_', '');
+
+      // Get bot token
+      const { data: tgConn } = await supabase
+        .from('telegram_connections')
+        .select('bot_token')
+        .eq('bot_username', botUsername)
+        .eq('status', 'active')
+        .single();
+
+      if (tgConn?.bot_token) {
+        const sendResponse = await fetch(`https://api.telegram.org/bot${tgConn.bot_token}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: parseInt(contact_number),
+            text: message
+          })
+        });
+
+        if (!sendResponse.ok) {
+          const errorText = await sendResponse.text();
+          console.error('❌ Erro ao enviar Telegram:', errorText);
+          throw new Error(`Failed to send Telegram message: ${errorText}`);
+        }
+
+        console.log('✅ Mensagem enviada via Telegram');
+      } else {
+        console.error('❌ Conexão Telegram não encontrada para @' + botUsername);
+      }
+    }
+
     // 4. For widget, we would need to use realtime or websockets
     // For now, widget messages are handled by the frontend directly
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       success: true,
       message: 'Message sent successfully'
     }), {
@@ -161,8 +198,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Erro no live-chat-send:', error);
-    return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return new Response(JSON.stringify({
+      error: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

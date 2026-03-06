@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -12,9 +12,9 @@ import { useLiveChat } from '@/hooks/useLiveChat';
 import { SessionsList } from '@/components/live-chat/SessionsList';
 import { ChatWindow } from '@/components/live-chat/ChatWindow';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { 
-  Bot, 
-  User, 
+import {
+  Bot,
+  User,
   Radio,
   RefreshCw,
   Send
@@ -126,13 +126,14 @@ export default function LiveChat() {
                 <SelectContent>
                   <SelectItem value="all">Todas</SelectItem>
                   <SelectItem value="whatsapp">📱 WhatsApp</SelectItem>
+                  <SelectItem value="telegram">✈️ Telegram</SelectItem>
                   <SelectItem value="widget">💬 Widget</SelectItem>
                   <SelectItem value="telegram">✈️ Telegram</SelectItem>
                 </SelectContent>
               </Select>
 
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="icon"
                 onClick={() => loadSessions()}
                 title="Atualizar"

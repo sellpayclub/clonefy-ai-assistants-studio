@@ -19,6 +19,7 @@ import {
   Radio,
   Brush,
   Wallet,
+  Send,
 } from "lucide-react";
 
 const TelegramSidebarIcon = () => (
@@ -181,10 +182,9 @@ const AppSidebar = () => {
                         end
                         className={`
                           flex items-center rounded-lg transition-all duration-200 relative
-                          ${
-                            active
-                              ? "bg-gradient-to-r from-primary/15 to-primary/5 text-primary font-medium shadow-sm"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          ${active
+                            ? "bg-gradient-to-r from-primary/15 to-primary/5 text-primary font-medium shadow-sm"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           }
                           ${collapsed ? "justify-center p-2" : "px-3 py-2"}
                         `}
