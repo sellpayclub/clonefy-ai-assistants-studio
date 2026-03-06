@@ -133,18 +133,18 @@ const App = () => {
                       <Route path="/configuracoes/branding" element={<LazyPage><LazyBrandingSettings /></LazyPage>} />
 
                       {/* Follow-up System */}
-                      <Route path="/followup" element={<LazyPage><LazyFollowupDashboard /></LazyPage>} />
-                      <Route path="/followup/campaigns/new" element={<LazyPage><LazyFollowupCampaignWizard /></LazyPage>} />
-                      <Route path="/followup/campaigns/:id" element={<LazyPage><LazyFollowupCampaignDetails /></LazyPage>} />
-                      <Route path="/followup/leads" element={<LazyPage><LazyFollowupLeadsList /></LazyPage>} />
-                      <Route path="/followup/import" element={<LazyPage><LazyFollowupImportLeads /></LazyPage>} />
+                      <Route path="/followup" element={<RestrictedRoute><LazyPage><LazyFollowupDashboard /></LazyPage></RestrictedRoute>} />
+                      <Route path="/followup/campaigns/new" element={<RestrictedRoute><LazyPage><LazyFollowupCampaignWizard /></LazyPage></RestrictedRoute>} />
+                      <Route path="/followup/campaigns/:id" element={<RestrictedRoute><LazyPage><LazyFollowupCampaignDetails /></LazyPage></RestrictedRoute>} />
+                      <Route path="/followup/leads" element={<RestrictedRoute><LazyPage><LazyFollowupLeadsList /></LazyPage></RestrictedRoute>} />
+                      <Route path="/followup/import" element={<RestrictedRoute><LazyPage><LazyFollowupImportLeads /></LazyPage></RestrictedRoute>} />
 
                       {/* Commerce System */}
-                      <Route path="/commerce" element={<LazyPage><LazyCommerceStore /></LazyPage>} />
-                      <Route path="/commerce/orders" element={<LazyPage><LazyCommerceOrders /></LazyPage>} />
-                      <Route path="/commerce/conversations" element={<LazyPage><LazyCommerceConversations /></LazyPage>} />
-                      <Route path="/commerce/payment-settings" element={<LazyPage><LazyCommercePaymentSettings /></LazyPage>} />
-                      <Route path="/commerce/connect-whatsapp" element={<LazyPage><LazyCommerceConnectWhatsApp /></LazyPage>} />
+                      <Route path="/commerce" element={<RestrictedRoute><LazyPage><LazyCommerceStore /></LazyPage></RestrictedRoute>} />
+                      <Route path="/commerce/orders" element={<RestrictedRoute><LazyPage><LazyCommerceOrders /></LazyPage></RestrictedRoute>} />
+                      <Route path="/commerce/conversations" element={<RestrictedRoute><LazyPage><LazyCommerceConversations /></LazyPage></RestrictedRoute>} />
+                      <Route path="/commerce/payment-settings" element={<RestrictedRoute><LazyPage><LazyCommercePaymentSettings /></LazyPage></RestrictedRoute>} />
+                      <Route path="/commerce/connect-whatsapp" element={<RestrictedRoute><LazyPage><LazyCommerceConnectWhatsApp /></LazyPage></RestrictedRoute>} />
 
                       {/* Financial Agent */}
                       <Route path="/financeiro" element={<LazyPage><LazyFinancialDashboard /></LazyPage>} />
