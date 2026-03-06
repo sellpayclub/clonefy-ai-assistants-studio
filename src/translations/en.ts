@@ -116,7 +116,7 @@ export default {
       },
       startChat: {
         title: "Start Chat",
-        description: "Test your AI clones in a conversation",
+        description: "Test your AI agents in a conversation",
         button: "Test Chat"
       }
     }
