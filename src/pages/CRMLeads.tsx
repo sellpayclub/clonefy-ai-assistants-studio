@@ -27,6 +27,20 @@ const CRMLeads = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showPipelineSettings, setShowPipelineSettings] = useState(false);
 
+  // Load Converteai SDK only on this page
+  useEffect(() => {
+    const s = document.createElement("script");
+    s.src = "https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js";
+    s.async = true;
+    s.id = "converteai-sdk";
+    if (!document.getElementById("converteai-sdk")) {
+      document.head.appendChild(s);
+    }
+    return () => {
+      document.getElementById("converteai-sdk")?.remove();
+    };
+  }, []);
+
   // Init default stages if none exist
   useEffect(() => {
     if (!crm.stagesLoading && crm.pipelineStages.length === 0 && user?.id) {
