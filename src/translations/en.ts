@@ -30,7 +30,7 @@ export default {
     subtitle: "Everything you need to automate and scale your customer service",
     salesAgent: {
       title: "Sales Agent",
-      description: "SDR, Closer, Professional Salesperson! Teach your Clone to sell your Product/Service and create a professional salesperson that adjusts and improves with each conversation, sending personalized links, videos and much more."
+      description: "SDR, Closer, Professional Salesperson! Teach your Agent to sell your Product/Service and create a professional salesperson that adjusts and improves with each conversation, sending personalized links, videos and much more."
     },
     scheduling: {
       title: "Scheduling",
@@ -38,11 +38,11 @@ export default {
     },
     multiService: {
       title: "Multi-Service",
-      description: "Your Clone will have a conversation history, serving each client in a personalized way, remembering all of them and creating 100% personalized service."
+      description: "Your Agent will have a conversation history, serving each client in a personalized way, remembering all of them and creating 100% personalized service."
     },
     support: {
       title: "Support & Service",
-      description: "Use your clone to automate your customer support and service, include all information about your business and make it available to help your customers."
+      description: "Use your agent to automate your customer support and service, include all information about your business and make it available to help your customers."
     },
     naturalConversations: {
       title: "Natural Conversations",
