@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Search, Plus, MessageSquare, Phone, Mail, Calendar, Globe, Smartphone, Flame, Thermometer, Snowflake, ArrowRight, LayoutList, Kanban, Settings2 } from "lucide-react";
