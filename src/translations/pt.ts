@@ -204,7 +204,7 @@ export default {
   // Navigation
   nav: {
     dashboard: "Dashboard",
-    assistants: "Clones de IA", 
+    assistants: "Agentes de IA", 
     conversations: "Conversas",
     whatsapp: "WhatsApp",
     settings: "Configurações",
