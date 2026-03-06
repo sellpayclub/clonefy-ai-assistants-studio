@@ -183,7 +183,7 @@ export default {
       description: "Visão geral do sistema"
     },
     agents: {
-      title: "Clones de IA",
+      title: "Agentes de IA",
       description: "Seus Agentes"
     },
     whatsapp: {
