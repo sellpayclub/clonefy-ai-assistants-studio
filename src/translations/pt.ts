@@ -30,7 +30,7 @@ export default {
     subtitle: "Tudo que você precisa para automatizar e escalar seu atendimento",
     salesAgent: {
       title: "Agente de Vendas",
-      description: "SDR, Closer, Vendedor profissional! Ensine seu Clone a vender o seu Produto/Serviço e crie um vendedor profissional que se ajusta e melhora a cada conversa, enviando links personalizados, vídeos e muito mais."
+      description: "SDR, Closer, Vendedor profissional! Ensine seu Agente a vender o seu Produto/Serviço e crie um vendedor profissional que se ajusta e melhora a cada conversa, enviando links personalizados, vídeos e muito mais."
     },
     scheduling: {
       title: "Agendamentos",
@@ -38,11 +38,11 @@ export default {
     },
     multiService: {
       title: "Multi-Atendimento",
-      description: "Seu Clone terá um histórico de conversa, atendendo de forma personalizada cada cliente, lembrando de todos eles e criando um atendimento 100% personalizado."
+      description: "Seu Agente terá um histórico de conversa, atendendo de forma personalizada cada cliente, lembrando de todos eles e criando um atendimento 100% personalizado."
     },
     support: {
       title: "Suporte e Atendimento",
-      description: "Use seu clone para automatizar seu suporte e atendimento ao cliente, inclua todas as informações sobre seu negócio e deixe ele disponível para ajudar seus clientes."
+      description: "Use seu agente para automatizar seu suporte e atendimento ao cliente, inclua todas as informações sobre seu negócio e deixe ele disponível para ajudar seus clientes."
     },
     naturalConversations: {
       title: "Conversas Naturais",
