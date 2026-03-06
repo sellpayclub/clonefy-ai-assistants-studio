@@ -19,6 +19,7 @@ import ThankYou from "./pages/ThankYou";
 import LeadCapture from "./pages/LeadCapture";
 
 // Lazy load pages
+const LazyCRMSales = lazy(() => import("./pages/CRMSales"));
 const LazyDashboard = lazy(() => import("./pages/Dashboard"));
 const LazyBrandingSettings = lazy(() => import("./pages/BrandingSettings"));
 const LazyAssistants = lazy(() => import("./pages/Assistants"));
@@ -97,7 +98,7 @@ const App = () => {
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
-                  
+
                   <Routes>
                     {/* Public routes */}
                     <Route path="/" element={<Index />} />
@@ -107,8 +108,9 @@ const App = () => {
                     <Route path="/embed-chat/:assistantId" element={<EmbedChat />} />
                     <Route path="/thank-you" element={<ThankYou />} />
                     <Route path="/lead-capture" element={<LeadCapture />} />
-                    
+
                     {/* Public marketing pages */}
+                    <Route path="/crm" element={<Suspense fallback={<LoadingFallback />}><LazyCRMSales /></Suspense>} />
                     <Route path="/mercado-digital" element={<Suspense fallback={<LoadingFallback />}><LazyMercadoDigital /></Suspense>} />
                     <Route path="/es" element={<Suspense fallback={<LoadingFallback />}><LazyVentasEspanol /></Suspense>} />
                     <Route path="/espanol" element={<Suspense fallback={<LoadingFallback />}><LazyEspanol /></Suspense>} />
@@ -129,29 +131,29 @@ const App = () => {
                       <Route path="/grupos" element={<LazyPage><LazyGroupManagement /></LazyPage>} />
                       <Route path="/calendar" element={<LazyPage><LazyCalendar /></LazyPage>} />
                       <Route path="/configuracoes/branding" element={<LazyPage><LazyBrandingSettings /></LazyPage>} />
-                      
+
                       {/* Follow-up System */}
                       <Route path="/followup" element={<LazyPage><LazyFollowupDashboard /></LazyPage>} />
                       <Route path="/followup/campaigns/new" element={<LazyPage><LazyFollowupCampaignWizard /></LazyPage>} />
                       <Route path="/followup/campaigns/:id" element={<LazyPage><LazyFollowupCampaignDetails /></LazyPage>} />
                       <Route path="/followup/leads" element={<LazyPage><LazyFollowupLeadsList /></LazyPage>} />
                       <Route path="/followup/import" element={<LazyPage><LazyFollowupImportLeads /></LazyPage>} />
-                      
+
                       {/* Commerce System */}
                       <Route path="/commerce" element={<LazyPage><LazyCommerceStore /></LazyPage>} />
                       <Route path="/commerce/orders" element={<LazyPage><LazyCommerceOrders /></LazyPage>} />
                       <Route path="/commerce/conversations" element={<LazyPage><LazyCommerceConversations /></LazyPage>} />
                       <Route path="/commerce/payment-settings" element={<LazyPage><LazyCommercePaymentSettings /></LazyPage>} />
                       <Route path="/commerce/connect-whatsapp" element={<LazyPage><LazyCommerceConnectWhatsApp /></LazyPage>} />
-                      
+
                       {/* Financial Agent */}
                       <Route path="/financeiro" element={<LazyPage><LazyFinancialDashboard /></LazyPage>} />
                       <Route path="/financeiro/transacoes" element={<LazyPage><LazyFinancialTransactions /></LazyPage>} />
                       <Route path="/financeiro/conectar" element={<LazyPage><LazyFinancialConnect /></LazyPage>} />
-                      
+
                       {/* Telegram */}
                       <Route path="/telegram" element={<LazyPage><LazyTelegram /></LazyPage>} />
-                      
+
                       {/* Tools */}
                       <Route path="/ferramentas/clickgo" element={<LazyPage><LazyClickGo /></LazyPage>} />
                       <Route path="/ferramentas/gerador-link-whatsapp" element={<LazyPage><LazyWhatsAppLinkGenerator /></LazyPage>} />
