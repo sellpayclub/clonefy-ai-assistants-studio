@@ -130,7 +130,7 @@ export default {
       description: "System overview"
     },
     agents: {
-      title: "AI Clones",
+      title: "AI Agents",
       description: "Your Agents"
     },
     whatsapp: {
