@@ -384,7 +384,7 @@ export default {
         price: "97",
         period: "per month",
         features: [
-          "1 AI Clone",
+          "1 AI Agent",
           "1,000 messages/month",
           "Email support",
           "WhatsApp integration"
@@ -397,7 +397,7 @@ export default {
         period: "per month",
         recommended: "Recommended",
         features: [
-          "3 AI Clones",
+          "3 AI Agents",
           "5,000 messages/month",
           "Priority support",
           "WhatsApp integration",
@@ -412,7 +412,7 @@ export default {
         period: "per month",
         installment: "or 12x $49.70",
         features: [
-          "Unlimited clones",
+          "Unlimited agents",
           "20,000 messages/month",
           "VIP support 24/7",
           "All integrations",

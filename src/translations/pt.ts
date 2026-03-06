@@ -433,7 +433,7 @@ export default {
         period: "por mês",
         installment: "ou 12x de R$ 49,70",
         features: [
-          "Clones ilimitados",
+          "Agentes ilimitados",
           "20.000 mensagens/mês",
           "Suporte VIP 24/7",
           "Todas as integrações",

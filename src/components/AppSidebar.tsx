@@ -125,15 +125,16 @@ const AppSidebar = () => {
   const collapsed = state === "collapsed";
 
   // Filter menu items based on user email
+  const isAdmin = user?.email === "personaldann@gmail.com";
+
   const filteredMenuItems = useMemo(() => {
     return menuItems.filter((item) => {
-      // Only show admin for personaldann@gmail.com
-      if (item.url === "/admin") {
-        return user?.email === "personaldann@gmail.com";
+      if (item.url === "/admin" || (item as any).adminOnly) {
+        return isAdmin;
       }
       return true;
     });
-  }, [user?.email]);
+  }, [isAdmin]);
 
   const isActive = useCallback((path: string) => currentPath === path, [currentPath]);
 
