@@ -223,8 +223,12 @@ serve(async (req) => {
 
             const instanceName = payload.instance;
             const contactNumber = payload.data.key.remoteJid.replace('@s.whatsapp.net', '');
+            const contactName = payload.data.pushName || 'Cliente';
 
-            // Buscar registro do contato
+            // Ativar pausa de 2 horas
+            const takeoverUntil = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+
+            // Buscar registro do contato em n8n_fluxogpt
             const { data: existingContact } = await supabase
                 .from('n8n_fluxogpt')
                 .select('id')
@@ -233,26 +237,40 @@ serve(async (req) => {
                 .maybeSingle();
 
             if (existingContact) {
-                // Ativar pausa de 2 horas
-                const takeoverUntil = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
-
                 await supabase
                     .from('n8n_fluxogpt')
                     .update({ human_takeover_until: takeoverUntil })
                     .eq('id', existingContact.id);
+            }
 
-                // 📺 Sincronizar com Live Chat Sessions
+            // Buscar userId da instância para upsert correto na sessão
+            const { data: instanceCfg } = await supabase
+                .from('n8n_fluxogpt')
+                .select('userId')
+                .eq('nomeinstancia', instanceName)
+                .not('emailuser', 'is', null)
+                .limit(1)
+                .maybeSingle();
+
+            if (instanceCfg?.userId) {
+                // FIX: usar UPSERT em vez de UPDATE — cria a sessão se não existir
                 await supabase
                     .from('live_chat_sessions')
-                    .update({ 
+                    .upsert({
+                        user_id: instanceCfg.userId,
+                        instance_name: instanceName,
+                        contact_number: contactNumber,
+                        contact_name: contactName,
+                        source: 'whatsapp',
                         status: 'human_takeover',
-                        human_takeover_until: takeoverUntil 
-                    })
-                    .eq('instance_name', instanceName)
-                    .eq('contact_number', contactNumber);
+                        human_takeover_until: takeoverUntil,
+                        last_message_at: new Date().toISOString(),
+                        last_message_preview: '[Humano assumiu a conversa]',
+                        last_sender_type: 'human',
+                    }, { onConflict: 'user_id,instance_name,contact_number' });
 
                 console.log(`⏸️ HUMAN TAKEOVER ATIVADO! IA pausada até ${takeoverUntil} para contato ${contactNumber}`);
-                console.log('📺 Live Chat: Status atualizado para human_takeover');
+                console.log('📺 Live Chat: Sessão criada/atualizada com status human_takeover via UPSERT');
 
                 return new Response(JSON.stringify({
                     status: 'takeover_activated',
@@ -264,8 +282,8 @@ serve(async (req) => {
                     headers: { ...corsHeaders, 'Content-Type': 'application/json' }
                 });
             } else {
-                console.log('⏭️ Mensagem própria ignorada (contato ainda não registrado)');
-                return new Response(JSON.stringify({ status: 'ignored', reason: 'own_message_no_contact' }), {
+                console.log('⏭️ Mensagem própria ignorada (instância não encontrada ou sem emailuser)');
+                return new Response(JSON.stringify({ status: 'ignored', reason: 'own_message_no_instance' }), {
                     status: 200,
                     headers: { ...corsHeaders, 'Content-Type': 'application/json' }
                 });
