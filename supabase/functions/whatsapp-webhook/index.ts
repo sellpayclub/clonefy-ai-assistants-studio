@@ -752,6 +752,21 @@ serve(async (req) => {
                     })
                     .eq('id', existingSession.id);
             } else if (userId) {
+                // FIX: Verificar se há takeover ativo no n8n_fluxogpt antes de criar sessão
+                // Isso evita criar sessão como 'ai_active' quando humano já assumiu
+                const { data: contactForTakeover } = await supabase
+                    .from('n8n_fluxogpt')
+                    .select('human_takeover_until')
+                    .eq('nomeinstancia', instanceName)
+                    .eq('whatsappuser', contactNumber)
+                    .maybeSingle();
+
+                const isTakeoverActive = contactForTakeover?.human_takeover_until
+                    && new Date(contactForTakeover.human_takeover_until) > new Date();
+
+                const sessionStatus = isTakeoverActive ? 'human_takeover' : 'ai_active';
+                const sessionTakeoverUntil = isTakeoverActive ? contactForTakeover!.human_takeover_until : null;
+
                 // Criar nova sessão
                 const { data: newSession } = await supabase
                     .from('live_chat_sessions')
@@ -761,7 +776,8 @@ serve(async (req) => {
                         contact_number: contactNumber,
                         contact_name: contactName,
                         source: 'whatsapp',
-                        status: 'ai_active',
+                        status: sessionStatus,
+                        human_takeover_until: sessionTakeoverUntil,
                         assistant_id: openaiAssistantId,
                         assistant_name: assistantName,
                         last_message_at: new Date().toISOString(),
@@ -773,6 +789,9 @@ serve(async (req) => {
                     .single();
                 
                 liveChatSessionId = newSession?.id || null;
+                if (isTakeoverActive) {
+                    console.log(`📺 Nova sessão criada com status 'human_takeover' (takeover ativo detectado)`);
+                }
             }
 
             // Salvar mensagem do cliente
