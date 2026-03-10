@@ -1,73 +1,57 @@
 
-## Bug: IA não para quando humano responde pelo WhatsApp
+## Root Cause Found
 
-### Root Cause (confirmado lendo o código)
-
-No bloco `fromMe` (linhas 244-252 do `whatsapp-webhook`), quando o dono responde pelo próprio celular:
-
-```ts
-// Só faz UPDATE — se sessão não existe, não cria nada
-await supabase.from('live_chat_sessions')
-  .update({ status: 'human_takeover', human_takeover_until: takeoverUntil })
-  .eq('instance_name', instanceName)
-  .eq('contact_number', contactNumber);
+The `telegram-webhook` function does:
+```js
+const { data: conn } = await supabase
+  .from('telegram_connections')
+  .select('*, assistants(openai_assistant_id, name)')
+  ...
 ```
 
-Se a sessão ainda **não existe** no `live_chat_sessions`, o `.update()` não faz nada silenciosamente.
-
-Então quando o **cliente responde**:
-1. `liveSession = null` (sessão não existe) → check primário é ignorado
-2. Linha 711-757: cria nova sessão com `status: 'ai_active'` ← **ERRADO**
-3. Check secundário em `n8n_fluxogpt` (linha 792) detecta takeover e retorna "paused" — mas a sessão recém-criada ficou `ai_active`
-
-**Resultado**: A IA pode responder (dependendo de timing/race condition), e o Live Chat mostra sessão como `ai_active` quando deveria ser `human_takeover`.
-
----
-
-### Fix
-
-**Arquivo: `supabase/functions/whatsapp-webhook/index.ts`**
-
-No bloco `fromMe` (linhas 221-272), substituir o `.update()` do `live_chat_sessions` por **`upsert`** — mas precisamos do `userId` que só é descoberto depois no fluxo.
-
-A solução mais limpa: buscar o `userId` via `n8n_fluxogpt` **dentro do bloco `fromMe`** para poder fazer o upsert correto:
-
-```ts
-// 1. Pegar userId da instância
-const { data: instanceCfg } = await supabase
-  .from('n8n_fluxogpt')
-  .select('userId')
-  .eq('nomeinstancia', instanceName)
-  .not('emailuser', 'is', null)
-  .limit(1)
-  .maybeSingle();
-
-// 2. Upsert da sessão com human_takeover (cria se não existir)
-if (instanceCfg?.userId) {
-  await supabase.from('live_chat_sessions')
-    .upsert({
-      user_id: instanceCfg.userId,
-      instance_name: instanceName,
-      contact_number: contactNumber,
-      contact_name: contactName,
-      source: 'whatsapp',
-      status: 'human_takeover',
-      human_takeover_until: takeoverUntil,
-      last_message_at: new Date().toISOString(),
-      last_message_preview: '[Humano assumiu a conversa]',
-      last_sender_type: 'human',
-    }, { onConflict: 'user_id,instance_name,contact_number' });
+**The `telegram_connections` table has NO foreign key to `assistants`**, so the nested `.select('*, assistants(...)')` returns `conn.assistants = null`. This means `openAIAssistantId` is `undefined`, triggering the early return:
+```js
+if (!openAIAssistantId) {
+  await sendTelegramMessage(botToken, chatId, 'Bot não configurado...');
+  return new Response('ok', { status: 200 });  // ← exits WITHOUT saving to live_chat
 }
 ```
 
-**Segundo fix**: Na linha 736-757 (criação de nova sessão quando cliente responde), verificar se `n8n_fluxogpt.human_takeover_until` está ativo para criar a sessão com `status: 'human_takeover'` em vez de `ai_active`.
+Confirmed by the DB query: `telegram_connections.assistant_id` is a UUID pointing to `assistants.id`, but there's no declared FK constraint, so Supabase's relational join doesn't work.
 
----
+## Fix
 
-### Arquivo alterado
+Replace the broken nested join with a **two-step query**: first fetch the connection, then separately fetch the assistant:
 
-| Arquivo | Mudança |
+```js
+// Step 1: get connection
+const { data: conn } = await supabase
+  .from('telegram_connections')
+  .select('*')
+  .eq('bot_token', botToken)
+  .eq('is_active', true)
+  .single();
+
+// Step 2: get assistant separately
+const { data: assistantData } = await supabase
+  .from('assistants')
+  .select('openai_assistant_id, name')
+  .eq('id', conn.assistant_id)
+  .single();
+```
+
+Then use `assistantData?.openai_assistant_id` and `assistantData?.name` in place of `conn.assistants?.openai_assistant_id` and `conn.assistants?.name`.
+
+## Files to Change
+
+| File | Change |
 |---|---|
-| `supabase/functions/whatsapp-webhook/index.ts` | 1) Bloco `fromMe`: buscar `userId` + upsert sessão. 2) Criação de nova sessão: verificar takeover ativo para definir status correto |
+| `supabase/functions/telegram-webhook/index.ts` | Replace nested join with two-step query |
 
-Nenhuma migration de banco necessária. Nenhuma mudança de frontend.
+After fixing, redeploy the function. All Telegram messages will then correctly:
+1. Create/update `live_chat_sessions` with `source: 'telegram'`
+2. Save messages to `live_chat_messages`  
+3. Upsert CRM leads
+4. Respond via OpenAI
+
+No frontend changes needed — the UI already has the Telegram filter and badge from previous fixes.
