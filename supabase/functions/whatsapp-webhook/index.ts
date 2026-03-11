@@ -225,8 +225,22 @@ serve(async (req) => {
             const contactNumber = payload.data.key.remoteJid.replace('@s.whatsapp.net', '');
             const contactName = payload.data.pushName || 'Cliente';
 
-            // Ativar pausa de 2 horas
-            const takeoverUntil = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+            // Lookup configured pause duration (fallback to 2h)
+            let takeoverHours = 2;
+            const { data: takeoverCfg } = await supabase
+                .from('whatsapp_takeover_settings')
+                .select('auto_takeover_hours, user_id')
+                .eq('instance_name', instanceName)
+                .maybeSingle();
+
+            if (takeoverCfg?.auto_takeover_hours != null) {
+                takeoverHours = Number(takeoverCfg.auto_takeover_hours);
+            }
+
+            const takeoverMs = takeoverHours >= 999
+                ? 99 * 365 * 24 * 60 * 60 * 1000
+                : takeoverHours * 60 * 60 * 1000;
+            const takeoverUntil = new Date(Date.now() + takeoverMs).toISOString();
 
             // Buscar registro do contato em n8n_fluxogpt
             const { data: existingContact } = await supabase

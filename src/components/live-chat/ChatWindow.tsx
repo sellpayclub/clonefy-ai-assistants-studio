@@ -1,9 +1,16 @@
-import { memo, useRef, useEffect, useState } from 'react';
+import { memo, useRef, useEffect, useState, useCallback } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,10 +27,27 @@ import {
   MoreVertical,
   Phone,
   X,
-  Clock,
   MessageSquare
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import type { LiveChatSession, LiveChatMessage } from '@/hooks/useLiveChat';
+
+const DURATION_OPTIONS = [
+  { value: '0.5', label: '30 min' },
+  { value: '1',   label: '1h' },
+  { value: '2',   label: '2h' },
+  { value: '4',   label: '4h' },
+  { value: '8',   label: '8h' },
+  { value: '24',  label: '24h' },
+  { value: '999', label: 'Permanente' },
+];
+
+function durationLabel(hours: number): string {
+  if (hours >= 999) return 'permanentemente';
+  if (hours < 1) return '30 min';
+  return `${hours}h`;
+}
 
 interface ChatWindowProps {
   session: LiveChatSession | null;
@@ -125,8 +149,53 @@ export const ChatWindow = memo(function ChatWindow({
 }: ChatWindowProps) {
   const [inputValue, setInputValue] = useState('');
   const [sending, setSending] = useState(false);
+  const [pauseDuration, setPauseDuration] = useState(2);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { user } = useAuth();
+
+  // Load saved default duration when session changes
+  useEffect(() => {
+    if (!session?.instance_name || !user?.id) return;
+
+    supabase
+      .from('whatsapp_takeover_settings' as never)
+      .select('auto_takeover_hours')
+      .eq('user_id', user.id)
+      .eq('instance_name', session.instance_name)
+      .maybeSingle()
+      .then(({ data }: { data: { auto_takeover_hours: number } | null }) => {
+        if (data?.auto_takeover_hours != null) {
+          setPauseDuration(Number(data.auto_takeover_hours));
+        } else {
+          setPauseDuration(2); // default
+        }
+      });
+  }, [session?.instance_name, user?.id]);
+
+  // Save duration to DB (debounced)
+  const saveDuration = useCallback((instanceName: string, hours: number) => {
+    if (!user?.id) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      supabase
+        .from('whatsapp_takeover_settings' as never)
+        .upsert({
+          user_id: user.id,
+          instance_name: instanceName,
+          auto_takeover_hours: hours,
+        }, { onConflict: 'user_id,instance_name' });
+    }, 500);
+  }, [user?.id]);
+
+  const handleDurationChange = (value: string) => {
+    const hours = parseFloat(value);
+    setPauseDuration(hours);
+    if (session?.instance_name) {
+      saveDuration(session.instance_name, hours);
+    }
+  };
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -186,6 +255,9 @@ export const ChatWindow = memo(function ChatWindow({
     messagesByDate[date].push(msg);
   });
 
+  const currentDurationValue = DURATION_OPTIONS.find(o => parseFloat(o.value) === pauseDuration)?.value
+    ?? String(pauseDuration);
+
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
@@ -222,24 +294,40 @@ export const ChatWindow = memo(function ChatWindow({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Takeover Button */}
-            <Button
-              variant={isTakeover ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => onToggleTakeover(session.id)}
-            >
-              {isTakeover ? (
-                <>
-                  <Play className="h-4 w-4 mr-1" />
-                  Reativar IA
-                </>
-              ) : (
-                <>
+            {/* Takeover button + duration selector (only when AI is active) */}
+            {!isTakeover ? (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onToggleTakeover(session.id, pauseDuration)}
+                >
                   <Pause className="h-4 w-4 mr-1" />
                   Pausar IA
-                </>
-              )}
-            </Button>
+                </Button>
+                <Select value={currentDurationValue} onValueChange={handleDurationChange}>
+                  <SelectTrigger className="h-9 w-[80px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DURATION_OPTIONS.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => onToggleTakeover(session.id)}
+              >
+                <Play className="h-4 w-4 mr-1" />
+                Reativar IA
+              </Button>
+            )}
 
             {/* More options */}
             <DropdownMenu>
@@ -249,18 +337,6 @@ export const ChatWindow = memo(function ChatWindow({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onToggleTakeover(session.id, 1)}>
-                  <Clock className="h-4 w-4 mr-2" />
-                  Pausar IA por 1h
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onToggleTakeover(session.id, 4)}>
-                  <Clock className="h-4 w-4 mr-2" />
-                  Pausar IA por 4h
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onToggleTakeover(session.id, 8)}>
-                  <Clock className="h-4 w-4 mr-2" />
-                  Pausar IA por 8h
-                </DropdownMenuItem>
                 <Separator className="my-1" />
                 <DropdownMenuItem 
                   onClick={() => onClose(session.id)}
@@ -326,7 +402,7 @@ export const ChatWindow = memo(function ChatWindow({
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          💡 Ao enviar uma mensagem, a IA será pausada automaticamente por 2 horas
+          💡 Ao enviar uma mensagem, a IA será pausada por {durationLabel(pauseDuration)}
         </p>
       </div>
     </div>
