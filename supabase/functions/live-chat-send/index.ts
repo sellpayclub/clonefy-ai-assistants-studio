@@ -59,8 +59,24 @@ serve(async (req) => {
       console.error('❌ Erro ao salvar mensagem:', msgError);
     }
 
-    // 2. Update session
-    const takeoverUntil = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+    // 2. Lookup configured pause duration for this instance (fallback to 2h)
+    let takeoverHours = 2;
+    const { data: takeoverCfg } = await supabase
+      .from('whatsapp_takeover_settings')
+      .select('auto_takeover_hours')
+      .eq('user_id', user_id)
+      .eq('instance_name', instance_name)
+      .maybeSingle();
+
+    if (takeoverCfg?.auto_takeover_hours != null) {
+      takeoverHours = Number(takeoverCfg.auto_takeover_hours);
+    }
+
+    // 999 = permanent — use a far-future date
+    const takeoverMs = takeoverHours >= 999
+      ? 99 * 365 * 24 * 60 * 60 * 1000
+      : takeoverHours * 60 * 60 * 1000;
+    const takeoverUntil = new Date(Date.now() + takeoverMs).toISOString();
 
     await supabase
       .from('live_chat_sessions')

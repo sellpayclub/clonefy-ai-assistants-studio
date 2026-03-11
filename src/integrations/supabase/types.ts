@@ -3329,6 +3329,33 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_takeover_settings: {
+        Row: {
+          auto_takeover_hours: number
+          created_at: string | null
+          id: string
+          instance_name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_takeover_hours?: number
+          created_at?: string | null
+          id?: string
+          instance_name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_takeover_hours?: number
+          created_at?: string | null
+          id?: string
+          instance_name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       whatsapp_test_controls: {
         Row: {
           assistant_id: string | null
