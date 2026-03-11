@@ -290,7 +290,7 @@ serve(async (req) => {
                     status: 'takeover_activated',
                     contact: contactNumber,
                     pausedUntil: takeoverUntil,
-                    message: 'IA pausada por 2 horas - humano assumiu a conversa'
+                    message: `IA pausada por ${takeoverHours >= 999 ? 'tempo indeterminado' : takeoverHours + 'h'} - humano assumiu a conversa`
                 }), {
                     status: 200,
                     headers: { ...corsHeaders, 'Content-Type': 'application/json' }
