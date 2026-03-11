@@ -159,8 +159,9 @@ export const ChatWindow = memo(function ChatWindow({
   useEffect(() => {
     if (!session?.instance_name || !user?.id) return;
 
-    supabase
-      .from('whatsapp_takeover_settings' as never)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from('whatsapp_takeover_settings')
       .select('auto_takeover_hours')
       .eq('user_id', user.id)
       .eq('instance_name', session.instance_name)
@@ -169,7 +170,7 @@ export const ChatWindow = memo(function ChatWindow({
         if (data?.auto_takeover_hours != null) {
           setPauseDuration(Number(data.auto_takeover_hours));
         } else {
-          setPauseDuration(2); // default
+          setPauseDuration(2);
         }
       });
   }, [session?.instance_name, user?.id]);
@@ -179,13 +180,13 @@ export const ChatWindow = memo(function ChatWindow({
     if (!user?.id) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
-      supabase
-        .from('whatsapp_takeover_settings' as never)
-        .upsert({
-          user_id: user.id,
-          instance_name: instanceName,
-          auto_takeover_hours: hours,
-        }, { onConflict: 'user_id,instance_name' });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase as any)
+        .from('whatsapp_takeover_settings')
+        .upsert(
+          { user_id: user.id, instance_name: instanceName, auto_takeover_hours: hours },
+          { onConflict: 'user_id,instance_name' }
+        );
     }, 500);
   }, [user?.id]);
 
