@@ -1,57 +1,64 @@
 
-## Root Cause Found
+## Diagnóstico completo confirmado
 
-The `telegram-webhook` function does:
-```js
-const { data: conn } = await supabase
-  .from('telegram_connections')
-  .select('*, assistants(openai_assistant_id, name)')
-  ...
+### Problema isolado ao Telegram — WhatsApp 100% intacto
+
+**WhatsApp já funciona porque:**
+- Usa `source: 'whatsapp'` → está na lista permitida do CHECK constraint
+- Tem lógica própria no `whatsapp-webhook` que **nunca menciona 'telegram'** (confirmado por busca)
+- A tabela `n8n_fluxogpt` é exclusiva do WhatsApp
+
+**Telegram está falhando por 3 bloqueios no banco de dados:**
+
+| Problema | Onde | Detalhe |
+|---|---|---|
+| 1 | `live_chat_sessions.source` | CHECK constraint só permite `'whatsapp'` ou `'widget'` — bloqueia `'telegram'` |
+| 2 | `live_chat_messages.source` | Mesmo CHECK — bloqueia INSERT com `source: 'telegram'` |
+| 3 | `crm_leads` | Não tem unique index em `(user_id, whatsapp_number)` — o `upsert` no webhook falha silenciosamente |
+
+**Código do `telegram-webhook` já está correto** — o problema é 100% no banco.
+
+### A migração (único arquivo a criar)
+
+```sql
+-- Fix 1: live_chat_sessions aceitar 'telegram'
+ALTER TABLE public.live_chat_sessions
+  DROP CONSTRAINT live_chat_sessions_source_check;
+ALTER TABLE public.live_chat_sessions
+  ADD CONSTRAINT live_chat_sessions_source_check
+  CHECK (source = ANY (ARRAY['whatsapp'::text, 'widget'::text, 'telegram'::text]));
+
+-- Fix 2: live_chat_messages aceitar 'telegram'
+ALTER TABLE public.live_chat_messages
+  DROP CONSTRAINT live_chat_messages_source_check;
+ALTER TABLE public.live_chat_messages
+  ADD CONSTRAINT live_chat_messages_source_check
+  CHECK (source = ANY (ARRAY['whatsapp'::text, 'widget'::text, 'telegram'::text]));
+
+-- Fix 3: Unique index para o upsert de crm_leads funcionar
+CREATE UNIQUE INDEX IF NOT EXISTS crm_leads_user_id_whatsapp_number_key
+  ON public.crm_leads (user_id, whatsapp_number);
 ```
 
-**The `telegram_connections` table has NO foreign key to `assistants`**, so the nested `.select('*, assistants(...)')` returns `conn.assistants = null`. This means `openAIAssistantId` is `undefined`, triggering the early return:
-```js
-if (!openAIAssistantId) {
-  await sendTelegramMessage(botToken, chatId, 'Bot não configurado...');
-  return new Response('ok', { status: 200 });  // ← exits WITHOUT saving to live_chat
-}
-```
+### Garantia de não interferência no WhatsApp
 
-Confirmed by the DB query: `telegram_connections.assistant_id` is a UUID pointing to `assistants.id`, but there's no declared FK constraint, so Supabase's relational join doesn't work.
+- O WhatsApp continua usando `source: 'whatsapp'` — valor **já permitido** pelo novo constraint (só adicionamos, não removemos nada)
+- O unique index no `crm_leads` beneficia o WhatsApp também (evita duplicatas — atualmente o upsert do WhatsApp também dependia desse index)
+- **Zero alterações** em `whatsapp-webhook`, `live-chat-send`, frontend ou qualquer outro arquivo
+- Único arquivo criado: 1 migration SQL
 
-## Fix
+### O que muda na prática
+Após a migration, toda mensagem recebida pelo bot Telegram vai:
+1. Criar sessão no Live Chat com badge "✈️ Telegram" (frontend já trata isso)
+2. Salvar mensagens em `live_chat_messages`
+3. Criar/atualizar lead no CRM com `source: 'telegram'`
+4. IA responder normalmente via OpenAI
 
-Replace the broken nested join with a **two-step query**: first fetch the connection, then separately fetch the assistant:
-
-```js
-// Step 1: get connection
-const { data: conn } = await supabase
-  .from('telegram_connections')
-  .select('*')
-  .eq('bot_token', botToken)
-  .eq('is_active', true)
-  .single();
-
-// Step 2: get assistant separately
-const { data: assistantData } = await supabase
-  .from('assistants')
-  .select('openai_assistant_id, name')
-  .eq('id', conn.assistant_id)
-  .single();
-```
-
-Then use `assistantData?.openai_assistant_id` and `assistantData?.name` in place of `conn.assistants?.openai_assistant_id` and `conn.assistants?.name`.
-
-## Files to Change
-
-| File | Change |
+### Resumo de arquivos
+| Arquivo | Ação |
 |---|---|
-| `supabase/functions/telegram-webhook/index.ts` | Replace nested join with two-step query |
-
-After fixing, redeploy the function. All Telegram messages will then correctly:
-1. Create/update `live_chat_sessions` with `source: 'telegram'`
-2. Save messages to `live_chat_messages`  
-3. Upsert CRM leads
-4. Respond via OpenAI
-
-No frontend changes needed — the UI already has the Telegram filter and badge from previous fixes.
+| Nova migration SQL | CRIAR — adiciona 'telegram' aos constraints + unique index |
+| `whatsapp-webhook` | NÃO TOCA |
+| `telegram-webhook` | NÃO TOCA |
+| `live-chat-send` | NÃO TOCA |
+| Frontend | NÃO TOCA |
