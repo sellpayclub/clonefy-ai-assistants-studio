@@ -27,13 +27,15 @@ interface LeadDetailsDrawerProps {
   onUpdateLead?: (data: Partial<Lead>) => void;
   onDeleteLead?: (id: string) => void;
   onAddNote?: (content: string) => void;
+  onUpdateNote?: (id: string, content: string) => void;
+  onDeleteNote?: (id: string) => void;
   isUpdating?: boolean;
 }
 
 export function LeadDetailsDrawer({
   lead, open, onOpenChange,
   pipelineStages = [], allTags = [], notes = [],
-  onUpdateLead, onDeleteLead, onAddNote, isUpdating
+  onUpdateLead, onDeleteLead, onAddNote, onUpdateNote, onDeleteNote, isUpdating
 }: LeadDetailsDrawerProps) {
   const [editOpen, setEditOpen] = useState(false);
 
@@ -211,7 +213,12 @@ export function LeadDetailsDrawer({
                 <Separator />
 
                 {onAddNote && (
-                  <LeadNotesSection notes={notes} onAddNote={onAddNote} />
+                  <LeadNotesSection
+                    notes={notes}
+                    onAddNote={onAddNote}
+                    onUpdateNote={onUpdateNote}
+                    onDeleteNote={onDeleteNote}
+                  />
                 )}
 
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">

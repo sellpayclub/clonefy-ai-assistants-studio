@@ -1,50 +1,57 @@
 
-## O que o usuário quer
+## Root Cause Found
 
-Edição dos conteúdos do CRM — tanto das **notas** (editar e deletar) quanto dos dados do lead diretamente no drawer (sem precisar abrir o formulário separado).
+The `telegram-webhook` function does:
+```js
+const { data: conn } = await supabase
+  .from('telegram_connections')
+  .select('*, assistants(openai_assistant_id, name)')
+  ...
+```
 
----
+**The `telegram_connections` table has NO foreign key to `assistants`**, so the nested `.select('*, assistants(...)')` returns `conn.assistants = null`. This means `openAIAssistantId` is `undefined`, triggering the early return:
+```js
+if (!openAIAssistantId) {
+  await sendTelegramMessage(botToken, chatId, 'Bot não configurado...');
+  return new Response('ok', { status: 200 });  // ← exits WITHOUT saving to live_chat
+}
+```
 
-## Estado atual
+Confirmed by the DB query: `telegram_connections.assistant_id` is a UUID pointing to `assistants.id`, but there's no declared FK constraint, so Supabase's relational join doesn't work.
 
-- Notas: só tem "adicionar". Sem editar ou deletar.
-- Lead data: tem botão ✏️ que abre o `LeadForm` em um Dialog separado — funciona, mas para o usuário é trabalhoso.
-- `useCRMLeads.ts`: tem `addNote` mas não tem `updateNote` nem `deleteNote`.
-- `crm_lead_notes` RLS: `ALL` para o dono — UPDATE e DELETE já são permitidos no banco.
+## Fix
 
----
+Replace the broken nested join with a **two-step query**: first fetch the connection, then separately fetch the assistant:
 
-## O que vai mudar
+```js
+// Step 1: get connection
+const { data: conn } = await supabase
+  .from('telegram_connections')
+  .select('*')
+  .eq('bot_token', botToken)
+  .eq('is_active', true)
+  .single();
 
-### Arquivo 1 — `src/hooks/useCRMLeads.ts`
-Adicionar 2 mutations:
-- `updateNote({ id, content })` → UPDATE na `crm_lead_notes`
-- `deleteNote(id)` → DELETE na `crm_lead_notes`
+// Step 2: get assistant separately
+const { data: assistantData } = await supabase
+  .from('assistants')
+  .select('openai_assistant_id, name')
+  .eq('id', conn.assistant_id)
+  .single();
+```
 
-### Arquivo 2 — `src/components/crm/LeadNotesSection.tsx`
-Para cada nota do usuário (`created_by !== 'ai'`), adicionar ao hover:
-- Botão ✏️ → transforma o texto em `<Textarea>` inline com "Salvar" / "Cancelar"
-- Botão 🗑️ → confirma e deleta
-- Notas da IA ficam somente leitura (sem botões)
+Then use `assistantData?.openai_assistant_id` and `assistantData?.name` in place of `conn.assistants?.openai_assistant_id` and `conn.assistants?.name`.
 
-Props novas: `onUpdateNote(id, content)` e `onDeleteNote(id)`
+## Files to Change
 
-### Arquivo 3 — `src/components/crm/LeadDetailsDrawer.tsx`
-- Passar as novas props `onUpdateNote` e `onDeleteNote` para `LeadNotesSection`
-- Adicionar tipos na interface do componente
-
-### Arquivo 4 — `src/pages/CRMLeads.tsx`
-- Conectar `crm.updateNote.mutate` e `crm.deleteNote.mutate` passando para o drawer
-
----
-
-## Resumo
-
-| Arquivo | Mudança |
+| File | Change |
 |---|---|
-| `src/hooks/useCRMLeads.ts` | + `updateNote` + `deleteNote` |
-| `src/components/crm/LeadNotesSection.tsx` | UI editar/deletar inline por nota |
-| `src/components/crm/LeadDetailsDrawer.tsx` | Passar novas props |
-| `src/pages/CRMLeads.tsx` | Conectar mutations no drawer |
+| `supabase/functions/telegram-webhook/index.ts` | Replace nested join with two-step query |
 
-Zero alterações em banco, webhooks, ou outros componentes.
+After fixing, redeploy the function. All Telegram messages will then correctly:
+1. Create/update `live_chat_sessions` with `source: 'telegram'`
+2. Save messages to `live_chat_messages`  
+3. Upsert CRM leads
+4. Respond via OpenAI
+
+No frontend changes needed — the UI already has the Telegram filter and badge from previous fixes.
