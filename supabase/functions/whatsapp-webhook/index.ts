@@ -1681,26 +1681,26 @@ async function processCRMLead(
                 messages: [
                     {
                         role: 'system',
-                        content: `Você é um analista de CRM experiente. Analise a conversa completa de WhatsApp e extraia informações detalhadas para o time de vendas.
+                        content: `Você é um assistente que ajuda vendedores a entender melhor seus clientes. Analise a conversa e preencha as informações abaixo.
 
 Retorne APENAS um JSON com as seguintes chaves:
 {
-  "name": "Nome do cliente (null se não identificado)",
-  "email": "Email do cliente (null se não identificado)",
-  "lead_score": 0-100 baseado em interesse REAL de compra (0=só curiosidade, 100=pronto para comprar AGORA),
+  "name": "Nome do cliente (null se não foi dito)",
+  "email": "Email do cliente (null se não foi dito)",
+  "lead_score": número de 0 a 100 indicando o interesse real em comprar (0=só curioso, 100=quer comprar agora),
   "urgency_level": "baixa | média | alta | imediata",
   "sentiment": "positivo | neutro | negativo | misto",
-  "intent_summary": "Resumo de 2-3 frases do objetivo principal do cliente",
-  "conversation_analysis": "Análise DETALHADA em 3-5 parágrafos sobre: contexto da conversa, comportamento do cliente, pontos de interesse, objeções levantadas, e recomendações para o vendedor",
-  "key_topics": ["lista", "de", "tópicos", "principais", "discutidos"],
-  "customer_questions": ["perguntas", "específicas", "que", "o", "cliente", "fez"],
-  "objections": ["objeções", "preocupações", "ou", "hesitações", "do", "cliente"],
-  "products_mentioned": ["produtos", "serviços", "ou", "planos", "mencionados"],
-  "next_action": "Próximo passo ESPECÍFICO recomendado para o vendedor (ex: ligar para confirmar, enviar proposta, agendar demo)",
+  "intent_summary": "Em 2-3 frases simples, explique o que o cliente quer. Escreva como se estivesse contando para um colega: 'O cliente entrou em contato porque...'",
+  "conversation_analysis": "Explique o que aconteceu na conversa de forma clara e direta. O que o cliente quer? Ele parece interessado? Tem alguma dúvida ou preocupação? O que o vendedor deve fazer agora? Escreva como se fosse um resumo para alguém que não leu a conversa. Use frases curtas e palavras simples.",
+  "key_topics": ["assuntos", "que", "foram", "falados"],
+  "customer_questions": ["perguntas", "que", "o", "cliente", "fez"],
+  "objections": ["dúvidas", "preocupações", "ou", "resistências", "do", "cliente"],
+  "products_mentioned": ["produtos", "ou", "serviços", "que", "apareceram", "na", "conversa"],
+  "next_action": "Diga em uma frase curta o que o vendedor deve fazer agora. Seja direto: 'Ligar para confirmar interesse', 'Enviar o preço', 'Agendar uma demonstração', etc.",
   "pipeline_stage": "novo | contato feito | qualificado | proposta | negociacao | fechado | perdido - classifique baseado no estágio REAL da negociação: novo=primeiro contato, contato feito=já conversaram, qualificado=interesse real demonstrado, proposta=preço discutido, negociacao=comparando/pedindo desconto, fechado=compra confirmada, perdido=recusou ou sumiu"
 }
 
-SEJA DETALHADO! O vendedor vai usar essa análise para fechar a venda.`
+Escreva tudo em linguagem simples e direta, fácil de entender. Como se fosse explicar para alguém que não é da área. Sem palavras difíceis ou termos técnicos.`
                     },
                     {
                         role: 'user',
