@@ -271,6 +271,40 @@ export function useCRMLeads() {
     },
   });
 
+  const updateNote = useMutation({
+    mutationFn: async ({ id, content }: { id: string; content: string }) => {
+      const { error } = await (supabase as any)
+        .from('crm_lead_notes')
+        .update({ content })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crm-lead-notes'] });
+      toast({ title: 'Nota atualizada!' });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Erro ao atualizar nota', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const deleteNote = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any)
+        .from('crm_lead_notes')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crm-lead-notes'] });
+      toast({ title: 'Nota excluída!' });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Erro ao excluir nota', description: err.message, variant: 'destructive' });
+    },
+  });
+
   // Filtered leads
   const filteredLeads = useMemo(() => {
     return leads.filter(lead => {
