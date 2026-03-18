@@ -35,7 +35,7 @@ interface LeadDetailsDrawerProps {
 export function LeadDetailsDrawer({
   lead, open, onOpenChange,
   pipelineStages = [], allTags = [], notes = [],
-  onUpdateLead, onDeleteLead, onAddNote, isUpdating
+  onUpdateLead, onDeleteLead, onAddNote, onUpdateNote, onDeleteNote, isUpdating
 }: LeadDetailsDrawerProps) {
   const [editOpen, setEditOpen] = useState(false);
 
