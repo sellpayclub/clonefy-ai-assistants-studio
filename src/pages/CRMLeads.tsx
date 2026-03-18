@@ -245,6 +245,8 @@ const CRMLeads = () => {
         onUpdateLead={data => { crm.updateLead.mutate(data as any); setSelectedLead(prev => prev ? { ...prev, ...data } : null); }}
         onDeleteLead={id => { crm.deleteLead.mutate(id); setIsDrawerOpen(false); }}
         onAddNote={content => selectedLead && crm.addNote.mutate({ leadId: selectedLead.id, content })}
+        onUpdateNote={(id, content) => crm.updateNote.mutate({ id, content })}
+        onDeleteNote={id => crm.deleteNote.mutate(id)}
         isUpdating={crm.updateLead.isPending}
       />
 

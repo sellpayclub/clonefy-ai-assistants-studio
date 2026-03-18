@@ -213,7 +213,12 @@ export function LeadDetailsDrawer({
                 <Separator />
 
                 {onAddNote && (
-                  <LeadNotesSection notes={notes} onAddNote={onAddNote} />
+                  <LeadNotesSection
+                    notes={notes}
+                    onAddNote={onAddNote}
+                    onUpdateNote={onUpdateNote}
+                    onDeleteNote={onDeleteNote}
+                  />
                 )}
 
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
