@@ -1,35 +1,57 @@
 
-## O que muda
+## Root Cause Found
 
-Só os prompts dos 2 webhooks. Nenhum outro arquivo é tocado.
+The `telegram-webhook` function does:
+```js
+const { data: conn } = await supabase
+  .from('telegram_connections')
+  .select('*, assistants(openai_assistant_id, name)')
+  ...
+```
 
-### Problema atual
-O prompt atual diz:
-- `"Análise DETALHADA em 3-5 parágrafos: contexto da conversa, necessidades identificadas..."`
-- `"SEJA DETALHADO! O vendedor vai usar essa análise para fechar a venda."`
+**The `telegram_connections` table has NO foreign key to `assistants`**, so the nested `.select('*, assistants(...)')` returns `conn.assistants = null`. This means `openAIAssistantId` is `undefined`, triggering the early return:
+```js
+if (!openAIAssistantId) {
+  await sendTelegramMessage(botToken, chatId, 'Bot não configurado...');
+  return new Response('ok', { status: 200 });  // ← exits WITHOUT saving to live_chat
+}
+```
 
-Isso instrui o modelo a escrever como consultor de negócios — linguagem técnica e formal.
+Confirmed by the DB query: `telegram_connections.assistant_id` is a UUID pointing to `assistants.id`, but there's no declared FK constraint, so Supabase's relational join doesn't work.
 
-### A correção
-Mudar a instrução de tom nos dois arquivos para algo como:
+## Fix
 
-**`intent_summary`** — pedir linguagem simples, como se explicasse para um amigo:
-> "Escreva em linguagem simples e direta, como se contasse para um colega o que o cliente quer. Sem jargões."
+Replace the broken nested join with a **two-step query**: first fetch the connection, then separately fetch the assistant:
 
-**`conversation_analysis`** — pedir texto fácil de ler:
-> "Use linguagem simples e humana. Explique o que aconteceu na conversa, o que o cliente quer, se parece interessado e o que o vendedor deve fazer. Como se fosse um resumo para alguém que não leu a conversa."
+```js
+// Step 1: get connection
+const { data: conn } = await supabase
+  .from('telegram_connections')
+  .select('*')
+  .eq('bot_token', botToken)
+  .eq('is_active', true)
+  .single();
 
-**`next_action`** — já está ok, mas reforçar clareza:
-> "Diga claramente o que fazer a seguir, em uma frase curta e direta."
+// Step 2: get assistant separately
+const { data: assistantData } = await supabase
+  .from('assistants')
+  .select('openai_assistant_id, name')
+  .eq('id', conn.assistant_id)
+  .single();
+```
 
-**Instrução geral no final do prompt** — trocar:
-- Antes: `"SEJA DETALHADO! O vendedor vai usar essa análise para fechar a venda."`
-- Depois: `"Escreva tudo em linguagem simples, direta e fácil de entender. Como se fosse explicar para alguém que não é especialista. Evite palavras difíceis, siglas ou termos corporativos."`
+Then use `assistantData?.openai_assistant_id` and `assistantData?.name` in place of `conn.assistants?.openai_assistant_id` and `conn.assistants?.name`.
 
-### Arquivos alterados
-| Arquivo | Mudança |
+## Files to Change
+
+| File | Change |
 |---|---|
-| `supabase/functions/whatsapp-webhook/index.ts` | Atualizar instruções de `intent_summary`, `conversation_analysis` e instrução final do prompt |
-| `supabase/functions/widget-chat/index.ts` | Mesma mudança |
+| `supabase/functions/telegram-webhook/index.ts` | Replace nested join with two-step query |
 
-Zero alterações em frontend, banco de dados ou qualquer outro arquivo.
+After fixing, redeploy the function. All Telegram messages will then correctly:
+1. Create/update `live_chat_sessions` with `source: 'telegram'`
+2. Save messages to `live_chat_messages`  
+3. Upsert CRM leads
+4. Respond via OpenAI
+
+No frontend changes needed — the UI already has the Telegram filter and badge from previous fixes.
