@@ -27,6 +27,8 @@ interface LeadDetailsDrawerProps {
   onUpdateLead?: (data: Partial<Lead>) => void;
   onDeleteLead?: (id: string) => void;
   onAddNote?: (content: string) => void;
+  onUpdateNote?: (id: string, content: string) => void;
+  onDeleteNote?: (id: string) => void;
   isUpdating?: boolean;
 }
 

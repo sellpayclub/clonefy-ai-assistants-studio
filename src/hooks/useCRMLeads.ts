@@ -372,5 +372,7 @@ export function useCRMLeads() {
     // Notes
     getNotesForLead,
     addNote,
+    updateNote,
+    deleteNote,
   };
 }
