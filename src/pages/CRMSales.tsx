@@ -95,15 +95,15 @@ const CRMSales = () => {
 
                     {/* Main Title */}
                     <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 leading-tight text-slate-900">
-                        Conheça o CRM com IA que se preenche sozinho<br />
+                        O CRM Inteligente que Encontra e Recupera<br />
                         <span className="bg-gradient-to-r from-emerald-500 to-green-600 bg-clip-text text-transparent">
-                            enquanto você vende!
+                            Dinheiro Escondido nas Suas Conversas.
                         </span>
                     </h1>
 
                     {/* Subtitle */}
                     <p className="text-lg sm:text-xl lg:text-2xl text-slate-600 mb-6 max-w-4xl mx-auto leading-relaxed">
-                        Nossa IA assiste cada conversa no WhatsApp e preenche todos os dados sozinha: <strong className="text-slate-800">nome, histórico, score do lead, resumo, próximos passos e muito mais</strong>. Você vende, ela organiza de forma 100% automática.
+                        Esqueça planilhas caóticas e softwares difíceis de usar. Assuma o <strong className="text-slate-800">controle da sua operação</strong> com um sistema projetado para acabar com o vazamento de lucros por falha de <i>follow-up</i> ou desorganização.
                     </p>
 
                     {/* Features Grid */}
