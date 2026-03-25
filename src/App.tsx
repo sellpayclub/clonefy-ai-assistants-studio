@@ -129,7 +129,7 @@ const App = () => {
                       <Route path="/widget-customization" element={<LazyPage><LazyWidgetCustomization /></LazyPage>} />
                       <Route path="/widget-analytics" element={<LazyPage><LazyWidgetAnalytics /></LazyPage>} />
                       <Route path="/crm-leads" element={<LazyPage><LazyCRMLeads /></LazyPage>} />
-                      <Route path="/grupos" element={<LazyPage><LazyGroupManagement /></LazyPage>} />
+                      <Route path="/grupos" element={<RestrictedRoute><LazyPage><LazyGroupManagement /></LazyPage></RestrictedRoute>} />
                       <Route path="/calendar" element={<LazyPage><LazyCalendar /></LazyPage>} />
                       <Route path="/configuracoes/branding" element={<LazyPage><LazyBrandingSettings /></LazyPage>} />
 
@@ -148,9 +148,9 @@ const App = () => {
                       <Route path="/commerce/connect-whatsapp" element={<RestrictedRoute><LazyPage><LazyCommerceConnectWhatsApp /></LazyPage></RestrictedRoute>} />
 
                       {/* Financial Agent */}
-                      <Route path="/financeiro" element={<LazyPage><LazyFinancialDashboard /></LazyPage>} />
-                      <Route path="/financeiro/transacoes" element={<LazyPage><LazyFinancialTransactions /></LazyPage>} />
-                      <Route path="/financeiro/conectar" element={<LazyPage><LazyFinancialConnect /></LazyPage>} />
+                      <Route path="/financeiro" element={<RestrictedRoute><LazyPage><LazyFinancialDashboard /></LazyPage></RestrictedRoute>} />
+                      <Route path="/financeiro/transacoes" element={<RestrictedRoute><LazyPage><LazyFinancialTransactions /></LazyPage></RestrictedRoute>} />
+                      <Route path="/financeiro/conectar" element={<RestrictedRoute><LazyPage><LazyFinancialConnect /></LazyPage></RestrictedRoute>} />
 
                       {/* Tools */}
                       <Route path="/ferramentas/clickgo" element={<LazyPage><LazyClickGo /></LazyPage>} />
