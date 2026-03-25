@@ -71,10 +71,10 @@ const menuItems = [
     highlight: true,
   },
   {
-    title: "sidebar.conversations.title",
+    title: "Testar Agente",
     url: "/conversations",
     icon: MessageSquare,
-    description: "sidebar.conversations.description",
+    description: "Teste seus agentes de IA",
   },
   {
     title: "Follow-up IA",
