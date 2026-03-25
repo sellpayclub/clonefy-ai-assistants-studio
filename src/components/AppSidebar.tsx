@@ -90,9 +90,10 @@ const menuItems = [
     icon: UsersRound,
     description: "Gerencie grupos de WhatsApp",
     highlight: true,
+    adminOnly: true,
   },
   { title: "Loja WhatsApp", url: "/commerce", icon: Store, description: "Venda via WhatsApp com IA", highlight: true, adminOnly: true },
-  { title: "Financeiro IA", url: "/financeiro", icon: Wallet, description: "Controle financeiro pelo WhatsApp", highlight: true },
+  { title: "Financeiro IA", url: "/financeiro", icon: Wallet, description: "Controle financeiro pelo WhatsApp", highlight: true, adminOnly: true },
   {
     title: "Chat Flutuante",
     url: "/widget-customization",
