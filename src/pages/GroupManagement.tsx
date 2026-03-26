@@ -513,10 +513,10 @@ const GroupManagement = () => {
                                                     </span>
                                                 </div>
                                                 <Button
-                                                    variant="outline"
+                                                    variant={webhookActive ? "destructive" : "outline"}
                                                     size="sm"
                                                     className="w-full"
-                                                    onClick={configureWebhook}
+                                                    onClick={toggleWebhook}
                                                     disabled={configuringWebhook}
                                                 >
                                                     {configuringWebhook ? (
@@ -524,7 +524,7 @@ const GroupManagement = () => {
                                                     ) : (
                                                         <Zap className="h-4 w-4 mr-2" />
                                                     )}
-                                                    Ativar Webhook do Grupo
+                                                    {webhookActive ? "Desativar Webhook" : "Ativar Webhook do Grupo"}
                                                 </Button>
                                             </div>
                                         ) : qrCode ? (
