@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from "react";
 import {
-  Sparkles,
   Bot,
   MessageSquare,
   Smartphone,
