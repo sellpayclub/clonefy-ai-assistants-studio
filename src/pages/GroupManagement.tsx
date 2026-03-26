@@ -26,7 +26,8 @@ import {
     Loader2,
     QrCode,
     Wifi,
-    WifiOff
+    WifiOff,
+    Zap
 } from "lucide-react";
 
 interface WhatsAppGroup {
@@ -85,6 +86,7 @@ const GroupManagement = () => {
     const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
     const [qrCode, setQrCode] = useState<string | null>(null);
     const [loadingConnection, setLoadingConnection] = useState(false);
+    const [configuringWebhook, setConfiguringWebhook] = useState(false);
 
     // Verificar autenticação
     useEffect(() => {
@@ -188,6 +190,30 @@ const GroupManagement = () => {
             setConnectionStatus('disconnected');
         } finally {
             setLoadingConnection(false);
+        }
+    };
+
+    const configureWebhook = async () => {
+        if (!userId) return;
+        setConfiguringWebhook(true);
+        try {
+            const { data, error } = await supabase.functions.invoke('group-connection', {
+                body: { action: 'configure_webhook', user_id: userId }
+            });
+            if (error) throw error;
+            toast({
+                title: "Webhook configurado! ✅",
+                description: "Grupos e mensagens serão monitorados automaticamente."
+            });
+        } catch (error) {
+            console.error('Erro ao configurar webhook:', error);
+            toast({
+                title: "Erro ao configurar webhook",
+                description: "Tente novamente.",
+                variant: "destructive"
+            });
+        } finally {
+            setConfiguringWebhook(false);
         }
     };
 
@@ -474,11 +500,27 @@ const GroupManagement = () => {
                                     </CardHeader>
                                     <CardContent>
                                         {connectionStatus === 'connected' ? (
-                                            <div className="flex items-center gap-2">
-                                                <Badge className="bg-primary">Conectado</Badge>
-                                                <span className="text-sm text-muted-foreground">
-                                                    Pronto para monitorar grupos
-                                                </span>
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-2">
+                                                    <Badge className="bg-primary">Conectado</Badge>
+                                                    <span className="text-sm text-muted-foreground">
+                                                        Pronto para monitorar grupos
+                                                    </span>
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full"
+                                                    onClick={configureWebhook}
+                                                    disabled={configuringWebhook}
+                                                >
+                                                    {configuringWebhook ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                                    ) : (
+                                                        <Zap className="h-4 w-4 mr-2" />
+                                                    )}
+                                                    Ativar Webhook do Grupo
+                                                </Button>
                                             </div>
                                         ) : qrCode ? (
                                             <div className="text-center">
