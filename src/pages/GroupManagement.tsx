@@ -26,7 +26,8 @@ import {
     Loader2,
     QrCode,
     Wifi,
-    WifiOff
+    WifiOff,
+    Zap
 } from "lucide-react";
 
 interface WhatsAppGroup {

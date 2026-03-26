@@ -249,6 +249,55 @@ serve(async (req) => {
         }
 
         // =====================================================
+        // ACTION: configure_webhook
+        // Configura webhook na instância para receber eventos de grupo
+        // =====================================================
+        if (action === 'configure_webhook') {
+            console.log(`🔗 [GROUP-CONNECTION] Configurando webhook: ${instanceName}`);
+
+            const webhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/group-webhook`;
+
+            const response = await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': EVOLUTION_API_KEY
+                },
+                body: JSON.stringify({
+                    enabled: true,
+                    url: webhookUrl,
+                    webhookByEvents: false,
+                    webhookBase64: false,
+                    events: [
+                        'MESSAGES_UPSERT',
+                        'GROUP_PARTICIPANTS_UPDATE',
+                        'GROUPS_UPSERT',
+                        'GROUPS_UPDATE'
+                    ]
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                console.error(`❌ [GROUP-CONNECTION] Erro ao configurar webhook: ${error}`);
+                throw new Error(`Failed to configure webhook: ${error}`);
+            }
+
+            const data = await response.json();
+            console.log(`✅ [GROUP-CONNECTION] Webhook configurado: ${webhookUrl}`);
+
+            return new Response(JSON.stringify({
+                success: true,
+                webhook_url: webhookUrl,
+                instance_name: instanceName,
+                data
+            }), {
+                status: 200,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        // =====================================================
         // ACTION: disconnect
         // Desconecta a instância
         // =====================================================
