@@ -488,95 +488,99 @@ const GroupManagement = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* WhatsApp Connection + Lista de Grupos */}
                             <div className="lg:col-span-1 space-y-4">
-                                {/* Card de Conexão WhatsApp */}
-                                <Card className={connectionStatus === 'connected' ? 'border-primary/50 bg-primary/5' : ''}>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="text-lg flex items-center gap-2">
-                                            {connectionStatus === 'connected' ? (
-                                                <Wifi className="h-5 w-5 text-primary" />
-                                            ) : (
-                                                <WifiOff className="h-5 w-5 text-muted-foreground" />
-                                            )}
-                                            Conexão WhatsApp
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Conexão exclusiva para monitoramento de grupos
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        {connectionStatus === 'connected' ? (
-                                            <div className="space-y-3">
-                                                <div className="flex items-center gap-2">
-                                                    <Badge className="bg-primary">Conectado</Badge>
-                                                    <span className="text-sm text-muted-foreground">
-                                                        Pronto para monitorar grupos
-                                                    </span>
-                                                </div>
+                                 {/* Card de Conexão WhatsApp */}
+                                 <Card className={`border-2 ${connectionStatus === 'connected' ? 'border-primary/50 bg-primary/5' : 'border-orange-400/50 bg-orange-400/5'}`}>
+                                     <CardHeader className="pb-3">
+                                         <CardTitle className="text-lg flex items-center gap-2">
+                                             {connectionStatus === 'connected' ? (
+                                                 <Wifi className="h-5 w-5 text-primary" />
+                                             ) : (
+                                                 <WifiOff className="h-5 w-5 text-orange-500" />
+                                             )}
+                                             {connectionStatus === 'connected' ? 'WhatsApp Conectado ✅' : '⚠️ Passo 1 — Conectar WhatsApp'}
+                                         </CardTitle>
+                                         <CardDescription>
+                                             {connectionStatus === 'connected'
+                                                 ? 'Conexão ativa para monitoramento de grupos'
+                                                 : 'Conecte seu WhatsApp para poder monitorar os grupos'}
+                                         </CardDescription>
+                                     </CardHeader>
+                                     <CardContent className="space-y-3">
+                                         {connectionStatus === 'connected' ? (
+                                             <>
+                                                 <div className="flex items-center gap-2">
+                                                     <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                                                     <span className="text-sm font-medium text-primary">Conectado — pronto para monitorar</span>
+                                                 </div>
 
-                                                {/* Explicação do webhook */}
-                                                <div className={`rounded-lg border p-3 text-xs space-y-1 ${webhookActive ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/40'}`}>
-                                                    <p className="font-semibold flex items-center gap-1">
-                                                        <Zap className="h-3 w-3" />
-                                                        {webhookActive ? "Webhook ativo — IA monitorando grupos" : "Webhook de Grupos"}
-                                                    </p>
-                                                    {!webhookActive ? (
-                                                        <p className="text-muted-foreground leading-relaxed">
-                                                            Ative para que sua IA receba e responda mensagens nos seus grupos de WhatsApp automaticamente. Sem isso, as mensagens dos grupos não chegam ao sistema.
-                                                        </p>
-                                                    ) : (
-                                                        <p className="text-muted-foreground leading-relaxed">
-                                                            As mensagens dos grupos estão chegando ao sistema. Desative se quiser pausar o monitoramento.
-                                                        </p>
-                                                    )}
-                                                </div>
-
-                                                <Button
-                                                    variant={webhookActive ? "destructive" : "default"}
-                                                    size="sm"
-                                                    className="w-full"
-                                                    onClick={toggleWebhook}
-                                                    disabled={configuringWebhook}
-                                                >
-                                                    {configuringWebhook ? (
-                                                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                                    ) : (
-                                                        <Zap className="h-4 w-4 mr-2" />
-                                                    )}
-                                                    {webhookActive ? "Desativar Webhook" : "Ativar Webhook do Grupo"}
-                                                </Button>
-                                            </div>
-                                        ) : qrCode ? (
-                                            <div className="text-center">
-                                                <p className="text-sm text-muted-foreground mb-3">
-                                                    Escaneie o QR Code com seu WhatsApp
-                                                </p>
-                                                <div className="bg-white p-4 rounded-lg inline-block">
-                                                    <img
-                                                        src={qrCode.startsWith('data:') ? qrCode : `data:image/png;base64,${qrCode}`}
-                                                        alt="QR Code WhatsApp"
-                                                        className="w-48 h-48 mx-auto"
-                                                    />
-                                                </div>
-                                                <p className="text-xs text-muted-foreground mt-3">
-                                                    Aguardando conexão...
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            <Button
-                                                onClick={connectWhatsApp}
-                                                disabled={loadingConnection}
-                                                className="w-full"
-                                            >
-                                                {loadingConnection ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                                ) : (
-                                                    <QrCode className="h-4 w-4 mr-2" />
-                                                )}
-                                                Conectar WhatsApp
-                                            </Button>
-                                        )}
-                                    </CardContent>
-                                </Card>
+                                                 {/* Separador visual para o Passo 2 */}
+                                                 <div className={`rounded-xl border-2 p-4 space-y-3 transition-all ${webhookActive ? 'border-primary bg-primary/8' : 'border-dashed border-orange-400/70 bg-orange-400/5'}`}>
+                                                     <div className="flex items-center gap-2">
+                                                         <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${webhookActive ? 'bg-primary text-primary-foreground' : 'bg-orange-400 text-white'}`}>
+                                                             2
+                                                         </div>
+                                                         <p className="font-semibold text-sm">
+                                                             {webhookActive ? '🟢 Webhook Ativo — Grupos sendo monitorados!' : '🔴 Ativar Monitoramento dos Grupos'}
+                                                         </p>
+                                                     </div>
+                                                     <p className="text-xs text-muted-foreground leading-relaxed">
+                                                         {webhookActive
+                                                             ? 'As mensagens dos seus grupos estão chegando ao sistema. A IA está monitorando e enviando alertas conforme configurado.'
+                                                             : 'Clique no botão abaixo para ligar o monitoramento. Sem isso, as mensagens dos grupos NÃO chegam ao sistema e a IA não funciona nos grupos.'}
+                                                     </p>
+                                                     <Button
+                                                         variant={webhookActive ? "outline" : "default"}
+                                                         size="sm"
+                                                         className={`w-full font-semibold ${!webhookActive ? 'bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-md' : ''}`}
+                                                         onClick={toggleWebhook}
+                                                         disabled={configuringWebhook}
+                                                     >
+                                                         {configuringWebhook ? (
+                                                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                                         ) : (
+                                                             <Zap className="h-4 w-4 mr-2" />
+                                                         )}
+                                                         {webhookActive ? 'Desativar Monitoramento' : '⚡ Ligar Monitoramento dos Grupos'}
+                                                     </Button>
+                                                 </div>
+                                             </>
+                                         ) : qrCode ? (
+                                             <div className="text-center space-y-3">
+                                                 <p className="text-sm font-medium">Escaneie o QR Code com seu WhatsApp</p>
+                                                 <p className="text-xs text-muted-foreground">Abra o WhatsApp → Aparelhos conectados → Conectar aparelho</p>
+                                                 <div className="bg-white p-4 rounded-lg inline-block shadow">
+                                                     <img
+                                                         src={qrCode.startsWith('data:') ? qrCode : `data:image/png;base64,${qrCode}`}
+                                                         alt="QR Code WhatsApp"
+                                                         className="w-48 h-48 mx-auto"
+                                                     />
+                                                 </div>
+                                                 <p className="text-xs text-muted-foreground animate-pulse">
+                                                     Aguardando conexão...
+                                                 </p>
+                                             </div>
+                                         ) : (
+                                             <div className="space-y-3">
+                                                 <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
+                                                     <span className="text-lg">📱</span>
+                                                     <span>Você precisará escanear um QR Code com o WhatsApp que irá monitorar os grupos.</span>
+                                                 </div>
+                                                 <Button
+                                                     onClick={connectWhatsApp}
+                                                     disabled={loadingConnection}
+                                                     className="w-full font-semibold"
+                                                 >
+                                                     {loadingConnection ? (
+                                                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                                     ) : (
+                                                         <QrCode className="h-4 w-4 mr-2" />
+                                                     )}
+                                                     Conectar WhatsApp (Passo 1)
+                                                 </Button>
+                                             </div>
+                                         )}
+                                     </CardContent>
+                                 </Card>
 
                                 {/* Lista de Grupos */}
                                 <Card>
