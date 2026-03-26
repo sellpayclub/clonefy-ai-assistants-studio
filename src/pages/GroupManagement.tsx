@@ -500,11 +500,27 @@ const GroupManagement = () => {
                                     </CardHeader>
                                     <CardContent>
                                         {connectionStatus === 'connected' ? (
-                                            <div className="flex items-center gap-2">
-                                                <Badge className="bg-primary">Conectado</Badge>
-                                                <span className="text-sm text-muted-foreground">
-                                                    Pronto para monitorar grupos
-                                                </span>
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-2">
+                                                    <Badge className="bg-primary">Conectado</Badge>
+                                                    <span className="text-sm text-muted-foreground">
+                                                        Pronto para monitorar grupos
+                                                    </span>
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full"
+                                                    onClick={configureWebhook}
+                                                    disabled={configuringWebhook}
+                                                >
+                                                    {configuringWebhook ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                                    ) : (
+                                                        <Zap className="h-4 w-4 mr-2" />
+                                                    )}
+                                                    Ativar Webhook do Grupo
+                                                </Button>
                                             </div>
                                         ) : qrCode ? (
                                             <div className="text-center">
