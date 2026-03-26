@@ -194,17 +194,21 @@ const GroupManagement = () => {
         }
     };
 
-    const configureWebhook = async () => {
+    const toggleWebhook = async () => {
         if (!userId) return;
         setConfiguringWebhook(true);
+        const newState = !webhookActive;
         try {
-            const { data, error } = await supabase.functions.invoke('group-connection', {
-                body: { action: 'configure_webhook', user_id: userId }
+            const { error } = await supabase.functions.invoke('group-connection', {
+                body: { action: 'configure_webhook', user_id: userId, enabled: newState }
             });
             if (error) throw error;
+            setWebhookActive(newState);
             toast({
-                title: "Webhook configurado! ✅",
-                description: "Grupos e mensagens serão monitorados automaticamente."
+                title: newState ? "Webhook ativado! ✅" : "Webhook desativado",
+                description: newState
+                    ? "Grupos e mensagens serão monitorados automaticamente."
+                    : "O monitoramento de grupos foi pausado."
             });
         } catch (error) {
             console.error('Erro ao configurar webhook:', error);
