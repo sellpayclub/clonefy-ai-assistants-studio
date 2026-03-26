@@ -55,6 +55,7 @@ const LazyCommerceConnectWhatsApp = lazy(() => import("./pages/CommerceConnectWh
 const LazyFinancialDashboard = lazy(() => import("./pages/FinancialDashboard"));
 const LazyFinancialTransactions = lazy(() => import("./pages/FinancialTransactions"));
 const LazyFinancialConnect = lazy(() => import("./pages/FinancialConnect"));
+const LazyChangelog = lazy(() => import("./pages/Changelog"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
