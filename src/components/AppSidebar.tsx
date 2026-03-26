@@ -107,6 +107,12 @@ const menuItems = [
     description: "Personalize logo e cores do sistema",
   },
   { title: "sidebar.admin.title", url: "/admin", icon: Settings, description: "sidebar.admin.description" },
+  {
+    title: "Novidades",
+    url: "/novidades",
+    icon: Sparkles,
+    description: "Veja todas as atualizações da plataforma",
+  },
 ];
 
 const AppSidebar = () => {

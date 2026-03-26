@@ -153,6 +153,9 @@ const App = () => {
                       <Route path="/financeiro/transacoes" element={<RestrictedRoute><LazyPage><LazyFinancialTransactions /></LazyPage></RestrictedRoute>} />
                       <Route path="/financeiro/conectar" element={<RestrictedRoute><LazyPage><LazyFinancialConnect /></LazyPage></RestrictedRoute>} />
 
+                      {/* Changelog */}
+                      <Route path="/novidades" element={<LazyPage><LazyChangelog /></LazyPage>} />
+
                       {/* Tools */}
                       <Route path="/ferramentas/clickgo" element={<LazyPage><LazyClickGo /></LazyPage>} />
                       <Route path="/ferramentas/gerador-link-whatsapp" element={<LazyPage><LazyWhatsAppLinkGenerator /></LazyPage>} />
