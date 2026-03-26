@@ -21,6 +21,7 @@ import {
   Brush,
   Wallet,
   Send,
+  Sparkles,
 } from "lucide-react";
 
 const TelegramSidebarIcon = () => (
