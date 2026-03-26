@@ -55,6 +55,7 @@ const LazyCommerceConnectWhatsApp = lazy(() => import("./pages/CommerceConnectWh
 const LazyFinancialDashboard = lazy(() => import("./pages/FinancialDashboard"));
 const LazyFinancialTransactions = lazy(() => import("./pages/FinancialTransactions"));
 const LazyFinancialConnect = lazy(() => import("./pages/FinancialConnect"));
+const LazyChangelog = lazy(() => import("./pages/Changelog"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -151,6 +152,9 @@ const App = () => {
                       <Route path="/financeiro" element={<RestrictedRoute><LazyPage><LazyFinancialDashboard /></LazyPage></RestrictedRoute>} />
                       <Route path="/financeiro/transacoes" element={<RestrictedRoute><LazyPage><LazyFinancialTransactions /></LazyPage></RestrictedRoute>} />
                       <Route path="/financeiro/conectar" element={<RestrictedRoute><LazyPage><LazyFinancialConnect /></LazyPage></RestrictedRoute>} />
+
+                      {/* Changelog */}
+                      <Route path="/novidades" element={<LazyPage><LazyChangelog /></LazyPage>} />
 
                       {/* Tools */}
                       <Route path="/ferramentas/clickgo" element={<LazyPage><LazyClickGo /></LazyPage>} />
