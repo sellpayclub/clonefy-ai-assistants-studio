@@ -87,6 +87,7 @@ const GroupManagement = () => {
     const [qrCode, setQrCode] = useState<string | null>(null);
     const [loadingConnection, setLoadingConnection] = useState(false);
     const [configuringWebhook, setConfiguringWebhook] = useState(false);
+    const [webhookActive, setWebhookActive] = useState(false);
 
     // Verificar autenticação
     useEffect(() => {
@@ -193,17 +194,21 @@ const GroupManagement = () => {
         }
     };
 
-    const configureWebhook = async () => {
+    const toggleWebhook = async () => {
         if (!userId) return;
         setConfiguringWebhook(true);
+        const newState = !webhookActive;
         try {
-            const { data, error } = await supabase.functions.invoke('group-connection', {
-                body: { action: 'configure_webhook', user_id: userId }
+            const { error } = await supabase.functions.invoke('group-connection', {
+                body: { action: 'configure_webhook', user_id: userId, enabled: newState }
             });
             if (error) throw error;
+            setWebhookActive(newState);
             toast({
-                title: "Webhook configurado! ✅",
-                description: "Grupos e mensagens serão monitorados automaticamente."
+                title: newState ? "Webhook ativado! ✅" : "Webhook desativado",
+                description: newState
+                    ? "Grupos e mensagens serão monitorados automaticamente."
+                    : "O monitoramento de grupos foi pausado."
             });
         } catch (error) {
             console.error('Erro ao configurar webhook:', error);
@@ -508,10 +513,10 @@ const GroupManagement = () => {
                                                     </span>
                                                 </div>
                                                 <Button
-                                                    variant="outline"
+                                                    variant={webhookActive ? "destructive" : "outline"}
                                                     size="sm"
                                                     className="w-full"
-                                                    onClick={configureWebhook}
+                                                    onClick={toggleWebhook}
                                                     disabled={configuringWebhook}
                                                 >
                                                     {configuringWebhook ? (
@@ -519,7 +524,7 @@ const GroupManagement = () => {
                                                     ) : (
                                                         <Zap className="h-4 w-4 mr-2" />
                                                     )}
-                                                    Ativar Webhook do Grupo
+                                                    {webhookActive ? "Desativar Webhook" : "Ativar Webhook do Grupo"}
                                                 </Button>
                                             </div>
                                         ) : qrCode ? (

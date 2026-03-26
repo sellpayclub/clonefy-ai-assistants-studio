@@ -250,10 +250,15 @@ serve(async (req) => {
 
         // =====================================================
         // ACTION: configure_webhook
-        // Configura webhook na instância para receber eventos de grupo
+        // Ativa ou desativa o webhook na instância para eventos de grupo
         // =====================================================
         if (action === 'configure_webhook') {
-            console.log(`🔗 [GROUP-CONNECTION] Configurando webhook: ${instanceName}`);
+            const enable = req.method === 'DELETE' ? false : true;
+            // Suporte ao campo opcional "enabled" no body
+            const body = await req.json().catch(() => ({}));
+            const enabled = body?.enabled !== undefined ? body.enabled : enable;
+
+            console.log(`🔗 [GROUP-CONNECTION] ${enabled ? 'Ativando' : 'Desativando'} webhook: ${instanceName}`);
 
             const webhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/group-webhook`;
 
@@ -264,7 +269,7 @@ serve(async (req) => {
                     'apikey': EVOLUTION_API_KEY
                 },
                 body: JSON.stringify({
-                    enabled: true,
+                    enabled,
                     url: webhookUrl,
                     webhookByEvents: false,
                     webhookBase64: false,
@@ -284,10 +289,11 @@ serve(async (req) => {
             }
 
             const data = await response.json();
-            console.log(`✅ [GROUP-CONNECTION] Webhook configurado: ${webhookUrl}`);
+            console.log(`✅ [GROUP-CONNECTION] Webhook ${enabled ? 'ativado' : 'desativado'}: ${webhookUrl}`);
 
             return new Response(JSON.stringify({
                 success: true,
+                enabled,
                 webhook_url: webhookUrl,
                 instance_name: instanceName,
                 data
