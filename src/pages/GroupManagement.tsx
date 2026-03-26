@@ -86,6 +86,7 @@ const GroupManagement = () => {
     const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
     const [qrCode, setQrCode] = useState<string | null>(null);
     const [loadingConnection, setLoadingConnection] = useState(false);
+    const [configuringWebhook, setConfiguringWebhook] = useState(false);
 
     // Verificar autenticação
     useEffect(() => {
