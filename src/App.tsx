@@ -13,6 +13,7 @@ import AppLayout, { RestrictedRoute } from "@/components/AppLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
+import ResetPassword from "./pages/ResetPassword";
 import EmbedChat from "./pages/EmbedChat";
 import NotFound from "./pages/NotFound";
 import ThankYou from "./pages/ThankYou";
