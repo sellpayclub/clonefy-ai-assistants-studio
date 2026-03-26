@@ -87,6 +87,7 @@ const GroupManagement = () => {
     const [qrCode, setQrCode] = useState<string | null>(null);
     const [loadingConnection, setLoadingConnection] = useState(false);
     const [configuringWebhook, setConfiguringWebhook] = useState(false);
+    const [webhookActive, setWebhookActive] = useState(false);
 
     // Verificar autenticação
     useEffect(() => {
