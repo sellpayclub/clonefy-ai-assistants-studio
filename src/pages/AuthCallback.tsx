@@ -19,6 +19,12 @@ const AuthCallback = () => {
         const refreshToken = searchParams.get('refresh_token');
         const type = searchParams.get('type');
         
+        // Recovery type: redirect to reset-password page, Supabase SDK handles the hash
+        if (type === 'recovery') {
+          navigate('/reset-password');
+          return;
+        }
+
         if (type === 'signup' && accessToken && refreshToken) {
           // Definir a sessão com os tokens recebidos
           const { data, error } = await supabase.auth.setSession({
