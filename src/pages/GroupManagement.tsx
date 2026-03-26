@@ -512,8 +512,26 @@ const GroupManagement = () => {
                                                         Pronto para monitorar grupos
                                                     </span>
                                                 </div>
+
+                                                {/* Explicação do webhook */}
+                                                <div className={`rounded-lg border p-3 text-xs space-y-1 ${webhookActive ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/40'}`}>
+                                                    <p className="font-semibold flex items-center gap-1">
+                                                        <Zap className="h-3 w-3" />
+                                                        {webhookActive ? "Webhook ativo — IA monitorando grupos" : "Webhook de Grupos"}
+                                                    </p>
+                                                    {!webhookActive ? (
+                                                        <p className="text-muted-foreground leading-relaxed">
+                                                            Ative para que sua IA receba e responda mensagens nos seus grupos de WhatsApp automaticamente. Sem isso, as mensagens dos grupos não chegam ao sistema.
+                                                        </p>
+                                                    ) : (
+                                                        <p className="text-muted-foreground leading-relaxed">
+                                                            As mensagens dos grupos estão chegando ao sistema. Desative se quiser pausar o monitoramento.
+                                                        </p>
+                                                    )}
+                                                </div>
+
                                                 <Button
-                                                    variant={webhookActive ? "destructive" : "outline"}
+                                                    variant={webhookActive ? "destructive" : "default"}
                                                     size="sm"
                                                     className="w-full"
                                                     onClick={toggleWebhook}
