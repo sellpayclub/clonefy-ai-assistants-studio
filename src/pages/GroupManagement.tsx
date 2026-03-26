@@ -193,6 +193,30 @@ const GroupManagement = () => {
         }
     };
 
+    const configureWebhook = async () => {
+        if (!userId) return;
+        setConfiguringWebhook(true);
+        try {
+            const { data, error } = await supabase.functions.invoke('group-connection', {
+                body: { action: 'configure_webhook', user_id: userId }
+            });
+            if (error) throw error;
+            toast({
+                title: "Webhook configurado! ✅",
+                description: "Grupos e mensagens serão monitorados automaticamente."
+            });
+        } catch (error) {
+            console.error('Erro ao configurar webhook:', error);
+            toast({
+                title: "Erro ao configurar webhook",
+                description: "Tente novamente.",
+                variant: "destructive"
+            });
+        } finally {
+            setConfiguringWebhook(false);
+        }
+    };
+
     const loadGroupDetails = async (group: WhatsAppGroup) => {
         setSelectedGroup(group);
 
