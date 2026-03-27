@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Smartphone, QrCode, Plus, Trash2, RefreshCw, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Smartphone, QrCode, Plus, Trash2, RefreshCw, CheckCircle, AlertCircle, Loader2, Users } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
@@ -942,8 +943,54 @@ const WhatsApp = () => {
                               )}
                             </div>
 
+                            {/* Group AI Toggle */}
+                            {isConnected && (
+                              <div className="mt-4 p-4 border rounded-lg bg-blue-50 border-blue-200">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                                      <Users className="w-4 h-4 text-white" />
+                                    </div>
+                                    <div>
+                                      <h4 className="font-medium text-blue-900">IA responde em grupos</h4>
+                                      <p className="text-xs text-blue-600">Ativar para a IA responder mensagens em grupos WhatsApp</p>
+                                    </div>
+                                  </div>
+                                  <Switch
+                                    defaultChecked={false}
+                                    onCheckedChange={async (checked) => {
+                                      try {
+                                        const { data, error } = await supabase.functions.invoke('group-connection', {
+                                          body: {
+                                            action: 'configure_webhook',
+                                            user_id: user?.id,
+                                            instanceName: connection.nomeinstancia,
+                                            enabled: checked,
+                                          },
+                                        });
+                                        if (error) throw error;
+                                        toast({
+                                          title: checked ? "Grupos ativados!" : "Grupos desativados!",
+                                          description: checked
+                                            ? "A IA agora responde em grupos WhatsApp."
+                                            : "A IA não responderá mais em grupos.",
+                                        });
+                                      } catch (err: any) {
+                                        console.error('Erro ao configurar grupos:', err);
+                                        toast({
+                                          title: "Erro",
+                                          description: err.message || "Não foi possível alterar configuração de grupos.",
+                                          variant: "destructive",
+                                        });
+                                      }
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+
                             {/* ElevenLabs Voice Settings Update */}
-                            <div className="mt-4 p-4 border rounded-lg bg-primary/5 border-primary/20">
+                              <div className="mt-4 p-4 border rounded-lg bg-primary/5 border-primary/20">
                               <div className="flex items-center gap-2 mb-3">
                                 <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                                   <span className="text-primary-foreground text-xs">🎙️</span>

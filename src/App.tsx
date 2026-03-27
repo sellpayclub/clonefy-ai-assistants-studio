@@ -40,7 +40,7 @@ const LazyNicheLinkGenerator = lazy(() => import("./pages/tools/NicheLinkGenerat
 const LazySectorIASolution = lazy(() => import("./pages/ia/SectorIASolution"));
 const LazyMercadoDigital = lazy(() => import("./pages/MercadoDigital"));
 const LazyVentasEspanol = lazy(() => import("./pages/VentasEspanol"));
-const LazyGroupManagement = lazy(() => import("./pages/GroupManagement"));
+
 const LazyLiveChat = lazy(() => import("./pages/LiveChat"));
 const LazyCalendar = lazy(() => import("./pages/Calendar"));
 const LazyFollowupDashboard = lazy(() => import("./pages/followup/FollowupDashboard"));
@@ -132,7 +132,7 @@ const App = () => {
                       <Route path="/widget-customization" element={<LazyPage><LazyWidgetCustomization /></LazyPage>} />
                       <Route path="/widget-analytics" element={<LazyPage><LazyWidgetAnalytics /></LazyPage>} />
                       <Route path="/crm-leads" element={<LazyPage><LazyCRMLeads /></LazyPage>} />
-                      <Route path="/grupos" element={<RestrictedRoute><LazyPage><LazyGroupManagement /></LazyPage></RestrictedRoute>} />
+                      
                       <Route path="/calendar" element={<LazyPage><LazyCalendar /></LazyPage>} />
                       <Route path="/configuracoes/branding" element={<LazyPage><LazyBrandingSettings /></LazyPage>} />
 
