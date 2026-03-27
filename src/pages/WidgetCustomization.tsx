@@ -665,7 +665,7 @@ const WidgetCustomization = () => {
                                <Copy className="h-4 w-4" />
                              </Button>
                              <Button
-                               onClick={() => window.open(`https://clonefy-ai-assistants-studio.lovable.app/embed-chat/${selectedAssistant}`, '_blank')}
+                               onClick={() => window.open(`/embed/chat/${selectedAssistant}`, '_blank')}
                              >
                                Abrir Chat
                              </Button>
@@ -740,7 +740,7 @@ const WidgetCustomization = () => {
                         'Salvar Personalização'
                       )}
                     </Button>
-                    <Button variant="outline" onClick={() => window.open(`/embed-chat?assistant=${selectedAssistant}`, '_blank')}>
+                    <Button variant="outline" onClick={() => window.open(`/embed/chat/${selectedAssistant}`, '_blank')}>
                       <MessageCircle className="h-4 w-4 mr-2" />
                       Testar Chat
                     </Button>
