@@ -1,37 +1,30 @@
 
 
-## Fix: Botao "Testar Chat" nao funciona
+## Plano: Toggle "IA atende grupos" na conexão WhatsApp + remover Gestão de Grupos
 
-### Problema
-O botao "Testar Chat" na pagina Widget Customization abre a URL `/embed-chat?assistant=ID` usando query parameter, mas a rota espera um path parameter: `/embed-chat/:assistantId`. Resultado: a pagina EmbedChat abre sem receber o ID do agente e nao carrega nada.
+### O que vamos fazer
 
-### Correcao
+1. **Adicionar um Switch "IA atende grupos" dentro de cada card de conexão** na página WhatsApp (`src/pages/WhatsApp.tsx`)
+   - Um toggle simples (Switch) logo abaixo dos detalhes da conexão, ao lado das configs de voz ElevenLabs
+   - Quando ativado: chama `supabase.functions.invoke('group-connection', { body: { action: 'configure_webhook', user_id, enabled: true } })` — mesma lógica que já existe em GroupManagement
+   - Quando desativado: mesma chamada com `enabled: false`
+   - Visual: ícone Users + "IA responde em grupos" + Switch on/off
+   - Só aparece quando a conexão está conectada (tem `whatsappuser`)
 
-**Arquivo: `src/pages/WidgetCustomization.tsx` (linha 743)**
+2. **Remover a página Gestão de Grupos**
+   - Deletar `src/pages/GroupManagement.tsx`
+   - Remover rota `/grupos` e lazy import de `App.tsx`
+   - Remover qualquer referência no sidebar (já não está lá)
 
-Mudar de:
-```tsx
-window.open(`/embed-chat?assistant=${selectedAssistant}`, '_blank')
-```
+### Arquivos modificados
 
-Para:
-```tsx
-window.open(`/embed/chat/${selectedAssistant}`, '_blank')
-```
+| Arquivo | Ação |
+|---|---|
+| `src/pages/WhatsApp.tsx` | Adicionar toggle "IA atende grupos" em cada card de conexão |
+| `src/pages/GroupManagement.tsx` | Deletar |
+| `src/App.tsx` | Remover rota `/grupos` e lazy import |
 
-Isso usa a rota correta `/embed/chat/:agentId` que o EmbedChat espera via `useParams()`.
+### Detalhe técnico
 
----
-
-## Feature futura: Painel de Atendentes (Subcontas)
-
-Sobre a ideia do cliente de criar subcontas para vendedores/atendentes com acesso limitado ao CRM + Chat ao Vivo apenas para agentes especificos — e uma feature excelente mas de fato complexa. Envolve:
-
-- Sistema de convites e autenticacao de atendentes
-- Tabela de permissoes (qual atendente acessa qual agente)
-- Filtro no Live Chat por agente permitido
-- Acesso restrito ao CRM (apenas leads do agente atribuido)
-- Interface simplificada para o atendente (sem acesso a configs, billing, etc.)
-
-Recomendo implementar primeiro o fix do botao agora, e planejar essa feature em etapas separadas depois.
+O toggle reutiliza a mesma Edge Function `group-connection` com action `configure_webhook`. A diferença é que agora ele fica embutido no card da conexão WhatsApp existente — sem página separada, sem fluxo de QR code dedicado para grupos. Simples: liga ou desliga.
 
