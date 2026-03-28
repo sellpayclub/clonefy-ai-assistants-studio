@@ -1076,7 +1076,7 @@ const WhatsApp = () => {
                                           variant: "destructive",
                                         });
                                       }
-                                    }
+                                    }}
                                   />
                                   <span className="text-sm text-amber-700">minutos</span>
                                 </div>
