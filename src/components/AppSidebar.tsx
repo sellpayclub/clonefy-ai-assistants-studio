@@ -21,6 +21,7 @@ import {
   Wallet,
   Send,
   Sparkles,
+  FileText,
 } from "lucide-react";
 
 const TelegramSidebarIcon = () => (
@@ -112,6 +113,13 @@ const menuItems = [
     url: "/novidades",
     icon: Sparkles,
     description: "Veja todas as atualizações da plataforma",
+  },
+  {
+    title: "Docs Técnico",
+    url: "/docs-tecnico",
+    icon: FileText,
+    description: "Documentação completa do sistema",
+    adminOnly: true,
   },
 ];
 

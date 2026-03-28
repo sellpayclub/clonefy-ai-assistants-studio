@@ -57,6 +57,7 @@ const LazyFinancialDashboard = lazy(() => import("./pages/FinancialDashboard"));
 const LazyFinancialTransactions = lazy(() => import("./pages/FinancialTransactions"));
 const LazyFinancialConnect = lazy(() => import("./pages/FinancialConnect"));
 const LazyChangelog = lazy(() => import("./pages/Changelog"));
+const LazyTechnicalDocs = lazy(() => import("./pages/TechnicalDocs"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -157,6 +158,7 @@ const App = () => {
 
                       {/* Changelog */}
                       <Route path="/novidades" element={<LazyPage><LazyChangelog /></LazyPage>} />
+                      <Route path="/docs-tecnico" element={<RestrictedRoute><LazyPage><LazyTechnicalDocs /></LazyPage></RestrictedRoute>} />
 
                       {/* Tools */}
                       <Route path="/ferramentas/clickgo" element={<LazyPage><LazyClickGo /></LazyPage>} />
