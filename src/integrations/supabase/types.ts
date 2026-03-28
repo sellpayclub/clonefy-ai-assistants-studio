@@ -2522,6 +2522,8 @@ export type Database = {
           created_at: string | null
           emailuser: string | null
           followup_count: number | null
+          followup_delay_minutes: number
+          followup_enabled: boolean
           human_takeover_until: string | null
           id: number
           idassistentgpt: string | null
@@ -2539,6 +2541,8 @@ export type Database = {
           created_at?: string | null
           emailuser?: string | null
           followup_count?: number | null
+          followup_delay_minutes?: number
+          followup_enabled?: boolean
           human_takeover_until?: string | null
           id?: number
           idassistentgpt?: string | null
@@ -2556,6 +2560,8 @@ export type Database = {
           created_at?: string | null
           emailuser?: string | null
           followup_count?: number | null
+          followup_delay_minutes?: number
+          followup_enabled?: boolean
           human_takeover_until?: string | null
           id?: number
           idassistentgpt?: string | null

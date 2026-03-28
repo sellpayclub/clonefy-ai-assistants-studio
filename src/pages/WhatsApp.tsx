@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Smartphone, QrCode, Plus, Trash2, RefreshCw, CheckCircle, AlertCircle, Loader2, Users } from "lucide-react";
+import { Smartphone, QrCode, Plus, Trash2, RefreshCw, CheckCircle, AlertCircle, Loader2, Users, Clock } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -986,6 +986,88 @@ const WhatsApp = () => {
                                     }}
                                   />
                                 </div>
+                              </div>
+                            )}
+
+                            {/* Follow-up Automático Toggle */}
+                            {isConnected && (
+                              <div className="mt-4 p-4 border rounded-lg bg-amber-50 border-amber-200">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
+                                      <Clock className="w-4 h-4 text-white" />
+                                    </div>
+                                    <div>
+                                      <h4 className="font-medium text-amber-900">Follow-up Automático</h4>
+                                      <p className="text-xs text-amber-600">Envia 1 mensagem se o cliente não responder no tempo definido</p>
+                                    </div>
+                                  </div>
+                                  <Switch
+                                    defaultChecked={false}
+                                    onCheckedChange={async (checked) => {
+                                      try {
+                                        const { error } = await supabase
+                                          .from('n8n_fluxogpt' as any)
+                                          .update({ followup_enabled: checked } as any)
+                                          .eq('nomeinstancia', connection.nomeinstancia);
+                                        if (error) throw error;
+                                        toast({
+                                          title: checked ? "Follow-up ativado!" : "Follow-up desativado!",
+                                          description: checked
+                                            ? "O sistema enviará 1 mensagem automática após o tempo definido."
+                                            : "O follow-up automático foi desativado.",
+                                        });
+                                      } catch (err: any) {
+                                        console.error('Erro ao configurar follow-up:', err);
+                                        toast({
+                                          title: "Erro",
+                                          description: err.message || "Não foi possível alterar configuração de follow-up.",
+                                          variant: "destructive",
+                                        });
+                                      }
+                                    }}
+                                  />
+                                </div>
+                                
+                                {/* Delay input - always visible so user can configure */}
+                                <div className="mt-3 flex items-center gap-3">
+                                  <Label htmlFor={`followup-delay-${connection.id}`} className="text-sm text-amber-800 whitespace-nowrap">
+                                    Tempo sem resposta:
+                                  </Label>
+                                  <Input
+                                    id={`followup-delay-${connection.id}`}
+                                    type="number"
+                                    min={1}
+                                    max={1440}
+                                    defaultValue={5}
+                                    className="w-24 border-amber-300 focus:border-amber-500"
+                                    onBlur={async (e) => {
+                                      const minutes = parseInt(e.target.value) || 5;
+                                      try {
+                                        const { error } = await supabase
+                                          .from('n8n_fluxogpt' as any)
+                                          .update({ followup_delay_minutes: minutes } as any)
+                                          .eq('nomeinstancia', connection.nomeinstancia);
+                                        if (error) throw error;
+                                        toast({
+                                          title: "Tempo atualizado!",
+                                          description: `Follow-up será enviado após ${minutes} minutos sem resposta.`,
+                                        });
+                                      } catch (err: any) {
+                                        console.error('Erro ao atualizar tempo:', err);
+                                        toast({
+                                          title: "Erro",
+                                          description: err.message || "Não foi possível atualizar o tempo.",
+                                          variant: "destructive",
+                                        });
+                                      }
+                                    }}
+                                  />
+                                  <span className="text-sm text-amber-700">minutos</span>
+                                </div>
+                                <p className="text-xs text-amber-600 mt-2">
+                                  💡 Apenas 1 mensagem é enviada por conversa. O contador reseta quando o cliente responde.
+                                </p>
                               </div>
                             )}
 
