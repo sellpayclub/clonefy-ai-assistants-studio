@@ -1,51 +1,46 @@
 
 
-## Revisão Completa — Problemas Encontrados e Correções
+## Plano: Criar página "Documentação Técnica" (admin-only)
 
-### Problemas Identificados
+### O que será feito
 
-#### 1. BUG REAL: Cache incoerente no `loadData` (linhas 194-196)
-No bloco de `assistants`, as linhas 195-196 fazem cache de `connectionsData` que **ainda pode ser `undefined`** nesse ponto (se connections está sendo carregada em paralelo e ainda não retornou). Isso salva `undefined` no cache de conexões.
+Criar uma nova página `/docs-tecnico` acessível **apenas pelo admin** (via `RestrictedRoute`), contendo a documentação completa do software CLONEFY — arquitetura, tabelas, edge functions, fluxos, integrações e como tudo funciona. Será uma página dentro do app com seções organizadas por accordion/tabs.
 
-```
-// Dentro do bloco 'assistants':
-performanceCache.set(connectionsCacheKey, connectionsData, 10); // connectionsData pode ser undefined aqui!
-```
+### Estrutura da Documentação
 
-Esse cache já é feito corretamente no bloco `connections` (linha 204), então as linhas 195-196 dentro do bloco `assistants` devem ser removidas. A linha 195 (cache assistants) deve permanecer mas ser movida para o lugar correto.
+A página terá as seguintes seções:
 
-**Correção**: Mover `performanceCache.set(assistantsCacheKey, assistantsData, 15)` para logo após `assistantsData = response.data.assistants` e remover a linha 196.
+1. **Visão Geral do Sistema** — stack (React + Vite + Supabase + Tailwind), deploy (Vercel), estrutura de pastas
+2. **Autenticação & Acesso** — Supabase Auth, emails autorizados, admin check por email, `RestrictedRoute`
+3. **Banco de Dados** — todas as tabelas principais: `n8n_fluxogpt`, `user_quotas`, `authorized_emails`, `crm_leads`, `commerce_*`, `followup_*`, etc.
+4. **Edge Functions** — lista de todas as 35+ functions com descrição do que cada uma faz
+5. **Módulos do Sistema**:
+   - Agentes IA (OpenAI Assistants API)
+   - WhatsApp (Evolution API + webhooks)
+   - Telegram (bot + webhooks)
+   - Chat Flutuante (widget embed)
+   - CRM Leads (kanban + pipeline)
+   - Follow-up Automático (CRON + webhook externo)
+   - Loja WhatsApp (commerce_*)
+   - Financeiro IA
+   - Chat ao Vivo (live chat)
+   - Agendamento (Calendar + Google Calendar)
+6. **Integrações Externas** — Evolution API, OpenAI, ElevenLabs, Kiwify, Agendify, webhook N8N
+7. **Frontend** — rotas, lazy loading, sidebar, temas, i18n (4 idiomas), branding customizável
+8. **Segurança** — RLS policies, admin password, RestrictedRoute, quotas por usuário
 
-#### 2. BUG: Follow-up toggle/input usa `defaultChecked={false}` e `defaultValue={5}` fixos
-Os valores de `followup_enabled` e `followup_delay_minutes` não vêm da conexão carregada — sempre mostram `false` e `5` independente do que está salvo no banco. O usuário ativa, recarrega a página, e vê desativado de novo (embora no banco esteja ativo).
+### Implementação Técnica
 
-**Correção**: Carregar os valores de `followup_enabled` e `followup_delay_minutes` da tabela `n8n_fluxogpt` e usar como valores iniciais. Opções:
-- Adicionar esses campos na interface `WhatsAppConnection` e retorná-los na edge function `whatsapp-evolution` (action `list`)
-- Ou fazer uma query separada no frontend para cada conexão
-
-A melhor abordagem: adicionar `followup_enabled` e `followup_delay_minutes` na resposta da edge function `whatsapp-evolution` quando lista conexões, pois ela já faz `SELECT *` da tabela `n8n_fluxogpt`.
-
-#### 3. BUG: RLS pode bloquear updates do follow-up no frontend
-O frontend faz `supabase.from('n8n_fluxogpt').update(...)` com o anon key. Preciso verificar se há RLS policies na tabela `n8n_fluxogpt` que permitam isso. Como a tabela não está na lista de RLS policies fornecida, provavelmente RLS não está habilitado nessa tabela ou está habilitado sem policies — o que bloquearia tudo.
-
-**Correção**: Verificar e garantir que a tabela tem uma policy que permite UPDATE pelo usuário autenticado via email match.
-
-#### 4. MENOR: Grupo toggle também usa `defaultChecked={false}` fixo (mesmo problema do item 2 mas pré-existente)
-
-#### 5. MENOR: Indentação irregular nas linhas 194-196 (cosmético, mas indica o bug de cópia errada)
-
-### Plano de Correções
-
-| Arquivo | Correção |
+| Arquivo | Ação |
 |---|---|
-| `src/pages/WhatsApp.tsx` | Corrigir cache bug (linhas 194-196); usar valores reais do banco para toggle/input do follow-up |
-| `src/pages/WhatsApp.tsx` | Adicionar `followup_enabled` e `followup_delay_minutes` à interface `WhatsAppConnection` |
-| `supabase/functions/whatsapp-evolution/index.ts` | Verificar que `SELECT *` já retorna os novos campos (já faz, pois é `SELECT *`) |
-| Nova migração SQL | Adicionar RLS policy para permitir UPDATE na `n8n_fluxogpt` pelo usuário autenticado (match por `emailuser`) — se necessário |
-| `src/pages/Changelog.tsx` | OK, sem problemas |
+| `src/pages/TechnicalDocs.tsx` | Nova página com toda a documentação em seções accordion |
+| `src/App.tsx` | Adicionar rota `/docs-tecnico` dentro de `RestrictedRoute` |
+| `src/components/AppSidebar.tsx` | Adicionar item "Docs Técnico" no menu (adminOnly) com ícone `FileText` |
 
-### Prioridade
-1. **Crítico**: Fix cache bug (pode causar perda de dados de conexões no cache)
-2. **Crítico**: Fix follow-up toggle mostrando sempre desativado (UX quebrada)
-3. **Importante**: Verificar/adicionar RLS policy para updates funcionarem
+### Detalhes
+
+- Página read-only, sem interações com banco — é puro conteúdo estático organizado em accordions
+- Visível apenas para admin (`RestrictedRoute` + `adminOnly` no sidebar)
+- Toda a documentação hardcoded no componente (não precisa de API)
+- Estilo consistente com o resto do app (cards, badges, accordions do shadcn)
 
