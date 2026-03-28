@@ -20,6 +20,7 @@ const changelog: ChangelogEntry[] = [
       "📝 Notas do CRM agora podem ser editadas e excluídas diretamente no drawer do lead",
       "🔒 Financeiro IA e Gestão de Grupos agora são exclusivos para administradores",
       "💬 Seção 'Conversas' renomeada para 'Testar Agente' — mais claro para o uso atual",
+      "⏱️ Follow-up Automático — ative por conexão e defina o tempo de inatividade para disparo automático de 1 mensagem de reengajamento",
     ],
   },
   {
