@@ -1065,9 +1065,15 @@ const WhatsApp = () => {
                                   />
                                   <span className="text-sm text-amber-700">minutos</span>
                                 </div>
-                                <p className="text-xs text-amber-600 mt-2">
-                                  💡 Apenas 1 mensagem é enviada por conversa. O contador reseta quando o cliente responde.
-                                </p>
+                                <div className="mt-3 p-3 bg-amber-100/50 rounded-md border border-amber-200/50">
+                                  <p className="text-xs font-medium text-amber-800 mb-1.5">📋 Como funciona:</p>
+                                  <ul className="text-xs text-amber-700 space-y-1 list-disc list-inside">
+                                    <li>Quando ativado, o sistema monitora suas conversas automaticamente</li>
+                                    <li>Se o bot foi o último a falar e o cliente não respondeu no tempo definido, envia <strong>1 mensagem automática</strong> de reengajamento</li>
+                                    <li>Apenas 1 mensagem por conversa — <strong>sem spam</strong></li>
+                                    <li>O contador reseta automaticamente quando o cliente responde</li>
+                                  </ul>
+                                </div>
                               </div>
                             )}
 
