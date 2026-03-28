@@ -38,6 +38,9 @@ interface WhatsAppConnection {
   created_at: string;
   IDvoz?: string;
   ApiELEVEN?: string;
+  followup_enabled?: boolean;
+  followup_delay_minutes?: number;
+  group_enabled?: boolean;
 }
 
 const WhatsApp = () => {
@@ -191,9 +194,7 @@ const WhatsApp = () => {
             if (type === 'assistants') {
               if (!response.error && response.data?.assistants) {
                 assistantsData = response.data.assistants;
-        // Cache assistentes por 15 minutos, conexões por 10 minutos
-        performanceCache.set(assistantsCacheKey, assistantsData, 15);
-        performanceCache.set(connectionsCacheKey, connectionsData, 10);
+                performanceCache.set(assistantsCacheKey, assistantsData, 15);
               } else {
                 console.warn('No assistants found or error:', response.error);
                 assistantsData = assistantsData || [];
@@ -957,7 +958,7 @@ const WhatsApp = () => {
                                     </div>
                                   </div>
                                   <Switch
-                                    defaultChecked={false}
+                                    checked={!!connection.group_enabled}
                                     onCheckedChange={async (checked) => {
                                       try {
                                         const { data, error } = await supabase.functions.invoke('group-connection', {
@@ -969,6 +970,10 @@ const WhatsApp = () => {
                                           },
                                         });
                                         if (error) throw error;
+                                        // Update local state
+                                        setConnections(prev => prev.map(c => 
+                                          c.id === connection.id ? { ...c, group_enabled: checked } : c
+                                        ));
                                         toast({
                                           title: checked ? "Grupos ativados!" : "Grupos desativados!",
                                           description: checked
@@ -1003,7 +1008,7 @@ const WhatsApp = () => {
                                     </div>
                                   </div>
                                   <Switch
-                                    defaultChecked={false}
+                                    checked={!!connection.followup_enabled}
                                     onCheckedChange={async (checked) => {
                                       try {
                                         const { error } = await supabase
@@ -1011,6 +1016,10 @@ const WhatsApp = () => {
                                           .update({ followup_enabled: checked } as any)
                                           .eq('nomeinstancia', connection.nomeinstancia);
                                         if (error) throw error;
+                                        // Update local state
+                                        setConnections(prev => prev.map(c => 
+                                          c.id === connection.id ? { ...c, followup_enabled: checked } : c
+                                        ));
                                         toast({
                                           title: checked ? "Follow-up ativado!" : "Follow-up desativado!",
                                           description: checked
@@ -1039,8 +1048,14 @@ const WhatsApp = () => {
                                     type="number"
                                     min={1}
                                     max={1440}
-                                    defaultValue={5}
+                                    value={connection.followup_delay_minutes ?? 5}
                                     className="w-24 border-amber-300 focus:border-amber-500"
+                                    onChange={(e) => {
+                                      const minutes = parseInt(e.target.value) || 5;
+                                      setConnections(prev => prev.map(c => 
+                                        c.id === connection.id ? { ...c, followup_delay_minutes: minutes } : c
+                                      ));
+                                    }}
                                     onBlur={async (e) => {
                                       const minutes = parseInt(e.target.value) || 5;
                                       try {
@@ -1061,7 +1076,7 @@ const WhatsApp = () => {
                                           variant: "destructive",
                                         });
                                       }
-                                    }}
+                                    }
                                   />
                                   <span className="text-sm text-amber-700">minutos</span>
                                 </div>
