@@ -83,13 +83,27 @@ export function useCRMLeads() {
     queryKey: ['crm-leads', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const { data, error } = await (supabase as any)
-        .from('crm_leads')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('last_interaction', { ascending: false });
-      if (error) throw error;
-      return (data || []) as Lead[];
+      // Fetch all leads without the default 1000 row limit
+      const allLeads: Lead[] = [];
+      const PAGE_SIZE = 1000;
+      let from = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data, error } = await (supabase as any)
+          .from('crm_leads')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('last_interaction', { ascending: false })
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) throw error;
+        const batch = (data || []) as Lead[];
+        allLeads.push(...batch);
+        hasMore = batch.length === PAGE_SIZE;
+        from += PAGE_SIZE;
+      }
+
+      return allLeads;
     },
     enabled: !!user?.id,
   });
@@ -246,13 +260,26 @@ export function useCRMLeads() {
     queryKey: ['crm-lead-notes', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const { data, error } = await (supabase as any)
-        .from('crm_lead_notes')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []) as LeadNote[];
+      const allNotes: LeadNote[] = [];
+      const PAGE_SIZE = 1000;
+      let from = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data, error } = await (supabase as any)
+          .from('crm_lead_notes')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) throw error;
+        const batch = (data || []) as LeadNote[];
+        allNotes.push(...batch);
+        hasMore = batch.length === PAGE_SIZE;
+        from += PAGE_SIZE;
+      }
+
+      return allNotes;
     },
     enabled: !!user?.id,
   });
