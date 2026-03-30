@@ -96,7 +96,7 @@ export const useUserLimits = () => {
       };
 
       setLimits(newLimits);
-      performanceCache.set(cacheKey, newLimits, 1);
+      performanceCache.set(cacheKey, newLimits, 5);
     } catch (error: any) {
       console.error('Erro ao carregar limites:', error);
       setLimits({
