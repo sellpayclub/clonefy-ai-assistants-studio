@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
-import { debounce, performanceCache } from '@/utils/performance';
+import { performanceCache } from '@/utils/performance';
 
 interface Assistant {
   id: string;
@@ -21,66 +21,61 @@ export const useOptimizedAssistants = (session: Session | null) => {
   const [loading, setLoading] = useState(true);
   const lastLoadRef = useRef<number>(0);
 
-  const loadAssistants = useCallback(
-    debounce(async (forceRefresh = false) => {
-      if (!session) {
-        setLoading(false);
+  const loadAssistants = useCallback(async (forceRefresh = false) => {
+    if (!session) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const now = Date.now();
+      
+      // Rate limiting de 1 segundo
+      if (!forceRefresh && (now - lastLoadRef.current) < 1000) {
         return;
       }
+      lastLoadRef.current = now;
 
-      try {
-        const now = Date.now();
-        
-        // Rate limiting reduzido para 1 segundo
-        if (!forceRefresh && (now - lastLoadRef.current) < 1000) {
+      // Check cache first
+      const cacheKey = `assistants-${session.user.id}`;
+      if (!forceRefresh) {
+        const cached = performanceCache.get(cacheKey) as Assistant[] | null;
+        if (cached) {
+          setAssistants(cached);
+          setLoading(false);
           return;
         }
-        lastLoadRef.current = now;
-
-        // Check cache first
-        const cacheKey = `assistants-${session.user.id}`;
-        if (!forceRefresh) {
-          const cached = performanceCache.get(cacheKey) as Assistant[] | null;
-          if (cached) {
-            setAssistants(cached);
-            setLoading(false);
-            return;
-          }
-        }
-
-        // Call Edge Function
-        const response = await supabase.functions.invoke('openai-assistants', {
-          body: { action: 'list' },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
-
-        if (response.error) {
-          throw response.error;
-        }
-
-        const assistantsList = response.data?.assistants || [];
-        setAssistants(assistantsList);
-        
-        // Cache for 15 minutes para melhor performance
-        performanceCache.set(cacheKey, assistantsList, 15);
-      } catch (error: any) {
-        console.error('Error loading assistants:', error);
-        // Don't show error toast for cached requests
-        if (forceRefresh) {
-          throw error;
-        }
-      } finally {
-        setLoading(false);
       }
-    }, 300), // Reduzido debounce para 300ms
-    [session]
-  );
+
+      // Call Edge Function
+      const response = await supabase.functions.invoke('openai-assistants', {
+        body: { action: 'list' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      const assistantsList = response.data?.assistants || [];
+      setAssistants(assistantsList);
+      
+      // Cache for 15 minutes
+      performanceCache.set(cacheKey, assistantsList, 15);
+    } catch (error: any) {
+      console.error('Error loading assistants:', error);
+      if (forceRefresh) {
+        throw error;
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [session]);
 
   const reloadAssistants = useCallback(async () => {
     if (session) {
-      const cacheKey = `assistants-${session.user.id}`;
       performanceCache.clear();
     }
     setLoading(true);

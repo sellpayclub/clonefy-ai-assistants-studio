@@ -93,50 +93,6 @@ export const useDashboardStats = (user: User | null) => {
     };
   }, [debouncedLoadStats]);
 
-  // Setup realtime subscriptions with proper cleanup
-  useEffect(() => {
-    if (!user) return;
-
-    const channels: any[] = [];
-
-    // Subscription para assistants
-    const assistantsChannel = supabase
-      .channel('assistants-stats')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'assistants',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => debouncedLoadStats()
-      )
-      .subscribe();
-
-    channels.push(assistantsChannel);
-
-    // Subscription para connections
-    const connectionsChannel = supabase
-      .channel('connections-stats')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'whatsapp_connections',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => debouncedLoadStats()
-      )
-      .subscribe();
-
-    channels.push(connectionsChannel);
-
-    return () => {
-      channels.forEach(channel => supabase.removeChannel(channel));
-    };
-  }, [user, debouncedLoadStats]);
 
   const reloadStats = useCallback(() => {
     debouncedLoadStats();
