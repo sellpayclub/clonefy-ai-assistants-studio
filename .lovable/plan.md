@@ -1,27 +1,36 @@
 
 
-## Plano: Aplicar apenas as 3 otimizações seguras
+## Plano: Corrigir Follow-up Automático do WhatsApp
 
-Mudanças isoladas, sem risco para usuários ativos.
+### Problema raiz
+A função `disparar_followup_clonefy()` envia POST para `https://webhook.dcsaudeautomacao.com/webhook/follow-up` (servidor externo morto). Precisa apontar para a edge function `whatsapp-followup` do Supabase.
 
-### 1. `src/hooks/useDashboardStats.ts` — Remover realtime subscriptions
-- Remover o segundo `useEffect` que cria 2 channels WebSocket (`assistants-stats`, `connections-stats`)
-- Dados continuam carregando normalmente no mount — só param de escutar mudanças em tempo real (contadores de dashboard não precisam disso)
-- **Risco**: Zero. Nenhuma funcionalidade depende de contadores atualizando em tempo real
+### Correção
 
-### 2. `src/hooks/useUserLimits.ts` — Cache de 1min → 5min
-- Mudar `performanceCache.set(cacheKey, newLimits, 1)` para `performanceCache.set(cacheKey, newLimits, 5)`
-- O realtime subscription existente já invalida o cache quando os limites mudam no banco
-- **Risco**: Zero. Backup de invalidação por realtime já existe
+**1. Migration: Recriar `disparar_followup_clonefy()`**
 
-### 3. `src/hooks/useOptimizedAssistants.ts` — Remover debounce do load inicial
-- Separar a função em `loadAssistants` (direto, sem debounce) para o primeiro carregamento
-- Manter debounce apenas no `reloadAssistants` (para re-fetches manuais)
-- **Risco**: Mínimo. Rate limiting interno (`lastLoadRef`) e cache check já protegem contra chamadas duplicadas
+Trocar a URL do `net.http_post` de:
+```
+https://webhook.dcsaudeautomacao.com/webhook/follow-up
+```
+Para:
+```
+https://ekfkrwueqwpqakpsrsjt.supabase.co/functions/v1/whatsapp-followup
+```
 
-### O que NÃO será alterado
-- Nenhuma página (WhatsApp, Assistants, Conversations) — auth local mantida intacta
-- Nenhuma edge function
-- Nenhuma rota ou componente de UI
-- Nenhuma migração de banco
+Adicionar header de Authorization com o anon key (necessario para chamar edge functions). A lógica da query, filtros e payload permanecem idênticos.
+
+**2. Nenhuma alteração na edge function `whatsapp-followup`**
+
+A função já está correta: recebe o payload, roda o OpenAI Assistant com prompt contextual de follow-up, e envia via Evolution API.
+
+**3. Nenhuma alteração na UI**
+
+O toggle de follow-up na página WhatsApp já funciona corretamente (update por `nomeinstancia` com RLS por `emailuser`). O problema é que mesmo ativando, o cron chamava um servidor morto.
+
+### Seguranca
+- Apenas 1 migration: recriar a mesma função com URL corrigida
+- Zero alterações em código frontend
+- Zero alterações em edge functions
+- Zero alterações em tabelas
 
