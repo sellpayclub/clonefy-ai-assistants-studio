@@ -898,7 +898,7 @@ serve(async (req) => {
                     whatsappuser: contactNumber,
                     last_message_at: new Date().toISOString(),
                     last_sender: 'user',
-                    followup_count: 3  // Quando o usuário responde, encerramos o ciclo de follow-up para ele
+                    followup_count: 0  // Reset para 0 - o cron só pega last_sender='bot', então não dispara enquanto user está ativo
                 })
                 .eq('id', existingContact.id);
 
@@ -949,7 +949,9 @@ serve(async (req) => {
                     timeout: now,
                     last_message_at: new Date().toISOString(),
                     last_sender: 'user',
-                    followup_count: 3
+                    followup_count: 0,
+                    followup_enabled: instanceConfig.followup_enabled || false,
+                    followup_delay_minutes: instanceConfig.followup_delay_minutes || 5
                 })
                 .select()
                 .single();
@@ -1269,7 +1271,8 @@ serve(async (req) => {
             .update({
                 message: null,
                 last_message_at: new Date().toISOString(),
-                last_sender: 'bot'
+                last_sender: 'bot',
+                followup_count: 0  // Reset para permitir follow-up se ficar inativo
             })
             .eq('id', existingContact?.id || instanceConfig.id);
 
