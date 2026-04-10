@@ -1013,7 +1013,7 @@ const WhatsApp = () => {
                                       try {
                                         const { error } = await supabase
                                           .from('n8n_fluxogpt' as any)
-                                          .update({ followup_enabled: checked } as any)
+                                          .update({ followup_enabled: checked, followup_count: 0 } as any)
                                           .eq('nomeinstancia', connection.nomeinstancia);
                                         if (error) throw error;
                                         // Update local state
