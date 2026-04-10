@@ -1,47 +1,54 @@
 
 
-## Plano: Corrigir Follow-up para TODOS os contatos
+## Plano: Garantir Follow-up Funcional para TODOS os Usuários (Antigos e Novos)
 
-### Problema confirmado
-- Apenas `royalparma` tem follow-up ativado. Possui 276 contatos, TODOS com `followup_count = 3` (bloqueado). Zero follow-ups foram disparados.
-- O cron `disparar_followup_clonefy()` filtra por `followup_count = 0`, mas novos contatos nascem com `followup_count: 3` no webhook.
-- Contatos não herdam `followup_enabled` da instância.
-- Após bot responder, `followup_count` não reseta para 0.
+### Situação atual
 
-### Correções (3 alterações no webhook + 1 migration de dados)
+| Instância | Contatos | followup_count | followup_enabled | Status |
+|---|---|---|---|---|
+| royalparma | 276 | 0-1 | true | ✅ Corrigido (já funciona) |
+| AGENTE_PLX | 27 | 3 (bloqueado!) | false | ⚠️ Se ativar follow-up, não vai funcionar |
+| secretaria_IA | 7 | 3 (bloqueado!) | false | ⚠️ Se ativar follow-up, não vai funcionar |
 
-**1. Edge Function `whatsapp-webhook/index.ts` -- Insert de novo contato (linha 944-953)**
-Mudar de:
+**Webhook** (para novos contatos): Já corrigido. Novos contatos nascem com `followup_count: 0` e herdam configurações da instância.
+
+**Problema restante**: 34 contatos antigos (AGENTE_PLX + secretaria_IA) ainda têm `followup_count: 3`. Se esses usuários ativarem o follow-up no futuro, esses contatos antigos ficarão bloqueados.
+
+### Correções necessárias
+
+**1. Migration SQL — Resetar `followup_count` de TODOS os contatos antigos**
+
+Atualizar todos os contatos com `followup_count = 3` para `followup_count = 0` em TODAS as instâncias. Isso garante que se qualquer usuário ativar follow-up, os contatos antigos já estarão prontos.
+
+```sql
+UPDATE n8n_fluxogpt
+SET followup_count = 0
+WHERE followup_count = 3
+  AND whatsappuser NOT IN ('Conectado', 'Connected');
 ```
-followup_count: 3
+
+**2. Toggle do WhatsApp — Propagar `followup_count = 0` ao ativar**
+
+No `src/pages/WhatsApp.tsx` (linha 1014-1017), quando o usuário ativa o toggle de follow-up, além de setar `followup_enabled = true`, também resetar `followup_count = 0` para garantir que contatos existentes sejam processados.
+
+Mudar de:
+```typescript
+.update({ followup_enabled: checked })
 ```
 Para:
-```
-followup_count: 0,
-followup_enabled: instanceConfig.followup_enabled || false,
-followup_delay_minutes: instanceConfig.followup_delay_minutes || 5
+```typescript
+.update({ followup_enabled: checked, followup_count: 0 })
 ```
 
-**2. Edge Function `whatsapp-webhook/index.ts` -- Update quando usuario responde (linha 892-903)**
-Mudar `followup_count: 3` para `followup_count: 0`. Quando o usuario responde, o timer de inatividade recomeça naturalmente (o `last_sender` vira `'user'`, e o cron so pega `last_sender = 'bot'`).
+### Impacto
+- **Usuários antigos**: 34 contatos bloqueados serão desbloqueados
+- **Usuários novos**: Já cobertos pela correção anterior no webhook
+- **Toggle futuro**: Sempre reseta contatos ao ativar follow-up
+- Zero risco de quebrar funcionalidade existente (apenas muda `followup_count` de 3 para 0)
 
-**3. Edge Function `whatsapp-webhook/index.ts` -- Update apos bot responder (linha 1267-1274)**
-Adicionar `followup_count: 0` no update. Isso permite que o cron dispare follow-up caso o contato fique inativo novamente apos a resposta do bot.
-
-**4. Migration de dados -- Corrigir contatos existentes**
-SQL para atualizar TODOS os contatos de instancias com follow-up ativado:
-- Setar `followup_enabled = true` e `followup_count = 0` nos contatos cujo `last_sender = 'bot'` e que estao inativos
-- Isso ativa o follow-up imediatamente para os contatos que ja estao esperando
-
-### Segurança
-- Zero alteração na UI
-- Zero alteração na edge function `whatsapp-followup` (ela já funciona)
-- Zero alteração no cron `disparar_followup_clonefy` (ele já funciona)
-- Alterações cirurgicas no webhook: 3 linhas mudadas
-- Migration de dados: apenas UPDATE em registros existentes da instancia `royalparma`
-
-### Ordem de execução
-1. Editar `whatsapp-webhook/index.ts` (3 pontos)
-2. Deploy do webhook
-3. Migration SQL para corrigir dados existentes
+### Arquivos modificados
+| Arquivo | Alteração |
+|---|---|
+| `src/pages/WhatsApp.tsx` | 1 linha: adicionar `followup_count: 0` no update do toggle |
+| Nova migration SQL | Reset de `followup_count` para todos contatos bloqueados |
 
