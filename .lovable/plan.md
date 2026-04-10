@@ -1,36 +1,47 @@
 
 
-## Plano: Corrigir Follow-up Automático do WhatsApp
+## Plano: Corrigir Follow-up para TODOS os contatos
 
-### Problema raiz
-A função `disparar_followup_clonefy()` envia POST para `https://webhook.dcsaudeautomacao.com/webhook/follow-up` (servidor externo morto). Precisa apontar para a edge function `whatsapp-followup` do Supabase.
+### Problema confirmado
+- Apenas `royalparma` tem follow-up ativado. Possui 276 contatos, TODOS com `followup_count = 3` (bloqueado). Zero follow-ups foram disparados.
+- O cron `disparar_followup_clonefy()` filtra por `followup_count = 0`, mas novos contatos nascem com `followup_count: 3` no webhook.
+- Contatos não herdam `followup_enabled` da instância.
+- Após bot responder, `followup_count` não reseta para 0.
 
-### Correção
+### Correções (3 alterações no webhook + 1 migration de dados)
 
-**1. Migration: Recriar `disparar_followup_clonefy()`**
-
-Trocar a URL do `net.http_post` de:
+**1. Edge Function `whatsapp-webhook/index.ts` -- Insert de novo contato (linha 944-953)**
+Mudar de:
 ```
-https://webhook.dcsaudeautomacao.com/webhook/follow-up
+followup_count: 3
 ```
 Para:
 ```
-https://ekfkrwueqwpqakpsrsjt.supabase.co/functions/v1/whatsapp-followup
+followup_count: 0,
+followup_enabled: instanceConfig.followup_enabled || false,
+followup_delay_minutes: instanceConfig.followup_delay_minutes || 5
 ```
 
-Adicionar header de Authorization com o anon key (necessario para chamar edge functions). A lógica da query, filtros e payload permanecem idênticos.
+**2. Edge Function `whatsapp-webhook/index.ts` -- Update quando usuario responde (linha 892-903)**
+Mudar `followup_count: 3` para `followup_count: 0`. Quando o usuario responde, o timer de inatividade recomeça naturalmente (o `last_sender` vira `'user'`, e o cron so pega `last_sender = 'bot'`).
 
-**2. Nenhuma alteração na edge function `whatsapp-followup`**
+**3. Edge Function `whatsapp-webhook/index.ts` -- Update apos bot responder (linha 1267-1274)**
+Adicionar `followup_count: 0` no update. Isso permite que o cron dispare follow-up caso o contato fique inativo novamente apos a resposta do bot.
 
-A função já está correta: recebe o payload, roda o OpenAI Assistant com prompt contextual de follow-up, e envia via Evolution API.
+**4. Migration de dados -- Corrigir contatos existentes**
+SQL para atualizar TODOS os contatos de instancias com follow-up ativado:
+- Setar `followup_enabled = true` e `followup_count = 0` nos contatos cujo `last_sender = 'bot'` e que estao inativos
+- Isso ativa o follow-up imediatamente para os contatos que ja estao esperando
 
-**3. Nenhuma alteração na UI**
+### Segurança
+- Zero alteração na UI
+- Zero alteração na edge function `whatsapp-followup` (ela já funciona)
+- Zero alteração no cron `disparar_followup_clonefy` (ele já funciona)
+- Alterações cirurgicas no webhook: 3 linhas mudadas
+- Migration de dados: apenas UPDATE em registros existentes da instancia `royalparma`
 
-O toggle de follow-up na página WhatsApp já funciona corretamente (update por `nomeinstancia` com RLS por `emailuser`). O problema é que mesmo ativando, o cron chamava um servidor morto.
-
-### Seguranca
-- Apenas 1 migration: recriar a mesma função com URL corrigida
-- Zero alterações em código frontend
-- Zero alterações em edge functions
-- Zero alterações em tabelas
+### Ordem de execução
+1. Editar `whatsapp-webhook/index.ts` (3 pontos)
+2. Deploy do webhook
+3. Migration SQL para corrigir dados existentes
 
