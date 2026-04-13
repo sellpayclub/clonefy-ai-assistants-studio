@@ -3714,6 +3714,7 @@ export type Database = {
       }
       generate_order_number: { Args: { store_uuid: string }; Returns: string }
       get_user_email: { Args: { target_user_id: string }; Returns: string }
+      get_user_id_by_email: { Args: { target_email: string }; Returns: string }
       get_user_usage_stats: {
         Args: { target_user_id?: string }
         Returns: {
