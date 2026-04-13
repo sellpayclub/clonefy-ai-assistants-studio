@@ -1005,6 +1005,20 @@ serve(async (req) => {
 
         console.log(`📨 Processando mensagem completa: ${currentMessages}`);
 
+        // 📋 CRM-ONLY MODE: Se não tem agente IA, parar aqui (contato já foi registrado e CRM/Live Chat atualizados)
+        if (isCrmOnly) {
+            console.log('📋 CRM-only: Mensagem registrada, sem processamento de IA');
+            return new Response(JSON.stringify({
+                status: 'crm_only',
+                contact: contactNumber,
+                instance: instanceName,
+                message: 'Mensagem registrada no CRM sem agente IA'
+            }), {
+                status: 200,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
         // 3. Criar ou usar thread existente do OpenAI
         if (!openaiApiKey) {
             throw new Error('OPENAI_API_KEY não configurada');
