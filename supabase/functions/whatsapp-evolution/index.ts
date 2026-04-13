@@ -55,7 +55,7 @@ serve(async (req) => {
 
     switch (action) {
       case 'create':
-        return await createWhatsAppInstanceSequential(instanceName!, assistantId!, userEmail!, supabaseClient, elevenLabsApiKey, voiceId, webhookUrl);
+        return await createWhatsAppInstanceSequential(instanceName!, assistantId || null, userEmail!, supabaseClient, elevenLabsApiKey, voiceId, webhookUrl);
       case 'create_financial':
         return await createFinancialInstance(instanceName!, supabaseClient, webhookUrl);
       case 'list':
