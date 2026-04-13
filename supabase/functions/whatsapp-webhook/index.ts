@@ -737,7 +737,43 @@ serve(async (req) => {
         // Variáveis normalizadas para uso em todo o código
         const assistantUuid = assistantData?.id || '';  // UUID interno (para CRM e Analytics)
         const openaiAssistantId = assistantData?.openai_assistant_id || instanceConfig.idassistentgpt || '';  // Para OpenAI API
-        const userId = assistantData?.user_id || instanceConfig.userId || '';
+        let userId = assistantData?.user_id || instanceConfig.userId || '';
+
+        // Se userId ainda estiver vazio (CRM-only), resolver via emailuser → auth.users
+        if (!userId && instanceConfig.emailuser) {
+            console.log('🔍 Resolvendo userId via emailuser:', instanceConfig.emailuser);
+            const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+            const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+            
+            if (supabaseUrl && serviceKey) {
+                try {
+                    const authResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users?page=1&per_page=1000`, {
+                        headers: {
+                            'Authorization': `Bearer ${serviceKey}`,
+                            'apikey': serviceKey
+                        }
+                    });
+                    
+                    if (authResponse.ok) {
+                        const authData = await authResponse.json();
+                        const matchedUser = authData.users?.find((u: any) => 
+                            u.email === instanceConfig.emailuser || 
+                            u.user_metadata?.email === instanceConfig.emailuser
+                        );
+                        if (matchedUser) {
+                            userId = matchedUser.id;
+                            console.log('✅ userId resolvido via emailuser:', userId);
+                        }
+                    }
+                } catch (e) {
+                    console.error('❌ Erro ao resolver userId via emailuser:', e);
+                }
+            }
+            
+            if (!userId) {
+                console.warn('⚠️ Não foi possível resolver userId para emailuser:', instanceConfig.emailuser);
+            }
+        }
         const assistantName = assistantData?.name || 'Assistente';
 
         console.log('🤖 Mapeamento de assistente:', {
@@ -1008,6 +1044,33 @@ serve(async (req) => {
         // 📋 CRM-ONLY MODE: Se não tem agente IA, parar aqui (contato já foi registrado e CRM/Live Chat atualizados)
         if (isCrmOnly) {
             console.log('📋 CRM-only: Mensagem registrada, sem processamento de IA');
+
+            // Criar/atualizar lead no CRM para conexões CRM-only
+            if (userId) {
+                try {
+                    const { error: crmError } = await supabase
+                        .from('crm_leads')
+                        .upsert({
+                            user_id: userId,
+                            whatsapp_number: contactNumber,
+                            name: contactName || contactNumber,
+                            source: 'whatsapp',
+                            last_interaction: new Date().toISOString(),
+                            status: 'new'
+                        }, {
+                            onConflict: 'user_id,whatsapp_number'
+                        });
+
+                    if (crmError) {
+                        console.error('❌ Erro ao criar lead CRM-only:', crmError);
+                    } else {
+                        console.log('✅ Lead CRM-only criado/atualizado para:', contactNumber);
+                    }
+                } catch (e) {
+                    console.error('❌ Exceção ao criar lead CRM-only:', e);
+                }
+            }
+
             return new Response(JSON.stringify({
                 status: 'crm_only',
                 contact: contactNumber,
