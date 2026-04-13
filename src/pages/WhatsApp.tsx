@@ -921,7 +921,11 @@ const WhatsApp = () => {
                             {/* Connection Details */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
                               <div>
-                                <span className="font-medium">Assistente:</span> {assistant?.name || 'Não encontrado'}
+                                <span className="font-medium">Assistente:</span> {
+                                  !connection.idassistentgpt || connection.idassistentgpt.trim() === '' 
+                                    ? <Badge variant="outline" className="ml-1 text-xs">📋 Apenas CRM</Badge>
+                                    : (assistant?.name || connection.idassistentgpt)
+                                }
                               </div>
                               <div>
                                 <span className="font-medium">Status:</span> {isConnected ? 'Conectado' : 'Desconectado'}
