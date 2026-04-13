@@ -739,39 +739,20 @@ serve(async (req) => {
         const openaiAssistantId = assistantData?.openai_assistant_id || instanceConfig.idassistentgpt || '';  // Para OpenAI API
         let userId = assistantData?.user_id || instanceConfig.userId || '';
 
-        // Se userId ainda estiver vazio (CRM-only), resolver via emailuser → auth.users
+        // Se userId ainda estiver vazio (CRM-only), resolver via emailuser → RPC direto
         if (!userId && instanceConfig.emailuser) {
-            console.log('🔍 Resolvendo userId via emailuser:', instanceConfig.emailuser);
-            const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-            const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-            
-            if (supabaseUrl && serviceKey) {
-                try {
-                    const authResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users?page=1&per_page=1000`, {
-                        headers: {
-                            'Authorization': `Bearer ${serviceKey}`,
-                            'apikey': serviceKey
-                        }
-                    });
-                    
-                    if (authResponse.ok) {
-                        const authData = await authResponse.json();
-                        const matchedUser = authData.users?.find((u: any) => 
-                            u.email === instanceConfig.emailuser || 
-                            u.user_metadata?.email === instanceConfig.emailuser
-                        );
-                        if (matchedUser) {
-                            userId = matchedUser.id;
-                            console.log('✅ userId resolvido via emailuser:', userId);
-                        }
-                    }
-                } catch (e) {
-                    console.error('❌ Erro ao resolver userId via emailuser:', e);
+            console.log('🔍 Resolvendo userId via emailuser (RPC):', instanceConfig.emailuser);
+            try {
+                const { data: resolvedId, error: rpcError } = await supabase
+                    .rpc('get_user_id_by_email', { target_email: instanceConfig.emailuser });
+                if (resolvedId) {
+                    userId = resolvedId;
+                    console.log('✅ userId resolvido via RPC:', userId);
+                } else {
+                    console.warn('⚠️ userId não encontrado via RPC para:', instanceConfig.emailuser, rpcError);
                 }
-            }
-            
-            if (!userId) {
-                console.warn('⚠️ Não foi possível resolver userId para emailuser:', instanceConfig.emailuser);
+            } catch (e) {
+                console.error('❌ Erro ao resolver userId via RPC:', e);
             }
         }
         const assistantName = assistantData?.name || 'Assistente';
