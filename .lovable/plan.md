@@ -1,46 +1,68 @@
 
 
-## Plano: Corrigir Live Chat e CRM para Conexoes CRM-Only (sem agente IA)
+## Plano: Tornar CRM-only robusto para todos os clientes (atual e futuros)
+
+### Diagnóstico atual (dados de produção)
+
+| Item | Status | Evidência |
+|---|---|---|
+| Live Chat (LibidFem) | ✅ Funciona | 1 sessão criada com userId correto `814575e9` |
+| CRM Lead (LibidFem) | ❌ Não criado | 0 leads para userId `814575e9` |
+| userId resolução | ⚠️ Instável | 00:40 falhou `(não encontrado)`, 00:47 funcionou |
 
 ### Problema raiz
 
-Duas falhas impedem conexoes CRM-only (como LibidFem) de aparecerem no Live Chat e CRM:
+1. **userId instável**: O método Auth Admin API (`/auth/v1/admin/users?per_page=1000`) é frágil — depende de paginação e pode falhar em ambientes com muitos usuários. Funcionou às 00:47 mas falhou às 00:40.
 
-1. **`userId` vazio**: A tabela `n8n_fluxogpt` nao tem coluna `userId`. Para conexoes com agente, o `user_id` vem de `assistantData.user_id`. Para CRM-only, `assistantData` e null, entao `userId` fica `''` — e nenhuma sessao/mensagem/lead e criada.
+2. **CRM lead não criado**: Quando userId falhou (00:40), o `if (userId)` no bloco CRM-only retornou sem criar lead. Quando funcionou (00:47), os logs indicam que o fluxo pode ter sido interrompido por buffer/timeout antes de chegar ao upsert.
 
-2. **CRM lead nunca criado**: A funcao `saveLeadToCRM` e chamada somente apos processamento da IA (linha 1785+). Como CRM-only sai na linha 1009, o lead nunca e criado.
+### Correções (cirúrgicas, sem risco)
 
-### Correcoes no `whatsapp-webhook/index.ts`
+**1. Nova função SQL `get_user_id_by_email` (migration)**
 
-**1. Resolver userId para CRM-only via `emailuser` → `auth.users`**
-
-Apos a linha 740 (`const userId = ...`), adicionar logica:
-```
-Se userId estiver vazio E instanceConfig.emailuser existir:
-  → Buscar auth.users.id pelo email
-  → Usar como userId
-```
-
-Isso garante que `userId` sempre sera preenchido, pois toda instancia tem `emailuser`.
-
-**2. Criar lead basico no CRM antes do exit CRM-only (linha 1009)**
-
-Antes do `return` do CRM-only, inserir upsert basico em `crm_leads`:
-```
-- user_id: userId
-- whatsapp_number: contactNumber  
-- name: contactName
-- source: 'whatsapp'
-- last_interaction: now()
+Acessa `auth.users` diretamente via `SECURITY DEFINER` — sem paginação, sem API HTTP:
+```sql
+CREATE OR REPLACE FUNCTION public.get_user_id_by_email(target_email text)
+RETURNS uuid
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT id FROM auth.users WHERE email = target_email LIMIT 1;
+$$;
 ```
 
-Sem analise de IA (nao tem agente), mas o lead aparece no CRM.
+**2. Simplificar resolução de userId no webhook (linhas 742-776)**
+
+Substituir o bloco inteiro de 34 linhas (fetch Auth Admin API) por 8 linhas com RPC:
+```typescript
+if (!userId && instanceConfig.emailuser) {
+    const { data: resolvedId } = await supabase
+        .rpc('get_user_id_by_email', { target_email: instanceConfig.emailuser });
+    if (resolvedId) {
+        userId = resolvedId;
+        console.log('✅ userId resolvido via RPC:', userId);
+    }
+}
+```
 
 **3. Deploy do webhook**
 
-### Impacto
-- Live Chat: sessoes serao criadas corretamente (userId valido)
-- CRM: leads serao criados na primeira mensagem
-- Conexoes com agente: zero alteracao (userId ja vem de assistantData)
-- Apenas `whatsapp-webhook/index.ts` sera editado
+### O que NÃO muda
+- Todo o fluxo de conexões COM agente IA (userId vem de `assistantData.user_id`)
+- Live Chat (já funciona para CRM-only)
+- Lógica de follow-up
+- Frontend
+- Nenhum outro edge function
+
+### Risco: zero
+- A função SQL é `STABLE` e `SECURITY DEFINER` — consulta read-only
+- O bloco `if (!userId)` só executa quando assistantData é null (CRM-only)
+- Conexões com agente nunca entram nesse bloco (já têm userId)
+
+### Arquivos
+| Arquivo | Alteração |
+|---|---|
+| Nova migration SQL | Criar função `get_user_id_by_email` |
+| `supabase/functions/whatsapp-webhook/index.ts` | Substituir linhas 742-776 por RPC (8 linhas) |
+| Deploy | `whatsapp-webhook` |
 
