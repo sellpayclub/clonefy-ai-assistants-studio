@@ -613,22 +613,28 @@ serve(async (req) => {
                 console.log(`🔒 HUMAN TAKEOVER ATIVO (live_chat_sessions)! IA pausada até ${liveSession.human_takeover_until} (${remainingMinutes} min restantes)`);
                 console.log(`👤 Operador está atendendo o contato ${contactNumber} - IA NÃO responderá`);
 
-                // Ainda precisamos salvar a mensagem do cliente no Live Chat antes de sair
-                // Buscar config para obter userId
+                // Resolver userId via emailuser da instância
                 const { data: instanceConfigForMsg } = await supabase
                     .from('n8n_fluxogpt')
-                    .select('userId')
+                    .select('emailuser')
                     .eq('nomeinstancia', instanceName)
                     .not('emailuser', 'is', null)
                     .limit(1)
                     .maybeSingle();
 
-                if (instanceConfigForMsg?.userId) {
+                let takeoverUserId = '';
+                if (instanceConfigForMsg?.emailuser) {
+                    const { data: resolvedId } = await supabase
+                        .rpc('get_user_id_by_email', { target_email: instanceConfigForMsg.emailuser });
+                    if (resolvedId) takeoverUserId = resolvedId;
+                }
+
+                if (takeoverUserId) {
                     // Salvar mensagem do cliente (mesmo com IA pausada)
                     await supabase
                         .from('live_chat_messages')
                         .insert({
-                            user_id: instanceConfigForMsg.userId,
+                            user_id: takeoverUserId,
                             session_id: liveSession.id,
                             instance_name: instanceName,
                             contact_number: contactNumber,
@@ -651,6 +657,25 @@ serve(async (req) => {
                         .eq('id', liveSession.id);
 
                     console.log('📺 Live Chat: Mensagem salva mesmo com IA pausada');
+
+                    // Criar/atualizar lead no CRM durante takeover
+                    try {
+                        await supabase
+                            .from('crm_leads')
+                            .upsert({
+                                user_id: takeoverUserId,
+                                whatsapp_number: contactNumber,
+                                name: contactName || contactNumber,
+                                source: 'whatsapp',
+                                last_interaction: new Date().toISOString(),
+                                status: 'new'
+                            }, {
+                                onConflict: 'user_id,whatsapp_number'
+                            });
+                        console.log('✅ Lead CRM criado/atualizado durante takeover (live_chat)');
+                    } catch (e) {
+                        console.error('⚠️ Erro ao criar lead durante takeover:', e);
+                    }
                 }
 
                 return new Response(JSON.stringify({
@@ -873,6 +898,27 @@ serve(async (req) => {
                 const remainingMinutes = Math.ceil((takeoverUntil.getTime() - Date.now()) / (1000 * 60));
                 console.log(`⏸️ HUMAN TAKEOVER ATIVO! IA pausada até ${existingContact.human_takeover_until} (${remainingMinutes} min restantes)`);
                 console.log(`👤 Humano está atendendo o contato ${contactNumber} - IA não responderá`);
+
+                // Criar/atualizar lead no CRM durante takeover n8n
+                if (userId) {
+                    try {
+                        await supabase
+                            .from('crm_leads')
+                            .upsert({
+                                user_id: userId,
+                                whatsapp_number: contactNumber,
+                                name: contactName || contactNumber,
+                                source: 'whatsapp',
+                                last_interaction: new Date().toISOString(),
+                                status: 'new'
+                            }, {
+                                onConflict: 'user_id,whatsapp_number'
+                            });
+                        console.log('✅ Lead CRM criado/atualizado durante takeover (n8n)');
+                    } catch (e) {
+                        console.error('⚠️ Erro ao criar lead durante takeover n8n:', e);
+                    }
+                }
 
                 return new Response(JSON.stringify({
                     status: 'paused',
