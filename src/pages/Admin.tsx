@@ -280,7 +280,13 @@ const Admin = () => {
 
           {/* ===== PAINEL GLOBAL ===== */}
           <TabsContent value="global" className="space-y-6">
-            {/* Metrics Cards */}
+            {adminData.error && (
+              <div className="bg-destructive/10 border border-destructive/30 text-destructive rounded-lg p-4 flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                <span className="text-sm">Erro ao carregar dados globais: {adminData.error}</span>
+              </div>
+            )}
+            
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Card>
                 <CardContent className="p-4 text-center">
