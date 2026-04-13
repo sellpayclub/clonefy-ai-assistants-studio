@@ -1,53 +1,29 @@
 
 
-## Plano: Corrigir fluxo CRM-only ponta a ponta
+## Plano: Corrigir itens funcionais 4-7 do painel admin
 
-### Problemas encontrados (3 bugs)
+### 4. Sessoes ativas contadas incorretamente
+A funcao `admin_get_global_stats` conta TODAS sessoes com status `ai_active`/`human_takeover`, incluindo sessoes antigas. Correcao: filtrar por `last_message_at > now() - interval '24 hours'`.
 
-**Bug 1: Mensagens não salvas durante Human Takeover**
-- Linha 620: `select('userId')` — mas a tabela `n8n_fluxogpt` **não tem coluna `userId`**
-- Resultado: `instanceConfigForMsg?.userId` é sempre `undefined`
-- Mensagens do cliente durante takeover NÃO são salvas no Live Chat
-- Correção: usar RPC `get_user_id_by_email` com o `emailuser` da instância
+### 5. Tabela de sessoes sem filtro por usuario
+A tabela de leads ja tem dropdown de filtro por usuario, mas a de sessoes nao. Adicionar o mesmo dropdown com lista de emails unicos extraidos das sessoes.
 
-**Bug 2: CRM lead nunca criado durante Human Takeover**
-- Quando takeover está ativo, o webhook retorna na linha 656 (early return)
-- O bloco CRM-only (linha 1026) **nunca é alcançado**
-- Resultado: lead nunca aparece no CRM enquanto operador atende
-- Correção: adicionar upsert de CRM lead no bloco de takeover (linhas 616-654)
+### 6. Indicacao de erro no painel global
+Quando `adminData.error` existir, mostrar um alerta vermelho no topo do painel global.
 
-**Bug 3: Human takeover N8N também bloqueia CRM lead**
-- Segundo check de takeover (linha 868) também faz early return antes do CRM-only block
-- Mesmo problema: lead não é criado
-- Correção: mover CRM upsert para ANTES dos early returns, ou duplicar no bloco de takeover
+### 7. Data de criacao nas sessoes
+Adicionar coluna "Criado em" na tabela de sessoes mostrando `created_at` formatado.
 
-### Correções no webhook (3 alterações cirúrgicas)
+---
 
-**Alteração 1** — Bloco takeover live_chat_sessions (linhas 616-654):
-- Resolver userId via RPC `get_user_id_by_email` em vez de `select('userId')`
-- Adicionar upsert de CRM lead antes do return
+### Alteracoes
 
-**Alteração 2** — Bloco takeover n8n_fluxogpt (linhas 867-896):
-- Adicionar upsert de CRM lead antes do early return (usa `userId` já resolvido na linha 740-757)
-
-**Alteração 3** — Nenhuma mudança nos blocos existentes que já funcionam (live chat session creation, CRM-only block)
-
-### O que NÃO muda
-- Fluxo de conexões com agente IA (userId vem de assistantData)
-- Live Chat session creation (funciona)
-- Buffer de mensagens
-- Lógica de follow-up
-- Frontend (CRM, Live Chat, hooks)
-- Nenhuma migration necessária
-
-### Arquivos
-| Arquivo | Alteração |
+| Arquivo | O que muda |
 |---|---|
-| `supabase/functions/whatsapp-webhook/index.ts` | 3 blocos corrigidos |
-| Deploy | `whatsapp-webhook` |
+| Migration SQL | `CREATE OR REPLACE` de `admin_get_global_stats` — adicionar filtro `last_message_at > now() - interval '24 hours'` na contagem de sessoes ativas |
+| `src/pages/Admin.tsx` | (1) Adicionar state `sessionFilterUser` + dropdown na tabela de sessoes, (2) Adicionar alerta de erro quando `adminData.error`, (3) Adicionar coluna "Criado em" na tabela de sessoes |
 
-### Risco: mínimo
-- Alterações apenas em blocos de early-return que hoje já falham silenciosamente
-- Conexões com agente IA nunca entram nesses blocos
-- Adiciona funcionalidade onde antes não havia nenhuma
+### Risco: zero
+- Apenas 1 funcao SQL atualizada (read-only, SECURITY DEFINER)
+- Frontend: adicoes visuais no painel admin, nenhuma logica existente alterada
 
