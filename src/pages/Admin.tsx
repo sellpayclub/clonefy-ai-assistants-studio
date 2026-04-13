@@ -187,6 +187,10 @@ const Admin = () => {
 
   // Unique user emails from leads for filter dropdown
   const uniqueLeadUsers = Array.from(new Set(adminData.leads.map(l => l.user_email))).filter(Boolean);
+  const uniqueSessionUsers = Array.from(new Set(adminData.sessions.map(s => s.user_email))).filter(Boolean);
+  const filteredSessions = sessionFilterUser
+    ? adminData.sessions.filter(s => s.user_id === sessionFilterUser)
+    : adminData.sessions;
 
   if (loading && !isAuthenticated) {
     return (
