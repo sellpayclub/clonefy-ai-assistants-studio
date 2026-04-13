@@ -9,7 +9,7 @@ export interface LiveChatSession {
   instance_name: string;
   contact_number: string;
   contact_name: string | null;
-  source: 'whatsapp' | 'widget' | 'telegram';
+  source: 'whatsapp' | 'widget' | 'telegram' | 'instagram' | 'messenger';
   status: 'ai_active' | 'human_takeover' | 'waiting' | 'closed';
   assistant_id: string | null;
   assistant_name: string | null;
