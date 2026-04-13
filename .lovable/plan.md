@@ -1,53 +1,53 @@
 
 
-## Plano: Painel Admin Global (Proprietário)
+## Plano: Corrigir fluxo CRM-only ponta a ponta
 
-### O que será criado
+### Problemas encontrados (3 bugs)
 
-**1. Funções SQL para acesso admin (migration)**
+**Bug 1: Mensagens não salvas durante Human Takeover**
+- Linha 620: `select('userId')` — mas a tabela `n8n_fluxogpt` **não tem coluna `userId`**
+- Resultado: `instanceConfigForMsg?.userId` é sempre `undefined`
+- Mensagens do cliente durante takeover NÃO são salvas no Live Chat
+- Correção: usar RPC `get_user_id_by_email` com o `emailuser` da instância
 
-Criar funções `SECURITY DEFINER` que verificam se o chamador é admin (`personaldann@gmail.com`) e retornam dados de todos os usuários:
+**Bug 2: CRM lead nunca criado durante Human Takeover**
+- Quando takeover está ativo, o webhook retorna na linha 656 (early return)
+- O bloco CRM-only (linha 1026) **nunca é alcançado**
+- Resultado: lead nunca aparece no CRM enquanto operador atende
+- Correção: adicionar upsert de CRM lead no bloco de takeover (linhas 616-654)
 
-- `admin_get_global_stats()` → totais: usuários, leads, sessões ativas, conexões, assistentes
-- `admin_get_all_leads(target_user_id?)` → leads de todos ou de um usuário específico  
-- `admin_get_all_sessions(target_user_id?)` → sessões live chat de todos ou de um usuário
+**Bug 3: Human takeover N8N também bloqueia CRM lead**
+- Segundo check de takeover (linha 868) também faz early return antes do CRM-only block
+- Mesmo problema: lead não é criado
+- Correção: mover CRM upsert para ANTES dos early returns, ou duplicar no bloco de takeover
 
-**2. Painel Admin expandido (`Admin.tsx`)**
+### Correções no webhook (3 alterações cirúrgicas)
 
-Nova aba "Painel Global" com:
-- Cards de métricas: Total Usuários, Total Leads, Sessões Ativas, Conexões WhatsApp, Assistentes
-- Tabela de "leads recentes" de todos os usuários
-- Botão "Ver dados" em cada usuário → filtra CRM/Live Chat desse usuário
+**Alteração 1** — Bloco takeover live_chat_sessions (linhas 616-654):
+- Resolver userId via RPC `get_user_id_by_email` em vez de `select('userId')`
+- Adicionar upsert de CRM lead antes do return
 
-**3. Filtro admin no CRM (`useCRMLeads.ts` + `CRMLeads.tsx`)**
+**Alteração 2** — Bloco takeover n8n_fluxogpt (linhas 867-896):
+- Adicionar upsert de CRM lead antes do early return (usa `userId` já resolvido na linha 740-757)
 
-- Novo parâmetro opcional `adminViewUserId` no hook
-- Quando admin: dropdown no topo da página para selecionar usuário (ou "Todos")
-- Dados vêm via RPC `admin_get_all_leads`
+**Alteração 3** — Nenhuma mudança nos blocos existentes que já funcionam (live chat session creation, CRM-only block)
 
-**4. Filtro admin no Live Chat (`useLiveChat.ts` + `LiveChat.tsx`)**
-
-- Mesmo padrão: dropdown para selecionar usuário
-- Dados vêm via RPC `admin_get_all_sessions`
-
-### Segurança
-- Todas as funções SQL verificam `auth.uid()` = ID do personaldann@gmail.com
-- Nenhuma tabela tem RLS alterada
-- Acesso apenas leitura (view-only)
+### O que NÃO muda
+- Fluxo de conexões com agente IA (userId vem de assistantData)
+- Live Chat session creation (funciona)
+- Buffer de mensagens
+- Lógica de follow-up
+- Frontend (CRM, Live Chat, hooks)
+- Nenhuma migration necessária
 
 ### Arquivos
 | Arquivo | Alteração |
 |---|---|
-| Nova migration | 3 funções SQL admin |
-| `src/pages/Admin.tsx` | Nova aba "Painel Global" com métricas |
-| `src/hooks/useCRMLeads.ts` | Suporte a `adminViewUserId` |
-| `src/pages/CRMLeads.tsx` | Dropdown de usuário para admin |
-| `src/hooks/useLiveChat.ts` | Suporte a `adminViewUserId` |
-| `src/pages/LiveChat.tsx` | Dropdown de usuário para admin |
-| Novo: `src/hooks/useAdminData.ts` | Hook para dados globais admin |
+| `supabase/functions/whatsapp-webhook/index.ts` | 3 blocos corrigidos |
+| Deploy | `whatsapp-webhook` |
 
-### O que NÃO muda
-- Fluxo normal de usuários comuns
-- RLS das tabelas
-- Edge functions
-- Nenhuma lógica de negócio existente
+### Risco: mínimo
+- Alterações apenas em blocos de early-return que hoje já falham silenciosamente
+- Conexões com agente IA nunca entram nesses blocos
+- Adiciona funcionalidade onde antes não havia nenhuma
+
