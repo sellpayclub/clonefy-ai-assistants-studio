@@ -2516,6 +2516,56 @@ export type Database = {
           },
         ]
       }
+      meta_connections: {
+        Row: {
+          assistant_id: string | null
+          created_at: string
+          id: string
+          instagram_account_id: string | null
+          is_active: boolean
+          page_access_token: string
+          page_id: string
+          platform: string
+          updated_at: string
+          user_id: string
+          webhook_verify_token: string
+        }
+        Insert: {
+          assistant_id?: string | null
+          created_at?: string
+          id?: string
+          instagram_account_id?: string | null
+          is_active?: boolean
+          page_access_token: string
+          page_id: string
+          platform: string
+          updated_at?: string
+          user_id: string
+          webhook_verify_token?: string
+        }
+        Update: {
+          assistant_id?: string | null
+          created_at?: string
+          id?: string
+          instagram_account_id?: string | null
+          is_active?: boolean
+          page_access_token?: string
+          page_id?: string
+          platform?: string
+          updated_at?: string
+          user_id?: string
+          webhook_verify_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_connections_assistant_id_fkey"
+            columns: ["assistant_id"]
+            isOneToOne: false
+            referencedRelation: "assistants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       n8n_fluxogpt: {
         Row: {
           ApiELEVEN: string | null

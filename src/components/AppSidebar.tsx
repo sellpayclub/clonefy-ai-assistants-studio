@@ -22,6 +22,7 @@ import {
   Send,
   Sparkles,
   FileText,
+  Instagram,
 } from "lucide-react";
 
 const TelegramSidebarIcon = () => (
@@ -65,6 +66,13 @@ const menuItems = [
   { title: "sidebar.agents.title", url: "/assistants", icon: Bot, description: "sidebar.agents.description" },
   { title: "sidebar.whatsapp.title", url: "/whatsapp", icon: Smartphone, description: "sidebar.whatsapp.description" },
   TelegramMenuItem,
+  {
+    title: "Meta Channels",
+    url: "/meta-channels",
+    icon: Instagram,
+    description: "Instagram Direct e Messenger",
+    highlight: false,
+  },
   {
     title: "Chat ao Vivo",
     url: "/live-chat",

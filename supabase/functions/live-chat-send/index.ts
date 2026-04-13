@@ -165,40 +165,42 @@ serve(async (req) => {
       console.log('✅ Mensagem enviada via WhatsApp');
     }
 
-    // 3b. Send via Telegram if source is telegram
-    if (source === 'telegram') {
-      console.log('✈️ Enviando via Telegram Bot API...');
+    // 3c. Send via Meta (Instagram / Messenger)
+    if (source === 'messenger' || source === 'instagram') {
+      console.log(`📱 Enviando via Meta Graph API (${source})...`);
 
-      // instance_name format: tg_botusername
-      const botUsername = instance_name.replace('tg_', '');
+      // instance_name format: meta_{page_id}
+      const metaPageId = instance_name.replace('meta_', '');
 
-      // Get bot token
-      const { data: tgConn } = await supabase
-        .from('telegram_connections')
-        .select('bot_token')
-        .eq('bot_username', botUsername)
-        .eq('status', 'active')
-        .single();
+      const { data: metaConn } = await supabase
+        .from('meta_connections')
+        .select('page_access_token')
+        .eq('user_id', user_id)
+        .eq('page_id', metaPageId)
+        .eq('is_active', true)
+        .maybeSingle();
 
-      if (tgConn?.bot_token) {
-        const sendResponse = await fetch(`https://api.telegram.org/bot${tgConn.bot_token}/sendMessage`, {
+      if (metaConn?.page_access_token) {
+        const sendResponse = await fetch(`https://graph.facebook.com/v19.0/me/messages`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            chat_id: parseInt(contact_number),
-            text: message
+            recipient: { id: contact_number },
+            messaging_type: 'RESPONSE',
+            message: { text: message },
+            access_token: metaConn.page_access_token
           })
         });
 
         if (!sendResponse.ok) {
           const errorText = await sendResponse.text();
-          console.error('❌ Erro ao enviar Telegram:', errorText);
-          throw new Error(`Failed to send Telegram message: ${errorText}`);
+          console.error('❌ Erro ao enviar Meta:', errorText);
+          throw new Error(`Failed to send Meta message: ${errorText}`);
         }
 
-        console.log('✅ Mensagem enviada via Telegram');
+        console.log(`✅ Mensagem enviada via ${source}`);
       } else {
-        console.error('❌ Conexão Telegram não encontrada para @' + botUsername);
+        console.error('❌ Conexão Meta não encontrada para page_id:', metaPageId);
       }
     }
 
