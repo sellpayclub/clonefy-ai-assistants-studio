@@ -26,6 +26,7 @@ const LazyBrandingSettings = lazy(() => import("./pages/BrandingSettings"));
 const LazyAssistants = lazy(() => import("./pages/Assistants"));
 const LazyWhatsApp = lazy(() => import("./pages/WhatsApp"));
 const LazyTelegram = lazy(() => import("./pages/Telegram"));
+const LazyMetaChannels = lazy(() => import("./pages/MetaChannels"));
 const LazyConversations = lazy(() => import("./pages/Conversations"));
 const LazyAdmin = lazy(() => import("./pages/Admin"));
 const LazyEspanol = lazy(() => import("./pages/Espanol"));
@@ -127,6 +128,7 @@ const App = () => {
                       <Route path="/assistants" element={<LazyPage><LazyAssistants /></LazyPage>} />
                       <Route path="/whatsapp" element={<LazyPage><LazyWhatsApp /></LazyPage>} />
                       <Route path="/telegram" element={<LazyPage><LazyTelegram /></LazyPage>} />
+                      <Route path="/meta-channels" element={<LazyPage><LazyMetaChannels /></LazyPage>} />
                       <Route path="/conversations" element={<LazyPage><LazyConversations /></LazyPage>} />
                       <Route path="/live-chat" element={<LazyPage><LazyLiveChat /></LazyPage>} />
                       <Route path="/admin" element={<LazyPage><LazyAdmin /></LazyPage>} />
