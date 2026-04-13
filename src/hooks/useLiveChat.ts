@@ -224,7 +224,7 @@ export function useLiveChat() {
       content: trimmedContent,
       message_type: 'text',
       media_url: null,
-      source: session.source,
+      source: session.source as string,
       assistant_id: session.assistant_id,
       assistant_name: session.assistant_name,
       is_read: true,
