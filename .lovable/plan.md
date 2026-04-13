@@ -1,54 +1,46 @@
 
 
-## Plano: Garantir Follow-up Funcional para TODOS os Usuários (Antigos e Novos)
+## Plano: Corrigir Live Chat e CRM para Conexoes CRM-Only (sem agente IA)
 
-### Situação atual
+### Problema raiz
 
-| Instância | Contatos | followup_count | followup_enabled | Status |
-|---|---|---|---|---|
-| royalparma | 276 | 0-1 | true | ✅ Corrigido (já funciona) |
-| AGENTE_PLX | 27 | 3 (bloqueado!) | false | ⚠️ Se ativar follow-up, não vai funcionar |
-| secretaria_IA | 7 | 3 (bloqueado!) | false | ⚠️ Se ativar follow-up, não vai funcionar |
+Duas falhas impedem conexoes CRM-only (como LibidFem) de aparecerem no Live Chat e CRM:
 
-**Webhook** (para novos contatos): Já corrigido. Novos contatos nascem com `followup_count: 0` e herdam configurações da instância.
+1. **`userId` vazio**: A tabela `n8n_fluxogpt` nao tem coluna `userId`. Para conexoes com agente, o `user_id` vem de `assistantData.user_id`. Para CRM-only, `assistantData` e null, entao `userId` fica `''` — e nenhuma sessao/mensagem/lead e criada.
 
-**Problema restante**: 34 contatos antigos (AGENTE_PLX + secretaria_IA) ainda têm `followup_count: 3`. Se esses usuários ativarem o follow-up no futuro, esses contatos antigos ficarão bloqueados.
+2. **CRM lead nunca criado**: A funcao `saveLeadToCRM` e chamada somente apos processamento da IA (linha 1785+). Como CRM-only sai na linha 1009, o lead nunca e criado.
 
-### Correções necessárias
+### Correcoes no `whatsapp-webhook/index.ts`
 
-**1. Migration SQL — Resetar `followup_count` de TODOS os contatos antigos**
+**1. Resolver userId para CRM-only via `emailuser` → `auth.users`**
 
-Atualizar todos os contatos com `followup_count = 3` para `followup_count = 0` em TODAS as instâncias. Isso garante que se qualquer usuário ativar follow-up, os contatos antigos já estarão prontos.
-
-```sql
-UPDATE n8n_fluxogpt
-SET followup_count = 0
-WHERE followup_count = 3
-  AND whatsappuser NOT IN ('Conectado', 'Connected');
+Apos a linha 740 (`const userId = ...`), adicionar logica:
+```
+Se userId estiver vazio E instanceConfig.emailuser existir:
+  → Buscar auth.users.id pelo email
+  → Usar como userId
 ```
 
-**2. Toggle do WhatsApp — Propagar `followup_count = 0` ao ativar**
+Isso garante que `userId` sempre sera preenchido, pois toda instancia tem `emailuser`.
 
-No `src/pages/WhatsApp.tsx` (linha 1014-1017), quando o usuário ativa o toggle de follow-up, além de setar `followup_enabled = true`, também resetar `followup_count = 0` para garantir que contatos existentes sejam processados.
+**2. Criar lead basico no CRM antes do exit CRM-only (linha 1009)**
 
-Mudar de:
-```typescript
-.update({ followup_enabled: checked })
+Antes do `return` do CRM-only, inserir upsert basico em `crm_leads`:
 ```
-Para:
-```typescript
-.update({ followup_enabled: checked, followup_count: 0 })
+- user_id: userId
+- whatsapp_number: contactNumber  
+- name: contactName
+- source: 'whatsapp'
+- last_interaction: now()
 ```
+
+Sem analise de IA (nao tem agente), mas o lead aparece no CRM.
+
+**3. Deploy do webhook**
 
 ### Impacto
-- **Usuários antigos**: 34 contatos bloqueados serão desbloqueados
-- **Usuários novos**: Já cobertos pela correção anterior no webhook
-- **Toggle futuro**: Sempre reseta contatos ao ativar follow-up
-- Zero risco de quebrar funcionalidade existente (apenas muda `followup_count` de 3 para 0)
-
-### Arquivos modificados
-| Arquivo | Alteração |
-|---|---|
-| `src/pages/WhatsApp.tsx` | 1 linha: adicionar `followup_count: 0` no update do toggle |
-| Nova migration SQL | Reset de `followup_count` para todos contatos bloqueados |
+- Live Chat: sessoes serao criadas corretamente (userId valido)
+- CRM: leads serao criados na primeira mensagem
+- Conexoes com agente: zero alteracao (userId ja vem de assistantData)
+- Apenas `whatsapp-webhook/index.ts` sera editado
 
