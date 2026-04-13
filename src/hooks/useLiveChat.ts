@@ -33,7 +33,7 @@ export interface LiveChatMessage {
   content: string;
   message_type: 'text' | 'audio' | 'image' | 'document' | 'video';
   media_url: string | null;
-  source: 'whatsapp' | 'widget' | 'telegram';
+  source: 'whatsapp' | 'widget' | 'telegram' | 'instagram' | 'messenger';
   assistant_id: string | null;
   assistant_name: string | null;
   is_read: boolean;
@@ -224,7 +224,7 @@ export function useLiveChat() {
       content: trimmedContent,
       message_type: 'text',
       media_url: null,
-      source: session.source as string,
+      source: session.source,
       assistant_id: session.assistant_id,
       assistant_name: session.assistant_name,
       is_read: true,
