@@ -90,7 +90,7 @@ serve(async (req) => {
 
 async function createWhatsAppInstanceSequential(
   instanceName: string,
-  assistantId: string,
+  assistantId: string | null,
   userEmail: string,
   supabaseClient: any,
   elevenLabsApiKey?: string,
