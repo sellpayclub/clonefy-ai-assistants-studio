@@ -56,6 +56,7 @@ const Admin = () => {
   // Admin global data
   const adminData = useAdminData();
   const [leadFilterUser, setLeadFilterUser] = useState<string>("");
+  const [sessionFilterUser, setSessionFilterUser] = useState<string>("");
 
   const ADMIN_PASSWORD = "Danncarlos@123";
 
