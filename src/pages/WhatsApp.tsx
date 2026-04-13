@@ -261,7 +261,7 @@ const WhatsApp = () => {
       return;
     }
     
-    if (!instanceName || !selectedAssistant || !user?.email) return;
+    if (!instanceName || !user?.email) return;
 
     setCreating(true);
     setQrCode(null);
@@ -291,7 +291,7 @@ const WhatsApp = () => {
         body: {
           action: 'create',
           instanceName: instanceName,
-          assistantId: selectedAssistant,
+          assistantId: selectedAssistant || null,
           userEmail: user.email,
           // ElevenLabs optional fields
           elevenLabsApiKey: elevenLabsApiKey.trim() || null,
@@ -1168,16 +1168,19 @@ const WhatsApp = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="assistant">Assistente de IA</Label>
+                      <Label htmlFor="assistant">Assistente de IA (Opcional)</Label>
                       <Select 
                         value={selectedAssistant} 
                         onValueChange={setSelectedAssistant}
                         disabled={creating}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione um assistente" />
+                          <SelectValue placeholder="Nenhum (apenas CRM)" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="none">
+                            📋 Apenas CRM (sem agente IA)
+                          </SelectItem>
                           {assistants.map((assistant) => (
                             <SelectItem key={assistant.id} value={assistant.id}>
                               {assistant.name}
@@ -1190,11 +1193,9 @@ const WhatsApp = () => {
                           ))}
                         </SelectContent>
                       </Select>
-                      {assistants.length === 0 && (
-                        <p className="text-sm text-muted-foreground">
-                          Nenhum assistente encontrado. Crie um assistente primeiro.
-                        </p>
-                      )}
+                      <p className="text-sm text-muted-foreground">
+                        Deixe vazio ou selecione "Apenas CRM" para capturar contatos sem resposta automática da IA.
+                      </p>
                     </div>
 
                     {/* ElevenLabs Voice Integration - Optional */}
@@ -1261,7 +1262,7 @@ const WhatsApp = () => {
                     <Button 
                       type="submit" 
                       className="w-full" 
-                      disabled={creating || !instanceName || !selectedAssistant || (limits && !limits.can_create_whatsapp_connection)}
+                      disabled={creating || !instanceName || (limits && !limits.can_create_whatsapp_connection)}
                     >
                       {creating ? (
                         <>
