@@ -291,7 +291,7 @@ const WhatsApp = () => {
         body: {
           action: 'create',
           instanceName: instanceName,
-          assistantId: selectedAssistant || null,
+          assistantId: (selectedAssistant && selectedAssistant !== 'none') ? selectedAssistant : null,
           userEmail: user.email,
           // ElevenLabs optional fields
           elevenLabsApiKey: elevenLabsApiKey.trim() || null,
