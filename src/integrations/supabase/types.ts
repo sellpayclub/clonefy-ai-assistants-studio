@@ -3705,6 +3705,46 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_get_all_leads: {
+        Args: { target_user_id?: string }
+        Returns: {
+          company: string
+          created_at: string
+          email: string
+          id: string
+          intent_summary: string
+          last_interaction: string
+          lead_score: number
+          name: string
+          pipeline_stage: string
+          sentiment: string
+          source: string
+          status: string
+          tags: string[]
+          user_email: string
+          user_id: string
+          whatsapp_number: string
+        }[]
+      }
+      admin_get_all_sessions: {
+        Args: { target_user_id?: string }
+        Returns: {
+          assistant_name: string
+          contact_name: string
+          contact_number: string
+          created_at: string
+          id: string
+          instance_name: string
+          last_message_at: string
+          last_message_preview: string
+          source: string
+          status: string
+          unread_count: number
+          user_email: string
+          user_id: string
+        }[]
+      }
+      admin_get_global_stats: { Args: never; Returns: Json }
       cleanup_old_group_messages: { Args: never; Returns: undefined }
       disparar_followup_clonefy: { Args: never; Returns: undefined }
       disparar_followups_automaticos: { Args: never; Returns: undefined }
