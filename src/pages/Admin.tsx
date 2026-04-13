@@ -56,6 +56,7 @@ const Admin = () => {
   // Admin global data
   const adminData = useAdminData();
   const [leadFilterUser, setLeadFilterUser] = useState<string>("");
+  const [sessionFilterUser, setSessionFilterUser] = useState<string>("");
 
   const ADMIN_PASSWORD = "Danncarlos@123";
 
@@ -186,6 +187,10 @@ const Admin = () => {
 
   // Unique user emails from leads for filter dropdown
   const uniqueLeadUsers = Array.from(new Set(adminData.leads.map(l => l.user_email))).filter(Boolean);
+  const uniqueSessionUsers = Array.from(new Set(adminData.sessions.map(s => s.user_email))).filter(Boolean);
+  const filteredSessions = sessionFilterUser
+    ? adminData.sessions.filter(s => s.user_id === sessionFilterUser)
+    : adminData.sessions;
 
   if (loading && !isAuthenticated) {
     return (
@@ -275,7 +280,13 @@ const Admin = () => {
 
           {/* ===== PAINEL GLOBAL ===== */}
           <TabsContent value="global" className="space-y-6">
-            {/* Metrics Cards */}
+            {adminData.error && (
+              <div className="bg-destructive/10 border border-destructive/30 text-destructive rounded-lg p-4 flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                <span className="text-sm">Erro ao carregar dados globais: {adminData.error}</span>
+              </div>
+            )}
+            
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Card>
                 <CardContent className="p-4 text-center">
@@ -400,13 +411,27 @@ const Admin = () => {
             {/* Recent Sessions */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
-                  Sessões de Chat ao Vivo
-                </CardTitle>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5" />
+                    Sessões de Chat ao Vivo
+                  </CardTitle>
+                  <select
+                    className="bg-background border border-border rounded-md px-3 py-1.5 text-sm"
+                    value={sessionFilterUser}
+                    onChange={(e) => setSessionFilterUser(e.target.value)}
+                  >
+                    <option value="">Todos os usuários</option>
+                    {uniqueSessionUsers.map(email => (
+                      <option key={email} value={adminData.sessions.find(s => s.user_email === email)?.user_id || ''}>
+                        {email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </CardHeader>
               <CardContent>
-                {adminData.sessions.length === 0 ? (
+                {filteredSessions.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">Nenhuma sessão encontrada</div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -419,10 +444,11 @@ const Admin = () => {
                           <TableHead>Status</TableHead>
                           <TableHead>Última Msg</TableHead>
                           <TableHead>Não Lidas</TableHead>
+                          <TableHead>Criado em</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {adminData.sessions.slice(0, 50).map((sess) => (
+                        {filteredSessions.slice(0, 50).map((sess) => (
                           <TableRow key={sess.id}>
                             <TableCell>
                               <div className="text-xs text-muted-foreground max-w-[150px] truncate">{sess.user_email}</div>
@@ -445,10 +471,18 @@ const Admin = () => {
                                 <Badge className="text-xs">{sess.unread_count}</Badge>
                               ) : '0'}
                             </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {sess.created_at ? new Date(sess.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
+                    {filteredSessions.length > 50 && (
+                      <div className="text-center text-sm text-muted-foreground mt-2">
+                        Mostrando 50 de {filteredSessions.length} sessões
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
