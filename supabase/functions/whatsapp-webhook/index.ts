@@ -742,41 +742,31 @@ serve(async (req) => {
         // Se userId ainda estiver vazio (CRM-only), resolver via emailuser → auth.users
         if (!userId && instanceConfig.emailuser) {
             console.log('🔍 Resolvendo userId via emailuser:', instanceConfig.emailuser);
-            const { data: userData } = await supabase
-                .from('profiles')
-                .select('user_id')
-                .limit(1);
-            
-            // Buscar diretamente via auth admin ou RPC
-            const { data: userByEmail } = await supabase.rpc('get_user_email', { target_user_id: '00000000-0000-0000-0000-000000000000' });
-            
-            // Usar abordagem direta: buscar na tabela de assistants ou user_quotas pelo email
-            const { data: quotaUser } = await supabase
-                .from('user_quotas')
-                .select('user_id');
-            
-            // Melhor abordagem: usar service role para buscar auth.users
             const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
             const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
             
             if (supabaseUrl && serviceKey) {
-                const authResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users?page=1&per_page=1000`, {
-                    headers: {
-                        'Authorization': `Bearer ${serviceKey}`,
-                        'apikey': serviceKey
+                try {
+                    const authResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users?page=1&per_page=1000`, {
+                        headers: {
+                            'Authorization': `Bearer ${serviceKey}`,
+                            'apikey': serviceKey
+                        }
+                    });
+                    
+                    if (authResponse.ok) {
+                        const authData = await authResponse.json();
+                        const matchedUser = authData.users?.find((u: any) => 
+                            u.email === instanceConfig.emailuser || 
+                            u.user_metadata?.email === instanceConfig.emailuser
+                        );
+                        if (matchedUser) {
+                            userId = matchedUser.id;
+                            console.log('✅ userId resolvido via emailuser:', userId);
+                        }
                     }
-                });
-                
-                if (authResponse.ok) {
-                    const authData = await authResponse.json();
-                    const matchedUser = authData.users?.find((u: any) => 
-                        u.email === instanceConfig.emailuser || 
-                        u.user_metadata?.email === instanceConfig.emailuser
-                    );
-                    if (matchedUser) {
-                        userId = matchedUser.id;
-                        console.log('✅ userId resolvido via emailuser:', userId);
-                    }
+                } catch (e) {
+                    console.error('❌ Erro ao resolver userId via emailuser:', e);
                 }
             }
             
