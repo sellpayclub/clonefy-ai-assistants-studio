@@ -673,7 +673,7 @@ const WhatsApp = () => {
                   WhatsApp
                 </h1>
                 <p className="text-muted-foreground text-sm md:text-base">
-                  Conecte suas instâncias WhatsApp aos agentes de IA
+                  Conecte suas instâncias WhatsApp aos agentes de IA ou use apenas para CRM
                 </p>
                 {limits && (
                   <div className="text-xs md:text-sm text-muted-foreground mt-1">
@@ -1151,7 +1151,7 @@ const WhatsApp = () => {
                     Criar Nova Conexão WhatsApp
                   </CardTitle>
                   <CardDescription>
-                    Configure uma nova instância WhatsApp e conecte a um assistente de IA
+                    Configure uma nova instância WhatsApp. Conecte a um assistente de IA ou use apenas para CRM.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
