@@ -701,35 +701,42 @@ serve(async (req) => {
         // 🔧 CORREÇÃO CRÍTICA: Buscar assistente por openai_assistant_id (não por UUID)
         // O campo idassistentgpt contém o OpenAI assistant ID (ex: asst_...)
         // Precisamos do UUID interno (assistants.id) para CRM e Analytics
+        // Se idassistentgpt estiver vazio, é uma conexão CRM-only (sem agente IA)
+        const isCrmOnly = !instanceConfig.idassistentgpt || instanceConfig.idassistentgpt.trim() === '';
+        
         let assistantData: { id: string; user_id: string; name: string; openai_assistant_id: string } | null = null;
         
-        // Primeiro: tentar buscar por openai_assistant_id
-        const { data: assistantByOpenAI } = await supabase
-            .from('assistants')
-            .select('id, user_id, name, openai_assistant_id')
-            .eq('openai_assistant_id', instanceConfig.idassistentgpt)
-            .single();
-        
-        if (assistantByOpenAI) {
-            assistantData = assistantByOpenAI;
-            console.log('✅ Assistente encontrado por openai_assistant_id');
-        } else {
-            // Fallback: tentar buscar por UUID (caso legado)
-            const { data: assistantByUUID } = await supabase
+        if (!isCrmOnly) {
+            // Primeiro: tentar buscar por openai_assistant_id
+            const { data: assistantByOpenAI } = await supabase
                 .from('assistants')
                 .select('id, user_id, name, openai_assistant_id')
-                .eq('id', instanceConfig.idassistentgpt)
+                .eq('openai_assistant_id', instanceConfig.idassistentgpt)
                 .single();
             
-            if (assistantByUUID) {
-                assistantData = assistantByUUID;
-                console.log('✅ Assistente encontrado por UUID (legado)');
+            if (assistantByOpenAI) {
+                assistantData = assistantByOpenAI;
+                console.log('✅ Assistente encontrado por openai_assistant_id');
+            } else {
+                // Fallback: tentar buscar por UUID (caso legado)
+                const { data: assistantByUUID } = await supabase
+                    .from('assistants')
+                    .select('id, user_id, name, openai_assistant_id')
+                    .eq('id', instanceConfig.idassistentgpt)
+                    .single();
+                
+                if (assistantByUUID) {
+                    assistantData = assistantByUUID;
+                    console.log('✅ Assistente encontrado por UUID (legado)');
+                }
             }
+        } else {
+            console.log('📋 Modo CRM-only: sem agente IA configurado para esta instância');
         }
 
         // Variáveis normalizadas para uso em todo o código
         const assistantUuid = assistantData?.id || '';  // UUID interno (para CRM e Analytics)
-        const openaiAssistantId = assistantData?.openai_assistant_id || instanceConfig.idassistentgpt;  // Para OpenAI API
+        const openaiAssistantId = assistantData?.openai_assistant_id || instanceConfig.idassistentgpt || '';  // Para OpenAI API
         const userId = assistantData?.user_id || instanceConfig.userId || '';
         const assistantName = assistantData?.name || 'Assistente';
 
@@ -997,6 +1004,20 @@ serve(async (req) => {
         }
 
         console.log(`📨 Processando mensagem completa: ${currentMessages}`);
+
+        // 📋 CRM-ONLY MODE: Se não tem agente IA, parar aqui (contato já foi registrado e CRM/Live Chat atualizados)
+        if (isCrmOnly) {
+            console.log('📋 CRM-only: Mensagem registrada, sem processamento de IA');
+            return new Response(JSON.stringify({
+                status: 'crm_only',
+                contact: contactNumber,
+                instance: instanceName,
+                message: 'Mensagem registrada no CRM sem agente IA'
+            }), {
+                status: 200,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
 
         // 3. Criar ou usar thread existente do OpenAI
         if (!openaiApiKey) {
