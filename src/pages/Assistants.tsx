@@ -355,6 +355,9 @@ const Assistants = () => {
       if (error.message?.includes('duplicate') || error.message?.includes('unique') || error.message?.includes('already exists')) {
         errorTitle = "Nome já utilizado";
         errorMessage = "Já existe um agente com esse nome. Por favor, escolha um nome diferente.";
+      } else if (error.message?.includes('muito longas') || error.message?.includes('too long') || error.message?.includes('maximum')) {
+        errorTitle = "Instruções muito longas";
+        errorMessage = "O prompt excede o limite de caracteres. Mova transcrições e documentos para a Base de Conhecimento (aba Arquivos).";
       } else if (error.message?.includes('OpenAI API')) {
         errorTitle = "Erro na API do OpenAI";
         errorMessage = "Houve um problema ao conectar com o OpenAI. Tente novamente em alguns instantes.";
@@ -749,16 +752,21 @@ const Assistants = () => {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="instructions">Instruções</Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setInstructionsExpanded(true)}
-                          className="text-xs"
-                        >
-                          <Expand className="h-3 w-3 mr-1" />
-                          Expandir
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs ${instructions.length > 200000 ? 'text-red-500 font-bold' : instructions.length > 150000 ? 'text-yellow-500' : 'text-muted-foreground'}`}>
+                            {instructions.length.toLocaleString()}/200.000
+                          </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setInstructionsExpanded(true)}
+                            className="text-xs"
+                          >
+                            <Expand className="h-3 w-3 mr-1" />
+                            Expandir
+                          </Button>
+                        </div>
                       </div>
                       <Textarea
                         id="instructions"
@@ -768,8 +776,15 @@ const Assistants = () => {
                         onChange={(e) => setInstructions(e.target.value)}
                         required
                       />
+                      {instructions.length > 200000 && (
+                        <div className="p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-lg">
+                          <p className="text-xs text-red-700 dark:text-red-300 font-medium">
+                            ⚠️ Instruções muito longas! Transcrições e documentos devem ir para a <strong>Base de Conhecimento</strong> (aba Arquivos), não no campo de instruções.
+                          </p>
+                        </div>
+                      )}
                       <p className="text-xs text-muted-foreground">
-                        Seja específico sobre como o agente deve responder e se comportar.
+                        Seja específico sobre comportamento e regras. Documentos longos devem ir para a Base de Conhecimento.
                       </p>
                     </div>
 
