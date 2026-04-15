@@ -138,10 +138,21 @@ export const AssistantKnowledgeUpload = ({ assistantId, onUploadComplete }: Assi
 
       if (dbError) throw dbError;
 
-      toast.success('Arquivo de conhecimento enviado com sucesso!');
+      // Sync vector store after upload
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        await supabase.functions.invoke('openai-assistants', {
+          body: { action: 'sync-vector-store', assistantId },
+          headers: { Authorization: `Bearer ${sessionData?.session?.access_token}` },
+        });
+      } catch (syncError) {
+        console.error('Error syncing vector store:', syncError);
+      }
+
+      toast.success('Arquivo de conhecimento enviado e indexado com sucesso!');
       setDescription("");
       loadKnowledgeFiles();
-      // onUploadComplete?.(); // Removido para evitar reload desnecessário
+      onUploadComplete?.();
 
     } catch (error: any) {
       console.error('Erro no upload:', error);
@@ -198,9 +209,20 @@ export const AssistantKnowledgeUpload = ({ assistantId, onUploadComplete }: Assi
 
       if (error) throw error;
 
+      // Sync vector store after delete
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        await supabase.functions.invoke('openai-assistants', {
+          body: { action: 'sync-vector-store', assistantId },
+          headers: { Authorization: `Bearer ${sessionData?.session?.access_token}` },
+        });
+      } catch (syncError) {
+        console.error('Error syncing vector store:', syncError);
+      }
+
       toast.success('Arquivo de conhecimento removido!');
       loadKnowledgeFiles();
-      // onUploadComplete?.(); // Removido para evitar reload desnecessário
+      onUploadComplete?.();
 
     } catch (error: any) {
       console.error('Erro ao deletar:', error);
