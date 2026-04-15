@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS update_assistant_instructions_knowledge_trigger ON assistant_knowledge_files;
