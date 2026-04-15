@@ -1,85 +1,73 @@
 
+Objetivo: fazer o agente salvar mesmo com material grande e fazer a base de conhecimento realmente funcionar com seus 3 documentos/transcrições.
 
-## Plano: Implementar integracao Facebook Messenger + Instagram Direct
+Diagnóstico confirmado
+- O erro ao salvar não é aleatório: o `openai-assistants` está enviando `instructions` grandes demais para a OpenAI. Nos logs, houve update com 455.270 caracteres, acima do limite de 256.000.
+- A base de conhecimento hoje está incompleta: os arquivos são enviados para a API de Files, mas não estão sendo vinculados ao assistant com `file_search`/vector store. Então “subir o arquivo” não significa que o agente está usando o conteúdo.
+- Existe um agravante: ao subir arquivos, o sistema injeta nomes/URLs desses arquivos dentro de `instructions` via trigger SQL, inchando ainda mais o prompt e piorando o problema.
+- No fluxo de criação, os arquivos entram só depois que o agente é criado, mas sem sincronização real do assistant com esses arquivos.
 
-### Informacoes recebidas
+Plano de implementação
 
-- **App ID Instagram**: 888623730888263
-- **App Secret Instagram**: bbd0b5f83f6d3f435dd0f4aba7b067a0
-- Permissoes: `instagram_business_basic`, `instagram_manage_comments`, `instagram_business_manage_messages`
-- Precisa configurar webhook URL + verify token para Instagram e Messenger
+1. Corrigir a arquitetura do prompt
+- Manter `instructions` apenas para comportamento, função e regras do agente.
+- Bloquear no frontend e no edge function prompts longos demais com mensagem clara:
+  - “Transcrição/documentos longos devem ir para a Base de Conhecimento, não no campo de instruções.”
+- Adicionar contador de caracteres + alerta antes de salvar.
 
-### URLs para voce configurar no Meta
+2. Fazer a base de conhecimento funcionar de verdade
+- Atualizar `supabase/functions/openai-assistants/index.ts` para:
+  - criar/usar um vector store por agente;
+  - adicionar os `openai_file_id` dos documentos ao vector store;
+  - atualizar o assistant com `file_search` + `tool_resources`.
+- Sincronizar isso em 3 momentos:
+  - após criar agente;
+  - após upload de arquivo;
+  - após remover arquivo.
+- Reaproveitar a coluna `metadata` do assistant para guardar `vector_store_id`, evitando nova tabela.
 
-Apos implementacao, voce vai preencher nos formularios do Meta:
+3. Parar de inchar as instruções com arquivos
+- Fazer uma pequena migration para remover/desativar o trecho que adiciona arquivos de conhecimento dentro de `instructions`.
+- Manter mídia separada se necessário, mas conhecimento não deve mais ser copiado para o prompt.
 
-| Campo | Valor |
-|---|---|
-| **URL de callback (Webhook)** — Instagram e Messenger | `https://ekfkrwueqwpqakpsrsjt.supabase.co/functions/v1/meta-webhook` |
-| **Verificar token** | `clonefy_meta_verify_2024` |
-| **URL de redirecionamento** (Login Instagram) | `https://clonefy-ai-assistants-studio.lovable.app/meta-channels` |
+4. Unificar o fluxo de upload
+- Hoje há lógica duplicada em:
+  - `src/pages/Assistants.tsx`
+  - `src/components/AssistantKnowledgeUpload.tsx`
+  - `src/hooks/useAssistantKnowledgeFiles.ts`
+- Vou consolidar esse fluxo para que criação, edição e uploads posteriores usem a mesma sincronização com a OpenAI.
 
-### O que sera implementado
+5. Melhorar a mensagem de erro
+- Em vez de toast genérico “Edge Function returned a non-2xx”, mostrar o motivo real:
+  - prompt grande demais;
+  - arquivo não vinculado;
+  - tipo de arquivo inválido;
+  - falha no processamento do documento.
 
-#### 1. Secrets — `META_APP_SECRET`
-Adicionar o app secret como secret do Supabase para validacao de webhooks.
+6. Hardening para documentos “difíceis”
+- Se seus PDFs forem escaneados/imagem, adicionar fallback de extração/OCR para gerar texto utilizável antes de indexar.
+- Isso entra como reforço para casos em que o arquivo sobe, mas a resposta continua ruim.
 
-#### 2. Migration SQL — Tabela `meta_connections`
-Tabela isolada com: `user_id`, `platform` (messenger/instagram), `page_id`, `page_access_token`, `instagram_account_id`, `assistant_id`, `is_active`, `webhook_verify_token`. RLS por `user_id`.
+Arquivos previstos
+- `supabase/functions/openai-assistants/index.ts`
+- `supabase/functions/web-scraper/index.ts`
+- `src/pages/Assistants.tsx`
+- `src/components/AssistantKnowledgeUpload.tsx`
+- `src/hooks/useAssistantKnowledgeFiles.ts`
+- migration SQL para desativar o trigger/função que injeta conhecimento em `instructions`
 
-#### 3. Edge Function — `meta-webhook/index.ts`
-Seguindo exatamente o mesmo padrao do `telegram-webhook`:
+Resultado esperado
+- Você poderá manter o prompt principal enxuto.
+- As 3 documentações/transcrições irão para a base de conhecimento corretamente.
+- O agente deixará de falhar ao salvar por excesso de texto.
+- As respostas passarão a usar os arquivos enviados de forma muito mais confiável.
 
-- **GET**: Responde ao Meta Webhook Verification (`hub.verify_token` → retorna `hub.challenge`)
-- **POST**: Processa mensagens recebidas
-  - Identifica platform pelo campo `object` (`page` = messenger, `instagram` = instagram)
-  - Busca `meta_connections` pelo `page_id` extraido do webhook
-  - Cria/atualiza `live_chat_session` (source = `messenger` ou `instagram`)
-  - Salva `live_chat_message` (sender_type = customer)
-  - Upsert `crm_leads`
-  - Verifica human_takeover — se ativo, para aqui
-  - Se IA ativa, chama OpenAI Assistants API (mesmo runAssistant do telegram-webhook)
-  - Envia resposta via Graph API `POST https://graph.facebook.com/v19.0/me/messages`
-  - Salva resposta IA em `live_chat_messages`
+Observação importante
+- Para o seu caso, o correto não é “colocar os 3 documentos no prompt”.
+- O correto é: prompt curto + documentos/transcrição na base de conhecimento indexada.
 
-#### 4. Edge Function — Atualizar `live-chat-send/index.ts`
-Adicionar bloco para `source === 'messenger'` e `source === 'instagram'`:
-- Busca `page_access_token` em `meta_connections` pelo `user_id` + `page_id` (extraido de `instance_name` formato `meta_{page_id}`)
-- Envia via Graph API `POST /v19.0/me/messages`
-
-Bonus: remover o bloco duplicado de Telegram que existe nas linhas 168-210 (bug existente).
-
-#### 5. Frontend — Pagina `MetaChannels.tsx`
-Seguindo padrao da pagina `Telegram.tsx`:
-- Tutorial passo-a-passo
-- Campo para Page Access Token
-- Selecao de plataforma (Messenger / Instagram)
-- Selecao de assistente IA vinculado
-- Botao ativar/desativar
-- URL do webhook e verify token para copiar
-- Lista de conexoes ativas
-
-#### 6. Frontend — Sidebar e Rotas
-- Adicionar item "Meta Channels" no `AppSidebar.tsx` (icone Messenger/Instagram)
-- Rota `/meta-channels` no `App.tsx` com lazy load
-
-#### 7. Frontend — Badges no `SessionsList.tsx`
-Adicionar identificacao visual para sources `messenger` e `instagram` na lista de sessoes do Live Chat.
-
----
-
-### Arquivos
-
-| Arquivo | Acao |
-|---|---|
-| Migration SQL | Criar tabela `meta_connections` com RLS |
-| `supabase/functions/meta-webhook/index.ts` | Criar |
-| `supabase/functions/live-chat-send/index.ts` | Adicionar blocos messenger/instagram + remover duplicata telegram |
-| `src/pages/MetaChannels.tsx` | Criar |
-| `src/App.tsx` | Adicionar rota |
-| `src/components/AppSidebar.tsx` | Adicionar item menu |
-| `src/components/live-chat/SessionsList.tsx` | Adicionar badges |
-
-### Risco
-Zero impacto em WhatsApp/Telegram/Widget existentes. Tabela e webhook totalmente isolados.
-
+Validação após implementar
+- Testar salvar agente com instruções curtas e transcrição longa enviada como arquivo.
+- Testar upload dos 3 documentos.
+- Fazer perguntas específicas cujo conteúdo só existe nesses arquivos.
+- Confirmar que o agente responde com base neles sem estourar limite de instruções.
