@@ -59,6 +59,9 @@ const LazyFinancialTransactions = lazy(() => import("./pages/FinancialTransactio
 const LazyFinancialConnect = lazy(() => import("./pages/FinancialConnect"));
 const LazyChangelog = lazy(() => import("./pages/Changelog"));
 const LazyTechnicalDocs = lazy(() => import("./pages/TechnicalDocs"));
+const LazyVslDaniel = lazy(() => import("./pages/VslDaniel"));
+const LazyVslTalita = lazy(() => import("./pages/VslTalita"));
+const LazyPlanos = lazy(() => import("./pages/Planos"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -119,6 +122,9 @@ const App = () => {
                     <Route path="/mercado-digital" element={<Suspense fallback={<LoadingFallback />}><LazyMercadoDigital /></Suspense>} />
                     <Route path="/es" element={<Suspense fallback={<LoadingFallback />}><LazyVentasEspanol /></Suspense>} />
                     <Route path="/espanol" element={<Suspense fallback={<LoadingFallback />}><LazyEspanol /></Suspense>} />
+                    <Route path="/vsl-daniel" element={<Suspense fallback={<LoadingFallback />}><LazyVslDaniel /></Suspense>} />
+                    <Route path="/vsl-talita" element={<Suspense fallback={<LoadingFallback />}><LazyVslTalita /></Suspense>} />
+                    <Route path="/planos" element={<Suspense fallback={<LoadingFallback />}><LazyPlanos /></Suspense>} />
                     <Route path="/ferramentas/whatsapp-link/:slug" element={<Suspense fallback={<LoadingFallback />}><LazyNicheLinkGenerator /></Suspense>} />
                     <Route path="/ia/:slug" element={<Suspense fallback={<LoadingFallback />}><LazySectorIASolution /></Suspense>} />
 
