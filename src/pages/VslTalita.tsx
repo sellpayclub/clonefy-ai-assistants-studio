@@ -67,18 +67,7 @@ const VslTalita = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
-      {/* Header */}
-      <header className="w-full py-4 px-6">
-        <div className="max-w-5xl mx-auto flex justify-center">
-          <img
-            src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png"
-            alt="Clonefy"
-            className="h-10 md:h-12"
-          />
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white pt-8 sm:pt-12">
       {/* Hero Section */}
       <section className="px-4 py-8 md:py-12">
         <div className="max-w-3xl mx-auto text-center">

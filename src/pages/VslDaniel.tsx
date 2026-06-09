@@ -139,18 +139,7 @@ const VslDaniel = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Header */}
-      <header className="container mx-auto px-4 py-4 lg:py-6">
-        <div className="flex items-center justify-center">
-          <img
-            src="/lovable-uploads/dea91c3a-7ac2-4343-b166-58b5e0126a0d.png"
-            alt="CLONEFY Logo"
-            className="h-14 w-auto sm:h-16 lg:h-20"
-          />
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-8 sm:pt-12">
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-8 sm:py-10 lg:py-14">
         <div className="max-w-4xl mx-auto text-center">
