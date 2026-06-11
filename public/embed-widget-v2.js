@@ -1182,9 +1182,13 @@
 
       // Eventos de mensagem do iframe
       window.addEventListener('message', (event) => {
-        if (event.origin !== baseUrl) return;
+        const payload = event.data || {};
+        const { type, data } = payload;
 
-        const { type, data } = event.data;
+        // Aceitar apenas mensagens do nosso protocolo. Como o iframe pode ser
+        // servido por domínios variados (lovable.app, custom domain, etc.), não
+        // dependemos de uma checagem rígida de origin para ações de UI como fechar.
+        if (typeof type !== 'string' || !type.startsWith('clonefy:')) return;
 
         switch (type) {
           case 'clonefy:conversation_started':
