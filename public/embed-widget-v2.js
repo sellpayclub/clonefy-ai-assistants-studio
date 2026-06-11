@@ -37,6 +37,7 @@
     iframe: null,
     button: null,
     templateContainer: null,
+    closeFab: null,
     pendingMessage: null, // Message to send when chat opens
 
     async init() {
