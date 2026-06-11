@@ -79,6 +79,20 @@ const ChatWidget = () => {
     }
   }, [isOpen]);
 
+  // Fechar quando o iframe interno (botão X do cabeçalho) solicitar
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const type = event.data?.type;
+      if (type === 'clonefy:close_widget') {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+
   return (
     <>
       {/* Chat Button */}
