@@ -37,6 +37,7 @@
     iframe: null,
     button: null,
     templateContainer: null,
+    closeFab: null,
     pendingMessage: null, // Message to send when chat opens
 
     async init() {
@@ -610,7 +611,36 @@
           transform: scale(1) translateY(0) translate3d(0,0,0) !important;
           pointer-events: all !important;
         }
-        
+
+        /* Botão flutuante de fechar (garantia universal, principalmente mobile) */
+        .clonefy-mobile-close-fab {
+          display: none !important;
+          position: fixed !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 40px !important;
+          height: 40px !important;
+          border-radius: 50% !important;
+          border: none !important;
+          background: rgba(0,0,0,0.55) !important;
+          color: #fff !important;
+          font-size: 20px !important;
+          line-height: 1 !important;
+          cursor: pointer !important;
+          z-index: 2147483648 !important;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.25) !important;
+          -webkit-tap-highlight-color: transparent !important;
+        }
+
+        @media (max-width: 768px) {
+          .clonefy-mobile-close-fab.open {
+            display: flex !important;
+            top: auto !important;
+            bottom: calc(85dvh + 8px) !important;
+            right: 16px !important;
+          }
+        }
+
         @media (max-width: 768px) {
           .clonefy-widget-iframe {
             position: fixed !important;
@@ -1106,6 +1136,19 @@
       this.iframe.loading = 'lazy';
 
       document.body.appendChild(this.iframe);
+
+      // Botão flutuante de fechar (fallback garantido, principalmente no mobile
+      // onde o iframe cobre o botão principal). Sempre funciona pois chama close() direto.
+      this.closeFab = document.createElement('button');
+      this.closeFab.className = 'clonefy-mobile-close-fab';
+      this.closeFab.setAttribute('aria-label', 'Fechar chat');
+      this.closeFab.type = 'button';
+      this.closeFab.innerHTML = '✕';
+      this.closeFab.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.close();
+      });
+      document.body.appendChild(this.closeFab);
     },
 
     isMobile() {
@@ -1140,9 +1183,13 @@
 
       // Eventos de mensagem do iframe
       window.addEventListener('message', (event) => {
-        if (event.origin !== baseUrl) return;
+        const payload = event.data || {};
+        const { type, data } = payload;
 
-        const { type, data } = event.data;
+        // Aceitar apenas mensagens do nosso protocolo. Como o iframe pode ser
+        // servido por domínios variados (lovable.app, custom domain, etc.), não
+        // dependemos de uma checagem rígida de origin para ações de UI como fechar.
+        if (typeof type !== 'string' || !type.startsWith('clonefy:')) return;
 
         switch (type) {
           case 'clonefy:conversation_started':
@@ -1205,6 +1252,7 @@
 
       this.isOpen = true;
       this.iframe.classList.add('open');
+      if (this.closeFab) this.closeFab.classList.add('open');
       this.updateButtonIcon(true);
       this.button.setAttribute('aria-label', 'Fechar chat');
 
@@ -1239,6 +1287,7 @@
 
       this.isOpen = false;
       this.iframe.classList.remove('open');
+      if (this.closeFab) this.closeFab.classList.remove('open');
 
       // Esconder overlay no mobile
       if (this.overlay) {
