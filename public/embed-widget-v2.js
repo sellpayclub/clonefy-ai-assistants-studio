@@ -1135,6 +1135,19 @@
       this.iframe.loading = 'lazy';
 
       document.body.appendChild(this.iframe);
+
+      // Botão flutuante de fechar (fallback garantido, principalmente no mobile
+      // onde o iframe cobre o botão principal). Sempre funciona pois chama close() direto.
+      this.closeFab = document.createElement('button');
+      this.closeFab.className = 'clonefy-mobile-close-fab';
+      this.closeFab.setAttribute('aria-label', 'Fechar chat');
+      this.closeFab.type = 'button';
+      this.closeFab.innerHTML = '✕';
+      this.closeFab.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.close();
+      });
+      document.body.appendChild(this.closeFab);
     },
 
     isMobile() {
