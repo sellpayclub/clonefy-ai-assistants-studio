@@ -610,7 +610,36 @@
           transform: scale(1) translateY(0) translate3d(0,0,0) !important;
           pointer-events: all !important;
         }
-        
+
+        /* Botão flutuante de fechar (garantia universal, principalmente mobile) */
+        .clonefy-mobile-close-fab {
+          display: none !important;
+          position: fixed !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 40px !important;
+          height: 40px !important;
+          border-radius: 50% !important;
+          border: none !important;
+          background: rgba(0,0,0,0.55) !important;
+          color: #fff !important;
+          font-size: 20px !important;
+          line-height: 1 !important;
+          cursor: pointer !important;
+          z-index: 2147483648 !important;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.25) !important;
+          -webkit-tap-highlight-color: transparent !important;
+        }
+
+        @media (max-width: 768px) {
+          .clonefy-mobile-close-fab.open {
+            display: flex !important;
+            top: auto !important;
+            bottom: calc(85dvh + 8px) !important;
+            right: 16px !important;
+          }
+        }
+
         @media (max-width: 768px) {
           .clonefy-widget-iframe {
             position: fixed !important;
