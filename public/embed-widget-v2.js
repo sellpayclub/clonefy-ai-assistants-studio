@@ -1251,6 +1251,7 @@
 
       this.isOpen = true;
       this.iframe.classList.add('open');
+      if (this.closeFab) this.closeFab.classList.add('open');
       this.updateButtonIcon(true);
       this.button.setAttribute('aria-label', 'Fechar chat');
 
