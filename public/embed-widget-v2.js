@@ -1286,6 +1286,7 @@
 
       this.isOpen = false;
       this.iframe.classList.remove('open');
+      if (this.closeFab) this.closeFab.classList.remove('open');
 
       // Esconder overlay no mobile
       if (this.overlay) {
