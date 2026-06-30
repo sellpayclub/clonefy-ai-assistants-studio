@@ -1376,6 +1376,19 @@ serve(async (req) => {
         const assistantResponse = assistantMessage.content[0].text.value;
         console.log(`🤖 Resposta: ${assistantResponse.substring(0, 100)}...`);
 
+        // 💳 SALDO DE API: descontar custo fixo por resposta (apenas informativo, NUNCA bloqueia)
+        const COST_PER_MESSAGE_BRL = 0.10;
+        try {
+            if (userId) {
+                await supabase.rpc('debit_api_wallet', {
+                    _user_id: userId,
+                    _amount: COST_PER_MESSAGE_BRL,
+                });
+            }
+        } catch (walletError) {
+            console.error('⚠️ Débito de saldo de API falhou (non-blocking):', walletError);
+        }
+
         // 8. Limpar buffer de mensagens e marcar como resposta do bot
         await supabase
             .from('n8n_fluxogpt')

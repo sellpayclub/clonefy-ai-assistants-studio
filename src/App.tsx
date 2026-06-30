@@ -62,6 +62,7 @@ const LazyTechnicalDocs = lazy(() => import("./pages/TechnicalDocs"));
 const LazyVslDaniel = lazy(() => import("./pages/VslDaniel"));
 const LazyVslTalita = lazy(() => import("./pages/VslTalita"));
 const LazyPlanos = lazy(() => import("./pages/Planos"));
+const LazyApiBalance = lazy(() => import("./pages/ApiBalance"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -143,6 +144,7 @@ const App = () => {
                       <Route path="/crm-leads" element={<LazyPage><LazyCRMLeads /></LazyPage>} />
                       
                       <Route path="/calendar" element={<LazyPage><LazyCalendar /></LazyPage>} />
+                      <Route path="/saldo-api" element={<LazyPage><LazyApiBalance /></LazyPage>} />
                       <Route path="/configuracoes/branding" element={<LazyPage><LazyBrandingSettings /></LazyPage>} />
 
                       {/* Follow-up System */}
