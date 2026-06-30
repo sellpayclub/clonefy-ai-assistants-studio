@@ -145,6 +145,69 @@ export type Database = {
           },
         ]
       }
+      api_wallet_transactions: {
+        Row: {
+          amount_brl: number
+          created_at: string
+          description: string | null
+          id: string
+          openpix_charge_id: string | null
+          openpix_correlation_id: string | null
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount_brl?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          openpix_charge_id?: string | null
+          openpix_correlation_id?: string | null
+          status?: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          amount_brl?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          openpix_charge_id?: string | null
+          openpix_correlation_id?: string | null
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      api_wallets: {
+        Row: {
+          balance_brl: number
+          created_at: string
+          id: string
+          low_balance_notified: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance_brl?: number
+          created_at?: string
+          id?: string
+          low_balance_notified?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance_brl?: number
+          created_at?: string
+          id?: string
+          low_balance_notified?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           appointment_date: string
@@ -4588,6 +4651,14 @@ export type Database = {
       }
       admin_get_global_stats: { Args: never; Returns: Json }
       cleanup_old_group_messages: { Args: never; Returns: undefined }
+      credit_api_wallet: {
+        Args: { _amount: number; _correlation_id?: string; _user_id: string }
+        Returns: number
+      }
+      debit_api_wallet: {
+        Args: { _amount: number; _user_id: string }
+        Returns: number
+      }
       disparar_followup_clonefy: { Args: never; Returns: undefined }
       disparar_followups_automaticos: { Args: never; Returns: undefined }
       find_or_create_customer: {
@@ -4608,6 +4679,14 @@ export type Database = {
           plan_type: string
           user_email: string
           user_id: string
+        }[]
+      }
+      get_wallet_status: {
+        Args: { _user_id: string }
+        Returns: {
+          balance: number
+          is_empty: boolean
+          is_low: boolean
         }[]
       }
       has_role: {

@@ -19,6 +19,7 @@ import {
   Radio,
   Brush,
   Wallet,
+  CreditCard,
   Send,
   Sparkles,
   FileText,
@@ -65,6 +66,7 @@ const menuItems = [
   { title: "dashboard.title", url: "/dashboard", icon: LayoutDashboard, description: "dashboard.description" },
   { title: "sidebar.agents.title", url: "/assistants", icon: Bot, description: "sidebar.agents.description" },
   { title: "sidebar.whatsapp.title", url: "/whatsapp", icon: Smartphone, description: "sidebar.whatsapp.description" },
+  { title: "Saldo de API", url: "/saldo-api", icon: CreditCard, description: "Recarregue e acompanhe seu saldo de IA" },
   TelegramMenuItem,
   {
     title: "Meta Channels",
