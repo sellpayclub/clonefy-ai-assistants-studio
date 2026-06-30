@@ -3750,9 +3750,801 @@ export type Database = {
         }
         Relationships: []
       }
+      zapslim_admin_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          payload: Json | null
+          profile_id: string | null
+          read_at: string | null
+          severity: string
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          payload?: Json | null
+          profile_id?: string | null
+          read_at?: string | null
+          severity?: string
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          payload?: Json | null
+          profile_id?: string | null
+          read_at?: string | null
+          severity?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapslim_admin_notifications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profile_progress"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "zapslim_admin_notifications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zapslim_ai_reports: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          profile_id: string
+          report_type: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          profile_id: string
+          report_type: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          report_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapslim_ai_reports_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profile_progress"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "zapslim_ai_reports_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zapslim_body_photos: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          profile_id: string
+          storage_path: string
+          taken_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          profile_id: string
+          storage_path: string
+          taken_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          profile_id?: string
+          storage_path?: string
+          taken_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapslim_body_photos_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profile_progress"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "zapslim_body_photos_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zapslim_campaign_sends: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          error_message: string | null
+          evolution_message_id: string | null
+          id: string
+          profile_id: string
+          sent_at: string | null
+          status: Database["public"]["Enums"]["zs_campaign_send_status"]
+          whatsapp_phone: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          error_message?: string | null
+          evolution_message_id?: string | null
+          id?: string
+          profile_id: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["zs_campaign_send_status"]
+          whatsapp_phone: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          error_message?: string | null
+          evolution_message_id?: string | null
+          id?: string
+          profile_id?: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["zs_campaign_send_status"]
+          whatsapp_phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapslim_campaign_sends_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zapslim_campaign_sends_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profile_progress"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "zapslim_campaign_sends_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zapslim_campaigns: {
+        Row: {
+          audience_filter: Json
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          image_storage_path: string | null
+          link_url: string | null
+          message_text: string
+          name: string
+          scheduled_at: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["zs_campaign_status"]
+          total_failed: number
+          total_sent: number
+          total_skipped: number
+          total_target: number
+          updated_at: string
+        }
+        Insert: {
+          audience_filter?: Json
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_storage_path?: string | null
+          link_url?: string | null
+          message_text: string
+          name: string
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["zs_campaign_status"]
+          total_failed?: number
+          total_sent?: number
+          total_skipped?: number
+          total_target?: number
+          updated_at?: string
+        }
+        Update: {
+          audience_filter?: Json
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_storage_path?: string | null
+          link_url?: string | null
+          message_text?: string
+          name?: string
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["zs_campaign_status"]
+          total_failed?: number
+          total_sent?: number
+          total_skipped?: number
+          total_target?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      zapslim_dose_entries: {
+        Row: {
+          applied_at: string
+          created_at: string
+          dose: string
+          id: string
+          injection_site: string | null
+          medication: string | null
+          notes: string | null
+          profile_id: string
+          side_effects: string | null
+        }
+        Insert: {
+          applied_at?: string
+          created_at?: string
+          dose: string
+          id?: string
+          injection_site?: string | null
+          medication?: string | null
+          notes?: string | null
+          profile_id: string
+          side_effects?: string | null
+        }
+        Update: {
+          applied_at?: string
+          created_at?: string
+          dose?: string
+          id?: string
+          injection_site?: string | null
+          medication?: string | null
+          notes?: string | null
+          profile_id?: string
+          side_effects?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapslim_dose_entries_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profile_progress"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "zapslim_dose_entries_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zapslim_login_codes: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          used: boolean
+          whatsapp_phone: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          used?: boolean
+          whatsapp_phone: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          used?: boolean
+          whatsapp_phone?: string
+        }
+        Relationships: []
+      }
+      zapslim_meal_logs: {
+        Row: {
+          ai_analysis: string | null
+          calories: number | null
+          carbs_g: number | null
+          created_at: string
+          description: string | null
+          fat_g: number | null
+          fiber_g: number | null
+          id: string
+          profile_id: string
+          protein_g: number | null
+          recorded_at: string
+          storage_path: string | null
+          tips: string | null
+        }
+        Insert: {
+          ai_analysis?: string | null
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string
+          description?: string | null
+          fat_g?: number | null
+          fiber_g?: number | null
+          id?: string
+          profile_id: string
+          protein_g?: number | null
+          recorded_at?: string
+          storage_path?: string | null
+          tips?: string | null
+        }
+        Update: {
+          ai_analysis?: string | null
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string
+          description?: string | null
+          fat_g?: number | null
+          fiber_g?: number | null
+          id?: string
+          profile_id?: string
+          protein_g?: number | null
+          recorded_at?: string
+          storage_path?: string | null
+          tips?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapslim_meal_logs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profile_progress"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "zapslim_meal_logs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zapslim_message_logs: {
+        Row: {
+          ai_extracted: Json | null
+          channel: string
+          content: string | null
+          created_at: string
+          direction: Database["public"]["Enums"]["zs_message_direction"]
+          evolution_message_id: string | null
+          id: string
+          media_url: string | null
+          message_type: Database["public"]["Enums"]["zs_message_type"]
+          profile_id: string
+        }
+        Insert: {
+          ai_extracted?: Json | null
+          channel?: string
+          content?: string | null
+          created_at?: string
+          direction: Database["public"]["Enums"]["zs_message_direction"]
+          evolution_message_id?: string | null
+          id?: string
+          media_url?: string | null
+          message_type?: Database["public"]["Enums"]["zs_message_type"]
+          profile_id: string
+        }
+        Update: {
+          ai_extracted?: Json | null
+          channel?: string
+          content?: string | null
+          created_at?: string
+          direction?: Database["public"]["Enums"]["zs_message_direction"]
+          evolution_message_id?: string | null
+          id?: string
+          media_url?: string | null
+          message_type?: Database["public"]["Enums"]["zs_message_type"]
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapslim_message_logs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profile_progress"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "zapslim_message_logs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zapslim_profiles: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          current_dose: string | null
+          current_weight_kg: number | null
+          dashboard_slug: string
+          full_name: string | null
+          id: string
+          initial_weight_kg: number | null
+          insights_updated_at: string | null
+          kiwify_customer_id: string | null
+          kiwify_email: string | null
+          kiwify_subscription_id: string | null
+          last_checkin_at: string | null
+          last_dose_at: string | null
+          last_log_at: string | null
+          last_message_at: string | null
+          latest_insights: string | null
+          locale: string
+          marketing_opt_out: boolean
+          marketing_opt_out_at: string | null
+          medication: Database["public"]["Enums"]["zs_medication_type"] | null
+          medication_other: string | null
+          onboarding_completed: boolean
+          onboarding_step: Database["public"]["Enums"]["zs_onboarding_step"]
+          pending_image_caption: string | null
+          pending_image_path: string | null
+          short_code: string | null
+          streak_days: number
+          subscription_status: Database["public"]["Enums"]["zs_subscription_status"]
+          target_weight_kg: number | null
+          timezone: string
+          tutorial_completed: boolean
+          updated_at: string
+          weight_loss_method: string | null
+          welcome_sent_at: string | null
+          whatsapp_phone: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          current_dose?: string | null
+          current_weight_kg?: number | null
+          dashboard_slug?: string
+          full_name?: string | null
+          id?: string
+          initial_weight_kg?: number | null
+          insights_updated_at?: string | null
+          kiwify_customer_id?: string | null
+          kiwify_email?: string | null
+          kiwify_subscription_id?: string | null
+          last_checkin_at?: string | null
+          last_dose_at?: string | null
+          last_log_at?: string | null
+          last_message_at?: string | null
+          latest_insights?: string | null
+          locale?: string
+          marketing_opt_out?: boolean
+          marketing_opt_out_at?: string | null
+          medication?: Database["public"]["Enums"]["zs_medication_type"] | null
+          medication_other?: string | null
+          onboarding_completed?: boolean
+          onboarding_step?: Database["public"]["Enums"]["zs_onboarding_step"]
+          pending_image_caption?: string | null
+          pending_image_path?: string | null
+          short_code?: string | null
+          streak_days?: number
+          subscription_status?: Database["public"]["Enums"]["zs_subscription_status"]
+          target_weight_kg?: number | null
+          timezone?: string
+          tutorial_completed?: boolean
+          updated_at?: string
+          weight_loss_method?: string | null
+          welcome_sent_at?: string | null
+          whatsapp_phone: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          current_dose?: string | null
+          current_weight_kg?: number | null
+          dashboard_slug?: string
+          full_name?: string | null
+          id?: string
+          initial_weight_kg?: number | null
+          insights_updated_at?: string | null
+          kiwify_customer_id?: string | null
+          kiwify_email?: string | null
+          kiwify_subscription_id?: string | null
+          last_checkin_at?: string | null
+          last_dose_at?: string | null
+          last_log_at?: string | null
+          last_message_at?: string | null
+          latest_insights?: string | null
+          locale?: string
+          marketing_opt_out?: boolean
+          marketing_opt_out_at?: string | null
+          medication?: Database["public"]["Enums"]["zs_medication_type"] | null
+          medication_other?: string | null
+          onboarding_completed?: boolean
+          onboarding_step?: Database["public"]["Enums"]["zs_onboarding_step"]
+          pending_image_caption?: string | null
+          pending_image_path?: string | null
+          short_code?: string | null
+          streak_days?: number
+          subscription_status?: Database["public"]["Enums"]["zs_subscription_status"]
+          target_weight_kg?: number | null
+          timezone?: string
+          tutorial_completed?: boolean
+          updated_at?: string
+          weight_loss_method?: string | null
+          welcome_sent_at?: string | null
+          whatsapp_phone?: string
+        }
+        Relationships: []
+      }
+      zapslim_reminders: {
+        Row: {
+          created_at: string
+          custom_message: string | null
+          days_of_week: number[]
+          enabled: boolean
+          id: string
+          last_sent_at: string | null
+          next_run_at: string | null
+          profile_id: string
+          time_local: string
+          type: Database["public"]["Enums"]["zs_reminder_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custom_message?: string | null
+          days_of_week?: number[]
+          enabled?: boolean
+          id?: string
+          last_sent_at?: string | null
+          next_run_at?: string | null
+          profile_id: string
+          time_local?: string
+          type: Database["public"]["Enums"]["zs_reminder_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custom_message?: string | null
+          days_of_week?: number[]
+          enabled?: boolean
+          id?: string
+          last_sent_at?: string | null
+          next_run_at?: string | null
+          profile_id?: string
+          time_local?: string
+          type?: Database["public"]["Enums"]["zs_reminder_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapslim_reminders_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profile_progress"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "zapslim_reminders_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zapslim_subscription_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json
+          profile_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          payload?: Json
+          profile_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapslim_subscription_events_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profile_progress"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "zapslim_subscription_events_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zapslim_weight_entries: {
+        Row: {
+          created_at: string
+          id: string
+          mood: string | null
+          notes: string | null
+          profile_id: string
+          raw_message: string | null
+          recorded_at: string
+          symptoms: string[] | null
+          weight_kg: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mood?: string | null
+          notes?: string | null
+          profile_id: string
+          raw_message?: string | null
+          recorded_at?: string
+          symptoms?: string[] | null
+          weight_kg: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mood?: string | null
+          notes?: string | null
+          profile_id?: string
+          raw_message?: string | null
+          recorded_at?: string
+          symptoms?: string[] | null
+          weight_kg?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapslim_weight_entries_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profile_progress"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "zapslim_weight_entries_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zapslim_workout_logs: {
+        Row: {
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          notes: string | null
+          profile_id: string
+          recorded_at: string
+          trained: boolean
+          workout_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          profile_id: string
+          recorded_at?: string
+          trained?: boolean
+          workout_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          profile_id?: string
+          recorded_at?: string
+          trained?: boolean
+          workout_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapslim_workout_logs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profile_progress"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "zapslim_workout_logs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      zapslim_profile_progress: {
+        Row: {
+          current_weight_kg: number | null
+          dashboard_slug: string | null
+          full_name: string | null
+          goal_percent: number | null
+          initial_weight_kg: number | null
+          profile_id: string | null
+          streak_days: number | null
+          target_weight_kg: number | null
+          total_lost_kg: number | null
+        }
+        Insert: {
+          current_weight_kg?: number | null
+          dashboard_slug?: string | null
+          full_name?: string | null
+          goal_percent?: never
+          initial_weight_kg?: number | null
+          profile_id?: string | null
+          streak_days?: number | null
+          target_weight_kg?: number | null
+          total_lost_kg?: never
+        }
+        Update: {
+          current_weight_kg?: number | null
+          dashboard_slug?: string | null
+          full_name?: string | null
+          goal_percent?: never
+          initial_weight_kg?: number | null
+          profile_id?: string | null
+          streak_days?: number | null
+          target_weight_kg?: number | null
+          total_lost_kg?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_get_all_leads: {
@@ -3825,6 +4617,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_campaign_counters: {
+        Args: {
+          p_campaign_id: string
+          p_failed: number
+          p_sent: number
+          p_skipped: number
+        }
+        Returns: undefined
+      }
       search_store_products: {
         Args: {
           p_category_id?: string
@@ -3853,6 +4654,28 @@ export type Database = {
     }
     Enums: {
       user_role: "admin" | "vendedora"
+      zs_campaign_send_status: "pending" | "sent" | "failed" | "skipped"
+      zs_campaign_status:
+        | "draft"
+        | "scheduled"
+        | "sending"
+        | "completed"
+        | "failed"
+        | "canceled"
+      zs_medication_type: "mounjaro" | "ozempic" | "saxenda" | "none" | "other"
+      zs_message_direction: "inbound" | "outbound"
+      zs_message_type: "text" | "audio" | "image"
+      zs_onboarding_step:
+        | "welcome"
+        | "name"
+        | "initial_weight"
+        | "target_weight"
+        | "medication"
+        | "dose"
+        | "reminders"
+        | "done"
+      zs_reminder_type: "dose" | "water" | "weight" | "workout" | "custom"
+      zs_subscription_status: "inactive" | "active" | "late" | "canceled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3981,6 +4804,30 @@ export const Constants = {
   public: {
     Enums: {
       user_role: ["admin", "vendedora"],
+      zs_campaign_send_status: ["pending", "sent", "failed", "skipped"],
+      zs_campaign_status: [
+        "draft",
+        "scheduled",
+        "sending",
+        "completed",
+        "failed",
+        "canceled",
+      ],
+      zs_medication_type: ["mounjaro", "ozempic", "saxenda", "none", "other"],
+      zs_message_direction: ["inbound", "outbound"],
+      zs_message_type: ["text", "audio", "image"],
+      zs_onboarding_step: [
+        "welcome",
+        "name",
+        "initial_weight",
+        "target_weight",
+        "medication",
+        "dose",
+        "reminders",
+        "done",
+      ],
+      zs_reminder_type: ["dose", "water", "weight", "workout", "custom"],
+      zs_subscription_status: ["inactive", "active", "late", "canceled"],
     },
   },
 } as const
