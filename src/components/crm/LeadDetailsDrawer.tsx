@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
-  Phone, Mail, MessageSquare, Calendar, Globe, Smartphone,
+  Phone, Mail, MessageSquare, Calendar, Globe, Smartphone, Building2,
   TrendingUp, AlertTriangle, HelpCircle, Target, Lightbulb,
   Clock, Tag, User, FileText, ArrowRight, Flame, Thermometer,
   Snowflake, ThumbsUp, ThumbsDown, Minus, Sparkles, Paperclip, Edit, Trash2
@@ -49,7 +49,14 @@ export function LeadDetailsDrawer({
 
   const getSourceBadge = (source: string | null) => {
     if (source === 'widget') return <Badge variant="outline" className="gap-1 border-purple-500/50 text-purple-600"><Globe className="h-3 w-3" /> Site</Badge>;
+    if (source === 'prospeccao') return <Badge variant="outline" className="gap-1 border-blue-500/50 text-blue-600"><Building2 className="h-3 w-3" /> Prospecção</Badge>;
     return <Badge variant="outline" className="gap-1 border-green-500/50 text-green-600"><Smartphone className="h-3 w-3" /> WhatsApp</Badge>;
+  };
+
+  const getWhatsAppLink = (number: string) => {
+    const cleaned = number.replace(/\D/g, '').replace(/^widget_/, '').replace(/^prospeccao_/, '');
+    if (!cleaned || cleaned.length < 10) return null;
+    return `https://wa.me/${cleaned}`;
   };
 
   const getUrgencyBadge = (urgency: string | null) => {
@@ -152,8 +159,8 @@ export function LeadDetailsDrawer({
                         <p className="text-xs text-muted-foreground">WhatsApp / ID</p>
                         <p className="font-medium">{lead.whatsapp_number}</p>
                       </div>
-                      <a href={`https://wa.me/${lead.whatsapp_number.replace(/\D/g, '').replace('widget_', '')}`} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" variant="outline" className="gap-2"><MessageSquare className="h-3.5 w-3.5" /> Abrir</Button>
+                      <a href={getWhatsAppLink(lead.whatsapp_number) || '#'} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="outline" className="gap-2" disabled={!getWhatsAppLink(lead.whatsapp_number)}><MessageSquare className="h-3.5 w-3.5" /> Abrir</Button>
                       </a>
                     </div>
                     {lead.email && (

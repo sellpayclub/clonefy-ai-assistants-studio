@@ -12,7 +12,7 @@ export interface Lead {
   lead_score: number;
   status: string;
   intent_summary: string | null;
-  source: 'whatsapp' | 'widget' | null;
+  source: 'whatsapp' | 'widget' | 'prospeccao' | null;
   last_interaction: string;
   created_at: string;
   updated_at: string | null;

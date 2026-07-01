@@ -63,6 +63,7 @@ const LazyVslDaniel = lazy(() => import("./pages/VslDaniel"));
 const LazyVslTalita = lazy(() => import("./pages/VslTalita"));
 const LazyPlanos = lazy(() => import("./pages/Planos"));
 const LazyApiBalance = lazy(() => import("./pages/ApiBalance"));
+const LazyProspeccao = lazy(() => import("./pages/Prospeccao"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -142,6 +143,7 @@ const App = () => {
                       <Route path="/widget-customization" element={<LazyPage><LazyWidgetCustomization /></LazyPage>} />
                       <Route path="/widget-analytics" element={<LazyPage><LazyWidgetAnalytics /></LazyPage>} />
                       <Route path="/crm-leads" element={<LazyPage><LazyCRMLeads /></LazyPage>} />
+                      <Route path="/prospeccao" element={<LazyPage><LazyProspeccao /></LazyPage>} />
                       
                       <Route path="/calendar" element={<LazyPage><LazyCalendar /></LazyPage>} />
                       <Route path="/saldo-api" element={<LazyPage><LazyApiBalance /></LazyPage>} />

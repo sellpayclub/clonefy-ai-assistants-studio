@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Search, Plus, MessageSquare, Phone, Mail, Calendar, Globe, Smartphone, Flame, Thermometer, Snowflake, ArrowRight, LayoutList, Kanban, Settings2 } from "lucide-react";
+import { Users, Search, Plus, MessageSquare, Phone, Mail, Calendar, Globe, Smartphone, Flame, Thermometer, Snowflake, ArrowRight, LayoutList, Kanban, Settings2, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -48,6 +48,7 @@ const CRMLeads = () => {
 
   const getSourceBadge = (source: string | null) => {
     if (source === 'widget') return <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-tight px-1.5 py-0 gap-1 border-purple-500/50 text-purple-600"><Globe className="h-2.5 w-2.5" />Site</Badge>;
+    if (source === 'prospeccao') return <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-tight px-1.5 py-0 gap-1 border-blue-500/50 text-blue-600"><Building2 className="h-2.5 w-2.5" />Prospecção</Badge>;
     return <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-tight px-1.5 py-0 gap-1 border-green-500/50 text-green-600"><Smartphone className="h-2.5 w-2.5" />WhatsApp</Badge>;
   };
 

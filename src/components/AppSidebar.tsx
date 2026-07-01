@@ -24,6 +24,7 @@ import {
   Sparkles,
   FileText,
   Instagram,
+  Building2,
 } from "lucide-react";
 
 const TelegramSidebarIcon = () => (
@@ -105,6 +106,12 @@ const menuItems = [
     description: "Personalize o chat para seu site",
   },
   { title: "CRM Leads", url: "/crm-leads", icon: Users, description: "Gestão inteligente de leads extraídos" },
+  {
+    title: "Prospecção Local",
+    url: "/prospeccao",
+    icon: Building2,
+    description: "Busque empresas por ramo e cidade via CNPJ",
+  },
   {
     title: "Analytics do Chat",
     url: "/widget-analytics",

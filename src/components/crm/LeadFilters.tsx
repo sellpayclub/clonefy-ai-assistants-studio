@@ -60,6 +60,7 @@ export function LeadFilters({ filters, onChange, onReset, pipelineStages, allTag
           <SelectItem value="_all">Todas fontes</SelectItem>
           <SelectItem value="whatsapp">WhatsApp</SelectItem>
           <SelectItem value="widget">Site</SelectItem>
+          <SelectItem value="prospeccao">Prospecção</SelectItem>
         </SelectContent>
       </Select>
 
