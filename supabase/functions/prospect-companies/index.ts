@@ -483,6 +483,73 @@ async function importLeads(
   return { imported, skipped, errors };
 }
 
+async function fetchAllPages(params: {
+  searchProvider: "buscalead" | "casadosdados";
+  cnaes: string[];
+  uf: string;
+  municipioCodigo?: string;
+  municipioNome?: string;
+  contemCelular: boolean;
+  contemEmail: boolean;
+  keys: { buscalead: string | null; casadosdados: string | null };
+  maxResults: number;
+  excludedCnpjs: Set<string>;
+}): Promise<{ companies: ProspectCompany[]; total: number; fetched: number; truncated: boolean }> {
+  const allCompanies: ProspectCompany[] = [];
+  const seenCnpjs = new Set<string>();
+  let page = 0;
+  let total = 0;
+  const limit = 100;
+
+  while (allCompanies.length < params.maxResults) {
+    let result;
+    if (params.searchProvider === "buscalead") {
+      result = await searchBuscaLead({
+        cnaes: params.cnaes,
+        uf: params.uf,
+        municipioCodigo: params.municipioCodigo!,
+        page,
+        limit,
+        contemCelular: params.contemCelular,
+        contemEmail: params.contemEmail,
+        apiKey: params.keys.buscalead!,
+      });
+    } else {
+      result = await searchCasaDosDados({
+        cnaes: params.cnaes,
+        uf: params.uf,
+        municipioNome: params.municipioNome!,
+        page,
+        limit,
+        contemCelular: params.contemCelular,
+        contemEmail: params.contemEmail,
+        apiKey: params.keys.casadosdados!,
+      });
+    }
+
+    total = result.total;
+    if (!result.companies.length) break;
+
+    for (const company of result.companies) {
+      if (params.excludedCnpjs.has(company.cnpj)) continue;
+      if (seenCnpjs.has(company.cnpj)) continue;
+      seenCnpjs.add(company.cnpj);
+      allCompanies.push(company);
+      if (allCompanies.length >= params.maxResults) break;
+    }
+
+    page++;
+    if (page >= result.totalPages) break;
+  }
+
+  return {
+    companies: allCompanies,
+    total,
+    fetched: allCompanies.length,
+    truncated: total > allCompanies.length,
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -576,6 +643,49 @@ serve(async (req) => {
           page,
           total: result.total,
           totalPages: result.totalPages,
+          provider: searchProvider,
+          dataSource: "cnpj",
+        });
+      }
+
+      case "fetch_all_pages": {
+        if (!searchProvider) {
+          return jsonResponse({
+            error:
+              "Configure uma API de CNPJ: Casa dos Dados ou BuscaLead.",
+          }, 503);
+        }
+
+        const ramo = data.ramo as string;
+        if (!RAMO_CNAE_MAP[ramo]) {
+          return jsonResponse({ error: "Ramo de negócio inválido" }, 400);
+        }
+        const cnaes = RAMO_CNAE_MAP[ramo];
+        const contemCelular = data.contemCelular !== false;
+        const contemEmail = !!data.contemEmail;
+        const maxResults = Math.min(Number(data.maxResults) || 500, 500);
+        const excludedCnpjs = new Set<string>(
+          (data.excludedCnpjs as string[] | undefined) || [],
+        );
+
+        const result = await fetchAllPages({
+          searchProvider,
+          cnaes,
+          uf: data.uf,
+          municipioCodigo: data.municipioCodigo,
+          municipioNome: data.municipioNome,
+          contemCelular,
+          contemEmail,
+          keys,
+          maxResults,
+          excludedCnpjs,
+        });
+
+        return jsonResponse({
+          companies: result.companies,
+          total: result.total,
+          fetched: result.fetched,
+          truncated: result.truncated,
           provider: searchProvider,
           dataSource: "cnpj",
         });

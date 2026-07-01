@@ -79,3 +79,35 @@ export interface ImportLeadsResult {
   skipped: number;
   errors: string[];
 }
+
+export type SelectionMode = 'none' | 'page' | 'all';
+
+export interface LastSearchParams {
+  ramo: RamoNegocio;
+  uf: string;
+  municipioCodigo: string;
+  municipioNome: string;
+  contemCelular: boolean;
+  contemEmail: boolean;
+  total: number;
+  totalPages: number;
+  provider: string;
+}
+
+export interface FetchAllPagesResult {
+  companies: ProspectCompany[];
+  total: number;
+  fetched: number;
+  truncated: boolean;
+  provider: string;
+}
+
+export interface OutreachCampaignStatus {
+  id: string;
+  status: string;
+  total_leads: number;
+  sent_count: number;
+  failed_count: number;
+  pending_count: number;
+  skipped_count: number;
+}

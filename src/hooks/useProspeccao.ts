@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,10 +9,14 @@ import {
   type ProspeccaoApiKeys,
 } from '@/lib/prospeccao/api-keys';
 import type {
+  FetchAllPagesResult,
   ImportLeadsResult,
+  LastSearchParams,
+  OutreachCampaignStatus,
   ProspectCompany,
   ProspectSearchResult,
   RamoNegocio,
+  SelectionMode,
 } from '@/lib/prospeccao/constants';
 
 interface Municipio {
@@ -31,6 +35,17 @@ export interface ProspectConfig {
   dataSource: 'cnpj' | null;
   hasGeckoApi: boolean;
   configured: boolean;
+}
+
+export interface SearchParams {
+  ramo: RamoNegocio;
+  uf: string;
+  municipioCodigo: string;
+  municipioNome: string;
+  page?: number;
+  limit?: number;
+  contemCelular?: boolean;
+  contemEmail?: boolean;
 }
 
 const USE_LOCAL_PROSPECT =
@@ -71,6 +86,20 @@ async function callProspectFunction<T>(
   const response = await supabase.functions.invoke('prospect-companies', {
     body,
     headers: authHeaders,
+  });
+
+  if (response.error) throw new Error(response.error.message);
+  if (response.data?.error) throw new Error(response.data.error);
+  return response.data as T;
+}
+
+async function callOutreachFunction<T>(body: Record<string, unknown>): Promise<T> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Sessão expirada. Faça login novamente.');
+
+  const response = await supabase.functions.invoke('prospect-outreach', {
+    body,
+    headers: { Authorization: `Bearer ${session.access_token}` },
   });
 
   if (response.error) throw new Error(response.error.message);
@@ -174,7 +203,12 @@ async function importLeadsClient(
 export function useProspeccao() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  const [selectionMode, setSelectionMode] = useState<SelectionMode>('none');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [excludedIds, setExcludedIds] = useState<Set<string>>(new Set());
+  const [companyCache, setCompanyCache] = useState<Map<string, ProspectCompany>>(new Map());
+  const [searchContext, setSearchContext] = useState<LastSearchParams | null>(null);
   const [apiKeys, setApiKeysState] = useState<ProspeccaoApiKeys>(() => getStoredApiKeys());
 
   const saveApiKeysState = useCallback((keys: ProspeccaoApiKeys) => {
@@ -182,6 +216,36 @@ export function useProspeccao() {
     setApiKeysState(keys);
     queryClient.invalidateQueries({ queryKey: ['prospeccao-config'] });
   }, [queryClient]);
+
+  const resetSelection = useCallback(() => {
+    setSelectionMode('none');
+    setSelectedIds(new Set());
+    setExcludedIds(new Set());
+    setCompanyCache(new Map());
+    setSearchContext(null);
+  }, []);
+
+  const mergeIntoCache = useCallback((companies: ProspectCompany[]) => {
+    setCompanyCache(prev => {
+      const next = new Map(prev);
+      for (const c of companies) next.set(c.cnpj, c);
+      return next;
+    });
+  }, []);
+
+  const updateSearchContext = useCallback((params: SearchParams, result: ProspectSearchResult) => {
+    setSearchContext({
+      ramo: params.ramo,
+      uf: params.uf,
+      municipioCodigo: params.municipioCodigo,
+      municipioNome: params.municipioNome,
+      contemCelular: params.contemCelular !== false,
+      contemEmail: !!params.contemEmail,
+      total: result.total,
+      totalPages: result.totalPages,
+      provider: result.provider,
+    });
+  }, []);
 
   const configQuery = useQuery({
     queryKey: ['prospeccao-config', USE_LOCAL_PROSPECT, apiKeys],
@@ -199,21 +263,24 @@ export function useProspeccao() {
   });
 
   const searchMutation = useMutation({
-    mutationFn: (params: {
-      ramo: RamoNegocio;
-      uf: string;
-      municipioCodigo: string;
-      municipioNome: string;
-      page?: number;
-      limit?: number;
-      contemCelular?: boolean;
-      contemEmail?: boolean;
-    }) =>
+    mutationFn: (params: SearchParams) =>
       callProspectFunction<ProspectSearchResult>(
         { action: 'search', ...params },
         apiKeys,
       ),
-    onSuccess: () => setSelectedIds(new Set()),
+  });
+
+  const fetchAllPagesMutation = useMutation({
+    mutationFn: (params: Omit<SearchParams, 'page' | 'limit'> & { excludedCnpjs?: string[]; maxResults?: number }) =>
+      callProspectFunction<FetchAllPagesResult>(
+        {
+          action: 'fetch_all_pages',
+          ...params,
+          excludedCnpjs: params.excludedCnpjs,
+          maxResults: params.maxResults ?? 500,
+        },
+        apiKeys,
+      ),
   });
 
   const importMutation = useMutation({
@@ -240,6 +307,33 @@ export function useProspeccao() {
       ),
   });
 
+  const startOutreachMutation = useMutation({
+    mutationFn: (params: {
+      companies: ProspectCompany[];
+      messageTemplate: string;
+      whatsappInstance: string;
+      delaySeconds: number;
+      importToCrm: boolean;
+      campaignName?: string;
+      searchContext?: LastSearchParams | null;
+    }) =>
+      callOutreachFunction<{
+        campaignId: string;
+        queued: number;
+        skipped: number;
+        estimatedMinutes: number;
+      }>({
+        action: 'start_campaign',
+        companies: params.companies,
+        message_template: params.messageTemplate,
+        whatsapp_instance: params.whatsappInstance,
+        delay_seconds: params.delaySeconds,
+        import_to_crm: params.importToCrm,
+        campaign_name: params.campaignName,
+        search_context: params.searchContext,
+      }),
+  });
+
   const fetchMunicipios = useCallback(async (uf: string): Promise<Municipio[]> => {
     const data = await callProspectFunction<{ municipios: Municipio[] }>(
       { action: 'list_municipios', uf },
@@ -248,26 +342,152 @@ export function useProspeccao() {
     return data.municipios;
   }, [apiKeys]);
 
-  const toggleSelection = useCallback((cnpj: string) => {
+  const isCompanySelected = useCallback(
+    (cnpj: string) => {
+      if (selectionMode === 'all') return !excludedIds.has(cnpj);
+      if (selectionMode === 'page') return selectedIds.has(cnpj);
+      return false;
+    },
+    [selectionMode, selectedIds, excludedIds],
+  );
+
+  const selectedCount = useMemo(() => {
+    if (selectionMode === 'all' && searchContext) {
+      return Math.max(0, searchContext.total - excludedIds.size);
+    }
+    if (selectionMode === 'page') return selectedIds.size;
+    return 0;
+  }, [selectionMode, searchContext, excludedIds.size, selectedIds.size]);
+
+  const isAllPageSelected = useCallback(
+    (companies: ProspectCompany[]) =>
+      companies.length > 0 && companies.every(c => isCompanySelected(c.cnpj)),
+    [isCompanySelected],
+  );
+
+  const showSelectAllBanner = useCallback(
+    (companies: ProspectCompany[]) => {
+      if (!searchContext || searchContext.total <= companies.length) return false;
+      if (selectionMode === 'all') return false;
+      return isAllPageSelected(companies);
+    },
+    [searchContext, selectionMode, isAllPageSelected],
+  );
+
+  const toggleSelection = useCallback((company: ProspectCompany) => {
+    mergeIntoCache([company]);
+    const cnpj = company.cnpj;
+
+    if (selectionMode === 'all') {
+      setExcludedIds(prev => {
+        const next = new Set(prev);
+        if (next.has(cnpj)) next.delete(cnpj);
+        else next.add(cnpj);
+        return next;
+      });
+      return;
+    }
+
+    setSelectionMode('page');
     setSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(cnpj)) next.delete(cnpj);
       else next.add(cnpj);
       return next;
     });
+  }, [selectionMode, mergeIntoCache]);
+
+  const toggleSelectAllPage = useCallback((companies: ProspectCompany[]) => {
+    mergeIntoCache(companies);
+    const pageCnpjs = companies.map(c => c.cnpj);
+    const allSelected = companies.every(c => isCompanySelected(c.cnpj));
+
+    if (selectionMode === 'all') {
+      setExcludedIds(prev => {
+        const next = new Set(prev);
+        if (allSelected) {
+          for (const cnpj of pageCnpjs) next.add(cnpj);
+        } else {
+          for (const cnpj of pageCnpjs) next.delete(cnpj);
+        }
+        return next;
+      });
+      return;
+    }
+
+    if (allSelected) {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        for (const cnpj of pageCnpjs) next.delete(cnpj);
+        if (next.size === 0) {
+          setSelectionMode('none');
+        }
+        return next;
+      });
+    } else {
+      setSelectionMode('page');
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        for (const cnpj of pageCnpjs) next.add(cnpj);
+        return next;
+      });
+    }
+  }, [selectionMode, mergeIntoCache, isCompanySelected]);
+
+  const selectAllAcrossPages = useCallback(() => {
+    setSelectionMode('all');
+    setExcludedIds(new Set());
+    setSelectedIds(new Set());
   }, []);
 
-  const toggleSelectAll = useCallback((companies: ProspectCompany[]) => {
-    setSelectedIds(prev => {
-      if (prev.size === companies.length) return new Set();
-      return new Set(companies.map(c => c.cnpj));
-    });
+  const clearSelection = useCallback(() => {
+    setSelectionMode('none');
+    setSelectedIds(new Set());
+    setExcludedIds(new Set());
   }, []);
 
-  const getSelectedCompanies = useCallback(
-    (companies: ProspectCompany[]) =>
-      companies.filter(c => selectedIds.has(c.cnpj)),
-    [selectedIds],
+  const resolveSelectedCompanies = useCallback(async (): Promise<ProspectCompany[]> => {
+    if (selectionMode === 'none' || selectedCount === 0) return [];
+
+    if (selectionMode === 'all') {
+      if (!searchContext) throw new Error('Contexto de busca não encontrado');
+      const result = await fetchAllPagesMutation.mutateAsync({
+        ramo: searchContext.ramo,
+        uf: searchContext.uf,
+        municipioCodigo: searchContext.municipioCodigo,
+        municipioNome: searchContext.municipioNome,
+        contemCelular: searchContext.contemCelular,
+        contemEmail: searchContext.contemEmail,
+        excludedCnpjs: Array.from(excludedIds),
+      });
+      return result.companies;
+    }
+
+    return Array.from(selectedIds)
+      .map(cnpj => companyCache.get(cnpj))
+      .filter((c): c is ProspectCompany => !!c);
+  }, [
+    selectionMode,
+    selectedCount,
+    searchContext,
+    excludedIds,
+    selectedIds,
+    companyCache,
+    fetchAllPagesMutation,
+  ]);
+
+  const getCampaignStatus = useCallback(
+    (campaignId: string) =>
+      callOutreachFunction<OutreachCampaignStatus>({
+        action: 'get_campaign_status',
+        campaign_id: campaignId,
+      }),
+    [],
+  );
+
+  const processQueueDev = useCallback(
+    () => callOutreachFunction<{ processed: number }>({ action: 'process_queue' }),
+    [],
   );
 
   return {
@@ -279,14 +499,30 @@ export function useProspeccao() {
     estados: estadosQuery.data || [],
     estadosLoading: estadosQuery.isLoading,
     search: searchMutation,
+    fetchAllPages: fetchAllPagesMutation,
     importLeads: importMutation,
     enrich: enrichMutation,
+    startOutreach: startOutreachMutation,
     fetchMunicipios,
+    selectionMode,
     selectedIds,
-    setSelectedIds,
+    excludedIds,
+    searchContext,
+    selectedCount,
+    resetSelection,
+    mergeIntoCache,
+    updateSearchContext,
+    isCompanySelected,
+    isAllPageSelected,
+    showSelectAllBanner,
     toggleSelection,
-    toggleSelectAll,
-    getSelectedCompanies,
+    toggleSelectAllPage,
+    selectAllAcrossPages,
+    clearSelection,
+    resolveSelectedCompanies,
+    getCampaignStatus,
+    processQueueDev,
+    resolvingSelection: fetchAllPagesMutation.isPending,
   };
 }
 

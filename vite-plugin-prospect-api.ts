@@ -237,6 +237,66 @@ async function handleAction(
 
       return { ...result, page };
     }
+    case "fetch_all_pages": {
+      if (!searchProvider) {
+        throw new Error(
+          "Informe sua chave API de CNPJ (Casa dos Dados ou BuscaLead) no campo acima da busca.",
+        );
+      }
+      const ramo = body.ramo as string;
+      const cnaes = RAMO_CNAE_MAP[ramo];
+      if (!cnaes) throw new Error("Ramo inválido");
+
+      const maxResults = Math.min(Number(body.maxResults) || 500, 500);
+      const excludedCnpjs = new Set<string>(
+        (body.excludedCnpjs as string[] | undefined) || [],
+      );
+      const params = {
+        cnaes,
+        uf: body.uf as string,
+        municipioNome: body.municipioNome as string,
+        municipioCodigo: body.municipioCodigo as string,
+        contemCelular: body.contemCelular !== false,
+        contemEmail: !!body.contemEmail,
+      };
+
+      const allCompanies: Record<string, unknown>[] = [];
+      const seenCnpjs = new Set<string>();
+      let page = 0;
+      let total = 0;
+      const limit = 100;
+
+      while (allCompanies.length < maxResults) {
+        const pageParams = { ...params, page, limit };
+        const result =
+          searchProvider === "buscalead"
+            ? await searchBuscaLead(keys.buscalead!, pageParams)
+            : await searchCasaDosDados(keys.casadosdados!, pageParams);
+
+        total = result.total;
+        if (!result.companies.length) break;
+
+        for (const company of result.companies) {
+          if (excludedCnpjs.has(company.cnpj)) continue;
+          if (seenCnpjs.has(company.cnpj)) continue;
+          seenCnpjs.add(company.cnpj);
+          allCompanies.push(company);
+          if (allCompanies.length >= maxResults) break;
+        }
+
+        page++;
+        if (page >= result.totalPages) break;
+      }
+
+      return {
+        companies: allCompanies,
+        total,
+        fetched: allCompanies.length,
+        truncated: total > allCompanies.length,
+        provider: searchProvider,
+        dataSource: "cnpj",
+      };
+    }
     case "enrich_cnpj": {
       const cleanCnpj = String(body.cnpj).replace(/\D/g, "");
       if (keys.casadosdados) {

@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Building2,
   Download,
   Loader2,
   MapPin,
+  MessageCircle,
   Phone,
   Search,
   Sparkles,
@@ -45,6 +46,7 @@ import {
   type RamoNegocio,
 } from '@/lib/prospeccao/constants';
 import { useQueryClient } from '@tanstack/react-query';
+import { ProspectOutreachModal } from '@/components/prospeccao/ProspectOutreachModal';
 
 function formatPhoneDisplay(phone: string | null) {
   if (!phone) return '—';
@@ -82,6 +84,9 @@ const Prospeccao = () => {
   const [searchMeta, setSearchMeta] = useState<{ total: number; totalPages: number; provider: string } | null>(null);
   const [enrichingCnpj, setEnrichingCnpj] = useState<string | null>(null);
   const [cddKeyInput, setCddKeyInput] = useState(prospeccao.apiKeys.casaDosDados || '');
+  const [resolvingAction, setResolvingAction] = useState(false);
+  const [outreachOpen, setOutreachOpen] = useState(false);
+  const [outreachCompanies, setOutreachCompanies] = useState<ProspectCompany[]>([]);
 
   useEffect(() => {
     setCddKeyInput(prospeccao.apiKeys.casaDosDados || '');
@@ -114,22 +119,30 @@ const Prospeccao = () => {
 
   const canSearch = !!ramo && !!uf && !!municipioCodigo && !!municipioNome;
 
-  const handleSearch = async (targetPage = 0) => {
+  const searchParams = {
+    ramo,
+    uf,
+    municipioCodigo,
+    municipioNome,
+    limit: 50,
+    contemCelular,
+    contemEmail,
+  };
+
+  const runSearch = async (targetPage: number, resetSelection: boolean) => {
     if (!canSearch) return;
+
+    if (resetSelection) prospeccao.resetSelection();
 
     try {
       const result = await prospeccao.search.mutateAsync({
-        ramo,
-        uf,
-        municipioCodigo,
-        municipioNome,
+        ...searchParams,
         page: targetPage,
-        limit: 50,
-        contemCelular,
-        contemEmail,
       });
 
       setCompanies(result.companies);
+      prospeccao.mergeIntoCache(result.companies);
+      prospeccao.updateSearchContext({ ...searchParams, page: targetPage }, result);
       setSearchMeta({
         total: result.total,
         totalPages: result.totalPages,
@@ -145,40 +158,66 @@ const Prospeccao = () => {
     }
   };
 
-  const selectedCompanies = useMemo(
-    () => prospeccao.getSelectedCompanies(companies),
-    [companies, prospeccao.selectedIds],
-  );
+  const handleSearchNew = () => runSearch(0, true);
+  const handlePageChange = (targetPage: number) => runSearch(targetPage, false);
 
-  const handleImport = async () => {
-    if (!selectedCompanies.length) {
+  const handleExport = async () => {
+    if (prospeccao.selectedCount === 0) {
+      exportCompaniesToCsv(companies);
+      toast({
+        title: 'Exportação concluída',
+        description: `${companies.length} empresa(s) da página exportada(s).`,
+      });
+      return;
+    }
+    await resolveAndRun('export');
+  };
+
+  const resolveAndRun = async (
+    action: 'export' | 'import' | 'outreach',
+  ) => {
+    if (prospeccao.selectedCount === 0) {
       toast({ title: 'Selecione ao menos uma empresa', variant: 'destructive' });
       return;
     }
 
+    setResolvingAction(true);
     try {
-      const result = await prospeccao.importLeads.mutateAsync({
-        companies: selectedCompanies,
-        ramo,
-        cidade: municipioNome,
-      });
+      const resolved = await prospeccao.resolveSelectedCompanies();
+      if (!resolved.length) {
+        toast({ title: 'Nenhuma empresa encontrada na seleção', variant: 'destructive' });
+        return;
+      }
 
-      queryClient.invalidateQueries({ queryKey: ['crm-leads'] });
-
-      toast({
-        title: 'Importação concluída',
-        description: `${result.imported} lead(s) importado(s), ${result.skipped} ignorado(s).`,
-      });
-
-      if (result.errors.length) {
-        console.warn('Import errors:', result.errors);
+      if (action === 'export') {
+        exportCompaniesToCsv(resolved);
+        toast({
+          title: 'Exportação concluída',
+          description: `${resolved.length} empresa(s) exportada(s).`,
+        });
+      } else if (action === 'import') {
+        const result = await prospeccao.importLeads.mutateAsync({
+          companies: resolved,
+          ramo,
+          cidade: municipioNome,
+        });
+        queryClient.invalidateQueries({ queryKey: ['crm-leads'] });
+        toast({
+          title: 'Importação concluída',
+          description: `${result.imported} lead(s) importado(s), ${result.skipped} ignorado(s).`,
+        });
+      } else {
+        setOutreachCompanies(resolved);
+        setOutreachOpen(true);
       }
     } catch (err: any) {
       toast({
-        title: 'Erro na importação',
+        title: 'Erro ao resolver seleção',
         description: err.message,
         variant: 'destructive',
       });
+    } finally {
+      setResolvingAction(false);
     }
   };
 
@@ -197,21 +236,19 @@ const Prospeccao = () => {
     setEnrichingCnpj(company.cnpj);
     try {
       const { enrichment } = await prospeccao.enrich.mutateAsync(company.cnpj);
+      const updated = {
+        ...company,
+        ...enrichment,
+        telefone: enrichment.telefone || company.telefone,
+        email: enrichment.email || company.email,
+        socioPrincipal: enrichment.socioPrincipal || company.socioPrincipal,
+        hasPhone: enrichment.hasPhone ?? company.hasPhone,
+        enriched: true,
+      };
       setCompanies(prev =>
-        prev.map(c =>
-          c.cnpj === company.cnpj
-            ? {
-                ...c,
-                ...enrichment,
-                telefone: enrichment.telefone || c.telefone,
-                email: enrichment.email || c.email,
-                socioPrincipal: enrichment.socioPrincipal || c.socioPrincipal,
-                hasPhone: enrichment.hasPhone ?? c.hasPhone,
-                enriched: true,
-              }
-            : c,
-        ),
+        prev.map(c => (c.cnpj === company.cnpj ? updated : c)),
       );
+      prospeccao.mergeIntoCache([updated]);
       toast({ title: 'Contato enriquecido com sucesso' });
     } catch (err: any) {
       toast({
@@ -223,6 +260,11 @@ const Prospeccao = () => {
       setEnrichingCnpj(null);
     }
   };
+
+  const isBusy =
+    resolvingAction ||
+    prospeccao.resolvingSelection ||
+    prospeccao.search.isPending;
 
   return (
     <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden space-y-6">
@@ -384,7 +426,7 @@ const Prospeccao = () => {
           </div>
 
           <Button
-            onClick={() => handleSearch(0)}
+            onClick={handleSearchNew}
             disabled={!canSearch || prospeccao.search.isPending || !prospeccao.config?.configured}
             className="gap-2"
           >
@@ -419,36 +461,85 @@ const Prospeccao = () => {
                   variant="outline"
                   size="sm"
                   className="gap-1"
-                  onClick={() => exportCompaniesToCsv(selectedCompanies.length ? selectedCompanies : companies)}
+                  disabled={isBusy}
+                  onClick={handleExport}
                 >
-                  <Download className="h-3.5 w-3.5" />
-                  Exportar CSV
+                  {isBusy ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Download className="h-3.5 w-3.5" />
+                  )}
+                  Exportar CSV ({prospeccao.selectedCount || 'todas'})
                 </Button>
                 <Button
                   size="sm"
                   className="gap-1"
-                  onClick={handleImport}
-                  disabled={!selectedCompanies.length || prospeccao.importLeads.isPending}
+                  disabled={!prospeccao.selectedCount || isBusy || prospeccao.importLeads.isPending}
+                  onClick={() => resolveAndRun('import')}
                 >
-                  {prospeccao.importLeads.isPending ? (
+                  {prospeccao.importLeads.isPending || isBusy ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <Upload className="h-3.5 w-3.5" />
                   )}
-                  Importar para CRM ({selectedCompanies.length})
+                  Importar CRM ({prospeccao.selectedCount})
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="gap-1"
+                  disabled={!prospeccao.selectedCount || isBusy}
+                  onClick={() => resolveAndRun('outreach')}
+                >
+                  {isBusy ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <MessageCircle className="h-3.5 w-3.5" />
+                  )}
+                  Disparar WhatsApp ({prospeccao.selectedCount})
                 </Button>
               </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
+            {prospeccao.selectedCount > 0 && (
+              <div className="px-4 py-2 bg-primary/5 border-b text-sm flex flex-wrap items-center gap-2">
+                <span>
+                  <strong>{prospeccao.selectedCount.toLocaleString('pt-BR')}</strong> selecionada(s)
+                </span>
+                {prospeccao.showSelectAllBanner(companies) && searchMeta && (
+                  <>
+                    <span className="text-muted-foreground">·</span>
+                    <button
+                      type="button"
+                      className="text-primary underline font-medium"
+                      onClick={prospeccao.selectAllAcrossPages}
+                    >
+                      Selecionar todas as {searchMeta.total.toLocaleString('pt-BR')} empresas
+                    </button>
+                  </>
+                )}
+                {prospeccao.selectionMode === 'all' && (
+                  <Badge variant="secondary">Todas as páginas</Badge>
+                )}
+                <button
+                  type="button"
+                  className="text-muted-foreground underline ml-auto text-xs"
+                  onClick={prospeccao.clearSelection}
+                >
+                  Limpar seleção
+                </button>
+              </div>
+            )}
+
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-10">
                       <Checkbox
-                        checked={companies.length > 0 && prospeccao.selectedIds.size === companies.length}
-                        onCheckedChange={() => prospeccao.toggleSelectAll(companies)}
+                        checked={prospeccao.isAllPageSelected(companies)}
+                        onCheckedChange={() => prospeccao.toggleSelectAllPage(companies)}
                       />
                     </TableHead>
                     <TableHead>Empresa</TableHead>
@@ -464,8 +555,8 @@ const Prospeccao = () => {
                     <TableRow key={company.cnpj}>
                       <TableCell>
                         <Checkbox
-                          checked={prospeccao.selectedIds.has(company.cnpj)}
-                          onCheckedChange={() => prospeccao.toggleSelection(company.cnpj)}
+                          checked={prospeccao.isCompanySelected(company.cnpj)}
+                          onCheckedChange={() => prospeccao.toggleSelection(company)}
                         />
                       </TableCell>
                       <TableCell>
@@ -543,7 +634,7 @@ const Prospeccao = () => {
                     variant="outline"
                     size="sm"
                     disabled={page === 0 || prospeccao.search.isPending}
-                    onClick={() => handleSearch(page - 1)}
+                    onClick={() => handlePageChange(page - 1)}
                   >
                     Anterior
                   </Button>
@@ -551,7 +642,7 @@ const Prospeccao = () => {
                     variant="outline"
                     size="sm"
                     disabled={page >= searchMeta.totalPages - 1 || prospeccao.search.isPending}
-                    onClick={() => handleSearch(page + 1)}
+                    onClick={() => handlePageChange(page + 1)}
                   >
                     Próxima
                   </Button>
@@ -561,6 +652,27 @@ const Prospeccao = () => {
           </CardContent>
         </Card>
       )}
+
+      <ProspectOutreachModal
+        open={outreachOpen}
+        onOpenChange={setOutreachOpen}
+        companies={outreachCompanies}
+        isLocalMode={prospeccao.isLocalMode}
+        getCampaignStatus={prospeccao.getCampaignStatus}
+        processQueueDev={prospeccao.processQueueDev}
+        onStart={async params => {
+          const result = await prospeccao.startOutreach.mutateAsync({
+            companies: outreachCompanies,
+            messageTemplate: params.messageTemplate,
+            whatsappInstance: params.whatsappInstance,
+            delaySeconds: params.delaySeconds,
+            importToCrm: params.importToCrm,
+            searchContext: prospeccao.searchContext,
+          });
+          queryClient.invalidateQueries({ queryKey: ['crm-leads'] });
+          return result;
+        }}
+      />
     </main>
   );
 };
