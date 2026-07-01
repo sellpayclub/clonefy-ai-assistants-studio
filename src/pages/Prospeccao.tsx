@@ -58,6 +58,7 @@ function formatPhoneDisplay(phone: string | null) {
 }
 
 function formatCnpjDisplay(cnpj: string) {
+  if (cnpj.startsWith('gplace_')) return 'Google Maps';
   const d = cnpj.replace(/\D/g, '');
   if (d.length !== 14) return cnpj;
   return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
@@ -230,6 +231,16 @@ const Prospeccao = () => {
           </p>
         </div>
       </div>
+
+      {prospeccao.isLocalMode && (
+        <Alert>
+          <CheckCircle2 className="h-4 w-4" />
+          <AlertTitle>Modo local ativo</AlertTitle>
+          <AlertDescription>
+            Busca via GeckoAPI + Google Maps. Importação direta no CRM.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {!prospeccao.configLoading && !prospeccao.config?.configured && (
         <Alert variant="destructive">

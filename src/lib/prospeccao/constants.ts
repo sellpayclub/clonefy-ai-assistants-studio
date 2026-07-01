@@ -34,6 +34,13 @@ export const RAMO_CNAE_MAP: Record<RamoNegocio, string[]> = {
   beleza_completo: ['9602501', '9602502'],
 };
 
+export const RAMO_KEYWORD_MAP: Record<RamoNegocio, string> = {
+  estetica: 'clinica de estetica',
+  salao: 'salao de beleza',
+  estetica_medica: 'clinica estetica medica',
+  beleza_completo: 'salao de beleza estetica',
+};
+
 export const BRAZILIAN_UFS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
   'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',

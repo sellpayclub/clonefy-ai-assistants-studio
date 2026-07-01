@@ -14,6 +14,13 @@ const RAMO_CNAE_MAP: Record<string, string[]> = {
   beleza_completo: ["9602501", "9602502"],
 };
 
+const RAMO_KEYWORD_MAP: Record<string, string> = {
+  estetica: "clinica de estetica",
+  salao: "salao de beleza",
+  estetica_medica: "clinica estetica medica",
+  beleza_completo: "salao de beleza estetica",
+};
+
 interface ProspectCompany {
   cnpj: string;
   razaoSocial: string;
@@ -42,7 +49,7 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
-function getProvider(): "buscalead" | "casadosdados" | null {
+function getProvider(): "buscalead" | "casadosdados" | "gecko" | null {
   const configured = Deno.env.get("PROSPECT_API_PROVIDER")?.toLowerCase();
   if (configured === "buscalead" && Deno.env.get("BUSCALEAD_API_KEY")) {
     return "buscalead";
@@ -50,9 +57,20 @@ function getProvider(): "buscalead" | "casadosdados" | null {
   if (configured === "casadosdados" && Deno.env.get("CASA_DOS_DADOS_API_KEY")) {
     return "casadosdados";
   }
+  if (configured === "gecko" && Deno.env.get("GECKOAPI_API_KEY")) {
+    return "gecko";
+  }
   if (Deno.env.get("BUSCALEAD_API_KEY")) return "buscalead";
   if (Deno.env.get("CASA_DOS_DADOS_API_KEY")) return "casadosdados";
+  if (Deno.env.get("GECKOAPI_API_KEY")) return "gecko";
   return null;
+}
+
+function normalizeGeckoPhone(phone?: string | null): string | null {
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 10) return null;
+  return digits.startsWith("55") ? digits : `55${digits}`;
 }
 
 function formatCnpj(cnpj: string): string {
@@ -254,6 +272,72 @@ async function searchCasaDosDados(params: {
   };
 }
 
+async function searchGeckoPlaces(params: {
+  ramo: string;
+  uf: string;
+  municipioNome: string;
+  page: number;
+  limit: number;
+  contemCelular: boolean;
+}): Promise<{ companies: ProspectCompany[]; total: number; totalPages: number }> {
+  const apiKey = Deno.env.get("GECKOAPI_API_KEY")!;
+  const keyword = RAMO_KEYWORD_MAP[params.ramo] || params.ramo;
+  const address = `${params.municipioNome}, ${params.uf}, Brasil`;
+
+  const response = await fetch("https://api.geckoapi.com.br/v1/extract", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      target: "google.com",
+      type: "places",
+      keyword,
+      address,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`GeckoAPI Places: ${response.status} - ${errText}`);
+  }
+
+  const payload = await response.json();
+  const items = payload.data?.items || [];
+  const pageSize = Math.min(params.limit, 50);
+  const start = params.page * pageSize;
+  const slice = items.slice(start, start + pageSize);
+
+  const companies: ProspectCompany[] = slice
+    .map((item: any) => {
+      const phone = normalizeGeckoPhone(item.phone);
+      return {
+        cnpj: item.placeId ? `gplace_${item.placeId}` : `gmaps_${item.id || crypto.randomUUID()}`,
+        razaoSocial: item.name || "",
+        nomeFantasia: item.name || "",
+        telefone: phone,
+        email: null,
+        endereco: item.address || "",
+        cidade: item.city || params.municipioNome,
+        uf: params.uf.toUpperCase(),
+        socioPrincipal: null,
+        cnae: (item.categories || [])[0] || null,
+        cnaeDescricao: (item.categories || []).join(", ") || keyword,
+        situacao: "ATIVA",
+        hasPhone: !!phone,
+        enriched: false,
+      };
+    })
+    .filter((c: ProspectCompany) => !params.contemCelular || c.hasPhone);
+
+  return {
+    companies,
+    total: items.length,
+    totalPages: Math.max(1, Math.ceil(items.length / pageSize)),
+  };
+}
+
 async function enrichWithGecko(cnpj: string): Promise<Partial<ProspectCompany>> {
   const apiKey = Deno.env.get("GECKOAPI_API_KEY");
   if (!apiKey) {
@@ -338,21 +422,37 @@ async function importLeads(
   let skipped = 0;
   const errors: string[] = [];
 
+  const existingPhones = new Set(
+    (existingLeads || [])
+      .map((l) => l.whatsapp_number?.replace(/\D/g, ""))
+      .filter(Boolean),
+  );
+
   for (const company of companies) {
-    const cleanCnpj = company.cnpj.replace(/\D/g, "");
-    if (!cleanCnpj) {
+    const isGooglePlace = company.cnpj.startsWith("gplace_");
+    const cleanCnpj = isGooglePlace ? "" : company.cnpj.replace(/\D/g, "");
+    const dedupeKey = cleanCnpj || company.cnpj;
+
+    if (!dedupeKey) {
       skipped++;
       continue;
     }
 
-    if (existingCnpjs.has(cleanCnpj)) {
+    if (cleanCnpj && existingCnpjs.has(cleanCnpj)) {
       skipped++;
       continue;
     }
 
     const whatsappNumber = company.telefone
       ? company.telefone.replace(/\D/g, "")
+      : isGooglePlace
+      ? company.cnpj
       : `prospeccao_${cleanCnpj}`;
+
+    if (existingPhones.has(whatsappNumber)) {
+      skipped++;
+      continue;
+    }
 
     const tagSlug = `${meta.ramo}-${meta.cidade}`
       .toLowerCase()
@@ -367,7 +467,7 @@ async function importLeads(
       company: company.razaoSocial,
       whatsapp_number: whatsappNumber,
       email: company.email,
-      cpf_cnpj: formatCnpj(cleanCnpj),
+      cpf_cnpj: cleanCnpj.length === 14 ? formatCnpj(cleanCnpj) : null,
       address: company.endereco,
       source: "prospeccao",
       pipeline_stage: "novo",
@@ -375,6 +475,8 @@ async function importLeads(
       status: "aberto",
       intent_summary: company.cnaeDescricao
         ? `Prospecção: ${company.cnaeDescricao}`
+        : isGooglePlace
+        ? "Lead prospectado via Google Maps"
         : "Lead prospectado por CNPJ",
       tags: ["prospeccao", tagSlug].filter(Boolean),
       last_interaction: new Date().toISOString(),
@@ -384,6 +486,8 @@ async function importLeads(
         cidade: company.cidade,
         uf: company.uf,
         enriched: company.enriched || false,
+        google_place_id: isGooglePlace ? company.cnpj.replace("gplace_", "") : null,
+        source_provider: isGooglePlace ? "gecko_google_places" : "cnpj",
       },
     };
 
@@ -396,7 +500,8 @@ async function importLeads(
       }
     } else {
       imported++;
-      existingCnpjs.add(cleanCnpj);
+      if (cleanCnpj) existingCnpjs.add(cleanCnpj);
+      existingPhones.add(whatsappNumber);
     }
   }
 
@@ -447,15 +552,15 @@ serve(async (req) => {
         if (!provider) {
           return jsonResponse({
             error:
-              "Nenhuma API de prospecção configurada. Defina BUSCALEAD_API_KEY ou CASA_DOS_DADOS_API_KEY.",
+              "Nenhuma API de prospecção configurada. Defina GECKOAPI_API_KEY, BUSCALEAD_API_KEY ou CASA_DOS_DADOS_API_KEY.",
           }, 503);
         }
 
         const ramo = data.ramo as string;
-        const cnaes = RAMO_CNAE_MAP[ramo];
-        if (!cnaes) {
+        if (!RAMO_CNAE_MAP[ramo] && !RAMO_KEYWORD_MAP[ramo]) {
           return jsonResponse({ error: "Ramo de negócio inválido" }, 400);
         }
+        const cnaes = RAMO_CNAE_MAP[ramo] || [];
 
         const page = Number(data.page) || 0;
         const limit = Math.min(Number(data.limit) || 50, 100);
@@ -463,7 +568,16 @@ serve(async (req) => {
         const contemEmail = !!data.contemEmail;
 
         let result;
-        if (provider === "buscalead") {
+        if (provider === "gecko") {
+          result = await searchGeckoPlaces({
+            ramo,
+            uf: data.uf,
+            municipioNome: data.municipioNome,
+            page,
+            limit,
+            contemCelular,
+          });
+        } else if (provider === "buscalead") {
           if (!data.municipioCodigo) {
             return jsonResponse({ error: "Código IBGE do município é obrigatório" }, 400);
           }
