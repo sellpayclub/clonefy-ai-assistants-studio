@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isAdminEmail } from "../_shared/admin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -503,6 +504,10 @@ serve(async (req) => {
 
     if (!userId) {
       return jsonResponse({ error: "Não autorizado" }, 401);
+    }
+
+    if (!isAdminEmail(userEmail)) {
+      return jsonResponse({ error: "Prospecção disponível apenas para administradores" }, 403);
     }
 
     switch (action) {

@@ -23,7 +23,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -41,9 +43,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useProspeccao, exportCompaniesToCsv } from '@/hooks/useProspeccao';
 import {
   BRAZILIAN_UFS,
-  RAMO_OPTIONS,
+  DEFAULT_LEAD_LIMIT,
+  LEAD_LIMIT_OPTIONS,
+  PROSPECT_CATEGORY_GROUPS,
+  type LeadLimit,
   type ProspectCompany,
-  type RamoNegocio,
 } from '@/lib/prospeccao/constants';
 import { useQueryClient } from '@tanstack/react-query';
 import { ProspectOutreachModal } from '@/components/prospeccao/ProspectOutreachModal';
@@ -71,7 +75,8 @@ const Prospeccao = () => {
   const queryClient = useQueryClient();
   const prospeccao = useProspeccao();
 
-  const [ramo, setRamo] = useState<RamoNegocio>('beleza_completo');
+  const [ramo, setRamo] = useState('beleza_completo');
+  const [maxLeads, setMaxLeads] = useState<LeadLimit>(DEFAULT_LEAD_LIMIT);
   const [uf, setUf] = useState('');
   const [municipioCodigo, setMunicipioCodigo] = useState('');
   const [municipioNome, setMunicipioNome] = useState('');
@@ -125,9 +130,14 @@ const Prospeccao = () => {
     municipioCodigo,
     municipioNome,
     limit: 50,
+    maxLeads,
     contemCelular,
     contemEmail,
   };
+
+  const effectiveTotal = searchMeta
+    ? Math.min(searchMeta.total, maxLeads)
+    : 0;
 
   const runSearch = async (targetPage: number, resetSelection: boolean) => {
     if (!canSearch) return;
@@ -191,8 +201,8 @@ const Prospeccao = () => {
 
       if (truncated) {
         toast({
-          title: 'Limite de 500 empresas',
-          description: `Foram carregadas ${resolved.length} empresas (máximo por operação).`,
+          title: `Limite de ${maxLeads} empresas`,
+          description: `Foram carregadas ${resolved.length} empresas (máximo da sua busca).`,
         });
       }
 
@@ -352,22 +362,27 @@ const Prospeccao = () => {
         <CardHeader>
           <CardTitle className="text-lg">Filtros de busca</CardTitle>
           <CardDescription>
-            Selecione o ramo de negócio e a localização para encontrar empresas ativas
+            Selecione a categoria, localização e quantidade de leads antes de buscar (cada resultado consome crédito da API)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label>Ramo de negócio</Label>
-              <Select value={ramo} onValueChange={v => setRamo(v as RamoNegocio)}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="space-y-2 lg:col-span-2">
+              <Label>Categoria de negócio</Label>
+              <Select value={ramo} onValueChange={setRamo}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione o ramo" />
+                  <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
-                <SelectContent>
-                  {RAMO_OPTIONS.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
+                <SelectContent className="max-h-80">
+                  {PROSPECT_CATEGORY_GROUPS.map(group => (
+                    <SelectGroup key={group.id}>
+                      <SelectLabel>{group.label}</SelectLabel>
+                      {group.categories.map(cat => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>
@@ -414,6 +429,28 @@ const Prospeccao = () => {
             </div>
 
             <div className="space-y-2">
+              <Label>Quantidade de leads</Label>
+              <Select
+                value={String(maxLeads)}
+                onValueChange={v => setMaxLeads(Number(v) as LeadLimit)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEAD_LIMIT_OPTIONS.map(n => (
+                    <SelectItem key={n} value={String(n)}>
+                      Até {n} leads
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Limite máximo por busca — economiza créditos da Casa dos Dados
+              </p>
+            </div>
+
+            <div className="space-y-2 md:col-span-2 lg:col-span-1">
               <Label>Filtros de contato</Label>
               <div className="flex flex-col gap-2 pt-1">
                 <div className="flex items-center gap-2">
@@ -458,7 +495,10 @@ const Prospeccao = () => {
                   {municipioNome}, {uf}
                   {searchMeta && (
                     <Badge variant="secondary" className="ml-2">
-                      {searchMeta.total.toLocaleString('pt-BR')} empresas
+                      {searchMeta.total.toLocaleString('pt-BR')} no total
+                      {searchMeta.total > maxLeads && (
+                        <> · buscando até {maxLeads}</>
+                      )}
                     </Badge>
                   )}
                 </CardDescription>
@@ -519,7 +559,7 @@ const Prospeccao = () => {
                       className="text-primary underline font-medium"
                       onClick={prospeccao.selectAllAcrossPages}
                     >
-                      Selecionar todas as {searchMeta.total.toLocaleString('pt-BR')} empresas
+                      Selecionar até {effectiveTotal.toLocaleString('pt-BR')} leads
                     </button>
                   </span>
                 ) : (

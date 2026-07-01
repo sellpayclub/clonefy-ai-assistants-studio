@@ -25,6 +25,7 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useBranding } from "@/contexts/BrandingContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { isAdminEmail } from "@/lib/admin";
 
 import {
   Sidebar,
@@ -78,6 +79,7 @@ const menuItems = [
     url: "/prospeccao",
     icon: Building2,
     description: "Busque empresas por ramo e cidade via CNPJ",
+    adminOnly: true,
   },
   {
     title: "Analytics do Chat",
@@ -117,8 +119,7 @@ const AppSidebar = () => {
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
-  // Filter menu items based on user email
-  const isAdmin = user?.email === "personaldann@gmail.com";
+  const isAdmin = isAdminEmail(user?.email);
 
   const filteredMenuItems = useMemo(() => {
     return menuItems.filter((item) => {

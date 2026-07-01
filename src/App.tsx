@@ -126,7 +126,7 @@ const App = () => {
                       <Route path="/widget-customization" element={<LazyPage><LazyWidgetCustomization /></LazyPage>} />
                       <Route path="/widget-analytics" element={<LazyPage><LazyWidgetAnalytics /></LazyPage>} />
                       <Route path="/crm-leads" element={<LazyPage><LazyCRMLeads /></LazyPage>} />
-                      <Route path="/prospeccao" element={<LazyPage><LazyProspeccao /></LazyPage>} />
+                      <Route path="/prospeccao" element={<RestrictedRoute><LazyPage><LazyProspeccao /></LazyPage></RestrictedRoute>} />
                       
                       <Route path="/calendar" element={<LazyPage><LazyCalendar /></LazyPage>} />
                       <Route path="/saldo-api" element={<LazyPage><LazyApiBalance /></LazyPage>} />

@@ -1,17 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isAdminEmail } from "../_shared/admin.ts";
+import { getCnaesForCategory } from "../_shared/prospect-categories.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-casa-dos-dados-api-key, x-buscalead-api-key",
-};
-
-const RAMO_CNAE_MAP: Record<string, string[]> = {
-  estetica: ["9602502"],
-  salao: ["9602501"],
-  estetica_medica: ["8630503"],
-  beleza_completo: ["9602501", "9602502"],
 };
 
 interface ProspectCompany {
@@ -567,6 +562,10 @@ serve(async (req) => {
       return jsonResponse({ error: "Token inválido" }, 401);
     }
 
+    if (!isAdminEmail(user.email)) {
+      return jsonResponse({ error: "Prospecção disponível apenas para administradores" }, 403);
+    }
+
     const { action, ...data } = await req.json();
     const keys = resolveKeys(req);
     const searchProvider = getSearchProvider(keys);
@@ -600,10 +599,10 @@ serve(async (req) => {
         }
 
         const ramo = data.ramo as string;
-        if (!RAMO_CNAE_MAP[ramo]) {
-          return jsonResponse({ error: "Ramo de negócio inválido" }, 400);
+        const cnaes = getCnaesForCategory(ramo);
+        if (!cnaes) {
+          return jsonResponse({ error: "Categoria de negócio inválida" }, 400);
         }
-        const cnaes = RAMO_CNAE_MAP[ramo];
 
         const page = Number(data.page) || 0;
         const limit = Math.min(Number(data.limit) || 50, 100);
@@ -657,13 +656,13 @@ serve(async (req) => {
         }
 
         const ramo = data.ramo as string;
-        if (!RAMO_CNAE_MAP[ramo]) {
-          return jsonResponse({ error: "Ramo de negócio inválido" }, 400);
+        const cnaes = getCnaesForCategory(ramo);
+        if (!cnaes) {
+          return jsonResponse({ error: "Categoria de negócio inválida" }, 400);
         }
-        const cnaes = RAMO_CNAE_MAP[ramo];
         const contemCelular = data.contemCelular !== false;
         const contemEmail = !!data.contemEmail;
-        const maxResults = Math.min(Number(data.maxResults) || 500, 500);
+        const maxResults = Math.min(Number(data.maxResults) || 200, 200);
         const excludedCnpjs = new Set<string>(
           (data.excludedCnpjs as string[] | undefined) || [],
         );

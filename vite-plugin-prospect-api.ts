@@ -1,11 +1,11 @@
 import type { Plugin } from "vite";
 import { loadEnv } from "vite";
 import {
-  RAMO_CNAE_MAP,
   getSearchProvider,
   mapCnpjRecord,
   normalizePhone,
   parseCnpjContacts,
+  getCnaesForCategory,
 } from "./src/lib/prospeccao/cnpj-search";
 
 function resolveKeys(
@@ -214,8 +214,8 @@ async function handleAction(
         );
       }
       const ramo = body.ramo as string;
-      const cnaes = RAMO_CNAE_MAP[ramo];
-      if (!cnaes) throw new Error("Ramo inválido");
+      const cnaes = getCnaesForCategory(ramo);
+      if (!cnaes) throw new Error("Categoria inválida");
 
       const page = Number(body.page) || 0;
       const limit = Math.min(Number(body.limit) || 50, 100);
@@ -244,10 +244,10 @@ async function handleAction(
         );
       }
       const ramo = body.ramo as string;
-      const cnaes = RAMO_CNAE_MAP[ramo];
-      if (!cnaes) throw new Error("Ramo inválido");
+      const cnaes = getCnaesForCategory(ramo);
+      if (!cnaes) throw new Error("Categoria inválida");
 
-      const maxResults = Math.min(Number(body.maxResults) || 500, 500);
+      const maxResults = Math.min(Number(body.maxResults) || 200, 200);
       const excludedCnpjs = new Set<string>(
         (body.excludedCnpjs as string[] | undefined) || [],
       );

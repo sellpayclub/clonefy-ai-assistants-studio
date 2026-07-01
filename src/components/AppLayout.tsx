@@ -4,12 +4,11 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import ApiBalanceBanner from '@/components/ApiBalanceBanner';
 import { useAuth } from '@/contexts/AuthContext';
-
-const ADMIN_EMAIL = 'personaldann@gmail.com';
+import { isAdminEmail } from '@/lib/admin';
 
 export const RestrictedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
-  if (user?.email !== ADMIN_EMAIL) {
+  if (!isAdminEmail(user?.email)) {
     return <Navigate to="/dashboard" replace />;
   }
   return <>{children}</>;

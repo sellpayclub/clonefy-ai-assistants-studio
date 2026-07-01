@@ -1,45 +1,16 @@
-export type RamoNegocio =
-  | 'estetica'
-  | 'salao'
-  | 'estetica_medica'
-  | 'beleza_completo';
-
-export const RAMO_OPTIONS: { value: RamoNegocio; label: string; description: string }[] = [
-  {
-    value: 'estetica',
-    label: 'Clínica de estética',
-    description: 'Institutos de beleza, estética facial/corporal',
-  },
-  {
-    value: 'salao',
-    label: 'Salão de beleza',
-    description: 'Cabeleireiros, manicure, barbearia',
-  },
-  {
-    value: 'estetica_medica',
-    label: 'Estética médica',
-    description: 'Procedimentos médicos (botox, preenchimento)',
-  },
-  {
-    value: 'beleza_completo',
-    label: 'Beleza completo',
-    description: 'Estética + salão de beleza',
-  },
-];
-
-export const RAMO_CNAE_MAP: Record<RamoNegocio, string[]> = {
-  estetica: ['9602502'],
-  salao: ['9602501'],
-  estetica_medica: ['8630503'],
-  beleza_completo: ['9602501', '9602502'],
-};
-
-export const RAMO_KEYWORD_MAP: Record<RamoNegocio, string> = {
-  estetica: 'clinica de estetica',
-  salao: 'salao de beleza',
-  estetica_medica: 'clinica estetica medica',
-  beleza_completo: 'salao de beleza estetica',
-};
+export type { RamoNegocio, LeadLimit } from './categories';
+export {
+  PROSPECT_CATEGORY_GROUPS,
+  PROSPECT_CATEGORIES,
+  RAMO_OPTIONS,
+  RAMO_CNAE_MAP,
+  LEAD_LIMIT_OPTIONS,
+  DEFAULT_LEAD_LIMIT,
+  MAX_LEAD_LIMIT,
+  getCategoryByValue,
+  getCnaesForCategory,
+  isValidCategory,
+} from './categories';
 
 export const BRAZILIAN_UFS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
@@ -83,12 +54,13 @@ export interface ImportLeadsResult {
 export type SelectionMode = 'none' | 'page' | 'all';
 
 export interface LastSearchParams {
-  ramo: RamoNegocio;
+  ramo: string;
   uf: string;
   municipioCodigo: string;
   municipioNome: string;
   contemCelular: boolean;
   contemEmail: boolean;
+  maxLeads: number;
   total: number;
   totalPages: number;
   provider: string;

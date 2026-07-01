@@ -1,11 +1,5 @@
 import type { ProspectCompany } from './constants';
-
-export const RAMO_CNAE_MAP: Record<string, string[]> = {
-  estetica: ['9602502'],
-  salao: ['9602501'],
-  estetica_medica: ['8630503'],
-  beleza_completo: ['9602501', '9602502'],
-};
+export { RAMO_CNAE_MAP, getCnaesForCategory, isValidCategory } from './categories';
 
 export function normalizePhone(ddd?: string | null, phone?: string | null): string | null {
   if (!phone) return null;

@@ -8,6 +8,10 @@ import {
   saveApiKeys,
   type ProspeccaoApiKeys,
 } from '@/lib/prospeccao/api-keys';
+import {
+  DEFAULT_LEAD_LIMIT,
+  MAX_LEAD_LIMIT,
+} from '@/lib/prospeccao/constants';
 import type {
   FetchAllPagesResult,
   ImportLeadsResult,
@@ -15,7 +19,6 @@ import type {
   OutreachCampaignStatus,
   ProspectCompany,
   ProspectSearchResult,
-  RamoNegocio,
   SelectionMode,
 } from '@/lib/prospeccao/constants';
 
@@ -38,12 +41,13 @@ export interface ProspectConfig {
 }
 
 export interface SearchParams {
-  ramo: RamoNegocio;
+  ramo: string;
   uf: string;
   municipioCodigo: string;
   municipioNome: string;
   page?: number;
   limit?: number;
+  maxLeads?: number;
   contemCelular?: boolean;
   contemEmail?: boolean;
 }
@@ -234,6 +238,7 @@ export function useProspeccao() {
   }, []);
 
   const updateSearchContext = useCallback((params: SearchParams, result: ProspectSearchResult) => {
+    const maxLeads = params.maxLeads ?? DEFAULT_LEAD_LIMIT;
     setSearchContext({
       ramo: params.ramo,
       uf: params.uf,
@@ -241,6 +246,7 @@ export function useProspeccao() {
       municipioNome: params.municipioNome,
       contemCelular: params.contemCelular !== false,
       contemEmail: !!params.contemEmail,
+      maxLeads,
       total: result.total,
       totalPages: result.totalPages,
       provider: result.provider,
@@ -277,7 +283,7 @@ export function useProspeccao() {
           action: 'fetch_all_pages',
           ...params,
           excludedCnpjs: params.excludedCnpjs,
-          maxResults: params.maxResults ?? 500,
+          maxResults: params.maxResults ?? MAX_LEAD_LIMIT,
         },
         apiKeys,
       ),
@@ -351,13 +357,18 @@ export function useProspeccao() {
     [selectionMode, selectedIds, excludedIds],
   );
 
+  const effectiveTotal = useMemo(() => {
+    if (!searchContext) return 0;
+    return Math.min(searchContext.total, searchContext.maxLeads);
+  }, [searchContext]);
+
   const selectedCount = useMemo(() => {
     if (selectionMode === 'all' && searchContext) {
-      return Math.max(0, searchContext.total - excludedIds.size);
+      return Math.max(0, effectiveTotal - excludedIds.size);
     }
     if (selectionMode === 'page') return selectedIds.size;
     return 0;
-  }, [selectionMode, searchContext, excludedIds.size, selectedIds.size]);
+  }, [selectionMode, searchContext, effectiveTotal, excludedIds.size, selectedIds.size]);
 
   const isAllPageSelected = useCallback(
     (companies: ProspectCompany[]) =>
@@ -367,11 +378,11 @@ export function useProspeccao() {
 
   const showSelectAllBanner = useCallback(
     (companies: ProspectCompany[]) => {
-      if (!searchContext || searchContext.total <= companies.length) return false;
+      if (!searchContext || effectiveTotal <= companies.length) return false;
       if (selectionMode === 'all') return false;
       return isAllPageSelected(companies);
     },
-    [searchContext, selectionMode, isAllPageSelected],
+    [searchContext, effectiveTotal, selectionMode, isAllPageSelected],
   );
 
   const toggleSelection = useCallback((company: ProspectCompany) => {
@@ -463,6 +474,7 @@ export function useProspeccao() {
         municipioNome: searchContext.municipioNome,
         contemCelular: searchContext.contemCelular,
         contemEmail: searchContext.contemEmail,
+        maxResults: searchContext.maxLeads,
         excludedCnpjs: Array.from(excludedIds),
       });
       return { companies: result.companies, truncated: result.truncated };
@@ -514,6 +526,7 @@ export function useProspeccao() {
     selectedIds,
     excludedIds,
     searchContext,
+    effectiveTotal,
     selectedCount,
     resetSelection,
     mergeIntoCache,

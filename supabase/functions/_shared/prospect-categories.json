@@ -1,0 +1,167 @@
+{
+  "groups": [
+    {
+      "id": "beleza",
+      "label": "Beleza e Estética",
+      "categories": [
+        { "value": "salao", "label": "Salão de beleza", "description": "Cabeleireiros, manicure, barbearia", "cnaes": ["9602501"] },
+        { "value": "estetica", "label": "Clínica de estética", "description": "Institutos de beleza, estética facial/corporal", "cnaes": ["9602502"] },
+        { "value": "estetica_medica", "label": "Estética médica", "description": "Procedimentos médicos estéticos", "cnaes": ["8630503"] },
+        { "value": "beleza_completo", "label": "Beleza completo", "description": "Salão + estética", "cnaes": ["9602501", "9602502"] },
+        { "value": "spa_sauna", "label": "Spa e sauna", "description": "Sauna, banho, relaxamento", "cnaes": ["9609205"] },
+        { "value": "tatuagem", "label": "Tatuagem e piercing", "description": "Estúdios de tatuagem", "cnaes": ["9603304"] },
+        { "value": "cosmeticos", "label": "Loja de cosméticos", "description": "Perfumaria e cosméticos", "cnaes": ["4772500"] }
+      ]
+    },
+    {
+      "id": "saude",
+      "label": "Saúde",
+      "categories": [
+        { "value": "clinica_medica", "label": "Clínica médica", "description": "Consultas médicas ambulatoriais", "cnaes": ["8630501", "8630503"] },
+        { "value": "odontologia", "label": "Odontologia", "description": "Consultórios e clínicas odontológicas", "cnaes": ["8630502"] },
+        { "value": "fisioterapia", "label": "Fisioterapia", "description": "Clínicas de fisioterapia", "cnaes": ["8650003"] },
+        { "value": "nutricao", "label": "Nutrição", "description": "Nutricionistas e consultórios", "cnaes": ["8650002"] },
+        { "value": "psicologia", "label": "Psicologia", "description": "Psicólogos e clínicas", "cnaes": ["8650004"] },
+        { "value": "laboratorio", "label": "Laboratório clínico", "description": "Análises clínicas e diagnóstico", "cnaes": ["8640202"] },
+        { "value": "farmacia", "label": "Farmácia", "description": "Drogaria e farmácia", "cnaes": ["4771701"] },
+        { "value": "veterinaria", "label": "Clínica veterinária", "description": "Atendimento veterinário", "cnaes": ["7500100"] }
+      ]
+    },
+    {
+      "id": "alimentacao",
+      "label": "Alimentação e Bebidas",
+      "categories": [
+        { "value": "restaurante", "label": "Restaurante", "description": "Restaurantes e similares", "cnaes": ["5611201"] },
+        { "value": "lanchonete", "label": "Lanchonete", "description": "Lanches, sucos, casas de chá", "cnaes": ["5611203"] },
+        { "value": "bar", "label": "Bar e pub", "description": "Bares e casas de bebidas", "cnaes": ["5611204"] },
+        { "value": "padaria", "label": "Padaria e confeitaria", "description": "Padarias e confeitarias", "cnaes": ["4721102", "4721103"] },
+        { "value": "delivery", "label": "Delivery de comida", "description": "Entrega rápida de alimentos", "cnaes": ["5320202"] },
+        { "value": "food_truck", "label": "Food truck", "description": "Alimentação ambulante", "cnaes": ["5612100"] },
+        { "value": "supermercado", "label": "Supermercado", "description": "Mercados e minimercados", "cnaes": ["4711302", "4712100"] },
+        { "value": "acougue", "label": "Açougue e peixaria", "description": "Carnes e pescados", "cnaes": ["4722901", "4722902"] }
+      ]
+    },
+    {
+      "id": "comercio",
+      "label": "Comércio Varejista",
+      "categories": [
+        { "value": "moda", "label": "Loja de roupas", "description": "Vestuário e acessórios", "cnaes": ["4781400"] },
+        { "value": "calcados", "label": "Loja de calçados", "description": "Sapatos e calçados", "cnaes": ["4782201"] },
+        { "value": "moveis", "label": "Loja de móveis", "description": "Móveis e decoração", "cnaes": ["4754701"] },
+        { "value": "eletrodomesticos", "label": "Eletrodomésticos", "description": "Lojas de eletrodomésticos", "cnaes": ["4753900"] },
+        { "value": "informatica", "label": "Informática", "description": "Computadores e periféricos", "cnaes": ["4751201"] },
+        { "value": "celular", "label": "Celulares e telefonia", "description": "Lojas de celular e acessórios", "cnaes": ["4752100"] },
+        { "value": "pet_shop", "label": "Pet shop", "description": "Animais e produtos para pets", "cnaes": ["4789004"] },
+        { "value": "brinquedos", "label": "Brinquedos", "description": "Lojas de brinquedos", "cnaes": ["4763601"] },
+        { "value": "materiais_construcao", "label": "Materiais de construção", "description": "Lojas de construção", "cnaes": ["4744001", "4744099"] },
+        { "value": "ferragens", "label": "Ferragens", "description": "Ferragens e ferramentas", "cnaes": ["4742300"] }
+      ]
+    },
+    {
+      "id": "construcao",
+      "label": "Construção e Reformas",
+      "categories": [
+        { "value": "construtora", "label": "Construtora", "description": "Construção de edifícios", "cnaes": ["4120400"] },
+        { "value": "eletricista", "label": "Eletricista", "description": "Instalações elétricas", "cnaes": ["4321500"] },
+        { "value": "hidraulica", "label": "Hidráulica", "description": "Instalações hidráulicas", "cnaes": ["4322301"] },
+        { "value": "pintura", "label": "Pintura", "description": "Serviços de pintura", "cnaes": ["4330404"] },
+        { "value": "marcenaria", "label": "Marcenaria", "description": "Marcenarias e móveis sob medida", "cnaes": ["3101200"] },
+        { "value": "vidracaria", "label": "Vidraçaria", "description": "Instalação de vidros", "cnaes": ["4330403"] },
+        { "value": "paisagismo", "label": "Paisagismo", "description": "Jardins e paisagismo", "cnaes": ["8130300"] },
+        { "value": "limpeza", "label": "Limpeza e conservação", "description": "Limpeza predial e domiciliar", "cnaes": ["8121400"] }
+      ]
+    },
+    {
+      "id": "servicos",
+      "label": "Serviços Profissionais",
+      "categories": [
+        { "value": "advocacia", "label": "Advocacia", "description": "Escritórios de advocacia", "cnaes": ["6911701"] },
+        { "value": "contabilidade", "label": "Contabilidade", "description": "Escritórios contábeis", "cnaes": ["6920601"] },
+        { "value": "consultoria", "label": "Consultoria empresarial", "description": "Consultoria em gestão", "cnaes": ["7020400"] },
+        { "value": "marketing", "label": "Marketing e publicidade", "description": "Agências de marketing", "cnaes": ["7311400", "7319002"] },
+        { "value": "engenharia", "label": "Engenharia", "description": "Serviços de engenharia", "cnaes": ["7112000"] },
+        { "value": "seguros", "label": "Corretora de seguros", "description": "Seguros e previdência", "cnaes": ["6622300"] },
+        { "value": "imobiliaria", "label": "Imobiliária", "description": "Corretagem e administração de imóveis", "cnaes": ["6822600", "4110700"] },
+        { "value": "eventos", "label": "Eventos e festas", "description": "Organização de eventos", "cnaes": ["8230001", "8230002"] }
+      ]
+    },
+    {
+      "id": "tecnologia",
+      "label": "Tecnologia",
+      "categories": [
+        { "value": "software", "label": "Desenvolvimento de software", "description": "Software sob encomenda", "cnaes": ["6201501", "6202300"] },
+        { "value": "ti_suporte", "label": "Suporte de TI", "description": "Suporte técnico em informática", "cnaes": ["6209100"] },
+        { "value": "reparo_celular", "label": "Assistência técnica celular", "description": "Reparo de celulares", "cnaes": ["9512600"] },
+        { "value": "reparo_informatica", "label": "Assistência técnica informática", "description": "Reparo de computadores", "cnaes": ["9511800"] }
+      ]
+    },
+    {
+      "id": "automotivo",
+      "label": "Automotivo",
+      "categories": [
+        { "value": "oficina_mecanica", "label": "Oficina mecânica", "description": "Manutenção e reparo de veículos", "cnaes": ["4520001"] },
+        { "value": "auto_eletrica", "label": "Auto elétrica", "description": "Elétrica automotiva", "cnaes": ["4520002"] },
+        { "value": "funilaria", "label": "Funilaria e lanternagem", "description": "Reparo de lataria", "cnaes": ["4520006"] },
+        { "value": "borracharia", "label": "Borracharia", "description": "Pneus e borracharia", "cnaes": ["4520007"] },
+        { "value": "auto_pecas", "label": "Auto peças", "description": "Peças e acessórios automotivos", "cnaes": ["4530703"] },
+        { "value": "concessionaria", "label": "Concessionária", "description": "Venda de veículos", "cnaes": ["4511101", "4512901"] },
+        { "value": "lavagem", "label": "Lava-jato", "description": "Lavagem e estética automotiva", "cnaes": ["4520005"] }
+      ]
+    },
+    {
+      "id": "fitness",
+      "label": "Fitness e Esportes",
+      "categories": [
+        { "value": "academia", "label": "Academia", "description": "Academias e condicionamento físico", "cnaes": ["9313100"] },
+        { "value": "artes_marciais", "label": "Artes marciais", "description": "Escolas de luta e artes marciais", "cnaes": ["9312300"] },
+        { "value": "esportes", "label": "Artigos esportivos", "description": "Lojas de artigos esportivos", "cnaes": ["4763602"] },
+        { "value": "personal", "label": "Personal trainer", "description": "Treinamento personalizado", "cnaes": ["9313100"] }
+      ]
+    },
+    {
+      "id": "educacao",
+      "label": "Educação",
+      "categories": [
+        { "value": "escola_infantil", "label": "Escola infantil", "description": "Educação infantil", "cnaes": ["8513900"] },
+        { "value": "escola_particular", "label": "Escola particular", "description": "Ensino fundamental e médio", "cnaes": ["8513900", "8520100"] },
+        { "value": "curso_idiomas", "label": "Curso de idiomas", "description": "Escolas de idiomas", "cnaes": ["8593700"] },
+        { "value": "curso_informatica", "label": "Curso de informática", "description": "Treinamento em informática", "cnaes": ["8599604"] },
+        { "value": "autoescola", "label": "Autoescola", "description": "Ensino de direção", "cnaes": ["8599601"] }
+      ]
+    },
+    {
+      "id": "turismo",
+      "label": "Turismo e Hospedagem",
+      "categories": [
+        { "value": "hotel", "label": "Hotel e pousada", "description": "Hotéis e hospedagem", "cnaes": ["5510801", "5510803"] },
+        { "value": "agencia_viagem", "label": "Agência de viagens", "description": "Pacotes e passagens", "cnaes": ["7911200"] },
+        { "value": "turismo", "label": "Turismo e passeios", "description": "Operadores turísticos", "cnaes": ["7912100"] }
+      ]
+    },
+    {
+      "id": "pet",
+      "label": "Pet",
+      "categories": [
+        { "value": "pet_banho", "label": "Banho e tosa", "description": "Estética animal", "cnaes": ["9609208"] },
+        { "value": "pet_hotel", "label": "Hotel para pets", "description": "Hospedagem de animais", "cnaes": ["9609207"] }
+      ]
+    },
+    {
+      "id": "transporte",
+      "label": "Transporte e Logística",
+      "categories": [
+        { "value": "transporte_carga", "label": "Transporte de carga", "description": "Frete e logística", "cnaes": ["4930202"] },
+        { "value": "motoboy", "label": "Motoboy e entregas", "description": "Entregas rápidas", "cnaes": ["5320202"] },
+        { "value": "transporte_escolar", "label": "Transporte escolar", "description": "Transporte de alunos", "cnaes": ["4924800"] }
+      ]
+    },
+    {
+      "id": "fotografia",
+      "label": "Foto e Vídeo",
+      "categories": [
+        { "value": "fotografia", "label": "Fotografia", "description": "Estúdios e fotógrafos", "cnaes": ["7420001", "7420003"] },
+        { "value": "filmagem_eventos", "label": "Filmagem de eventos", "description": "Vídeo para festas e eventos", "cnaes": ["7420004"] }
+      ]
+    }
+  ]
+}
