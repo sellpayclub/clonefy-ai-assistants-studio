@@ -87,7 +87,6 @@ const WhatsAppWidgetGenerator = () => {
                         <span className="text-lg font-bold text-slate-700">Tools</span>
                     </div>
                     <div className="hidden sm:flex gap-4">
-                        <RouterLink to="/ferramentas/clickgo" className="text-sm text-slate-500 hover:text-emerald-600 font-medium">ClickGo</RouterLink>
                         <RouterLink to="/ferramentas/gerador-link-whatsapp" className="text-sm text-slate-500 hover:text-emerald-600 font-medium">Gerador de Link</RouterLink>
                     </div>
                 </div>
@@ -234,7 +233,6 @@ const WhatsAppWidgetGenerator = () => {
                     />
                     <div className="flex justify-center gap-8 mb-8">
                         <RouterLink to="/" className="text-slate-500 hover:text-emerald-600 font-medium">Home</RouterLink>
-                        <RouterLink to="/ferramentas/clickgo" className="text-slate-500 hover:text-emerald-600 font-medium">ClickGo</RouterLink>
                         <RouterLink to="/ferramentas/gerador-link-whatsapp" className="text-slate-500 hover:text-emerald-600 font-medium">Gerador de Link</RouterLink>
                     </div>
                     <p className="text-slate-400 text-sm">© 2024 Clonefy Tools - Aumente sua conversão com IA.</p>

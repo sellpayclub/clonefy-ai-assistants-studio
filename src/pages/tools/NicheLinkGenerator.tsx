@@ -254,7 +254,6 @@ const NicheLinkGenerator = () => {
                     <div className="flex justify-center gap-6 flex-wrap">
                         <Link to="/" className="text-slate-400 hover:text-white transition-colors">Clonefy</Link>
                         <Link to="/ferramentas/gerador-link-whatsapp" className="text-slate-400 hover:text-white transition-colors">Gerador de Link</Link>
-                        <Link to="/ferramentas/clickgo" className="text-slate-400 hover:text-white transition-colors">ClickGo</Link>
                     </div>
                 </div>
             </footer>

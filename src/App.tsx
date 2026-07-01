@@ -25,7 +25,6 @@ const LazyDashboard = lazy(() => import("./pages/Dashboard"));
 const LazyBrandingSettings = lazy(() => import("./pages/BrandingSettings"));
 const LazyAssistants = lazy(() => import("./pages/Assistants"));
 const LazyWhatsApp = lazy(() => import("./pages/WhatsApp"));
-const LazyTelegram = lazy(() => import("./pages/Telegram"));
 const LazyMetaChannels = lazy(() => import("./pages/MetaChannels"));
 const LazyConversations = lazy(() => import("./pages/Conversations"));
 const LazyAdmin = lazy(() => import("./pages/Admin"));
@@ -33,10 +32,8 @@ const LazyEspanol = lazy(() => import("./pages/Espanol"));
 const LazyWidgetCustomization = lazy(() => import("./pages/WidgetCustomization"));
 const LazyWidgetAnalytics = lazy(() => import("./pages/WidgetAnalytics"));
 const LazyCRMLeads = lazy(() => import("./pages/CRMLeads"));
-const LazyClickGo = lazy(() => import("./pages/tools/ClickGo"));
 const LazyWhatsAppLinkGenerator = lazy(() => import("./pages/tools/WhatsAppLinkGenerator"));
 const LazyWhatsAppWidgetGenerator = lazy(() => import("./pages/tools/WhatsAppWidgetGenerator"));
-const LazyWhatsAppROICalculator = lazy(() => import("./pages/tools/WhatsAppROICalculator"));
 const LazyNicheLinkGenerator = lazy(() => import("./pages/tools/NicheLinkGenerator"));
 const LazySectorIASolution = lazy(() => import("./pages/ia/SectorIASolution"));
 const LazyMercadoDigital = lazy(() => import("./pages/MercadoDigital"));
@@ -44,19 +41,6 @@ const LazyVentasEspanol = lazy(() => import("./pages/VentasEspanol"));
 
 const LazyLiveChat = lazy(() => import("./pages/LiveChat"));
 const LazyCalendar = lazy(() => import("./pages/Calendar"));
-const LazyFollowupDashboard = lazy(() => import("./pages/followup/FollowupDashboard"));
-const LazyFollowupCampaignWizard = lazy(() => import("./pages/followup/FollowupCampaignWizard"));
-const LazyFollowupCampaignDetails = lazy(() => import("./pages/followup/FollowupCampaignDetails"));
-const LazyFollowupImportLeads = lazy(() => import("./pages/followup/FollowupImportLeads"));
-const LazyFollowupLeadsList = lazy(() => import("./pages/followup/FollowupLeadsList"));
-const LazyCommerceStore = lazy(() => import("./pages/CommerceStore"));
-const LazyCommerceOrders = lazy(() => import("./pages/CommerceOrders"));
-const LazyCommerceConversations = lazy(() => import("./pages/CommerceConversations"));
-const LazyCommercePaymentSettings = lazy(() => import("./pages/CommercePaymentSettings"));
-const LazyCommerceConnectWhatsApp = lazy(() => import("./pages/CommerceConnectWhatsApp"));
-const LazyFinancialDashboard = lazy(() => import("./pages/FinancialDashboard"));
-const LazyFinancialTransactions = lazy(() => import("./pages/FinancialTransactions"));
-const LazyFinancialConnect = lazy(() => import("./pages/FinancialConnect"));
 const LazyChangelog = lazy(() => import("./pages/Changelog"));
 const LazyTechnicalDocs = lazy(() => import("./pages/TechnicalDocs"));
 const LazyVslDaniel = lazy(() => import("./pages/VslDaniel"));
@@ -135,7 +119,6 @@ const App = () => {
                       <Route path="/dashboard" element={<LazyPage><LazyDashboard /></LazyPage>} />
                       <Route path="/assistants" element={<LazyPage><LazyAssistants /></LazyPage>} />
                       <Route path="/whatsapp" element={<LazyPage><LazyWhatsApp /></LazyPage>} />
-                      <Route path="/telegram" element={<LazyPage><LazyTelegram /></LazyPage>} />
                       <Route path="/meta-channels" element={<LazyPage><LazyMetaChannels /></LazyPage>} />
                       <Route path="/conversations" element={<LazyPage><LazyConversations /></LazyPage>} />
                       <Route path="/live-chat" element={<LazyPage><LazyLiveChat /></LazyPage>} />
@@ -149,34 +132,13 @@ const App = () => {
                       <Route path="/saldo-api" element={<LazyPage><LazyApiBalance /></LazyPage>} />
                       <Route path="/configuracoes/branding" element={<LazyPage><LazyBrandingSettings /></LazyPage>} />
 
-                      {/* Follow-up System */}
-                      <Route path="/followup" element={<RestrictedRoute><LazyPage><LazyFollowupDashboard /></LazyPage></RestrictedRoute>} />
-                      <Route path="/followup/campaigns/new" element={<RestrictedRoute><LazyPage><LazyFollowupCampaignWizard /></LazyPage></RestrictedRoute>} />
-                      <Route path="/followup/campaigns/:id" element={<RestrictedRoute><LazyPage><LazyFollowupCampaignDetails /></LazyPage></RestrictedRoute>} />
-                      <Route path="/followup/leads" element={<RestrictedRoute><LazyPage><LazyFollowupLeadsList /></LazyPage></RestrictedRoute>} />
-                      <Route path="/followup/import" element={<RestrictedRoute><LazyPage><LazyFollowupImportLeads /></LazyPage></RestrictedRoute>} />
-
-                      {/* Commerce System */}
-                      <Route path="/commerce" element={<RestrictedRoute><LazyPage><LazyCommerceStore /></LazyPage></RestrictedRoute>} />
-                      <Route path="/commerce/orders" element={<RestrictedRoute><LazyPage><LazyCommerceOrders /></LazyPage></RestrictedRoute>} />
-                      <Route path="/commerce/conversations" element={<RestrictedRoute><LazyPage><LazyCommerceConversations /></LazyPage></RestrictedRoute>} />
-                      <Route path="/commerce/payment-settings" element={<RestrictedRoute><LazyPage><LazyCommercePaymentSettings /></LazyPage></RestrictedRoute>} />
-                      <Route path="/commerce/connect-whatsapp" element={<RestrictedRoute><LazyPage><LazyCommerceConnectWhatsApp /></LazyPage></RestrictedRoute>} />
-
-                      {/* Financial Agent */}
-                      <Route path="/financeiro" element={<RestrictedRoute><LazyPage><LazyFinancialDashboard /></LazyPage></RestrictedRoute>} />
-                      <Route path="/financeiro/transacoes" element={<RestrictedRoute><LazyPage><LazyFinancialTransactions /></LazyPage></RestrictedRoute>} />
-                      <Route path="/financeiro/conectar" element={<RestrictedRoute><LazyPage><LazyFinancialConnect /></LazyPage></RestrictedRoute>} />
-
                       {/* Changelog */}
                       <Route path="/novidades" element={<LazyPage><LazyChangelog /></LazyPage>} />
                       <Route path="/docs-tecnico" element={<RestrictedRoute><LazyPage><LazyTechnicalDocs /></LazyPage></RestrictedRoute>} />
 
                       {/* Tools */}
-                      <Route path="/ferramentas/clickgo" element={<LazyPage><LazyClickGo /></LazyPage>} />
                       <Route path="/ferramentas/gerador-link-whatsapp" element={<LazyPage><LazyWhatsAppLinkGenerator /></LazyPage>} />
                       <Route path="/ferramentas/gerador-widget-whatsapp" element={<LazyPage><LazyWhatsAppWidgetGenerator /></LazyPage>} />
-                      <Route path="/ferramentas/calculadora-roi-whatsapp" element={<LazyPage><LazyWhatsAppROICalculator /></LazyPage>} />
                     </Route>
 
                     {/* Catch-all */}

@@ -894,17 +894,9 @@ const MercadoDigital = () => {
                         <div className="flex flex-col items-center md:items-start">
                             <h4 className="font-bold text-white mb-4 uppercase text-xs tracking-wider">Ferramentas Gratuitas</h4>
                             <nav className="flex flex-col gap-2">
-                                <a href="https://clickgo-redirec-wpp.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300 text-sm font-medium flex items-center gap-2">
-                                    <Zap className="h-4 w-4" />
-                                    ClickGo - Redirecionador de WhatsApp
-                                </a>
                                 <Link to="/ferramentas/gerador-link-whatsapp" className="text-emerald-400 hover:text-emerald-300 text-sm font-medium flex items-center gap-2">
                                     <MessageSquare className="h-4 w-4" />
                                     Gerador de Link de WhatsApp
-                                </Link>
-                                <Link to="/ferramentas/calculadora-roi-whatsapp" className="text-emerald-400 hover:text-emerald-300 text-sm font-medium flex items-center gap-2">
-                                    <Calculator className="h-4 w-4" />
-                                    Calculadora de ROI WhatsApp
                                 </Link>
                                 <Link to="/auth" className="text-slate-400 hover:text-emerald-400 text-sm">Acessar Painel</Link>
                             </nav>

@@ -82,11 +82,6 @@ const WhatsAppLinkGenerator = () => {
                         <div className="h-6 w-px bg-slate-300 mx-1"></div>
                         <span className="text-lg font-bold text-slate-700">Tools</span>
                     </div>
-                    <RouterLink to="/ferramentas/clickgo">
-                        <Button variant="ghost" size="sm" className="text-emerald-700 hover:bg-emerald-50">
-                            Conheça o ClickGo
-                        </Button>
-                    </RouterLink>
                 </div>
             </header>
 
@@ -271,7 +266,6 @@ const WhatsAppLinkGenerator = () => {
                     </p>
                     <div className="flex justify-center gap-6">
                         <RouterLink to="/" className="text-slate-400 hover:text-white transition-colors">Clonefy</RouterLink>
-                        <RouterLink to="/ferramentas/clickgo" className="text-slate-400 hover:text-white transition-colors">ClickGo</RouterLink>
                         <RouterLink to="/auth" className="text-slate-400 hover:text-white transition-colors">Entrar</RouterLink>
                     </div>
                 </div>
