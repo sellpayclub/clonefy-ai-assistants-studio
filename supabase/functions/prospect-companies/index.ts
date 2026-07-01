@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-casa-dos-dados-api-key, x-buscalead-api-key",
 };
 
 const RAMO_CNAE_MAP: Record<string, string[]> = {
@@ -12,13 +12,6 @@ const RAMO_CNAE_MAP: Record<string, string[]> = {
   salao: ["9602501"],
   estetica_medica: ["8630503"],
   beleza_completo: ["9602501", "9602502"],
-};
-
-const RAMO_KEYWORD_MAP: Record<string, string> = {
-  estetica: "clinica de estetica",
-  salao: "salao de beleza",
-  estetica_medica: "clinica estetica medica",
-  beleza_completo: "salao de beleza estetica",
 };
 
 interface ProspectCompany {
@@ -36,6 +29,7 @@ interface ProspectCompany {
   situacao: string;
   hasPhone: boolean;
   enriched?: boolean;
+  dataSource?: "cnpj" | "google_maps";
 }
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -49,28 +43,32 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
-function getProvider(): "buscalead" | "casadosdados" | "gecko" | null {
-  const configured = Deno.env.get("PROSPECT_API_PROVIDER")?.toLowerCase();
-  if (configured === "buscalead" && Deno.env.get("BUSCALEAD_API_KEY")) {
-    return "buscalead";
-  }
-  if (configured === "casadosdados" && Deno.env.get("CASA_DOS_DADOS_API_KEY")) {
-    return "casadosdados";
-  }
-  if (configured === "gecko" && Deno.env.get("GECKOAPI_API_KEY")) {
-    return "gecko";
-  }
-  if (Deno.env.get("BUSCALEAD_API_KEY")) return "buscalead";
-  if (Deno.env.get("CASA_DOS_DADOS_API_KEY")) return "casadosdados";
-  if (Deno.env.get("GECKOAPI_API_KEY")) return "gecko";
-  return null;
+function resolveKeys(req: Request) {
+  return {
+    buscalead:
+      req.headers.get("x-buscalead-api-key") ||
+      Deno.env.get("BUSCALEAD_API_KEY") ||
+      null,
+    casadosdados:
+      req.headers.get("x-casa-dos-dados-api-key") ||
+      Deno.env.get("CASA_DOS_DADOS_API_KEY") ||
+      null,
+    gecko: Deno.env.get("GECKOAPI_API_KEY") || null,
+    preferred: Deno.env.get("PROSPECT_API_PROVIDER") || null,
+  };
 }
 
-function normalizeGeckoPhone(phone?: string | null): string | null {
-  if (!phone) return null;
-  const digits = phone.replace(/\D/g, "");
-  if (digits.length < 10) return null;
-  return digits.startsWith("55") ? digits : `55${digits}`;
+function getSearchProvider(keys: {
+  buscalead: string | null;
+  casadosdados: string | null;
+  preferred: string | null;
+}): "buscalead" | "casadosdados" | null {
+  const preferred = keys.preferred?.toLowerCase();
+  if (preferred === "buscalead" && keys.buscalead) return "buscalead";
+  if (preferred === "casadosdados" && keys.casadosdados) return "casadosdados";
+  if (keys.buscalead) return "buscalead";
+  if (keys.casadosdados) return "casadosdados";
+  return null;
 }
 
 function formatCnpj(cnpj: string): string {
@@ -117,8 +115,9 @@ async function searchBuscaLead(params: {
   limit: number;
   contemCelular: boolean;
   contemEmail: boolean;
+  apiKey: string;
 }): Promise<{ companies: ProspectCompany[]; total: number; totalPages: number }> {
-  const apiKey = Deno.env.get("BUSCALEAD_API_KEY")!;
+  const apiKey = params.apiKey;
   const filters: Record<string, unknown> = {
     cnae_fiscal_principal: params.cnaes,
     estado: [params.uf.toUpperCase()],
@@ -171,6 +170,7 @@ async function searchBuscaLead(params: {
       cnaeDescricao: item.cnae_principal_ref?.descricao || null,
       situacao: item.situacao_cadastral === "01" ? "ATIVA" : item.situacao_cadastral,
       hasPhone: !!phone,
+      dataSource: "cnpj",
     };
   });
 
@@ -189,8 +189,9 @@ async function searchCasaDosDados(params: {
   limit: number;
   contemCelular: boolean;
   contemEmail: boolean;
+  apiKey: string;
 }): Promise<{ companies: ProspectCompany[]; total: number; totalPages: number }> {
-  const apiKey = Deno.env.get("CASA_DOS_DADOS_API_KEY")!;
+  const apiKey = params.apiKey;
   const body = {
     codigo_atividade_principal: params.cnaes,
     incluir_atividade_secundaria: true,
@@ -262,80 +263,62 @@ async function searchCasaDosDados(params: {
         item.descricao_atividade_principal || item.atividade_principal?.descricao || null,
       situacao: item.situacao_cadastral?.situacao_cadastral || "ATIVA",
       hasPhone: !!phone,
+      dataSource: "cnpj",
     };
   });
 
+  const enrichedCompanies = await enrichCompaniesWithCnpjDetails(companies, apiKey);
+
   return {
-    companies,
+    companies: enrichedCompanies,
     total,
     totalPages: Math.max(1, Math.ceil(total / limit)),
   };
 }
 
-async function searchGeckoPlaces(params: {
-  ramo: string;
-  uf: string;
-  municipioNome: string;
-  page: number;
-  limit: number;
-  contemCelular: boolean;
-}): Promise<{ companies: ProspectCompany[]; total: number; totalPages: number }> {
-  const apiKey = Deno.env.get("GECKOAPI_API_KEY")!;
-  const keyword = RAMO_KEYWORD_MAP[params.ramo] || params.ramo;
-  const address = `${params.municipioNome}, ${params.uf}, Brasil`;
-
-  const response = await fetch("https://api.geckoapi.com.br/v1/extract", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      target: "google.com",
-      type: "places",
-      keyword,
-      address,
-    }),
+async function fetchCasaDosDadosDetail(cnpj: string, apiKey: string) {
+  const clean = cnpj.replace(/\D/g, "");
+  const response = await fetch(`https://api.casadosdados.com.br/v4/cnpj/${clean}`, {
+    headers: { "api-key": apiKey },
   });
+  if (!response.ok) return null;
+  return await response.json();
+}
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`GeckoAPI Places: ${response.status} - ${errText}`);
+async function enrichCompaniesWithCnpjDetails(
+  companies: ProspectCompany[],
+  apiKey: string,
+): Promise<ProspectCompany[]> {
+  const enriched: ProspectCompany[] = [];
+  for (const company of companies) {
+    if (company.telefone && company.email) {
+      enriched.push({ ...company, dataSource: "cnpj" });
+      continue;
+    }
+    const detail = await fetchCasaDosDadosDetail(company.cnpj, apiKey);
+    if (!detail) {
+      enriched.push({ ...company, dataSource: "cnpj" });
+      continue;
+    }
+    const telList = detail.contato_telefonico || [];
+    const emailList = detail.contato_email || [];
+    const firstPhone = telList[0];
+    const phone = company.telefone ||
+      (firstPhone
+        ? normalizePhone(firstPhone.ddd, firstPhone.numero || firstPhone.completo)
+        : null);
+    const email = company.email || emailList[0]?.email || null;
+    const socio = company.socioPrincipal || detail.quadro_societario?.[0]?.nome || null;
+    enriched.push({
+      ...company,
+      telefone: phone,
+      email,
+      socioPrincipal: socio,
+      hasPhone: !!phone,
+      dataSource: "cnpj",
+    });
   }
-
-  const payload = await response.json();
-  const items = payload.data?.items || [];
-  const pageSize = Math.min(params.limit, 50);
-  const start = params.page * pageSize;
-  const slice = items.slice(start, start + pageSize);
-
-  const companies: ProspectCompany[] = slice
-    .map((item: any) => {
-      const phone = normalizeGeckoPhone(item.phone);
-      return {
-        cnpj: item.placeId ? `gplace_${item.placeId}` : `gmaps_${item.id || crypto.randomUUID()}`,
-        razaoSocial: item.name || "",
-        nomeFantasia: item.name || "",
-        telefone: phone,
-        email: null,
-        endereco: item.address || "",
-        cidade: item.city || params.municipioNome,
-        uf: params.uf.toUpperCase(),
-        socioPrincipal: null,
-        cnae: (item.categories || [])[0] || null,
-        cnaeDescricao: (item.categories || []).join(", ") || keyword,
-        situacao: "ATIVA",
-        hasPhone: !!phone,
-        enriched: false,
-      };
-    })
-    .filter((c: ProspectCompany) => !params.contemCelular || c.hasPhone);
-
-  return {
-    companies,
-    total: items.length,
-    totalPages: Math.max(1, Math.ceil(items.length / pageSize)),
-  };
+  return enriched;
 }
 
 async function enrichWithGecko(cnpj: string): Promise<Partial<ProspectCompany>> {
@@ -429,24 +412,19 @@ async function importLeads(
   );
 
   for (const company of companies) {
-    const isGooglePlace = company.cnpj.startsWith("gplace_");
-    const cleanCnpj = isGooglePlace ? "" : company.cnpj.replace(/\D/g, "");
-    const dedupeKey = cleanCnpj || company.cnpj;
-
-    if (!dedupeKey) {
+    const cleanCnpj = company.cnpj.replace(/\D/g, "");
+    if (cleanCnpj.length !== 14) {
       skipped++;
       continue;
     }
 
-    if (cleanCnpj && existingCnpjs.has(cleanCnpj)) {
+    if (existingCnpjs.has(cleanCnpj)) {
       skipped++;
       continue;
     }
 
     const whatsappNumber = company.telefone
       ? company.telefone.replace(/\D/g, "")
-      : isGooglePlace
-      ? company.cnpj
       : `prospeccao_${cleanCnpj}`;
 
     if (existingPhones.has(whatsappNumber)) {
@@ -474,11 +452,9 @@ async function importLeads(
       lead_score: company.hasPhone ? 30 : 10,
       status: "aberto",
       intent_summary: company.cnaeDescricao
-        ? `Prospecção: ${company.cnaeDescricao}`
-        : isGooglePlace
-        ? "Lead prospectado via Google Maps"
-        : "Lead prospectado por CNPJ",
-      tags: ["prospeccao", tagSlug].filter(Boolean),
+        ? `Prospecção CNPJ: ${company.cnaeDescricao}`
+        : "Lead prospectado por CNPJ (Receita Federal)",
+      tags: ["prospeccao", "cnpj", tagSlug].filter(Boolean),
       last_interaction: new Date().toISOString(),
       custom_fields: {
         socio_principal: company.socioPrincipal,
@@ -486,8 +462,7 @@ async function importLeads(
         cidade: company.cidade,
         uf: company.uf,
         enriched: company.enriched || false,
-        google_place_id: isGooglePlace ? company.cnpj.replace("gplace_", "") : null,
-        source_provider: isGooglePlace ? "gecko_google_places" : "cnpj",
+        data_source: "cnpj",
       },
     };
 
@@ -526,14 +501,16 @@ serve(async (req) => {
     }
 
     const { action, ...data } = await req.json();
+    const keys = resolveKeys(req);
+    const searchProvider = getSearchProvider(keys);
 
     switch (action) {
       case "get_config": {
-        const provider = getProvider();
         return jsonResponse({
-          provider,
-          hasGeckoApi: !!Deno.env.get("GECKOAPI_API_KEY"),
-          configured: !!provider,
+          provider: searchProvider,
+          dataSource: searchProvider ? "cnpj" : null,
+          hasGeckoApi: !!keys.gecko,
+          configured: !!searchProvider,
         });
       }
 
@@ -548,19 +525,18 @@ serve(async (req) => {
       }
 
       case "search": {
-        const provider = getProvider();
-        if (!provider) {
+        if (!searchProvider) {
           return jsonResponse({
             error:
-              "Nenhuma API de prospecção configurada. Defina GECKOAPI_API_KEY, BUSCALEAD_API_KEY ou CASA_DOS_DADOS_API_KEY.",
+              "Configure uma API de CNPJ: Casa dos Dados ou BuscaLead. Obtenha em portal.casadosdados.com.br ou buscalead.com.",
           }, 503);
         }
 
         const ramo = data.ramo as string;
-        if (!RAMO_CNAE_MAP[ramo] && !RAMO_KEYWORD_MAP[ramo]) {
+        if (!RAMO_CNAE_MAP[ramo]) {
           return jsonResponse({ error: "Ramo de negócio inválido" }, 400);
         }
-        const cnaes = RAMO_CNAE_MAP[ramo] || [];
+        const cnaes = RAMO_CNAE_MAP[ramo];
 
         const page = Number(data.page) || 0;
         const limit = Math.min(Number(data.limit) || 50, 100);
@@ -568,16 +544,7 @@ serve(async (req) => {
         const contemEmail = !!data.contemEmail;
 
         let result;
-        if (provider === "gecko") {
-          result = await searchGeckoPlaces({
-            ramo,
-            uf: data.uf,
-            municipioNome: data.municipioNome,
-            page,
-            limit,
-            contemCelular,
-          });
-        } else if (provider === "buscalead") {
+        if (searchProvider === "buscalead") {
           if (!data.municipioCodigo) {
             return jsonResponse({ error: "Código IBGE do município é obrigatório" }, 400);
           }
@@ -589,6 +556,7 @@ serve(async (req) => {
             limit,
             contemCelular,
             contemEmail,
+            apiKey: keys.buscalead!,
           });
         } else {
           result = await searchCasaDosDados({
@@ -599,6 +567,7 @@ serve(async (req) => {
             limit,
             contemCelular,
             contemEmail,
+            apiKey: keys.casadosdados!,
           });
         }
 
@@ -607,12 +576,37 @@ serve(async (req) => {
           page,
           total: result.total,
           totalPages: result.totalPages,
-          provider,
+          provider: searchProvider,
+          dataSource: "cnpj",
         });
       }
 
       case "enrich_cnpj": {
-        const enrichment = await enrichWithGecko(data.cnpj);
+        const cleanCnpj = String(data.cnpj).replace(/\D/g, "");
+        if (cleanCnpj.length !== 14) {
+          return jsonResponse({ error: "CNPJ inválido para enriquecimento" }, 400);
+        }
+        if (keys.casadosdados) {
+          const detail = await fetchCasaDosDadosDetail(cleanCnpj, keys.casadosdados);
+          if (detail) {
+            const telList = detail.contato_telefonico || [];
+            const emailList = detail.contato_email || [];
+            const firstPhone = telList[0];
+            const phone = firstPhone
+              ? normalizePhone(firstPhone.ddd, firstPhone.numero || firstPhone.completo)
+              : null;
+            return jsonResponse({
+              enrichment: {
+                telefone: phone,
+                email: emailList[0]?.email || null,
+                socioPrincipal: detail.quadro_societario?.[0]?.nome || null,
+                hasPhone: !!phone,
+                enriched: true,
+              },
+            });
+          }
+        }
+        const enrichment = await enrichWithGecko(cleanCnpj);
         return jsonResponse({ enrichment });
       }
 

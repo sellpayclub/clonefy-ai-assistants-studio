@@ -34,6 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useProspeccao, exportCompaniesToCsv } from '@/hooks/useProspeccao';
@@ -58,7 +59,6 @@ function formatPhoneDisplay(phone: string | null) {
 }
 
 function formatCnpjDisplay(cnpj: string) {
-  if (cnpj.startsWith('gplace_')) return 'Google Maps';
   const d = cnpj.replace(/\D/g, '');
   if (d.length !== 14) return cnpj;
   return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
@@ -81,6 +81,11 @@ const Prospeccao = () => {
   const [companies, setCompanies] = useState<ProspectCompany[]>([]);
   const [searchMeta, setSearchMeta] = useState<{ total: number; totalPages: number; provider: string } | null>(null);
   const [enrichingCnpj, setEnrichingCnpj] = useState<string | null>(null);
+  const [cddKeyInput, setCddKeyInput] = useState(prospeccao.apiKeys.casaDosDados || '');
+
+  useEffect(() => {
+    setCddKeyInput(prospeccao.apiKeys.casaDosDados || '');
+  }, [prospeccao.apiKeys.casaDosDados]);
 
   useEffect(() => {
     if (!uf) {
@@ -178,10 +183,12 @@ const Prospeccao = () => {
   };
 
   const handleEnrich = async (company: ProspectCompany) => {
-    if (!prospeccao.config?.hasGeckoApi) {
+    const canEnrich =
+      prospeccao.config?.hasGeckoApi || !!prospeccao.apiKeys.casaDosDados;
+    if (!canEnrich) {
       toast({
-        title: 'GeckoAPI não configurada',
-        description: 'Configure GECKOAPI_API_KEY para enriquecer contatos.',
+        title: 'API não configurada',
+        description: 'Informe sua chave Casa dos Dados para buscar contatos do CNPJ.',
         variant: 'destructive',
       });
       return;
@@ -227,28 +234,54 @@ const Prospeccao = () => {
             Prospecção Local
           </h1>
           <p className="text-muted-foreground text-sm">
-            Busque empresas por ramo e cidade com dados de CNPJ e contato
+            Empresas reais da Receita Federal — CNPJ, sócio, telefone e e-mail cadastrados
           </p>
         </div>
       </div>
 
-      {prospeccao.isLocalMode && (
-        <Alert>
-          <CheckCircle2 className="h-4 w-4" />
-          <AlertTitle>Modo local ativo</AlertTitle>
-          <AlertDescription>
-            Busca via GeckoAPI + Google Maps. Importação direta no CRM.
-          </AlertDescription>
-        </Alert>
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Chave API de CNPJ</CardTitle>
+          <CardDescription>
+            Necessária para buscar dados da Receita Federal (não Google Maps).{' '}
+            <a
+              href="https://portal.casadosdados.com.br/plataforma/api/chave"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline"
+            >
+              Obter chave Casa dos Dados
+            </a>{' '}
+            (200 consultas grátis para teste).
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col sm:flex-row gap-3">
+          <Input
+            type="password"
+            placeholder="Cole sua api-key da Casa dos Dados"
+            value={cddKeyInput}
+            onChange={e => setCddKeyInput(e.target.value)}
+            className="flex-1"
+          />
+          <Button
+            variant="secondary"
+            onClick={() => {
+              prospeccao.saveApiKeys({ ...prospeccao.apiKeys, casaDosDados: cddKeyInput.trim() });
+              toast({ title: 'Chave salva nesta sessão' });
+            }}
+          >
+            Salvar chave
+          </Button>
+        </CardContent>
+      </Card>
 
       {!prospeccao.configLoading && !prospeccao.config?.configured && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>API não configurada</AlertTitle>
+          <AlertTitle>API de CNPJ necessária</AlertTitle>
           <AlertDescription>
-            Configure <code>BUSCALEAD_API_KEY</code> ou <code>CASA_DOS_DADOS_API_KEY</code> nas
-            variáveis de ambiente do Supabase para habilitar a busca.
+            Informe sua chave da Casa dos Dados acima. A GeckoAPI sozinha não faz busca por
+            CNAE/cidade — ela só enriquece CNPJs individuais.
           </AlertDescription>
         </Alert>
       )}
@@ -256,10 +289,12 @@ const Prospeccao = () => {
       {prospeccao.config?.configured && (
         <Alert>
           <CheckCircle2 className="h-4 w-4" />
-          <AlertTitle>API conectada: {prospeccao.config.provider}</AlertTitle>
+          <AlertTitle>
+            Fonte: Receita Federal via {prospeccao.config.provider === 'casadosdados' ? 'Casa dos Dados' : 'BuscaLead'}
+          </AlertTitle>
           <AlertDescription>
-            Dados provenientes do cadastro da Receita Federal. Telefones podem estar desatualizados.
-            {prospeccao.config.hasGeckoApi && ' Enriquecimento GeckoAPI disponível.'}
+            Retorna CNPJ, razão social, nome do sócio, telefone e e-mail cadastrados na Receita.
+            Nem toda empresa tem telefone no CNPJ — use o filtro &quot;Só com celular&quot;.
           </AlertDescription>
         </Alert>
       )}
@@ -473,7 +508,7 @@ const Prospeccao = () => {
                         {company.socioPrincipal || '—'}
                       </TableCell>
                       <TableCell>
-                        {!company.hasPhone && prospeccao.config?.hasGeckoApi && (
+                        {!company.hasPhone && (prospeccao.config?.hasGeckoApi || prospeccao.apiKeys.casaDosDados) && (
                           <Button
                             variant="ghost"
                             size="sm"

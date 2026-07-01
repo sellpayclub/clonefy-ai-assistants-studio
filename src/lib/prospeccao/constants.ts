@@ -62,6 +62,7 @@ export interface ProspectCompany {
   situacao: string;
   hasPhone: boolean;
   enriched?: boolean;
+  dataSource?: 'cnpj' | 'google_maps';
 }
 
 export interface ProspectSearchResult {
@@ -70,6 +71,7 @@ export interface ProspectSearchResult {
   total: number;
   totalPages: number;
   provider: string;
+  dataSource?: 'cnpj';
 }
 
 export interface ImportLeadsResult {

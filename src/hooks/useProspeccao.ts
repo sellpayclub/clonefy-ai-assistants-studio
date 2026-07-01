@@ -2,6 +2,12 @@ import { useCallback, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  buildApiKeyHeaders,
+  getStoredApiKeys,
+  saveApiKeys,
+  type ProspeccaoApiKeys,
+} from '@/lib/prospeccao/api-keys';
 import type {
   ImportLeadsResult,
   ProspectCompany,
@@ -20,8 +26,9 @@ interface Estado {
   id: number;
 }
 
-interface ProspectConfig {
+export interface ProspectConfig {
   provider: string | null;
+  dataSource: 'cnpj' | null;
   hasGeckoApi: boolean;
   configured: boolean;
 }
@@ -35,17 +42,24 @@ function formatCnpj(cnpj: string): string {
   return digits.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
 }
 
-async function callProspectFunction<T>(body: Record<string, unknown>): Promise<T> {
+async function callProspectFunction<T>(
+  body: Record<string, unknown>,
+  apiKeys?: ProspeccaoApiKeys,
+): Promise<T> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('Sessão expirada. Faça login novamente.');
+
+  const keys = apiKeys || getStoredApiKeys();
+  const apiKeyHeaders = buildApiKeyHeaders(keys);
+  const authHeaders = {
+    Authorization: `Bearer ${session.access_token}`,
+    ...apiKeyHeaders,
+  };
 
   if (USE_LOCAL_PROSPECT) {
     const response = await fetch('/api/prospect-companies', {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
     const data = await response.json();
@@ -56,7 +70,7 @@ async function callProspectFunction<T>(body: Record<string, unknown>): Promise<T
 
   const response = await supabase.functions.invoke('prospect-companies', {
     body,
-    headers: { Authorization: `Bearer ${session.access_token}` },
+    headers: authHeaders,
   });
 
   if (response.error) throw new Error(response.error.message);
@@ -90,19 +104,20 @@ async function importLeadsClient(
   const errors: string[] = [];
 
   for (const company of companies) {
-    const isGooglePlace = company.cnpj.startsWith('gplace_');
-    const cleanCnpj = isGooglePlace ? '' : company.cnpj.replace(/\D/g, '');
+    const cleanCnpj = company.cnpj.replace(/\D/g, '');
+    if (cleanCnpj.length !== 14) {
+      skipped++;
+      continue;
+    }
 
-    if (cleanCnpj && existingCnpjs.has(cleanCnpj)) {
+    if (existingCnpjs.has(cleanCnpj)) {
       skipped++;
       continue;
     }
 
     const whatsappNumber = company.telefone
       ? company.telefone.replace(/\D/g, '')
-      : isGooglePlace
-        ? company.cnpj
-        : `prospeccao_${cleanCnpj}`;
+      : `prospeccao_${cleanCnpj}`;
 
     if (existingPhones.has(whatsappNumber)) {
       skipped++;
@@ -122,18 +137,16 @@ async function importLeadsClient(
       company: company.razaoSocial,
       whatsapp_number: whatsappNumber,
       email: company.email,
-      cpf_cnpj: cleanCnpj.length === 14 ? formatCnpj(cleanCnpj) : null,
+      cpf_cnpj: formatCnpj(cleanCnpj),
       address: company.endereco,
       source: 'prospeccao',
       pipeline_stage: 'novo',
       lead_score: company.hasPhone ? 30 : 10,
       status: 'aberto',
       intent_summary: company.cnaeDescricao
-        ? `Prospecção: ${company.cnaeDescricao}`
-        : isGooglePlace
-          ? 'Lead prospectado via Google Maps'
-          : 'Lead prospectado por CNPJ',
-      tags: ['prospeccao', tagSlug].filter(Boolean),
+        ? `Prospecção CNPJ: ${company.cnaeDescricao}`
+        : 'Lead prospectado por CNPJ (Receita Federal)',
+      tags: ['prospeccao', 'cnpj', tagSlug].filter(Boolean),
       last_interaction: new Date().toISOString(),
       custom_fields: {
         socio_principal: company.socioPrincipal,
@@ -141,7 +154,7 @@ async function importLeadsClient(
         cidade: company.cidade,
         uf: company.uf,
         enriched: company.enriched || false,
-        google_place_id: isGooglePlace ? company.cnpj.replace('gplace_', '') : null,
+        data_source: 'cnpj',
       },
     });
 
@@ -150,7 +163,7 @@ async function importLeadsClient(
       else errors.push(`${company.cnpj}: ${error.message}`);
     } else {
       imported++;
-      if (cleanCnpj) existingCnpjs.add(cleanCnpj);
+      existingCnpjs.add(cleanCnpj);
       existingPhones.add(whatsappNumber);
     }
   }
@@ -162,17 +175,24 @@ export function useProspeccao() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [apiKeys, setApiKeysState] = useState<ProspeccaoApiKeys>(() => getStoredApiKeys());
+
+  const saveApiKeysState = useCallback((keys: ProspeccaoApiKeys) => {
+    saveApiKeys(keys);
+    setApiKeysState(keys);
+    queryClient.invalidateQueries({ queryKey: ['prospeccao-config'] });
+  }, [queryClient]);
 
   const configQuery = useQuery({
-    queryKey: ['prospeccao-config', USE_LOCAL_PROSPECT],
-    queryFn: () => callProspectFunction<ProspectConfig>({ action: 'get_config' }),
-    staleTime: 5 * 60 * 1000,
+    queryKey: ['prospeccao-config', USE_LOCAL_PROSPECT, apiKeys],
+    queryFn: () => callProspectFunction<ProspectConfig>({ action: 'get_config' }, apiKeys),
+    staleTime: 30 * 1000,
   });
 
   const estadosQuery = useQuery({
     queryKey: ['prospeccao-estados', USE_LOCAL_PROSPECT],
     queryFn: async () => {
-      const data = await callProspectFunction<{ estados: Estado[] }>({ action: 'list_estados' });
+      const data = await callProspectFunction<{ estados: Estado[] }>({ action: 'list_estados' }, apiKeys);
       return data.estados;
     },
     staleTime: 24 * 60 * 60 * 1000,
@@ -189,10 +209,10 @@ export function useProspeccao() {
       contemCelular?: boolean;
       contemEmail?: boolean;
     }) =>
-      callProspectFunction<ProspectSearchResult>({
-        action: 'search',
-        ...params,
-      }),
+      callProspectFunction<ProspectSearchResult>(
+        { action: 'search', ...params },
+        apiKeys,
+      ),
     onSuccess: () => setSelectedIds(new Set()),
   });
 
@@ -214,19 +234,19 @@ export function useProspeccao() {
 
   const enrichMutation = useMutation({
     mutationFn: (cnpj: string) =>
-      callProspectFunction<{ enrichment: Partial<ProspectCompany> }>({
-        action: 'enrich_cnpj',
-        cnpj,
-      }),
+      callProspectFunction<{ enrichment: Partial<ProspectCompany> }>(
+        { action: 'enrich_cnpj', cnpj },
+        apiKeys,
+      ),
   });
 
   const fetchMunicipios = useCallback(async (uf: string): Promise<Municipio[]> => {
-    const data = await callProspectFunction<{ municipios: Municipio[] }>({
-      action: 'list_municipios',
-      uf,
-    });
+    const data = await callProspectFunction<{ municipios: Municipio[] }>(
+      { action: 'list_municipios', uf },
+      apiKeys,
+    );
     return data.municipios;
-  }, []);
+  }, [apiKeys]);
 
   const toggleSelection = useCallback((cnpj: string) => {
     setSelectedIds(prev => {
@@ -254,6 +274,8 @@ export function useProspeccao() {
     config: configQuery.data,
     configLoading: configQuery.isLoading,
     isLocalMode: USE_LOCAL_PROSPECT,
+    apiKeys,
+    saveApiKeys: saveApiKeysState,
     estados: estadosQuery.data || [],
     estadosLoading: estadosQuery.isLoading,
     search: searchMutation,
@@ -268,7 +290,7 @@ export function useProspeccao() {
   };
 }
 
-export function exportCompaniesToCsv(companies: ProspectCompany[], filename = 'prospeccao.csv') {
+export function exportCompaniesToCsv(companies: ProspectCompany[], filename = 'prospeccao-cnpj.csv') {
   const headers = [
     'CNPJ',
     'Razão Social',
@@ -284,7 +306,7 @@ export function exportCompaniesToCsv(companies: ProspectCompany[], filename = 'p
   ];
 
   const rows = companies.map(c => [
-    c.cnpj.startsWith('gplace_') ? 'Google Maps' : c.cnpj,
+    c.cnpj,
     c.razaoSocial,
     c.nomeFantasia,
     c.telefone || '',
