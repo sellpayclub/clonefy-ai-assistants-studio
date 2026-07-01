@@ -51,6 +51,12 @@ import {
 } from '@/lib/prospeccao/constants';
 import { useQueryClient } from '@tanstack/react-query';
 import { ProspectOutreachModal } from '@/components/prospeccao/ProspectOutreachModal';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  clearProspeccaoSession,
+  loadProspeccaoSession,
+  saveProspeccaoSession,
+} from '@/lib/prospeccao/session-storage';
 
 function formatPhoneDisplay(phone: string | null) {
   if (!phone) return '—';
@@ -73,6 +79,7 @@ function formatCnpjDisplay(cnpj: string) {
 const Prospeccao = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const prospeccao = useProspeccao();
 
   const [ramo, setRamo] = useState('beleza_completo');
@@ -92,6 +99,26 @@ const Prospeccao = () => {
   const [resolvingAction, setResolvingAction] = useState(false);
   const [outreachOpen, setOutreachOpen] = useState(false);
   const [outreachCompanies, setOutreachCompanies] = useState<ProspectCompany[]>([]);
+  const [sessionRestored, setSessionRestored] = useState(false);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const saved = loadProspeccaoSession(user.id);
+    if (!saved?.companies.length) return;
+
+    setRamo(saved.ramo);
+    setMaxLeads(saved.maxLeads as LeadLimit);
+    setUf(saved.uf);
+    setMunicipioCodigo(saved.municipioCodigo);
+    setMunicipioNome(saved.municipioNome);
+    setContemCelular(saved.contemCelular);
+    setContemEmail(saved.contemEmail);
+    setCompanies(saved.companies);
+    setSearchMeta(saved.searchMeta);
+    setPage(saved.page);
+    prospeccao.mergeIntoCache(saved.companies);
+    setSessionRestored(true);
+  }, [user?.id]);
 
   useEffect(() => {
     setCddKeyInput(prospeccao.apiKeys.casaDosDados || '');
@@ -129,7 +156,7 @@ const Prospeccao = () => {
     uf,
     municipioCodigo,
     municipioNome,
-    limit: 50,
+    limit: Math.min(maxLeads, 50),
     maxLeads,
     contemCelular,
     contemEmail,
@@ -159,6 +186,27 @@ const Prospeccao = () => {
         provider: result.provider,
       });
       setPage(targetPage);
+
+      if (user?.id) {
+        saveProspeccaoSession(user.id, {
+          savedAt: new Date().toISOString(),
+          ramo,
+          uf,
+          municipioCodigo,
+          municipioNome,
+          maxLeads,
+          contemCelular,
+          contemEmail,
+          companies: result.companies,
+          searchMeta: {
+            total: result.total,
+            totalPages: result.totalPages,
+            provider: result.provider,
+          },
+          page: targetPage,
+        });
+        setSessionRestored(false);
+      }
     } catch (err: any) {
       toast({
         title: 'Erro na busca',
@@ -333,6 +381,29 @@ const Prospeccao = () => {
           </Button>
         </CardContent>
       </Card>
+
+      {sessionRestored && companies.length > 0 && (
+        <Alert>
+          <CheckCircle2 className="h-4 w-4" />
+          <AlertTitle>Sessão restaurada</AlertTitle>
+          <AlertDescription className="flex flex-wrap items-center gap-2">
+            {companies.length} lead(s) de {municipioNome} recuperados da última busca.
+            <button
+              type="button"
+              className="text-primary underline text-sm"
+              onClick={() => {
+                if (user?.id) clearProspeccaoSession(user.id);
+                setSessionRestored(false);
+                setCompanies([]);
+                setSearchMeta(null);
+                prospeccao.resetSelection();
+              }}
+            >
+              Limpar sessão
+            </button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {!prospeccao.configLoading && !prospeccao.config?.configured && (
         <Alert variant="destructive">

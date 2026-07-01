@@ -605,7 +605,21 @@ serve(async (req) => {
         }
 
         const page = Number(data.page) || 0;
-        const limit = Math.min(Number(data.limit) || 50, 100);
+        const maxLeads = Math.min(Number(data.maxLeads) || 200, 200);
+        const pageSize = Math.min(Math.min(Number(data.limit) || 50, 100), maxLeads);
+        const offset = page * pageSize;
+        if (offset >= maxLeads) {
+          return jsonResponse({
+            companies: [],
+            page,
+            total: 0,
+            totalPages: 0,
+            provider: searchProvider,
+            dataSource: "cnpj",
+            maxLeads,
+          });
+        }
+        const limit = Math.min(pageSize, maxLeads - offset);
         const contemCelular = data.contemCelular !== false;
         const contemEmail = !!data.contemEmail;
 
@@ -637,13 +651,18 @@ serve(async (req) => {
           });
         }
 
+        const cappedTotal = Math.min(result.total, maxLeads);
+        const totalPages = Math.max(1, Math.ceil(cappedTotal / pageSize));
+
         return jsonResponse({
-          companies: result.companies,
+          companies: result.companies.slice(0, limit),
           page,
           total: result.total,
-          totalPages: result.totalPages,
+          totalPages,
           provider: searchProvider,
           dataSource: "cnpj",
+          maxLeads,
+          cappedTotal,
         });
       }
 

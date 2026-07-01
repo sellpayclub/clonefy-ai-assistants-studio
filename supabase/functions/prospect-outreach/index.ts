@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { isAdminEmail } from "../_shared/admin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -155,22 +154,35 @@ async function upsertCrmLead(
 }
 
 async function validateInstance(userEmail: string, instanceName: string) {
-  const { data, error } = await supabase
+  const normalizedEmail = userEmail.trim().toLowerCase();
+  const normalizedInstance = instanceName.trim();
+
+  const { data: rows, error } = await supabase
     .from("n8n_fluxogpt")
     .select("nomeinstancia, idassistentgpt, emailuser")
-    .eq("nomeinstancia", instanceName)
-    .eq("emailuser", userEmail)
-    .maybeSingle();
+    .ilike("nomeinstancia", normalizedInstance)
+    .not("emailuser", "is", null);
 
-  if (error || !data) {
-    throw new Error("Conexão WhatsApp não encontrada ou sem permissão");
+  if (error) {
+    console.error("validateInstance db error:", error);
+    throw new Error(`Erro ao buscar conexão WhatsApp: ${error.message}`);
+  }
+
+  const data = (rows || []).find(
+    (row) => (row.emailuser || "").trim().toLowerCase() === normalizedEmail,
+  );
+
+  if (!data) {
+    throw new Error(
+      `Conexão "${normalizedInstance}" não encontrada para ${userEmail}. Verifique em Conexões WhatsApp.`,
+    );
   }
   if (!data.idassistentgpt?.trim()) {
     throw new Error("Esta conexão não tem assistente IA configurado");
   }
 
   const statusResponse = await fetch(
-    `${EVOLUTION_API_URL}/instance/connectionState/${instanceName}`,
+    `${EVOLUTION_API_URL}/instance/connectionState/${data.nomeinstancia}`,
     { headers: { apikey: EVOLUTION_API_KEY } },
   );
   if (statusResponse.ok) {
@@ -503,12 +515,11 @@ serve(async (req) => {
     }
 
     if (!userId) {
-      return jsonResponse({ error: "Não autorizado" }, 401);
+      console.warn("prospect-outreach: 401", { action, hasAuth: !!authHeader });
+      return jsonResponse({ error: "Não autorizado — faça login novamente" }, 401);
     }
 
-    if (!isAdminEmail(userEmail)) {
-      return jsonResponse({ error: "Prospecção disponível apenas para administradores" }, 403);
-    }
+    console.log("prospect-outreach:", { action, userId, userEmail });
 
     switch (action) {
       case "start_campaign":

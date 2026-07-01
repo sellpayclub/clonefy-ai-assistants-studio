@@ -218,7 +218,13 @@ async function handleAction(
       if (!cnaes) throw new Error("Categoria inválida");
 
       const page = Number(body.page) || 0;
-      const limit = Math.min(Number(body.limit) || 50, 100);
+      const maxLeads = Math.min(Number(body.maxLeads) || 200, 200);
+      const pageSize = Math.min(Math.min(Number(body.limit) || 50, 100), maxLeads);
+      const offset = page * pageSize;
+      if (offset >= maxLeads) {
+        return { companies: [], page, total: 0, totalPages: 0, maxLeads, cappedTotal: 0 };
+      }
+      const limit = Math.min(pageSize, maxLeads - offset);
       const params = {
         cnaes,
         uf: body.uf as string,
@@ -235,7 +241,16 @@ async function handleAction(
           ? await searchBuscaLead(keys.buscalead!, params)
           : await searchCasaDosDados(keys.casadosdados!, params);
 
-      return { ...result, page };
+      const cappedTotal = Math.min(result.total, maxLeads);
+      const totalPages = Math.max(1, Math.ceil(cappedTotal / pageSize));
+      return {
+        ...result,
+        companies: result.companies.slice(0, limit),
+        page,
+        totalPages,
+        maxLeads,
+        cappedTotal,
+      };
     }
     case "fetch_all_pages": {
       if (!searchProvider) {
