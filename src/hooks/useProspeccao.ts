@@ -446,8 +446,13 @@ export function useProspeccao() {
     setExcludedIds(new Set());
   }, []);
 
-  const resolveSelectedCompanies = useCallback(async (): Promise<ProspectCompany[]> => {
-    if (selectionMode === 'none' || selectedCount === 0) return [];
+  const resolveSelectedCompanies = useCallback(async (): Promise<{
+    companies: ProspectCompany[];
+    truncated: boolean;
+  }> => {
+    if (selectionMode === 'none' || selectedCount === 0) {
+      return { companies: [], truncated: false };
+    }
 
     if (selectionMode === 'all') {
       if (!searchContext) throw new Error('Contexto de busca não encontrado');
@@ -460,12 +465,13 @@ export function useProspeccao() {
         contemEmail: searchContext.contemEmail,
         excludedCnpjs: Array.from(excludedIds),
       });
-      return result.companies;
+      return { companies: result.companies, truncated: result.truncated };
     }
 
-    return Array.from(selectedIds)
+    const companies = Array.from(selectedIds)
       .map(cnpj => companyCache.get(cnpj))
       .filter((c): c is ProspectCompany => !!c);
+    return { companies, truncated: false };
   }, [
     selectionMode,
     selectedCount,

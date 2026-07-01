@@ -183,10 +183,17 @@ const Prospeccao = () => {
 
     setResolvingAction(true);
     try {
-      const resolved = await prospeccao.resolveSelectedCompanies();
+      const { companies: resolved, truncated } = await prospeccao.resolveSelectedCompanies();
       if (!resolved.length) {
         toast({ title: 'Nenhuma empresa encontrada na seleção', variant: 'destructive' });
         return;
+      }
+
+      if (truncated) {
+        toast({
+          title: 'Limite de 500 empresas',
+          description: `Foram carregadas ${resolved.length} empresas (máximo por operação).`,
+        });
       }
 
       if (action === 'export') {
@@ -504,12 +511,9 @@ const Prospeccao = () => {
           <CardContent className="p-0">
             {prospeccao.selectedCount > 0 && (
               <div className="px-4 py-2 bg-primary/5 border-b text-sm flex flex-wrap items-center gap-2">
-                <span>
-                  <strong>{prospeccao.selectedCount.toLocaleString('pt-BR')}</strong> selecionada(s)
-                </span>
-                {prospeccao.showSelectAllBanner(companies) && searchMeta && (
-                  <>
-                    <span className="text-muted-foreground">·</span>
+                {prospeccao.showSelectAllBanner(companies) && searchMeta ? (
+                  <span>
+                    <strong>{companies.length}</strong> selecionada(s) nesta página.{' '}
                     <button
                       type="button"
                       className="text-primary underline font-medium"
@@ -517,7 +521,11 @@ const Prospeccao = () => {
                     >
                       Selecionar todas as {searchMeta.total.toLocaleString('pt-BR')} empresas
                     </button>
-                  </>
+                  </span>
+                ) : (
+                  <span>
+                    <strong>{prospeccao.selectedCount.toLocaleString('pt-BR')}</strong> selecionada(s)
+                  </span>
                 )}
                 {prospeccao.selectionMode === 'all' && (
                   <Badge variant="secondary">Todas as páginas</Badge>
