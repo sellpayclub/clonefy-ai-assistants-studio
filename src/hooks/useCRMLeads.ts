@@ -72,6 +72,12 @@ const DEFAULT_FILTERS: LeadFilters = {
   urgency: null,
 };
 
+/** Colunas leves para a lista — evita carregar textos enormes de análise IA. */
+const LEAD_LIST_SELECT =
+  'id,name,whatsapp_number,email,lead_score,status,intent_summary,source,last_interaction,created_at,updated_at,tags,key_topics,urgency_level,next_action,company,pipeline_stage,custom_fields,cpf_cnpj,address';
+
+const MAX_LEADS_FETCH = 2000;
+
 export function useCRMLeads() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -83,29 +89,18 @@ export function useCRMLeads() {
     queryKey: ['crm-leads', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      // Fetch all leads without the default 1000 row limit
-      const allLeads: Lead[] = [];
-      const PAGE_SIZE = 1000;
-      let from = 0;
-      let hasMore = true;
-
-      while (hasMore) {
-        const { data, error } = await (supabase as any)
-          .from('crm_leads')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('last_interaction', { ascending: false })
-          .range(from, from + PAGE_SIZE - 1);
-        if (error) throw error;
-        const batch = (data || []) as Lead[];
-        allLeads.push(...batch);
-        hasMore = batch.length === PAGE_SIZE;
-        from += PAGE_SIZE;
-      }
-
-      return allLeads;
+      const { data, error } = await (supabase as any)
+        .from('crm_leads')
+        .select(LEAD_LIST_SELECT)
+        .eq('user_id', user.id)
+        .order('last_interaction', { ascending: false })
+        .limit(MAX_LEADS_FETCH);
+      if (error) throw error;
+      return (data || []) as Lead[];
     },
     enabled: !!user?.id,
+    staleTime: 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 
   // Fetch pipeline stages
@@ -122,6 +117,7 @@ export function useCRMLeads() {
       return (data || []) as PipelineStage[];
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Initialize default stages if none exist
@@ -255,33 +251,25 @@ export function useCRMLeads() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['crm-pipeline-stages'] }),
   });
 
-  // Notes
-  const { data: allNotes = [] } = useQuery({
-    queryKey: ['crm-lead-notes', user?.id],
+  // Notes — carregadas só quando o drawer abre (via useLeadNotes)
+  const [notesLeadId, setNotesLeadId] = useState<string | null>(null);
+
+  const { data: leadNotes = [] } = useQuery({
+    queryKey: ['crm-lead-notes', user?.id, notesLeadId],
     queryFn: async () => {
-      if (!user?.id) return [];
-      const allNotes: LeadNote[] = [];
-      const PAGE_SIZE = 1000;
-      let from = 0;
-      let hasMore = true;
-
-      while (hasMore) {
-        const { data, error } = await (supabase as any)
-          .from('crm_lead_notes')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .range(from, from + PAGE_SIZE - 1);
-        if (error) throw error;
-        const batch = (data || []) as LeadNote[];
-        allNotes.push(...batch);
-        hasMore = batch.length === PAGE_SIZE;
-        from += PAGE_SIZE;
-      }
-
-      return allNotes;
+      if (!user?.id || !notesLeadId) return [];
+      const { data, error } = await (supabase as any)
+        .from('crm_lead_notes')
+        .select('id,lead_id,user_id,content,created_by,created_at')
+        .eq('user_id', user.id)
+        .eq('lead_id', notesLeadId)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return (data || []) as LeadNote[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!notesLeadId,
+    staleTime: 30 * 1000,
   });
 
   const addNote = useMutation({
@@ -293,7 +281,7 @@ export function useCRMLeads() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-lead-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-lead-notes', user?.id, notesLeadId] });
       toast({ title: 'Nota adicionada!' });
     },
   });
@@ -307,7 +295,7 @@ export function useCRMLeads() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-lead-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-lead-notes', user?.id, notesLeadId] });
       toast({ title: 'Nota atualizada!' });
     },
     onError: (err: any) => {
@@ -324,7 +312,7 @@ export function useCRMLeads() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-lead-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-lead-notes', user?.id, notesLeadId] });
       toast({ title: 'Nota excluída!' });
     },
     onError: (err: any) => {
@@ -372,8 +360,13 @@ export function useCRMLeads() {
   }, [leads]);
 
   const getNotesForLead = useCallback((leadId: string) => {
-    return allNotes.filter(n => n.lead_id === leadId);
-  }, [allNotes]);
+    if (notesLeadId !== leadId) return [];
+    return leadNotes;
+  }, [notesLeadId, leadNotes]);
+
+  const openLeadNotes = useCallback((leadId: string | null) => {
+    setNotesLeadId(leadId);
+  }, []);
 
   return {
     leads,
@@ -397,6 +390,7 @@ export function useCRMLeads() {
     deleteLead,
     refetchLeads,
     // Notes
+    openLeadNotes,
     getNotesForLead,
     addNote,
     updateNote,

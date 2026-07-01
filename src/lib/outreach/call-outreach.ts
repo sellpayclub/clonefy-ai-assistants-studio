@@ -1,13 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabase-config';
 
-const SUPABASE_URL =
-  import.meta.env.VITE_SUPABASE_URL || 'https://ekfkrwueqwpqakpsrsjt.supabase.co';
-const SUPABASE_ANON_KEY =
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  '';
+function parseErrorPayload(payload: Record<string, unknown>, status: number): string {
+  if (typeof payload.msg === 'string') return payload.msg;
+  if (typeof payload.error === 'string') return payload.error;
+  if (typeof payload.message === 'string') return payload.message;
+  return `Erro ${status} no disparo WhatsApp`;
+}
 
-/** Chama prospect-outreach e expõe a mensagem real do body (não só "non-2xx"). */
+/** Chama prospect-outreach com apikey garantido (fix invalid credentials em produção). */
 export async function callOutreachFunction<T>(
   body: Record<string, unknown>,
 ): Promise<T> {
@@ -27,18 +28,17 @@ export async function callOutreachFunction<T>(
   });
 
   let payload: Record<string, unknown> = {};
+  const rawText = await response.text();
   try {
-    payload = (await response.json()) as Record<string, unknown>;
+    payload = rawText ? (JSON.parse(rawText) as Record<string, unknown>) : {};
   } catch {
-    /* resposta não-JSON */
+    if (!response.ok) {
+      throw new Error(rawText.slice(0, 200) || `Erro ${response.status} no disparo WhatsApp`);
+    }
   }
 
   if (!response.ok) {
-    const detail =
-      (typeof payload.error === 'string' && payload.error) ||
-      (typeof payload.message === 'string' && payload.message) ||
-      `Erro ${response.status} no disparo WhatsApp`;
-    throw new Error(detail);
+    throw new Error(parseErrorPayload(payload, response.status));
   }
 
   if (typeof payload.error === 'string') {

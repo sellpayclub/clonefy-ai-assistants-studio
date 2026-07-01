@@ -48,6 +48,11 @@ const CRMLeads = () => {
     [crm.filteredLeads],
   );
 
+  const callableIdSet = useMemo(
+    () => new Set(callableFilteredLeads.map(l => l.id)),
+    [callableFilteredLeads],
+  );
+
   const selectedLeads = useMemo(
     () => crm.filteredLeads.filter(l => selectedIds.has(l.id)),
     [crm.filteredLeads, selectedIds],
@@ -107,6 +112,7 @@ const CRMLeads = () => {
 
   const handleLeadClick = (lead: Lead) => {
     setSelectedLead(lead);
+    crm.openLeadNotes(lead.id);
     setIsDrawerOpen(true);
   };
 
@@ -270,7 +276,7 @@ const CRMLeads = () => {
                   </span>
                 </div>
                 {crm.filteredLeads.map(lead => {
-                  const callable = isCrmLeadCallable(lead);
+                  const callable = callableIdSet.has(lead.id);
                   return (
                   <div
                     key={lead.id}
@@ -362,7 +368,10 @@ const CRMLeads = () => {
       <LeadDetailsDrawer
         lead={selectedLead}
         open={isDrawerOpen}
-        onOpenChange={setIsDrawerOpen}
+        onOpenChange={open => {
+          setIsDrawerOpen(open);
+          if (!open) crm.openLeadNotes(null);
+        }}
         pipelineStages={crm.pipelineStages}
         allTags={crm.allTags}
         notes={selectedLead ? crm.getNotesForLead(selectedLead.id) : []}

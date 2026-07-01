@@ -7,8 +7,10 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const EVOLUTION_API_URL = "https://evolutionapi.clonefyia.com";
-const EVOLUTION_API_KEY = "94805bfbb25f77f37a029f5a3dbfe62b";
+const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL") ||
+  "https://evolutionapi.clonefyia.com";
+const EVOLUTION_API_KEY = Deno.env.get("EVOLUTION_API_KEY") ||
+  "94805bfbb25f77f37a029f5a3dbfe62b";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
@@ -89,7 +91,22 @@ async function sendWhatsAppMessage(
     );
 
     if (!response.ok) {
-      return { success: false, error: await response.text() };
+      const errText = await response.text();
+      try {
+        const parsed = JSON.parse(errText);
+        const msg = parsed?.message || parsed?.error || parsed?.response?.message;
+        if (msg) return { success: false, error: String(msg) };
+      } catch {
+        /* texto puro */
+      }
+      if (/invalid credentials/i.test(errText)) {
+        return {
+          success: false,
+          error:
+            "Chave da Evolution API inválida. Configure EVOLUTION_API_KEY nos secrets do Supabase.",
+        };
+      }
+      return { success: false, error: errText.slice(0, 300) };
     }
     return { success: true };
   } catch (error) {
