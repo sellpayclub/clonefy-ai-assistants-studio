@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Search, Plus, MessageSquare, Phone, Mail, Calendar, Globe, Smartphone, Flame, Thermometer, Snowflake, ArrowRight, LayoutList, Kanban, Settings2, Building2 } from "lucide-react";
+import { Users, Search, Plus, MessageSquare, Phone, Mail, Calendar, Globe, Smartphone, Flame, Thermometer, Snowflake, ArrowRight, LayoutList, Kanban, Settings2, Building2, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { LeadDetailsDrawer } from "@/components/crm/LeadDetailsDrawer";
@@ -14,10 +15,22 @@ import { LeadKanban } from "@/components/crm/LeadKanban";
 import { PipelineSettings } from "@/components/crm/PipelineSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCRMLeads, type Lead } from "@/hooks/useCRMLeads";
+import { ProspectOutreachModal } from "@/components/prospeccao/ProspectOutreachModal";
+import {
+  getOutreachCampaignStatus,
+  startOutreachCampaign,
+} from "@/lib/outreach/call-outreach";
+import {
+  isCrmLeadCallable,
+  mapCallableCrmLeads,
+} from "@/lib/outreach/map-crm-lead";
+import type { ProspectCompany } from "@/lib/prospeccao/constants";
+import { useToast } from "@/hooks/use-toast";
 
 const CRMLeads = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
+  const { toast } = useToast();
   const crm = useCRMLeads();
 
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -26,6 +39,63 @@ const CRMLeads = () => {
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
   const [showFilters, setShowFilters] = useState(false);
   const [showPipelineSettings, setShowPipelineSettings] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [outreachOpen, setOutreachOpen] = useState(false);
+  const [outreachCompanies, setOutreachCompanies] = useState<ProspectCompany[]>([]);
+
+  const callableFilteredLeads = useMemo(
+    () => crm.filteredLeads.filter(isCrmLeadCallable),
+    [crm.filteredLeads],
+  );
+
+  const selectedLeads = useMemo(
+    () => crm.filteredLeads.filter(l => selectedIds.has(l.id)),
+    [crm.filteredLeads, selectedIds],
+  );
+
+  const selectedCount = selectedIds.size;
+  const allFilteredSelected =
+    callableFilteredLeads.length > 0 &&
+    callableFilteredLeads.every(l => selectedIds.has(l.id));
+
+  const toggleLeadSelection = useCallback((leadId: string, checked: boolean) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (checked) next.add(leadId);
+      else next.delete(leadId);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAllFiltered = useCallback(() => {
+    if (allFilteredSelected) {
+      setSelectedIds(new Set());
+      return;
+    }
+    setSelectedIds(new Set(callableFilteredLeads.map(l => l.id)));
+  }, [allFilteredSelected, callableFilteredLeads]);
+
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
+  const handleOpenOutreach = useCallback(() => {
+    const mapped = mapCallableCrmLeads(selectedLeads);
+    if (!mapped.length) {
+      toast({
+        title: 'Nenhum lead com telefone válido',
+        description: 'Selecione leads com número WhatsApp real (não widget).',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (mapped.length < selectedLeads.length) {
+      toast({
+        title: `${selectedLeads.length - mapped.length} lead(s) ignorado(s)`,
+        description: 'Leads sem telefone válido não entram no disparo.',
+      });
+    }
+    setOutreachCompanies(mapped);
+    setOutreachOpen(true);
+  }, [selectedLeads, toast]);
 
 
   // Init default stages if none exist
@@ -136,6 +206,26 @@ const CRMLeads = () => {
                   allTags={crm.allTags}
                 />
               )}
+
+              {viewMode === 'list' && selectedCount > 0 && (
+                <div className="flex flex-wrap items-center gap-2 rounded-md border bg-primary/5 px-3 py-2 text-sm">
+                  <span>
+                    <strong>{selectedCount}</strong> selecionado(s)
+                    {callableFilteredLeads.length > 0 && (
+                      <span className="text-muted-foreground ml-1">
+                        ({callableFilteredLeads.length} com telefone na lista)
+                      </span>
+                    )}
+                  </span>
+                  <Button size="sm" className="h-8 gap-1 ml-auto" onClick={handleOpenOutreach}>
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    Disparar WhatsApp ({selectedCount})
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-8" onClick={clearSelection}>
+                    Limpar
+                  </Button>
+                </div>
+              )}
             </div>
           </CardHeader>
 
@@ -169,21 +259,45 @@ const CRMLeads = () => {
               </div>
             ) : (
               <div className="divide-y divide-border/40">
-                {crm.filteredLeads.map(lead => (
+                <div className="flex items-center gap-3 px-4 py-2 bg-muted/30 border-b text-sm">
+                  <Checkbox
+                    checked={allFilteredSelected}
+                    onCheckedChange={toggleSelectAllFiltered}
+                    aria-label="Selecionar todos com telefone"
+                  />
+                  <span className="text-muted-foreground">
+                    Selecionar todos com telefone ({callableFilteredLeads.length})
+                  </span>
+                </div>
+                {crm.filteredLeads.map(lead => {
+                  const callable = isCrmLeadCallable(lead);
+                  return (
                   <div
                     key={lead.id}
-                    className="p-4 hover:bg-muted/30 transition-colors group relative overflow-hidden cursor-pointer"
-                    onClick={() => handleLeadClick(lead)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={e => e.key === 'Enter' && handleLeadClick(lead)}
+                    className="p-4 hover:bg-muted/30 transition-colors group relative overflow-hidden"
                   >
                     <div className="flex flex-col md:flex-row md:items-center gap-4 relative z-10">
-                      <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border border-primary/20 shadow-sm group-hover:scale-105 transition-transform duration-300">
-                        <span className="text-primary font-bold text-lg">{lead.name ? lead.name[0].toUpperCase() : '#'}</span>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <Checkbox
+                          checked={selectedIds.has(lead.id)}
+                          disabled={!callable}
+                          onCheckedChange={checked => toggleLeadSelection(lead.id, !!checked)}
+                          aria-label={`Selecionar ${lead.name || 'lead'}`}
+                        />
+                        <button
+                          type="button"
+                          className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border border-primary/20 shadow-sm group-hover:scale-105 transition-transform duration-300"
+                          onClick={() => handleLeadClick(lead)}
+                        >
+                          <span className="text-primary font-bold text-lg">{lead.name ? lead.name[0].toUpperCase() : '#'}</span>
+                        </button>
                       </div>
 
-                      <div className="flex-1 space-y-1.5">
+                      <button
+                        type="button"
+                        className="flex-1 space-y-1.5 text-left min-w-0"
+                        onClick={() => handleLeadClick(lead)}
+                      >
                         <div className="flex items-center gap-2 flex-wrap">
                           <h4 className="font-semibold text-foreground">
                             {getUrgencyIndicator(lead.urgency_level)} {lead.name || 'Desconhecido'}
@@ -218,17 +332,26 @@ const CRMLeads = () => {
                             {lead.key_topics?.slice(0, 3).map((topic, i) => <Badge key={`k-${i}`} variant="secondary" className="text-[10px] px-1.5 py-0">{topic}</Badge>)}
                           </div>
                         )}
-                      </div>
+                      </button>
 
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 duration-300">
-                        <Button variant="outline" size="sm" className="h-8 gap-2 bg-background/50">
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {!callable && (
+                          <Badge variant="outline" className="text-[10px]">Sem WhatsApp</Badge>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-2 bg-background/50"
+                          onClick={() => handleLeadClick(lead)}
+                        >
                           <MessageSquare className="h-3.5 w-3.5" /> Ver Detalhes
                         </Button>
                       </div>
                     </div>
                     <div className="absolute left-0 bottom-0 top-0 w-1 bg-primary transform scale-y-0 group-hover:scale-y-100 transition-transform origin-top duration-300" />
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
@@ -269,6 +392,31 @@ const CRMLeads = () => {
         onCreateStage={s => crm.createStage.mutate(s)}
         onUpdateStage={s => crm.updateStage.mutate(s as any)}
         onDeleteStage={id => crm.deleteStage.mutate(id)}
+      />
+
+      <ProspectOutreachModal
+        open={outreachOpen}
+        onOpenChange={open => {
+          setOutreachOpen(open);
+          if (!open) clearSelection();
+        }}
+        companies={outreachCompanies}
+        showImportToCrmOption={false}
+        defaultImportToCrm={false}
+        dialogTitle="Disparar WhatsApp — CRM"
+        getCampaignStatus={getOutreachCampaignStatus}
+        onStart={async params => {
+          const result = await startOutreachCampaign({
+            companies: outreachCompanies,
+            messageTemplate: params.messageTemplate,
+            whatsappInstance: params.whatsappInstance,
+            delaySeconds: params.delaySeconds,
+            importToCrm: false,
+            campaignName: 'CRM WhatsApp',
+            searchContext: { source: 'crm', count: outreachCompanies.length },
+          });
+          return result;
+        }}
       />
     </main>
   );

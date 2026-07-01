@@ -47,3 +47,43 @@ export async function callOutreachFunction<T>(
 
   return payload as T;
 }
+
+export async function getOutreachCampaignStatus(campaignId: string) {
+  return callOutreachFunction<{
+    id: string;
+    status: string;
+    total_leads: number;
+    sent_count: number;
+    failed_count: number;
+    pending_count: number;
+  }>({
+    action: 'get_campaign_status',
+    campaign_id: campaignId,
+  });
+}
+
+export async function startOutreachCampaign(params: {
+  companies: unknown[];
+  messageTemplate: string;
+  whatsappInstance: string;
+  delaySeconds: number;
+  importToCrm: boolean;
+  campaignName?: string;
+  searchContext?: Record<string, unknown>;
+}) {
+  return callOutreachFunction<{
+    campaignId: string;
+    queued: number;
+    skipped: number;
+    estimatedMinutes: number;
+  }>({
+    action: 'start_campaign',
+    companies: params.companies,
+    message_template: params.messageTemplate,
+    whatsapp_instance: params.whatsappInstance,
+    delay_seconds: params.delaySeconds,
+    import_to_crm: params.importToCrm,
+    campaign_name: params.campaignName,
+    search_context: params.searchContext,
+  });
+}

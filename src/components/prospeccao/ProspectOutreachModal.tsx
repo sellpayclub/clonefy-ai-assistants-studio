@@ -55,6 +55,10 @@ interface ProspectOutreachModalProps {
   }>;
   processQueueDev?: () => Promise<{ processed: number }>;
   isLocalMode?: boolean;
+  /** Oculta checkbox "Importar no CRM" (ex.: disparo já a partir do CRM) */
+  showImportToCrmOption?: boolean;
+  defaultImportToCrm?: boolean;
+  dialogTitle?: string;
 }
 
 export function ProspectOutreachModal({
@@ -65,6 +69,9 @@ export function ProspectOutreachModal({
   getCampaignStatus,
   processQueueDev,
   isLocalMode,
+  showImportToCrmOption = true,
+  defaultImportToCrm = true,
+  dialogTitle = 'Disparar WhatsApp com IA',
 }: ProspectOutreachModalProps) {
   const { toast } = useToast();
   const [connections, setConnections] = useState<WhatsAppConnection[]>([]);
@@ -72,7 +79,7 @@ export function ProspectOutreachModal({
   const [whatsappInstance, setWhatsappInstance] = useState('');
   const [messageTemplate, setMessageTemplate] = useState(DEFAULT_OUTREACH_TEMPLATE);
   const [delaySeconds, setDelaySeconds] = useState(45);
-  const [importToCrm, setImportToCrm] = useState(true);
+  const [importToCrm, setImportToCrm] = useState(defaultImportToCrm);
   const [starting, setStarting] = useState(false);
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [progress, setProgress] = useState<{
@@ -101,6 +108,7 @@ export function ProspectOutreachModal({
 
     setCampaignId(null);
     setProgress(null);
+    setImportToCrm(defaultImportToCrm);
 
     const loadConnections = async () => {
       setLoadingConnections(true);
@@ -135,7 +143,7 @@ export function ProspectOutreachModal({
     };
 
     loadConnections();
-  }, [open, toast]);
+  }, [open, toast, defaultImportToCrm]);
 
   useEffect(() => {
     if (!campaignId || !open) return;
@@ -229,7 +237,7 @@ export function ProspectOutreachModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageCircle className="h-5 w-5" />
-            Disparar WhatsApp com IA
+            {dialogTitle}
           </DialogTitle>
           <DialogDescription>
             Envie mensagem personalizada para os leads selecionados. Quando responderem, a IA da
@@ -315,17 +323,19 @@ export function ProspectOutreachModal({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="import-crm"
-              checked={importToCrm}
-              onCheckedChange={v => setImportToCrm(!!v)}
-              disabled={!!campaignId}
-            />
-            <Label htmlFor="import-crm" className="font-normal cursor-pointer">
-              Importar leads no CRM automaticamente
-            </Label>
-          </div>
+          {showImportToCrmOption && (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="import-crm"
+                checked={importToCrm}
+                onCheckedChange={v => setImportToCrm(!!v)}
+                disabled={!!campaignId}
+              />
+              <Label htmlFor="import-crm" className="font-normal cursor-pointer">
+                Importar leads no CRM automaticamente
+              </Label>
+            </div>
+          )}
 
           {progress && (
             <div className="space-y-2 pt-2">
