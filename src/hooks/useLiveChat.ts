@@ -409,6 +409,7 @@ export function useLiveChat() {
     sendMessage,
     toggleHumanTakeover,
     closeSession,
+    cleanupSessions,
     loadSessions
   };
 }
