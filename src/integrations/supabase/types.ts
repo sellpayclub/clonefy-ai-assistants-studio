@@ -2907,6 +2907,129 @@ export type Database = {
         }
         Relationships: []
       }
+      prospect_outreach_campaigns: {
+        Row: {
+          assistant_id: string | null
+          created_at: string
+          delay_seconds: number
+          failed_count: number
+          id: string
+          import_to_crm: boolean
+          message_template: string
+          name: string
+          search_context: Json | null
+          sent_count: number
+          skipped_count: number
+          status: string
+          total_leads: number
+          updated_at: string
+          user_id: string
+          whatsapp_instance: string
+        }
+        Insert: {
+          assistant_id?: string | null
+          created_at?: string
+          delay_seconds?: number
+          failed_count?: number
+          id?: string
+          import_to_crm?: boolean
+          message_template: string
+          name?: string
+          search_context?: Json | null
+          sent_count?: number
+          skipped_count?: number
+          status?: string
+          total_leads?: number
+          updated_at?: string
+          user_id: string
+          whatsapp_instance: string
+        }
+        Update: {
+          assistant_id?: string | null
+          created_at?: string
+          delay_seconds?: number
+          failed_count?: number
+          id?: string
+          import_to_crm?: boolean
+          message_template?: string
+          name?: string
+          search_context?: Json | null
+          sent_count?: number
+          skipped_count?: number
+          status?: string
+          total_leads?: number
+          updated_at?: string
+          user_id?: string
+          whatsapp_instance?: string
+        }
+        Relationships: []
+      }
+      prospect_outreach_queue: {
+        Row: {
+          attempts: number
+          campaign_id: string
+          cnpj: string
+          created_at: string
+          crm_lead_id: string | null
+          error_message: string | null
+          id: string
+          lead_name: string
+          message_body: string
+          scheduled_at: string
+          sent_at: string | null
+          status: string
+          user_id: string
+          whatsapp_number: string
+        }
+        Insert: {
+          attempts?: number
+          campaign_id: string
+          cnpj: string
+          created_at?: string
+          crm_lead_id?: string | null
+          error_message?: string | null
+          id?: string
+          lead_name: string
+          message_body: string
+          scheduled_at: string
+          sent_at?: string | null
+          status?: string
+          user_id: string
+          whatsapp_number: string
+        }
+        Update: {
+          attempts?: number
+          campaign_id?: string
+          cnpj?: string
+          created_at?: string
+          crm_lead_id?: string | null
+          error_message?: string | null
+          id?: string
+          lead_name?: string
+          message_body?: string
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+          user_id?: string
+          whatsapp_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_outreach_queue_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_outreach_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospect_outreach_queue_crm_lead_id_fkey"
+            columns: ["crm_lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sale_items: {
         Row: {
           created_at: string | null
@@ -4705,6 +4828,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      process_prospect_outreach_queue: { Args: never; Returns: undefined }
       search_store_products: {
         Args: {
           p_category_id?: string
