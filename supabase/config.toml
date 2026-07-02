@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.prospect-companies]
 verify_jwt = false
+
+[functions.prospect-outreach]
+verify_jwt = false
