@@ -347,6 +347,33 @@ export function useLiveChat() {
     }
   }, [selectedSessionId, toast]);
 
+  // Limpar conversas antigas (e mensagens vinculadas) para não sobrecarregar
+  const cleanupSessions = useCallback(async (days: number, onlyClosed: boolean) => {
+    try {
+      const { data, error } = await supabase.rpc('cleanup_live_chat_sessions', {
+        p_days: days,
+        p_only_closed: onlyClosed,
+      });
+      if (error) throw error;
+      const count = (data as number) ?? 0;
+      if (selectedSessionId) setSelectedSessionId(null);
+      await loadSessions();
+      toast({
+        title: 'Limpeza concluída',
+        description: `${count} conversa(s) removida(s)`,
+      });
+      return true;
+    } catch (err: any) {
+      console.error('Error cleaning sessions:', err);
+      toast({
+        title: 'Erro ao limpar conversas',
+        description: err?.message || 'Tente novamente',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  }, [selectedSessionId, loadSessions, toast]);
+
   // Selected session
   const selectedSession = useMemo(() => {
     return sessions.find(s => s.id === selectedSessionId) || null;
