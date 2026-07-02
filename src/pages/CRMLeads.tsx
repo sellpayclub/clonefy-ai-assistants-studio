@@ -259,6 +259,15 @@ const CRMLeads = () => {
                     <MessageCircle className="h-3.5 w-3.5" />
                     Disparar WhatsApp ({selectedCount})
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="h-8 gap-1"
+                    onClick={() => setConfirmDeleteOpen(true)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Apagar ({selectedCount})
+                  </Button>
                   <Button size="sm" variant="ghost" className="h-8" onClick={clearSelection}>
                     Limpar
                   </Button>
