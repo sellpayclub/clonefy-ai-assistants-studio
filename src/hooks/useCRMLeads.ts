@@ -423,6 +423,8 @@ export function useCRMLeads() {
     createLead,
     updateLead,
     deleteLead,
+    deleteLeadsBulk,
+    cleanupOldLeads,
     refetchLeads,
     // Notes
     openLeadNotes,
