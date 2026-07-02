@@ -209,6 +209,10 @@ const CRMLeads = () => {
                     </Button>
                   )}
 
+                  <Button variant="outline" size="sm" className="h-8 gap-1" onClick={() => setCleanupOpen(true)}>
+                    <Eraser className="h-3.5 w-3.5" /> Limpar antigos
+                  </Button>
+
                   <Button size="sm" className="h-8 gap-1" onClick={() => setShowNewLeadForm(true)}>
                     <Plus className="h-3.5 w-3.5" /> Novo Lead
                   </Button>
