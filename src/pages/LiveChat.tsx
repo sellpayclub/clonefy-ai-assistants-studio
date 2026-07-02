@@ -151,6 +151,15 @@ export default function LiveChat() {
               <Button
                 variant="outline"
                 size="icon"
+                onClick={() => setCleanupOpen(true)}
+                title="Limpar conversas antigas"
+              >
+                <Eraser className="h-4 w-4" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="icon"
                 onClick={() => loadSessions()}
                 title="Atualizar"
               >
