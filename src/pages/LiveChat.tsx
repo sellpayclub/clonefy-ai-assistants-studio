@@ -13,17 +13,32 @@ import { SessionsList } from '@/components/live-chat/SessionsList';
 import { ChatWindow } from '@/components/live-chat/ChatWindow';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
   Bot,
   User,
   Radio,
   RefreshCw,
-  Send
+  Send,
+  Eraser
 } from 'lucide-react';
 
 export default function LiveChat() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
+  const [cleanupOpen, setCleanupOpen] = useState(false);
+  const [cleanupDays, setCleanupDays] = useState('90');
+  const [onlyClosed, setOnlyClosed] = useState(true);
 
   const {
     sessions,
@@ -36,6 +51,7 @@ export default function LiveChat() {
     sendMessage,
     toggleHumanTakeover,
     closeSession,
+    cleanupSessions,
     loadSessions
   } = useLiveChat();
 
@@ -135,6 +151,15 @@ export default function LiveChat() {
               <Button
                 variant="outline"
                 size="icon"
+                onClick={() => setCleanupOpen(true)}
+                title="Limpar conversas antigas"
+              >
+                <Eraser className="h-4 w-4" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="icon"
                 onClick={() => loadSessions()}
                 title="Atualizar"
               >
@@ -169,6 +194,54 @@ export default function LiveChat() {
           />
         </div>
       </div>
+
+      {/* Limpar conversas antigas */}
+      <AlertDialog open={cleanupOpen} onOpenChange={setCleanupOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Limpar conversas antigas</AlertDialogTitle>
+            <AlertDialogDescription>
+              Remove permanentemente as conversas (e suas mensagens) sem atividade
+              há mais tempo que o período escolhido. Ajuda a não sobrecarregar o
+              Chat ao vivo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3 py-2">
+            <Select value={cleanupDays} onValueChange={setCleanupDays}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="30">Sem atividade há 30 dias</SelectItem>
+                <SelectItem value="60">Sem atividade há 60 dias</SelectItem>
+                <SelectItem value="90">Sem atividade há 90 dias</SelectItem>
+                <SelectItem value="180">Sem atividade há 180 dias</SelectItem>
+              </SelectContent>
+            </Select>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={onlyClosed}
+                onCheckedChange={(v) => setOnlyClosed(!!v)}
+              />
+              Apagar somente conversas encerradas
+            </label>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                const days = parseInt(cleanupDays, 10);
+                if (!Number.isFinite(days) || days < 1) return;
+                await cleanupSessions(days, onlyClosed);
+                setCleanupOpen(false);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Limpar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }

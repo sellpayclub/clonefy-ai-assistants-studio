@@ -203,7 +203,42 @@ export function useCRMLeads() {
     },
   });
 
-  // Move lead in pipeline
+  // Apagar vários leads selecionados de uma vez
+  const deleteLeadsBulk = useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (!ids.length) return 0;
+      const { data, error } = await (supabase as any).rpc('delete_crm_leads_bulk', {
+        p_ids: ids,
+      });
+      if (error) throw error;
+      return (data as number) ?? 0;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ['crm-leads'] });
+      toast({ title: `${count} lead(s) excluído(s)!` });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Erro ao excluir leads', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  // Limpar leads antigos (mais antigos que X dias)
+  const cleanupOldLeads = useMutation({
+    mutationFn: async (days: number) => {
+      const { data, error } = await (supabase as any).rpc('cleanup_crm_leads_old', {
+        p_days: days,
+      });
+      if (error) throw error;
+      return (data as number) ?? 0;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ['crm-leads'] });
+      toast({ title: `${count} lead(s) antigo(s) removido(s)!` });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Erro ao limpar leads', description: err.message, variant: 'destructive' });
+    },
+  });
   const moveLeadToPipelineStage = useMutation({
     mutationFn: async ({ leadId, stage }: { leadId: string; stage: string }) => {
       const { error } = await (supabase as any)
@@ -388,6 +423,8 @@ export function useCRMLeads() {
     createLead,
     updateLead,
     deleteLead,
+    deleteLeadsBulk,
+    cleanupOldLeads,
     refetchLeads,
     // Notes
     openLeadNotes,

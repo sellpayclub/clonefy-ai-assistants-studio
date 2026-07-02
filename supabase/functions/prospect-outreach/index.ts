@@ -33,6 +33,19 @@ interface ProspectCompany {
   hasPhone: boolean;
 }
 
+function decodeJwtRole(token: string): string | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const json = JSON.parse(
+      atob(payload.replace(/-/g, "+").replace(/_/g, "/")),
+    );
+    return typeof json?.role === "string" ? json.role : null;
+  } catch {
+    return null;
+  }
+}
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -507,28 +520,34 @@ serve(async (req) => {
     const action = body.action as string;
 
     const authHeader = req.headers.get("Authorization");
-    const isCronDispatch = action === "dispatch_one" && body.queue_id && authHeader;
+    const token = authHeader ? authHeader.replace("Bearer ", "").trim() : null;
+
+    // Ações internas chamadas pelo cron: exigem token de service_role.
+    // Evita que terceiros disparem a fila sem autorização.
+    const isInternalAction =
+      action === "dispatch_one" || action === "process_queue";
+
+    if (isInternalAction) {
+      if (!token || decodeJwtRole(token) !== "service_role") {
+        console.warn("prospect-outreach: internal action negada", { action });
+        return jsonResponse({ error: "Não autorizado" }, 401);
+      }
+
+      if (action === "dispatch_one" && body.queue_id) {
+        return jsonResponse(await dispatchOne(body.queue_id));
+      }
+      return jsonResponse(await processQueueBatch());
+    }
 
     let userId: string | null = null;
     let userEmail: string | null = null;
 
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
+    if (token) {
       const { data: { user }, error } = await supabase.auth.getUser(token);
       if (!error && user) {
         userId = user.id;
         userEmail = user.email || null;
       }
-    }
-
-    if (action === "dispatch_one" && body.queue_id) {
-      const result = await dispatchOne(body.queue_id);
-      return jsonResponse(result);
-    }
-
-    if (action === "process_queue") {
-      const result = await processQueueBatch();
-      return jsonResponse(result);
     }
 
     if (!userId) {

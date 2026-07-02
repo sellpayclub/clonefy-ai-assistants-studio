@@ -2,10 +2,21 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Search, Plus, MessageSquare, Phone, Mail, Calendar, Globe, Smartphone, Flame, Thermometer, Snowflake, ArrowRight, LayoutList, Kanban, Settings2, Building2, MessageCircle } from "lucide-react";
+import { Users, Search, Plus, MessageSquare, Phone, Mail, Calendar, Globe, Smartphone, Flame, Thermometer, Snowflake, ArrowRight, LayoutList, Kanban, Settings2, Building2, MessageCircle, Trash2, Eraser } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { LeadDetailsDrawer } from "@/components/crm/LeadDetailsDrawer";
@@ -42,6 +53,9 @@ const CRMLeads = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [outreachOpen, setOutreachOpen] = useState(false);
   const [outreachCompanies, setOutreachCompanies] = useState<ProspectCompany[]>([]);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [cleanupOpen, setCleanupOpen] = useState(false);
+  const [cleanupDays, setCleanupDays] = useState('90');
 
   const callableFilteredLeads = useMemo(
     () => crm.filteredLeads.filter(isCrmLeadCallable),
@@ -101,6 +115,20 @@ const CRMLeads = () => {
     setOutreachCompanies(mapped);
     setOutreachOpen(true);
   }, [selectedLeads, toast]);
+
+  const handleDeleteSelected = useCallback(async () => {
+    await crm.deleteLeadsBulk.mutateAsync(Array.from(selectedIds));
+    setSelectedIds(new Set());
+    setConfirmDeleteOpen(false);
+  }, [crm.deleteLeadsBulk, selectedIds]);
+
+  const handleCleanupOld = useCallback(async () => {
+    const days = parseInt(cleanupDays, 10);
+    if (!Number.isFinite(days) || days < 1) return;
+    await crm.cleanupOldLeads.mutateAsync(days);
+    setCleanupOpen(false);
+  }, [crm.cleanupOldLeads, cleanupDays]);
+
 
 
   // Init default stages if none exist
@@ -181,6 +209,10 @@ const CRMLeads = () => {
                     </Button>
                   )}
 
+                  <Button variant="outline" size="sm" className="h-8 gap-1" onClick={() => setCleanupOpen(true)}>
+                    <Eraser className="h-3.5 w-3.5" /> Limpar antigos
+                  </Button>
+
                   <Button size="sm" className="h-8 gap-1" onClick={() => setShowNewLeadForm(true)}>
                     <Plus className="h-3.5 w-3.5" /> Novo Lead
                   </Button>
@@ -226,6 +258,15 @@ const CRMLeads = () => {
                   <Button size="sm" className="h-8 gap-1 ml-auto" onClick={handleOpenOutreach}>
                     <MessageCircle className="h-3.5 w-3.5" />
                     Disparar WhatsApp ({selectedCount})
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="h-8 gap-1"
+                    onClick={() => setConfirmDeleteOpen(true)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Apagar ({selectedCount})
                   </Button>
                   <Button size="sm" variant="ghost" className="h-8" onClick={clearSelection}>
                     Limpar
@@ -427,6 +468,64 @@ const CRMLeads = () => {
           return result;
         }}
       />
+
+      {/* Confirmar exclusão de selecionados */}
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apagar {selectedCount} lead(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação é permanente e não pode ser desfeita. Os leads selecionados
+              serão removidos do CRM.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteSelected}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Apagar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Limpar leads antigos */}
+      <AlertDialog open={cleanupOpen} onOpenChange={setCleanupOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Limpar leads antigos</AlertDialogTitle>
+            <AlertDialogDescription>
+              Remove permanentemente os leads criados há mais tempo que o período
+              escolhido. Útil para não sobrecarregar o CRM.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <Select value={cleanupDays} onValueChange={setCleanupDays}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="30">Mais antigos que 30 dias</SelectItem>
+                <SelectItem value="60">Mais antigos que 60 dias</SelectItem>
+                <SelectItem value="90">Mais antigos que 90 dias</SelectItem>
+                <SelectItem value="180">Mais antigos que 180 dias</SelectItem>
+                <SelectItem value="365">Mais antigos que 1 ano</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCleanupOld}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Limpar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 };
