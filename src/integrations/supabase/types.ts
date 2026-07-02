@@ -4773,6 +4773,11 @@ export type Database = {
         }[]
       }
       admin_get_global_stats: { Args: never; Returns: Json }
+      cleanup_crm_leads_old: { Args: { p_days: number }; Returns: number }
+      cleanup_live_chat_sessions: {
+        Args: { p_days: number; p_only_closed?: boolean }
+        Returns: number
+      }
       cleanup_old_group_messages: { Args: never; Returns: undefined }
       credit_api_wallet: {
         Args: { _amount: number; _correlation_id?: string; _user_id: string }
@@ -4782,6 +4787,7 @@ export type Database = {
         Args: { _amount: number; _user_id: string }
         Returns: number
       }
+      delete_crm_leads_bulk: { Args: { p_ids: string[] }; Returns: number }
       disparar_followup_clonefy: { Args: never; Returns: undefined }
       disparar_followups_automaticos: { Args: never; Returns: undefined }
       find_or_create_customer: {
