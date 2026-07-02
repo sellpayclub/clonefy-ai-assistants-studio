@@ -76,7 +76,7 @@ async function searchCasaDosDados(
     throw new Error(`Casa dos Dados: ${response.status} - ${await response.text()}`);
   }
 
-  const data = await response.json();
+  const data: any = await response.json();
   const cnpjs = data.cnpjs || [];
   const total = data.total || cnpjs.length;
   const limit = Math.min(params.limit, 100);
@@ -144,7 +144,7 @@ async function searchBuscaLead(
     throw new Error(`BuscaLead: ${response.status} - ${await response.text()}`);
   }
 
-  const data = await response.json();
+  const data: any = await response.json();
   const companies = (data.results || []).map((item: any) => {
     const phone = normalizePhone(item.ddd_1, item.telefone_1);
     return {
@@ -197,14 +197,14 @@ async function handleAction(
       const res = await fetch(
         "https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome",
       );
-      const data = await res.json();
+      const data: any = await res.json();
       return { estados: data.map((e: any) => ({ sigla: e.sigla, nome: e.nome, id: e.id })) };
     }
     case "list_municipios": {
       const res = await fetch(
         `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${body.uf}/municipios?orderBy=nome`,
       );
-      const data = await res.json();
+      const data: any = await res.json();
       return { municipios: data.map((m: any) => ({ id: String(m.id), nome: m.nome })) };
     }
     case "search": {
@@ -343,7 +343,7 @@ async function handleAction(
         }),
       });
       if (!response.ok) throw new Error(await response.text());
-      const payload = await response.json();
+      const payload: any = await response.json();
       const item = payload.data || payload;
       const contacts = parseCnpjContacts(item);
       return {
