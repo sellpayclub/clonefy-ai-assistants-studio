@@ -13,11 +13,23 @@ import { SessionsList } from '@/components/live-chat/SessionsList';
 import { ChatWindow } from '@/components/live-chat/ChatWindow';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
   Bot,
   User,
   Radio,
   RefreshCw,
-  Send
+  Send,
+  Eraser
 } from 'lucide-react';
 
 export default function LiveChat() {
