@@ -33,6 +33,19 @@ interface ProspectCompany {
   hasPhone: boolean;
 }
 
+function decodeJwtRole(token: string): string | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const json = JSON.parse(
+      atob(payload.replace(/-/g, "+").replace(/_/g, "/")),
+    );
+    return typeof json?.role === "string" ? json.role : null;
+  } catch {
+    return null;
+  }
+}
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
