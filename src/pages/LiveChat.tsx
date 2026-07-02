@@ -51,6 +51,7 @@ export default function LiveChat() {
     sendMessage,
     toggleHumanTakeover,
     closeSession,
+    cleanupSessions,
     loadSessions
   } = useLiveChat();
 
