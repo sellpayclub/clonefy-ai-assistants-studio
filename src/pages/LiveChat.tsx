@@ -36,6 +36,9 @@ export default function LiveChat() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
+  const [cleanupOpen, setCleanupOpen] = useState(false);
+  const [cleanupDays, setCleanupDays] = useState('90');
+  const [onlyClosed, setOnlyClosed] = useState(true);
 
   const {
     sessions,
