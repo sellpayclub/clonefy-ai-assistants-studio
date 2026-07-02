@@ -468,6 +468,64 @@ const CRMLeads = () => {
           return result;
         }}
       />
+
+      {/* Confirmar exclusão de selecionados */}
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apagar {selectedCount} lead(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação é permanente e não pode ser desfeita. Os leads selecionados
+              serão removidos do CRM.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteSelected}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Apagar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Limpar leads antigos */}
+      <AlertDialog open={cleanupOpen} onOpenChange={setCleanupOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Limpar leads antigos</AlertDialogTitle>
+            <AlertDialogDescription>
+              Remove permanentemente os leads criados há mais tempo que o período
+              escolhido. Útil para não sobrecarregar o CRM.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <Select value={cleanupDays} onValueChange={setCleanupDays}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="30">Mais antigos que 30 dias</SelectItem>
+                <SelectItem value="60">Mais antigos que 60 dias</SelectItem>
+                <SelectItem value="90">Mais antigos que 90 dias</SelectItem>
+                <SelectItem value="180">Mais antigos que 180 dias</SelectItem>
+                <SelectItem value="365">Mais antigos que 1 ano</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCleanupOld}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Limpar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 };
