@@ -116,6 +116,20 @@ const CRMLeads = () => {
     setOutreachOpen(true);
   }, [selectedLeads, toast]);
 
+  const handleDeleteSelected = useCallback(async () => {
+    await crm.deleteLeadsBulk.mutateAsync(Array.from(selectedIds));
+    setSelectedIds(new Set());
+    setConfirmDeleteOpen(false);
+  }, [crm.deleteLeadsBulk, selectedIds]);
+
+  const handleCleanupOld = useCallback(async () => {
+    const days = parseInt(cleanupDays, 10);
+    if (!Number.isFinite(days) || days < 1) return;
+    await crm.cleanupOldLeads.mutateAsync(days);
+    setCleanupOpen(false);
+  }, [crm.cleanupOldLeads, cleanupDays]);
+
+
 
   // Init default stages if none exist
   useEffect(() => {
