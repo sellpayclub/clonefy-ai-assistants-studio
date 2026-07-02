@@ -194,6 +194,54 @@ export default function LiveChat() {
           />
         </div>
       </div>
+
+      {/* Limpar conversas antigas */}
+      <AlertDialog open={cleanupOpen} onOpenChange={setCleanupOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Limpar conversas antigas</AlertDialogTitle>
+            <AlertDialogDescription>
+              Remove permanentemente as conversas (e suas mensagens) sem atividade
+              há mais tempo que o período escolhido. Ajuda a não sobrecarregar o
+              Chat ao vivo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3 py-2">
+            <Select value={cleanupDays} onValueChange={setCleanupDays}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="30">Sem atividade há 30 dias</SelectItem>
+                <SelectItem value="60">Sem atividade há 60 dias</SelectItem>
+                <SelectItem value="90">Sem atividade há 90 dias</SelectItem>
+                <SelectItem value="180">Sem atividade há 180 dias</SelectItem>
+              </SelectContent>
+            </Select>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={onlyClosed}
+                onCheckedChange={(v) => setOnlyClosed(!!v)}
+              />
+              Apagar somente conversas encerradas
+            </label>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                const days = parseInt(cleanupDays, 10);
+                if (!Number.isFinite(days) || days < 1) return;
+                await cleanupSessions(days, onlyClosed);
+                setCleanupOpen(false);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Limpar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
