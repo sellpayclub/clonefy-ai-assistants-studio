@@ -1,64 +1,37 @@
 ## Objetivo
+Revisar as funções novas (prospecção + disparo), corrigir os problemas reais encontrados e implementar a "limpeza/apagar dados" para não sobrecarregar CRM e Chat ao vivo.
 
-Criar um "Saldo de API" por usuário: ele recarrega via PIX (Woovi/OpenPix), o saldo cai a cada resposta da IA, e a IA do WhatsApp só responde se houver saldo ativo. Tudo em reais (BRL), com avisos de saldo baixo/zerado dentro do sistema.
+## O que já está OK (não vou mexer)
+- `prospect-companies` e `prospect-outreach`: presentes, registradas no `config.toml`, com tabelas `prospect_outreach_campaigns`/`prospect_outreach_queue` e cron `prospect-outreach-queue-job` (roda a cada minuto) — tudo funcional.
+- Frontend `Prospeccao.tsx`, `ProspectOutreachModal.tsx`, `useProspeccao.ts`, `call-outreach.ts`: fluxo completo (busca → seleção → disparo → CRM). TypeScript compila limpo.
+- Deploy das edge functions é **automático** no Lovable — os comandos `supabase functions deploy` que você colou não são necessários.
 
-## Regras de negócio
+## Problemas encontrados e correções
 
-- **Moeda:** tudo em BRL.
-- **Mínimo:** ~R$55/mês (equivalente aos US$10). Validade de 30 dias a cada recarga; saldo **não acumula entre meses** — paga para manter ativo.
-- **Custo por mensagem:** valor fixo por resposta da IA (constante configurável, ex.: `R$0,10` por resposta). Usado tanto para debitar quanto para estimar quantas conversas cada recarga rende.
-- **Valores de recarga (5 botões, dobrando):** R$55, R$110, R$220, R$440, R$880. Cada botão mostra a estimativa de conversas (ex.: "R$55 ≈ 550 respostas da IA") com aviso de que é aproximado.
-- **Gate:** somente o **WhatsApp** (`whatsapp-webhook`) para de responder quando o saldo zera/expira. Demais canais seguem normais.
+### 1. Furo de segurança no `prospect-outreach` (disparo)
+As ações `dispatch_one` e `process_queue` rodam **antes** da checagem de login e sem nenhum segredo. Hoje qualquer um poderia acionar disparos chutando um `queue_id`.
+- Corrigir: exigir validação (header com `CRON_SECRET` já existente nos secrets, ou token de serviço) para essas ações internas chamadas pelo cron.
+- Ajustar a função SQL `process_prospect_outreach_queue` para enviar esse header.
 
-## Banco de dados (1 migration)
+### 2. Verificação de runtime do fluxo real
+Como o build está limpo, vou rodar o app (login + página de Prospecção) para reproduzir a busca e o disparo de verdade e capturar erros de runtime/console que não aparecem em compilação. Corrijo o que aparecer.
 
-`api_wallets`: `user_id` (unique), `balance_brl` (numeric, default 0), `expires_at` (timestamptz), `low_balance_notified` (bool), `created_at`, `updated_at`. RLS: dono lê o próprio; escrita só via funções/edge.
+### 3. Limpeza / apagar dados (CRM + Chat ao vivo)
+Hoje existe só exclusão de 1 lead por vez; não há limpeza em massa. Vou implementar de forma segura:
+- Funções SQL `SECURITY DEFINER` (escopadas a `auth.uid()`) para apagar em lote respeitando o limite de 1000 linhas do Supabase:
+  - Apagar leads selecionados / por período (ex.: mais antigos que X dias) / por status.
+  - Apagar sessões de Chat ao vivo (e mensagens vinculadas) por período/encerradas.
+- UI:
+  - CRM (`CRMLeads.tsx`): ação "Apagar selecionados" e "Limpar antigos" com diálogo de confirmação.
+  - Chat ao vivo (`LiveChat.tsx`): "Limpar conversas antigas/encerradas" com confirmação.
+- Confirmação obrigatória (AlertDialog) para evitar exclusão acidental.
 
-`api_wallet_transactions`: `id`, `user_id`, `type` (`recharge`|`debit`), `amount_brl`, `description`, `openpix_correlation_id`, `openpix_charge_id`, `status` (`pending`|`paid`|`expired`), `created_at`. RLS: dono lê as próprias.
-
-Funções `SECURITY DEFINER`:
-
-- `debit_api_wallet(_user_id, _amount)` — desconta e retorna saldo novo.
-- `credit_api_wallet(_user_id, _amount, _correlation_id)` — soma saldo e define `expires_at = now() + 30 dias` (zera flag de aviso).
-- `get_wallet_status(_user_id)` — retorna saldo efetivo (0 se expirado) e estado ativo.
-
-**Ativação para usuários existentes:** seed de carteiras para todos os usuários com conexão WhatsApp ativa, com um **período de cortesia configurável** (ex.: `expires_at = now() + 7 dias` e um saldo inicial pequeno) para ninguém ser cortado de imediato — tempo de recarregar.
-
-GRANTs padrão (`authenticated` SELECT; `service_role` ALL).
-
-## Edge functions
-
-`openpix-charge` (nova): cria cobrança PIX na OpenPix (`POST https://api.openpix.com.br/api/v1/charge`, header `Authorization: <APP_ID>`, valor em centavos). Grava transação `pending` e retorna `brCode` (copia-e-cola) + `qrCodeImage`.
-
-`openpix-webhook` (nova): recebe `OPENPIX:CHARGE_COMPLETED`, **revalida a cobrança** chamando a API da OpenPix, marca transação `paid` e credita a carteira via `credit_api_wallet`. `verify_jwt=false`.
-
-`whatsapp-webhook` (edição mínima e isolada): antes de gerar a resposta da IA, checar `get_wallet_status`; se inativo, **não responder** e marcar `low_balance_notified`. Após enviar a resposta com sucesso, chamar `debit_api_wallet` com o custo fixo. Nenhuma outra lógica do webhook é alterada.
-
-## Frontend
-
-Nova página `src/pages/ApiBalance.tsx` (rota `/saldo-api`):
-
-- Card de saldo atual + validade + status (ativo/inativo), deixando claro: **"Este é o saldo de API que mantém sua IA respondendo no WhatsApp."**
-- 5 botões de recarga com estimativa de conversas e aviso de valor aproximado.
-- Ao escolher: chama `openpix-charge`, exibe **QR Code** + botão **copiar chave PIX (copia-e-cola)**, e faz polling do status até confirmar pagamento.
-
-`useApiWallet` (hook): lê saldo/validade do usuário logado.
-
-Aviso global: banner em `AppLayout` quando saldo está baixo (abaixo de um limite) ou zerado/expirado, com link para `/saldo-api`. Item novo no `AppSidebar` ("Saldo de API").
-
-## Segredo
-
-Salvar o App ID da OpenPix como secret de backend `OPENPIX_APP_ID` (valor já enviado no chat). A criação de cobrança passa só pela edge function — nada sensível no frontend.
-
-## Validação
-
-1. Recarregar via PIX em sandbox/produção → confirmar crédito após webhook.
-2. Confirmar débito por mensagem no WhatsApp e bloqueio quando zera.
-3. Conferir banner de saldo baixo e a estimativa de conversas nos botões.
+## Fora de escopo (não vou tocar)
+- Os ~98 avisos do linter Supabase são pré-existentes e amplos (RLS INFO, SECURITY DEFINER WARN, versão do Postgres). Não são desta feature e mexer neles arrisca estabilidade — deixo como está, salvo se você pedir.
+- Lógica de autenticação central (regra de estabilidade do projeto).
 
 ## Detalhes técnicos
-
-- Custo por mensagem e período de cortesia ficam como constantes no topo das funções/arquivos para ajuste fácil.
-- Webhook da OpenPix precisa ser cadastrado no painel Woovi apontando para a URL da `openpix-webhook` (forneço a URL após criar a função).
-- Saldo: ele acumula sim! mantenha ele até zerar, só vai pagar de novo quando ACABAR o saldo! assim é mai ajusto!
-- Mesmo que o saldo acabar, não trava nada nem muda nada, não bloqueia nada, é apenas informativo pra ele poder recarregar! 
+- Migrations novas: funções `delete_crm_leads_bulk(...)` e `cleanup_live_chat_sessions(...)` com `search_path=public`, escopadas ao usuário; grants para `authenticated`.
+- `prospect-outreach/index.ts`: gate de segredo nas ações `dispatch_one`/`process_queue`; `process_prospect_outreach_queue()` passa o header com o segredo.
+- Frontend: hooks `useCRMLeads`/`useLiveChat` ganham mutations de limpeza em lote + botões com AlertDialog.
+- Validação: rodar o fluxo no preview (busca, disparo, limpeza) e conferir console/network sem erros.
