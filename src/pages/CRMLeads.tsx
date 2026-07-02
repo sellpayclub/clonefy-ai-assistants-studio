@@ -53,6 +53,9 @@ const CRMLeads = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [outreachOpen, setOutreachOpen] = useState(false);
   const [outreachCompanies, setOutreachCompanies] = useState<ProspectCompany[]>([]);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [cleanupOpen, setCleanupOpen] = useState(false);
+  const [cleanupDays, setCleanupDays] = useState('90');
 
   const callableFilteredLeads = useMemo(
     () => crm.filteredLeads.filter(isCrmLeadCallable),
