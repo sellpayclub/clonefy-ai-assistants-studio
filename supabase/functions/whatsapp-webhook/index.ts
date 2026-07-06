@@ -607,12 +607,19 @@ serve(async (req) => {
 
         // 🔒 HUMAN TAKEOVER CHECK PRIMÁRIO: Verificar no live_chat_sessions (fonte da verdade)
         // Isso garante que quando o operador pausar a IA no painel, ela realmente pare de responder
-        const { data: liveSession } = await supabase
+        // Usamos order + limit(1) (em vez de .maybeSingle) para não quebrar caso existam sessões duplicadas,
+        // o que faria a checagem falhar silenciosamente e a IA responder durante o atendimento humano.
+        const { data: liveSessions } = await supabase
             .from('live_chat_sessions')
-            .select('id, status, human_takeover_until')
+            .select('id, status, human_takeover_until, unread_count')
             .eq('instance_name', instanceName)
             .eq('contact_number', contactNumber)
-            .maybeSingle();
+            .order('human_takeover_until', { ascending: false, nullsFirst: false })
+            .order('last_message_at', { ascending: false })
+            .limit(1);
+
+        const liveSession = liveSessions && liveSessions.length > 0 ? liveSessions[0] : null;
+
 
         if (liveSession) {
             const isHumanTakeover = liveSession.status === 'human_takeover';
