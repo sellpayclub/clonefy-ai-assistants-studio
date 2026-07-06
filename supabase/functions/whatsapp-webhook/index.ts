@@ -253,25 +253,37 @@ serve(async (req) => {
             if (existingContact) {
                 await supabase
                     .from('n8n_fluxogpt')
-                    .update({ human_takeover_until: takeoverUntil })
+                    .update({ human_takeover_until: takeoverUntil, last_sender: 'human' })
                     .eq('id', existingContact.id);
+                console.log('✅ n8n_fluxogpt atualizado com human_takeover_until');
             }
 
-            // Buscar userId da instância para upsert correto na sessão
+            // Resolver userId da instância (coluna userId OU via emailuser RPC — robusto)
             const { data: instanceCfg } = await supabase
                 .from('n8n_fluxogpt')
-                .select('userId')
+                .select('userId, emailuser')
                 .eq('nomeinstancia', instanceName)
                 .not('emailuser', 'is', null)
                 .limit(1)
                 .maybeSingle();
 
-            if (instanceCfg?.userId) {
+            let takeoverUserId = instanceCfg?.userId || '';
+            if (!takeoverUserId && instanceCfg?.emailuser) {
+                try {
+                    const { data: resolvedId } = await supabase
+                        .rpc('get_user_id_by_email', { target_email: instanceCfg.emailuser });
+                    if (resolvedId) takeoverUserId = resolvedId;
+                } catch (e) {
+                    console.error('⚠️ Erro ao resolver userId via emailuser no takeover:', e);
+                }
+            }
+
+            if (takeoverUserId) {
                 // FIX: usar UPSERT em vez de UPDATE — cria a sessão se não existir
                 await supabase
                     .from('live_chat_sessions')
                     .upsert({
-                        user_id: instanceCfg.userId,
+                        user_id: takeoverUserId,
                         instance_name: instanceName,
                         contact_number: contactNumber,
                         contact_name: contactName,
@@ -285,24 +297,22 @@ serve(async (req) => {
 
                 console.log(`⏸️ HUMAN TAKEOVER ATIVADO! IA pausada até ${takeoverUntil} para contato ${contactNumber}`);
                 console.log('📺 Live Chat: Sessão criada/atualizada com status human_takeover via UPSERT');
-
-                return new Response(JSON.stringify({
-                    status: 'takeover_activated',
-                    contact: contactNumber,
-                    pausedUntil: takeoverUntil,
-                    message: `IA pausada por ${takeoverHours >= 999 ? 'tempo indeterminado' : takeoverHours + 'h'} - humano assumiu a conversa`
-                }), {
-                    status: 200,
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-                });
             } else {
-                console.log('⏭️ Mensagem própria ignorada (instância não encontrada ou sem emailuser)');
-                return new Response(JSON.stringify({ status: 'ignored', reason: 'own_message_no_instance' }), {
-                    status: 200,
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-                });
+                console.warn('⚠️ userId não resolvido — takeover registrado apenas em n8n_fluxogpt');
             }
+
+            // Sempre retornar sucesso: takeover foi registrado (n8n e/ou live_chat)
+            return new Response(JSON.stringify({
+                status: 'takeover_activated',
+                contact: contactNumber,
+                pausedUntil: takeoverUntil,
+                message: `IA pausada por ${takeoverHours >= 999 ? 'tempo indeterminado' : takeoverHours + 'h'} - humano assumiu a conversa`
+            }), {
+                status: 200,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
         }
+
 
         const instanceName = payload.instance;
         const contactNumber = payload.data.key.remoteJid.replace('@s.whatsapp.net', '');
