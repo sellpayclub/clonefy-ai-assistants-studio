@@ -416,8 +416,8 @@ const Conversations = memo(() => {
   ), [conversations, selectedConversation, selectConversation, deleteConversation]);
 
   const MessagesList = useMemo(() => (
-    <ScrollArea className="flex-1 px-4">
-      <div className="space-y-4 py-4">
+    <ScrollArea className="flex-1 min-h-0">
+      <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-4">
         {messages.map((message) => (
           <MessageItem key={message.id} message={message} />
         ))}
@@ -425,6 +425,7 @@ const Conversations = memo(() => {
         <div ref={messagesEndRef} />
       </div>
     </ScrollArea>
+
   ), [messages, isTyping]);
 
   if (loading) {
