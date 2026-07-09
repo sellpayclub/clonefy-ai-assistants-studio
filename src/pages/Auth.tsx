@@ -117,16 +117,10 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Clean up existing state
+      // Clean up any stale local auth state before a fresh sign-in.
+      // (No global signOut network call here — it can hang/error and blocks login.)
       cleanupAuthState();
-      
-      // Attempt global sign out first
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Continue even if this fails
-        console.warn('Warning during initial cleanup:', err);
-      }
+
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
