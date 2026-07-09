@@ -514,8 +514,9 @@ const Conversations = memo(() => {
                 <>
                   {MessagesList}
                   
-                  <div className="border-t p-4">
-                    <div className="flex gap-2">
+                  <div className="border-t p-4 shrink-0 bg-background">
+                    <div className="mx-auto flex w-full max-w-3xl gap-2">
+
                       <Input
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
