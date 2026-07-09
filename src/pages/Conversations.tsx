@@ -455,7 +455,7 @@ const Conversations = memo(() => {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar de Conversas */}
-        <div className="w-80 border-r flex flex-col">
+        <div className="w-80 border-r flex flex-col min-h-0">
               <div className="p-4 border-b space-y-4">
                 <Select
                   value={selectedAssistant}
