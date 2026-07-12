@@ -1,37 +1,38 @@
-## Objetivo
-Revisar as funções novas (prospecção + disparo), corrigir os problemas reais encontrados e implementar a "limpeza/apagar dados" para não sobrecarregar CRM e Chat ao vivo.
+# Corrigir tamanho/scroll do Chat ao Vivo
 
-## O que já está OK (não vou mexer)
-- `prospect-companies` e `prospect-outreach`: presentes, registradas no `config.toml`, com tabelas `prospect_outreach_campaigns`/`prospect_outreach_queue` e cron `prospect-outreach-queue-job` (roda a cada minuto) — tudo funcional.
-- Frontend `Prospeccao.tsx`, `ProspectOutreachModal.tsx`, `useProspeccao.ts`, `call-outreach.ts`: fluxo completo (busca → seleção → disparo → CRM). TypeScript compila limpo.
-- Deploy das edge functions é **automático** no Lovable — os comandos `supabase functions deploy` que você colou não são necessários.
+## Problema
+Ao abrir uma conversa com muitas mensagens, a janela do chat cresce indefinidamente e fica impossível de ler. O usuário precisa rolar a página inteira em vez de rolar só dentro do chat, e o campo de digitar some para baixo.
 
-## Problemas encontrados e correções
+## Causa raiz
+A cadeia de flex não está restringindo a altura da área de mensagens:
 
-### 1. Furo de segurança no `prospect-outreach` (disparo)
-As ações `dispatch_one` e `process_queue` rodam **antes** da checagem de login e sem nenhum segredo. Hoje qualquer um poderia acionar disparos chutando um `queue_id`.
-- Corrigir: exigir validação (header com `CRON_SECRET` já existente nos secrets, ou token de serviço) para essas ações internas chamadas pelo cron.
-- Ajustar a função SQL `process_prospect_outreach_queue` para enviar esse header.
+```text
+main (h-screen, overflow-hidden)          -> OK
+  div (flex-1 flex overflow-hidden)        -> OK
+    div (flex-1 bg-muted/30)               -> FALTA min-h-0 / overflow-hidden
+      ChatWindow (h-full flex flex-col)    -> OK
+        ScrollArea (flex-1 p-6)            -> FALTA min-h-0  <-- estoura aqui
+```
 
-### 2. Verificação de runtime do fluxo real
-Como o build está limpo, vou rodar o app (login + página de Prospecção) para reproduzir a busca e o disparo de verdade e capturar erros de runtime/console que não aparecem em compilação. Corrijo o que aparecer.
+Sem `min-h-0`, um item flex assume altura mínima igual ao conteúdo, então a lista de mensagens empurra o container e "estica" o chat conforme o número de mensagens, em vez de manter altura fixa com scroll interno.
 
-### 3. Limpeza / apagar dados (CRM + Chat ao vivo)
-Hoje existe só exclusão de 1 lead por vez; não há limpeza em massa. Vou implementar de forma segura:
-- Funções SQL `SECURITY DEFINER` (escopadas a `auth.uid()`) para apagar em lote respeitando o limite de 1000 linhas do Supabase:
-  - Apagar leads selecionados / por período (ex.: mais antigos que X dias) / por status.
-  - Apagar sessões de Chat ao vivo (e mensagens vinculadas) por período/encerradas.
-- UI:
-  - CRM (`CRMLeads.tsx`): ação "Apagar selecionados" e "Limpar antigos" com diálogo de confirmação.
-  - Chat ao vivo (`LiveChat.tsx`): "Limpar conversas antigas/encerradas" com confirmação.
-- Confirmação obrigatória (AlertDialog) para evitar exclusão acidental.
+Além disso, o auto-scroll (`scrollRef`) está preso no elemento raiz do `ScrollArea` (que tem `overflow-hidden`), e não no viewport que realmente rola — por isso o scroll automático para a última mensagem não funciona de forma confiável.
 
-## Fora de escopo (não vou tocar)
-- Os ~98 avisos do linter Supabase são pré-existentes e amplos (RLS INFO, SECURITY DEFINER WARN, versão do Postgres). Não são desta feature e mexer neles arrisca estabilidade — deixo como está, salvo se você pedir.
-- Lógica de autenticação central (regra de estabilidade do projeto).
+## Correção (somente front-end / layout)
 
-## Detalhes técnicos
-- Migrations novas: funções `delete_crm_leads_bulk(...)` e `cleanup_live_chat_sessions(...)` com `search_path=public`, escopadas ao usuário; grants para `authenticated`.
-- `prospect-outreach/index.ts`: gate de segredo nas ações `dispatch_one`/`process_queue`; `process_prospect_outreach_queue()` passa o header com o segredo.
-- Frontend: hooks `useCRMLeads`/`useLiveChat` ganham mutations de limpeza em lote + botões com AlertDialog.
-- Validação: rodar o fluxo no preview (busca, disparo, limpeza) e conferir console/network sem erros.
+### 1. `src/pages/LiveChat.tsx`
+- No container da janela de chat (`<div className="flex-1 bg-muted/30">`), adicionar `min-h-0 overflow-hidden` para travar a altura da coluna.
+
+### 2. `src/components/live-chat/ChatWindow.tsx`
+- Adicionar `min-h-0` ao container raiz (`h-full flex flex-col`) e à `ScrollArea` das mensagens, garantindo que a lista tenha altura fixa e role internamente.
+- Manter header e input com `shrink-0` para ficarem sempre visíveis (o input nunca some para baixo).
+- Corrigir o auto-scroll: apontar o ref para o viewport real do `ScrollArea` (elemento com `data-radix-scroll-area-viewport`) em vez do root, para que ele role de fato até a última mensagem ao abrir/receber mensagens.
+- Opcional de leitura: limitar a largura da coluna de mensagens (ex.: `max-w-3xl mx-auto`) para conversas longas ficarem mais confortáveis de ler, mantendo o mesmo padrão já aplicado na página de Conversas.
+
+## Resultado esperado
+- A janela do chat ocupa sempre a altura da tela (fixa), independente do número de mensagens.
+- Rolagem acontece só dentro da lista de mensagens; header e campo de digitar permanecem fixos e visíveis.
+- Ao abrir uma conversa, o chat já posiciona na última mensagem automaticamente.
+
+## Observação
+Mudança puramente de layout/UX no front-end. Não altera lógica de negócio, Supabase, takeover da IA nem edge functions.
