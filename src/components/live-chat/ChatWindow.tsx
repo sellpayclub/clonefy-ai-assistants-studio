@@ -386,8 +386,8 @@ export const ChatWindow = memo(function ChatWindow({
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-4 border-t border-border">
-        <div className="flex gap-2">
+      <div className="shrink-0 p-4 border-t border-border">
+        <div className="flex gap-2 max-w-3xl mx-auto w-full">
           <Input
             ref={inputRef}
             placeholder="Digite sua mensagem..."
