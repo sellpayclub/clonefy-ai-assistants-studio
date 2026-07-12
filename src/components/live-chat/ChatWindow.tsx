@@ -356,8 +356,8 @@ export const ChatWindow = memo(function ChatWindow({
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-6" ref={scrollRef}>
-        <div className="flex flex-col gap-6">
+      <ScrollArea className="flex-1 min-h-0 p-6" ref={scrollRef}>
+        <div className="flex flex-col gap-6 max-w-3xl mx-auto w-full">
           {Object.entries(messagesByDate).map(([date, msgs]) => (
             <div key={date} className="space-y-4">
               {/* Date separator */}
