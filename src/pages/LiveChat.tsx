@@ -77,7 +77,7 @@ export default function LiveChat() {
   }
 
   return (
-    <main className="flex-1 flex flex-col h-screen overflow-hidden">
+    <main className="flex flex-col h-screen overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-border bg-background">
         <div className="flex items-center justify-between">
