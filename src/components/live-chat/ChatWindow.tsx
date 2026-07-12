@@ -263,9 +263,9 @@ export const ChatWindow = memo(function ChatWindow({
     ?? String(pauseDuration);
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full min-h-0 flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-border">
+      <div className="shrink-0 p-4 border-b border-border">
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
