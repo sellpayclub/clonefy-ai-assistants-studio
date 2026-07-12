@@ -198,12 +198,15 @@ export const ChatWindow = memo(function ChatWindow({
     }
   };
 
-  // Auto scroll to bottom
+  // Auto scroll to bottom (target the real scrollable viewport inside ScrollArea)
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const viewport = scrollRef.current?.querySelector<HTMLDivElement>(
+      '[data-radix-scroll-area-viewport]'
+    );
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, session?.id]);
 
   // Focus input when session changes
   useEffect(() => {
