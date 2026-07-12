@@ -198,12 +198,15 @@ export const ChatWindow = memo(function ChatWindow({
     }
   };
 
-  // Auto scroll to bottom
+  // Auto scroll to bottom (target the real scrollable viewport inside ScrollArea)
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const viewport = scrollRef.current?.querySelector<HTMLDivElement>(
+      '[data-radix-scroll-area-viewport]'
+    );
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, session?.id]);
 
   // Focus input when session changes
   useEffect(() => {
@@ -260,9 +263,9 @@ export const ChatWindow = memo(function ChatWindow({
     ?? String(pauseDuration);
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full min-h-0 flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-border">
+      <div className="shrink-0 p-4 border-b border-border">
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
@@ -353,8 +356,8 @@ export const ChatWindow = memo(function ChatWindow({
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-6" ref={scrollRef}>
-        <div className="flex flex-col gap-6">
+      <ScrollArea className="flex-1 min-h-0 p-6" ref={scrollRef}>
+        <div className="flex flex-col gap-6 max-w-3xl mx-auto w-full">
           {Object.entries(messagesByDate).map(([date, msgs]) => (
             <div key={date} className="space-y-4">
               {/* Date separator */}
@@ -383,8 +386,8 @@ export const ChatWindow = memo(function ChatWindow({
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-4 border-t border-border">
-        <div className="flex gap-2">
+      <div className="shrink-0 p-4 border-t border-border">
+        <div className="flex gap-2 max-w-3xl mx-auto w-full">
           <Input
             ref={inputRef}
             placeholder="Digite sua mensagem..."

@@ -184,7 +184,7 @@ export default function LiveChat() {
         </div>
 
         {/* Chat Window */}
-        <div className="flex-1 bg-muted/30">
+        <div className="flex-1 min-w-0 min-h-0 overflow-hidden bg-muted/30">
           <ChatWindow
             session={selectedSession}
             messages={messages}
