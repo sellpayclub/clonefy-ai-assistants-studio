@@ -93,9 +93,31 @@ async function callProspectFunction<T>(
     headers: authHeaders,
   });
 
-  if (response.error) throw new Error(response.error.message);
+  if (response.error) {
+    // supabase.functions.invoke devolve uma mensagem genérica ("non-2xx status code")
+    // quando a função retorna erro. A mensagem real fica no corpo (error.context).
+    let message = response.error.message || 'Erro na busca';
+    const ctx = (response.error as unknown as { context?: Response }).context;
+    if (ctx && typeof ctx.text === 'function') {
+      try {
+        const raw = await ctx.text();
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            if (parsed?.error) message = parsed.error;
+          } catch {
+            message = raw;
+          }
+        }
+      } catch {
+        /* mantém a mensagem padrão */
+      }
+    }
+    throw new Error(message);
+  }
   if (response.data?.error) throw new Error(response.data.error);
   return response.data as T;
+
 }
 
 async function importLeadsClient(

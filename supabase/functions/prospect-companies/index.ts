@@ -755,9 +755,56 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error("prospect-companies error:", error);
-    return jsonResponse(
-      { error: error instanceof Error ? error.message : "Erro interno" },
-      500,
-    );
+    const msg = error instanceof Error ? error.message : "Erro interno";
+    const lower = msg.toLowerCase();
+
+    // Sem créditos na API externa de CNPJ (Casa dos Dados / BuscaLead)
+    if (lower.includes("sem saldo") || lower.includes("saldo")) {
+      return jsonResponse(
+        {
+          error:
+            "Sua chave da Casa dos Dados está sem créditos. Recarregue o saldo em portal.casadosdados.com.br e tente novamente.",
+          code: "NO_BALANCE",
+        },
+        402,
+      );
+    }
+
+    // Chave inválida / acesso negado
+    if (lower.includes("401") || lower.includes("unauthorized") || lower.includes("api-key")) {
+      return jsonResponse(
+        {
+          error:
+            "Chave da API de CNPJ inválida. Verifique se colou a api-key correta da Casa dos Dados.",
+          code: "INVALID_KEY",
+        },
+        401,
+      );
+    }
+    if (lower.includes("403") || lower.includes("forbidden")) {
+      return jsonResponse(
+        {
+          error:
+            "Acesso negado pela API de CNPJ. Confirme se sua chave está ativa e com saldo disponível.",
+          code: "FORBIDDEN",
+        },
+        402,
+      );
+    }
+
+    // Limite de requisições da API externa
+    if (lower.includes("429") || lower.includes("rate limit") || lower.includes("too many")) {
+      return jsonResponse(
+        {
+          error:
+            "A API de CNPJ atingiu o limite de requisições. Aguarde alguns instantes e tente novamente.",
+          code: "RATE_LIMIT",
+        },
+        429,
+      );
+    }
+
+    return jsonResponse({ error: msg }, 500);
   }
 });
+
