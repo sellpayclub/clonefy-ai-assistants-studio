@@ -13,7 +13,7 @@ import {
   Users,
   Radio,
   Brush,
-  CreditCard,
+  
   Sparkles,
   FileText,
   Instagram,
