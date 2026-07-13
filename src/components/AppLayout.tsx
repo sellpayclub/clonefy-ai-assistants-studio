@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Outlet, useNavigate, Navigate } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
-import ApiBalanceBanner from '@/components/ApiBalanceBanner';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { isAdminEmail } from '@/lib/admin';
 
@@ -44,7 +44,7 @@ const AppLayout = () => {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <ApiBalanceBanner />
+          
           <Outlet />
         </div>
       </div>
