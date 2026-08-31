@@ -642,7 +642,7 @@ serve(async (req) => {
             return { success: false, error: `Ferramenta ${call.name} indisponível no widget.` };
           }
           const response = await supabase.functions.invoke('calendar-management', {
-            body: { action: call.name, assistant_id: agentId, ...call.arguments },
+            body: { action: call.name, assistant_id: agentId, internal_user_id: agent.user_id, ...call.arguments },
           });
           if (response.error) throw response.error;
           return response.data;

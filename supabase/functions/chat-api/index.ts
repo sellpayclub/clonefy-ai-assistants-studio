@@ -260,7 +260,7 @@ async function sendMessage(userId: string, data: any) {
         return { success: false, error: `Função ${call.name} não está disponível no chat de teste.` };
       }
       const calendarResponse = await supabase.functions.invoke('calendar-management', {
-        body: { action: call.name, assistant_id: conversation.assistant_id, ...call.arguments },
+        body: { action: call.name, assistant_id: conversation.assistant_id, internal_user_id: userId, ...call.arguments },
       });
       if (calendarResponse.error) throw calendarResponse.error;
       return calendarResponse.data;

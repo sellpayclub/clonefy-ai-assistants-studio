@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getSupabaseServiceKey } from '../_shared/openai-responses.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,7 +9,7 @@ const corsHeaders = {
 };
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabaseServiceKey = getSupabaseServiceKey();
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -28,31 +29,35 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      throw new Error('Invalid token');
+    let authorizedUserId = '';
+    if (token === supabaseServiceKey && typeof data.internal_user_id === 'string') {
+      authorizedUserId = data.internal_user_id;
+      delete data.internal_user_id;
+    } else {
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !user) throw new Error('Invalid token');
+      authorizedUserId = user.id;
     }
 
-    console.log(`Calendar Management API - Action: ${action}, User: ${user.id}`);
+    console.log(`Calendar Management API - Action: ${action}, User: ${authorizedUserId}`);
 
     switch (action) {
       case 'check_availability':
-        return await checkAvailability(user.id, data);
+        return await checkAvailability(authorizedUserId, data);
       case 'create_appointment':
-        return await createAppointment(user.id, data);
+        return await createAppointment(authorizedUserId, data);
       case 'list_appointments':
-        return await listAppointments(user.id, data);
+        return await listAppointments(authorizedUserId, data);
       case 'cancel_appointment':
-        return await cancelAppointment(user.id, data);
+        return await cancelAppointment(authorizedUserId, data);
       case 'reschedule_appointment':
-        return await rescheduleAppointment(user.id, data);
+        return await rescheduleAppointment(authorizedUserId, data);
       case 'update_calendar_settings':
-        return await updateCalendarSettings(user.id, data);
+        return await updateCalendarSettings(authorizedUserId, data);
       case 'get_calendar_settings':
-        return await getCalendarSettings(user.id, data);
+        return await getCalendarSettings(authorizedUserId, data);
       case 'update_appointment':
-        return await updateAppointment(user.id, data);
+        return await updateAppointment(authorizedUserId, data);
       default:
         throw new Error('Invalid action');
     }
