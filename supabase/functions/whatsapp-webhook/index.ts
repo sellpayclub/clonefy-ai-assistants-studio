@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+import { createOpenAIConversation, getSupabaseServiceKey, isResponsesConversationId, runOpenAIResponse } from '../_shared/openai-responses.ts';
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -18,7 +19,7 @@ const MESSAGE_BUFFER_SECONDS = 8; // Tempo para acumular mensagens
 // Supabase Client com service role para bypass RLS
 const supabase = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    getSupabaseServiceKey()
 );
 
 // Helper para salvar arquivos no CRM
@@ -746,13 +747,13 @@ serve(async (req) => {
         // Se idassistentgpt estiver vazio, é uma conexão CRM-only (sem agente IA)
         const isCrmOnly = !instanceConfig.idassistentgpt || instanceConfig.idassistentgpt.trim() === '';
         
-        let assistantData: { id: string; user_id: string; name: string; openai_assistant_id: string } | null = null;
+        let assistantData: { id: string; user_id: string; name: string; openai_assistant_id: string; instructions?: string; model?: string; tools?: unknown; metadata?: Record<string, unknown> } | null = null;
         
         if (!isCrmOnly) {
             // Primeiro: tentar buscar por openai_assistant_id
             const { data: assistantByOpenAI } = await supabase
                 .from('assistants')
-                .select('id, user_id, name, openai_assistant_id')
+                .select('id, user_id, name, openai_assistant_id, instructions, model, tools, metadata')
                 .eq('openai_assistant_id', instanceConfig.idassistentgpt)
                 .single();
             
@@ -763,7 +764,7 @@ serve(async (req) => {
                 // Fallback: tentar buscar por UUID (caso legado)
                 const { data: assistantByUUID } = await supabase
                     .from('assistants')
-                    .select('id, user_id, name, openai_assistant_id')
+                    .select('id, user_id, name, openai_assistant_id, instructions, model, tools, metadata')
                     .eq('id', instanceConfig.idassistentgpt)
                     .single();
                 
@@ -1131,25 +1132,14 @@ serve(async (req) => {
             throw new Error('OPENAI_API_KEY não configurada');
         }
 
-        if (!threadId) {
-            console.log('🆕 Criando nova thread no OpenAI...');
+        if (!isResponsesConversationId(threadId)) {
+            console.log('🆕 Criando/migrando conversa para OpenAI Responses...');
 
-            const threadResponse = await fetch('https://api.openai.com/v1/threads', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${openaiApiKey}`,
-                    'Content-Type': 'application/json',
-                    'OpenAI-Beta': 'assistants=v2'
-                },
-                body: JSON.stringify({})
+            const threadData = await createOpenAIConversation(openaiApiKey, {
+                assistant_id: assistantUuid,
+                channel: 'whatsapp',
+                contact: contactNumber.slice(-32),
             });
-
-            if (!threadResponse.ok) {
-                const error = await threadResponse.text();
-                throw new Error(`Erro ao criar thread: ${error}`);
-            }
-
-            const threadData = await threadResponse.json();
             threadId = threadData.id;
 
             // Salvar thread ID
@@ -1158,13 +1148,78 @@ serve(async (req) => {
                 .update({ threadid: threadId })
                 .eq('id', existingContact?.id || instanceConfig.id);
 
-            console.log(`✅ Thread criada: ${threadId}`);
+            console.log(`✅ Conversa Responses criada: ${threadId}`);
         } else {
             console.log(`📎 Usando thread existente: ${threadId}`);
         }
 
         // Registrar Analytics - Nova Conversa (Início do processamento)
         await updateAnalytics(assistantUuid, userId, 'conversation');
+
+        const responseResult = await runOpenAIResponse({
+            apiKey: openaiApiKey,
+            conversationId: threadId,
+            assistant: assistantData || {},
+            input: currentMessages,
+            onToolCall: async (call) => {
+                const args = call.arguments as Record<string, any>;
+
+                if (call.name.startsWith('agendify_')) {
+                    const actionMap: Record<string, string> = {
+                        agendify_list_services: 'list_services',
+                        agendify_list_professionals: 'list_professionals',
+                        agendify_check_availability: 'check_availability',
+                        agendify_create_appointment: 'create_appointment',
+                        agendify_cancel_appointment: 'cancel_appointment',
+                        agendify_list_appointments: 'list_appointments',
+                        agendify_search_clients: 'search_clients',
+                    };
+                    const action = actionMap[call.name];
+                    if (!action) return { success: false, error: `Ferramenta desconhecida: ${call.name}` };
+                    const proxyResponse = await supabase.functions.invoke('agendify-proxy', {
+                        body: { action, assistant_id: assistantUuid, ...args },
+                    });
+                    if (proxyResponse.error) throw proxyResponse.error;
+                    return proxyResponse.data;
+                }
+
+                if (call.name.includes('image') || call.name.includes('imagem')) {
+                    await fetch(`${EVOLUTION_API_URL}/message/sendMedia/${instanceName}`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json', apikey: EVOLUTION_API_KEY },
+                        body: JSON.stringify({ number: contactNumber, mediatype: 'image', media: args.url || args.image_url || args.media, caption: args.caption || args.text || '', delay: 2 }),
+                    });
+                    return { success: true };
+                }
+                if (call.name.includes('video')) {
+                    await fetch(`${EVOLUTION_API_URL}/message/sendMedia/${instanceName}`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json', apikey: EVOLUTION_API_KEY },
+                        body: JSON.stringify({ number: contactNumber, mediatype: 'video', media: args.url || args.video_url || args.media, caption: args.caption || args.text || '', delay: 2 }),
+                    });
+                    return { success: true };
+                }
+                if (call.name.includes('audio') || call.name.includes('voz')) {
+                    await fetch(`${EVOLUTION_API_URL}/message/sendWhatsAppAudio/${instanceName}`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json', apikey: EVOLUTION_API_KEY },
+                        body: JSON.stringify({ number: contactNumber, audio: args.url || args.audio_url || args.media, delay: 2 }),
+                    });
+                    return { success: true };
+                }
+                if (call.name.includes('document') || call.name.includes('arquivo')) {
+                    await fetch(`${EVOLUTION_API_URL}/message/sendMedia/${instanceName}`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json', apikey: EVOLUTION_API_KEY },
+                        body: JSON.stringify({ number: contactNumber, mediatype: 'document', media: args.url || args.document_url || args.media, fileName: args.fileName || args.file_name || 'documento', delay: 2 }),
+                    });
+                    return { success: true };
+                }
+
+                return { success: false, error: `Ferramenta ${call.name} indisponível neste canal.` };
+            },
+        });
+        const assistantResponse = responseResult.text;
+
+        // Kept temporarily for rollback reference; never executes after migration.
+        // eslint-disable-next-line no-constant-condition
+        if (false) {
 
         // 4. Adicionar mensagem à thread
         console.log('📤 Enviando mensagem para OpenAI...');
@@ -1390,7 +1445,10 @@ serve(async (req) => {
             throw new Error('Resposta do assistente não encontrada');
         }
 
-        const assistantResponse = assistantMessage.content[0].text.value;
+        const legacyAssistantResponse = assistantMessage.content[0].text.value;
+        console.log(`🤖 Resposta legada: ${legacyAssistantResponse.substring(0, 100)}...`);
+        }
+
         console.log(`🤖 Resposta: ${assistantResponse.substring(0, 100)}...`);
 
         // 💳 SALDO DE API: descontar custo fixo por resposta (apenas informativo, NUNCA bloqueia)

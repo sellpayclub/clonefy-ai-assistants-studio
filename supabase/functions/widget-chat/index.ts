@@ -1,6 +1,12 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.51.0';
+import {
+  createOpenAIConversation,
+  getSupabaseServiceKey,
+  isResponsesConversationId,
+  runOpenAIResponse,
+} from '../_shared/openai-responses.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,7 +14,7 @@ const corsHeaders = {
 };
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabaseKey = getSupabaseServiceKey();
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -416,7 +422,7 @@ serve(async (req) => {
       // Get agent details with optimized query
       const { data: agent, error: agentError } = await supabase
         .from('assistants')
-        .select('id, name, openai_assistant_id, user_id')
+        .select('id, name, openai_assistant_id, user_id, instructions, model, tools, metadata')
         .eq('id', agentId)
         .eq('is_active', true)
         .single();
@@ -438,24 +444,12 @@ serve(async (req) => {
       if (!currentConversationId) {
         isNewConversation = true;
 
-        // Create OpenAI thread first (parallel optimization)
-        const threadResponse = await fetch('https://api.openai.com/v1/threads', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-            'OpenAI-Beta': 'assistants=v2'
-          },
+        const thread = await createOpenAIConversation(openAIApiKey!, {
+          assistant_id: agentId,
+          channel: 'widget',
         });
-
-        if (!threadResponse.ok) {
-          const errorData = await threadResponse.json().catch(() => ({}));
-          throw new Error(`Failed to create OpenAI thread: ${errorData.error?.message || threadResponse.statusText}`);
-        }
-
-        const thread = await threadResponse.json();
         if (!thread.id) {
-          throw new Error('OpenAI thread creation failed: no thread ID returned');
+          throw new Error('OpenAI conversation creation failed: no ID returned');
         }
         threadId = thread.id;
 
@@ -495,8 +489,13 @@ serve(async (req) => {
         }
 
         threadId = conversation?.openai_thread_id;
-        if (!threadId) {
-          throw new Error('Thread ID not found for conversation');
+        if (!isResponsesConversationId(threadId)) {
+          const migrated = await createOpenAIConversation(openAIApiKey!, {
+            assistant_id: agentId,
+            channel: 'widget',
+          });
+          threadId = migrated.id;
+          await supabase.from('conversations').update({ openai_thread_id: threadId }).eq('id', currentConversationId);
         }
       }
 
@@ -609,221 +608,93 @@ serve(async (req) => {
         });
       }
 
-      // Parallel operations for better performance
-      const [messageResponse, dbInsertResponse] = await Promise.all([
-        // Add user message to OpenAI thread
-        fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-            'OpenAI-Beta': 'assistants=v2'
-          },
-          body: JSON.stringify({
-            role: 'user',
-            content: message
-          }),
-        }),
-        // Save user message to database
-        supabase.from('messages').insert({
-          conversation_id: currentConversationId,
-          role: 'user',
-          content: message
-        })
-      ]);
-
-      // Run the assistant immediately after message is added
-      const runResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-          'OpenAI-Beta': 'assistants=v2'
-        },
-        body: JSON.stringify({
-          assistant_id: agent.openai_assistant_id
-        }),
+      await supabase.from('messages').insert({
+        conversation_id: currentConversationId,
+        role: 'user',
+        content: message,
       });
 
-      if (!runResponse.ok) {
-        const errorData = await runResponse.json().catch(() => ({}));
-        throw new Error(`Failed to create OpenAI run: ${errorData.error?.message || runResponse.statusText}`);
-      }
-
-      const run = await runResponse.json();
-      if (!run.id || !run.status) {
-        throw new Error('Invalid run response from OpenAI');
-      }
-
-      // Optimized polling with tool call handling
-      let runStatus = run.status;
-      let attempts = 0;
-      const maxAttempts = 60; // Increased attempts but shorter intervals
-      const pollInterval = 300; // Ainda mais rápido - 300ms para melhor experiência
-
-      while (runStatus === 'queued' || runStatus === 'in_progress' || runStatus === 'requires_action') {
-        if (attempts >= maxAttempts) {
-          throw new Error('Assistant response timeout - a resposta está demorando mais que o esperado');
-        }
-
-        if (runStatus === 'requires_action') {
-          // Get the full run data to access required_action
-          const fullRunResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${run.id}`, {
-            headers: {
-              'Authorization': `Bearer ${openAIApiKey}`,
-              'OpenAI-Beta': 'assistants=v2'
-            },
-          });
-
-          const fullRunData = await fullRunResponse.json();
-          const requiredAction = fullRunData.required_action;
-
-          if (requiredAction && requiredAction.type === 'submit_tool_outputs') {
-            console.log('Processing tool calls for widget...');
-
-            for (const toolCall of requiredAction.submit_tool_outputs.tool_calls) {
-              if (toolCall.type === 'function') {
-                const functionName = toolCall.function.name;
-                if (['check_availability', 'create_appointment', 'list_appointments', 'cancel_appointment', 'reschedule_appointment', 'update_appointment'].includes(functionName)) {
-                  console.log(`Widget calling calendar function: ${functionName}`);
-
-                  // Call our calendar proxy to handle the function call
-                  const proxyResponse = await supabase.functions.invoke('chat-proxy', {
-                    body: {
-                      action: 'tool_call',
-                      run_id: run.id,
-                      thread_id: threadId,
-                      tool_call_id: toolCall.id,
-                      function_name: functionName,
-                      arguments: toolCall.function.arguments
-                    }
-                  });
-
-                  if (proxyResponse.error) {
-                    console.error(`Error calling calendar function: ${proxyResponse.error.message}`);
-                  } else {
-                    console.log('Calendar function called successfully');
-                  }
-
-                  // The proxy handles the tool output submission, so we continue
-                  break;
-                }
-              }
-            }
+      const result = await runOpenAIResponse({
+        apiKey: openAIApiKey!,
+        conversationId: threadId,
+        assistant: agent,
+        input: message,
+        onToolCall: async (call) => {
+          if (call.name.startsWith('agendify_')) {
+            const actionMap: Record<string, string> = {
+              agendify_list_services: 'list_services',
+              agendify_list_professionals: 'list_professionals',
+              agendify_check_availability: 'check_availability',
+              agendify_create_appointment: 'create_appointment',
+              agendify_cancel_appointment: 'cancel_appointment',
+              agendify_list_appointments: 'list_appointments',
+              agendify_search_clients: 'search_clients',
+            };
+            const response = await supabase.functions.invoke('agendify-proxy', {
+              body: { action: actionMap[call.name], assistant_id: agentId, ...call.arguments },
+            });
+            if (response.error) throw response.error;
+            return response.data;
           }
-        }
 
-        // Shorter wait time for faster responses
-        await new Promise(resolve => setTimeout(resolve, pollInterval));
+          const calendarFunctions = ['check_availability', 'create_appointment', 'list_appointments', 'cancel_appointment', 'reschedule_appointment', 'update_appointment'];
+          if (!calendarFunctions.includes(call.name)) {
+            return { success: false, error: `Ferramenta ${call.name} indisponível no widget.` };
+          }
+          const response = await supabase.functions.invoke('calendar-management', {
+            body: { action: call.name, assistant_id: agentId, ...call.arguments },
+          });
+          if (response.error) throw response.error;
+          return response.data;
+        },
+      });
 
-        const statusResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${run.id}`, {
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'OpenAI-Beta': 'assistants=v2'
-          },
-        });
+      const responseText = result.text;
+      updateAnalytics(agentId, agent.user_id, 'assistant').catch(e => console.error('Analytics error:', e));
 
-        const statusData = await statusResponse.json();
-        runStatus = statusData.status;
-        attempts++;
-
-        // Log progress para debugging - reduzindo logs
-        if (attempts % 6 === 0) { // Log a cada ~1.8 segundos
-          console.log(`Assistant processing... Status: ${runStatus}, Attempt: ${attempts}`);
-        }
-      }
-
-      if (runStatus === 'completed') {
-        // Get the assistant's response
-        const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages?order=desc&limit=1`, {
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'OpenAI-Beta': 'assistants=v2'
-          },
-        });
-
-        if (!messagesResponse.ok) {
-          throw new Error('Failed to fetch assistant response');
-        }
-
-        const messagesData = await messagesResponse.json();
-        if (!messagesData.data || messagesData.data.length === 0) {
-          throw new Error('No messages found in response');
-        }
-
-        const assistantMessage = messagesData.data[0];
-        if (!assistantMessage.content || assistantMessage.content.length === 0) {
-          throw new Error('Empty message content from assistant');
-        }
-
-        // Retornar resposta imediatamente sem aguardar save no DB
-        const responseText = assistantMessage.content[0]?.text?.value;
-        if (!responseText) {
-          throw new Error('Invalid message format from assistant');
-        }
-
-        // 📊 Analytics: Registrar mensagem do assistente
-        updateAnalytics(agentId, agent.user_id, 'assistant').catch(e => console.error('Analytics error:', e));
-
-        // 📺 LIVE CHAT: Salvar resposta da IA em background
-        if (liveChatSessionId) {
-          supabase
-            .from('live_chat_messages')
-            .insert({
-              user_id: agent.user_id,
-              session_id: liveChatSessionId,
-              instance_name: 'widget',
-              contact_number: currentConversationId,
-              contact_name: 'Visitante Widget',
-              sender_type: 'ai',
-              content: responseText,
-              message_type: 'text',
-              source: 'widget',
-              assistant_id: agentId,
-              assistant_name: agent.name
-            })
-            .then(() => console.log('📺 Widget Live Chat: Resposta IA salva'));
-
-          supabase
-            .from('live_chat_sessions')
-            .update({
-              last_message_at: new Date().toISOString(),
-              last_message_preview: responseText.substring(0, 100),
-              last_sender_type: 'ai'
-            })
-            .eq('id', liveChatSessionId)
-            .then(() => {});
-        }
-
-        // Background save - não bloquear resposta (sem catch)
-        supabase.from('messages').insert({
-          conversation_id: currentConversationId,
-          role: 'assistant',
+      if (liveChatSessionId) {
+        supabase.from('live_chat_messages').insert({
+          user_id: agent.user_id,
+          session_id: liveChatSessionId,
+          instance_name: 'widget',
+          contact_number: currentConversationId,
+          contact_name: 'Visitante Widget',
+          sender_type: 'ai',
           content: responseText,
-          openai_message_id: assistantMessage.id
-        }).then(() => {
-          console.log('Assistant message saved to database');
-        });
+          message_type: 'text',
+          source: 'widget',
+          assistant_id: agentId,
+          assistant_name: agent.name,
+        }).then(() => console.log('📺 Widget Live Chat: Resposta IA salva'));
 
-        // 🧠 CRM: Processar lead em background com TODA a conversa (não bloqueia resposta)
-        console.log('📈 [Widget] Iniciando Profiling COMPLETO de Lead para o CRM...');
-        processCRMLead(
-          agentId,
-          agent.user_id,
-          `widget_${currentConversationId}`, // ID único da sessão do widget
-          currentConversationId, // Agora passa o ID da conversa para buscar histórico completo
-          openAIApiKey!
-        ).catch(e => console.error('❌ [Widget] Erro no background profiling:', e));
-
-        return new Response(JSON.stringify({
-          response: responseText,
-          conversationId: currentConversationId
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      } else {
-        throw new Error(`Assistant run failed with status: ${runStatus}`);
+        supabase.from('live_chat_sessions').update({
+          last_message_at: new Date().toISOString(),
+          last_message_preview: responseText.substring(0, 100),
+          last_sender_type: 'ai',
+        }).eq('id', liveChatSessionId).then(() => {});
       }
+
+      supabase.from('messages').insert({
+        conversation_id: currentConversationId,
+        role: 'assistant',
+        content: responseText,
+        openai_message_id: result.id,
+      }).then(() => console.log('Assistant message saved to database'));
+
+      processCRMLead(
+        agentId,
+        agent.user_id,
+        `widget_${currentConversationId}`,
+        currentConversationId,
+        openAIApiKey!,
+      ).catch(e => console.error('❌ [Widget] Erro no background profiling:', e));
+
+      return new Response(JSON.stringify({
+        response: responseText,
+        conversationId: currentConversationId,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     return new Response(JSON.stringify({ error: 'Invalid action' }), {

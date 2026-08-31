@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { createOpenAIConversation, getSupabaseServiceKey, isResponsesConversationId, runOpenAIResponse } from '../_shared/openai-responses.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,7 +10,7 @@ const corsHeaders = {
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  getSupabaseServiceKey()
 );
 
 interface EvolutionWebhookData {
@@ -306,23 +307,11 @@ async function processMessageQueue(queueId: string, instanceConfig: any) {
     // Criar ou buscar thread do OpenAI
     let threadId = conversation.openai_thread_id;
     
-    if (!threadId) {
-      // Criar nova thread
-      const threadResponse = await fetch('https://api.openai.com/v1/threads', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-          'Content-Type': 'application/json',
-          'OpenAI-Beta': 'assistants=v2'
-        },
-        body: JSON.stringify({})
+    if (!isResponsesConversationId(threadId)) {
+      const threadData = await createOpenAIConversation(Deno.env.get('OPENAI_API_KEY') || '', {
+        assistant_id: assistant.id,
+        channel: 'whatsapp_test',
       });
-
-      if (!threadResponse.ok) {
-        throw new Error('Erro ao criar thread OpenAI');
-      }
-
-      const threadData = await threadResponse.json();
       threadId = threadData.id;
 
       // Salvar thread ID
@@ -334,88 +323,13 @@ async function processMessageQueue(queueId: string, instanceConfig: any) {
       console.log(`🆕 Nova thread criada: ${threadId}`);
     }
 
-    // Adicionar mensagem à thread
-    await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2'
-      },
-      body: JSON.stringify({
-        role: 'user',
-        content: combinedMessage
-      })
+    const result = await runOpenAIResponse({
+      apiKey: Deno.env.get('OPENAI_API_KEY') || '',
+      conversationId: threadId,
+      assistant,
+      input: combinedMessage,
     });
-
-    // Executar assistente
-    const runResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2'
-      },
-      body: JSON.stringify({
-        assistant_id: assistant.openai_assistant_id
-      })
-    });
-
-    if (!runResponse.ok) {
-      throw new Error('Erro ao executar assistente');
-    }
-
-    const runData = await runResponse.json();
-    const runId = runData.id;
-
-    console.log(`🤖 Assistente executando - Run ID: ${runId}`);
-
-    // Aguardar conclusão do run (polling)
-    let runStatus = 'queued';
-    let attempts = 0;
-    const maxAttempts = 30; // 30 segundos timeout
-
-    while (runStatus !== 'completed' && attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Aguardar 1 segundo
-      
-      const statusResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${runId}`, {
-        headers: {
-          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-          'OpenAI-Beta': 'assistants=v2'
-        }
-      });
-
-      const statusData = await statusResponse.json();
-      runStatus = statusData.status;
-      attempts++;
-
-      console.log(`⏳ Status do run: ${runStatus} (tentativa ${attempts})`);
-
-      if (runStatus === 'failed' || runStatus === 'cancelled' || runStatus === 'expired') {
-        throw new Error(`Assistente falhou: ${runStatus}`);
-      }
-    }
-
-    if (runStatus !== 'completed') {
-      throw new Error('Timeout na execução do assistente');
-    }
-
-    // Buscar resposta do assistente
-    const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages?order=desc&limit=1`, {
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'OpenAI-Beta': 'assistants=v2'
-      }
-    });
-
-    const messagesData = await messagesResponse.json();
-    const assistantMessage = messagesData.data[0];
-    
-    if (!assistantMessage || assistantMessage.role !== 'assistant') {
-      throw new Error('Resposta do assistente não encontrada');
-    }
-
-    const assistantResponse = assistantMessage.content[0].text.value;
+    const assistantResponse = result.text;
     console.log(`🤖 Resposta do assistente: ${assistantResponse}`);
 
     // Quebrar resposta em mensagens humanizadas

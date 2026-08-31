@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+import { createOpenAIConversation, getSupabaseServiceKey, isResponsesConversationId, runOpenAIResponse } from '../_shared/openai-responses.ts';
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -15,7 +16,7 @@ const EVOLUTION_API_KEY = '94805bfbb25f77f37a029f5a3dbfe62b';
 // Supabase Client
 const supabase = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    getSupabaseServiceKey()
 );
 
 interface FollowupRequest {
@@ -45,7 +46,7 @@ serve(async (req) => {
             id,
             instanceName,
             contactNumber,
-            threadId,
+            threadId: payloadThreadId,
             assistantId,
             followupNumber,
             elevenLabsApiKey,
@@ -53,7 +54,7 @@ serve(async (req) => {
         } = payload;
 
         // Validações
-        if (!instanceName || !contactNumber || !threadId || !assistantId) {
+        if (!instanceName || !contactNumber || !assistantId) {
             throw new Error('Dados incompletos para follow-up');
         }
 
@@ -77,98 +78,34 @@ serve(async (req) => {
             throw new Error('OPENAI_API_KEY não configurada');
         }
 
-        // Enviar mensagem de follow-up para o Assistant
-        console.log('📤 Enviando prompt de follow-up para OpenAI...');
-
-        const messageResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${openaiApiKey}`,
-                'Content-Type': 'application/json',
-                'OpenAI-Beta': 'assistants=v2'
-            },
-            body: JSON.stringify({
-                role: 'user',
-                content: followupPrompt
-            })
-        });
-
-        if (!messageResponse.ok) {
-            const error = await messageResponse.text();
-            throw new Error(`Erro ao adicionar mensagem: ${error}`);
+        let { data: assistant } = await supabase.from('assistants')
+            .select('id, instructions, model, tools, metadata')
+            .eq('openai_assistant_id', assistantId).maybeSingle();
+        if (!assistant && /^[0-9a-f-]{36}$/i.test(assistantId)) {
+            const fallback = await supabase.from('assistants')
+                .select('id, instructions, model, tools, metadata')
+                .eq('id', assistantId).maybeSingle();
+            assistant = fallback.data;
         }
+        if (!assistant) throw new Error('Configuração do agente não encontrada');
 
-        // Executar o assistente
-        console.log('🤖 Executando assistente...');
-
-        const runResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${openaiApiKey}`,
-                'Content-Type': 'application/json',
-                'OpenAI-Beta': 'assistants=v2'
-            },
-            body: JSON.stringify({
-                assistant_id: assistantId
-            })
-        });
-
-        if (!runResponse.ok) {
-            const error = await runResponse.text();
-            throw new Error(`Erro ao executar assistente: ${error}`);
-        }
-
-        const runData = await runResponse.json();
-        const runId = runData.id;
-
-        console.log(`⏳ Run iniciado: ${runId}`);
-
-        // Aguardar conclusão (polling com timeout menor para follow-up)
-        let runStatus = 'queued';
-        let attempts = 0;
-        const maxAttempts = 30; // 30 segundos timeout
-
-        while (runStatus !== 'completed' && attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            const statusResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${runId}`, {
-                headers: {
-                    'Authorization': `Bearer ${openaiApiKey}`,
-                    'OpenAI-Beta': 'assistants=v2'
-                }
+        let threadId = payloadThreadId;
+        if (!isResponsesConversationId(threadId)) {
+            const conversation = await createOpenAIConversation(openaiApiKey, {
+                assistant_id: assistant.id,
+                channel: 'whatsapp_followup',
             });
-
-            const statusData = await statusResponse.json();
-            runStatus = statusData.status;
-            attempts++;
-
-            if (runStatus === 'failed' || runStatus === 'cancelled' || runStatus === 'expired') {
-                throw new Error(`Assistente falhou: ${runStatus}`);
-            }
+            threadId = conversation.id;
+            await supabase.from('n8n_fluxogpt').update({ threadid: threadId }).eq('id', id);
         }
 
-        if (runStatus !== 'completed') {
-            throw new Error(`Timeout na execução do assistente`);
-        }
-
-        // Buscar resposta
-        console.log('📥 Buscando resposta do assistente...');
-
-        const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages?order=desc&limit=1`, {
-            headers: {
-                'Authorization': `Bearer ${openaiApiKey}`,
-                'OpenAI-Beta': 'assistants=v2'
-            }
+        const result = await runOpenAIResponse({
+            apiKey: openaiApiKey,
+            conversationId: threadId,
+            assistant,
+            input: followupPrompt,
         });
-
-        const messagesData = await messagesResponse.json();
-        const assistantMessage = messagesData.data[0];
-
-        if (!assistantMessage || assistantMessage.role !== 'assistant') {
-            throw new Error('Resposta do assistente não encontrada');
-        }
-
-        const followupMessage = assistantMessage.content[0].text.value;
+        const followupMessage = result.text;
         console.log(`🤖 Mensagem de follow-up: ${followupMessage}`);
 
         // Enviar mensagem via WhatsApp (com áudio se ElevenLabs configurado)

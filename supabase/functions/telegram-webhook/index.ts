@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createOpenAIConversation, getSupabaseServiceKey, isResponsesConversationId, runOpenAIResponse } from '../_shared/openai-responses.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,7 +8,7 @@ const corsHeaders = {
 };
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+const SUPABASE_SERVICE_ROLE_KEY = getSupabaseServiceKey();
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') ?? '';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -29,19 +30,18 @@ async function getOrCreateThread(chatId: number, botToken: string, userId: strin
     .eq('bot_token', botToken)
     .single();
 
-  if (existing) return existing.openai_thread_id;
+  if (existing && isResponsesConversationId(existing.openai_thread_id)) return existing.openai_thread_id;
 
-  // Create new OpenAI thread
-  const threadRes = await fetch('https://api.openai.com/v1/threads', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2'
-    },
-    body: JSON.stringify({})
+  const thread = await createOpenAIConversation(OPENAI_API_KEY, {
+    assistant_id: assistantId,
+    channel: 'telegram',
   });
-  const thread = await threadRes.json();
+
+  if (existing) {
+    await supabase.from('telegram_threads').update({ openai_thread_id: thread.id })
+      .eq('telegram_chat_id', chatId).eq('bot_token', botToken);
+    return thread.id;
+  }
 
   await supabase.from('telegram_threads').insert({
     telegram_chat_id: chatId,
@@ -55,62 +55,14 @@ async function getOrCreateThread(chatId: number, botToken: string, userId: strin
   return thread.id;
 }
 
-async function runAssistant(threadId: string, assistantOpenAIId: string, userMessage: string): Promise<string> {
-  // Add user message to thread
-  await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2'
-    },
-    body: JSON.stringify({ role: 'user', content: userMessage })
+async function runAssistant(threadId: string, assistant: any, userMessage: string): Promise<string> {
+  const result = await runOpenAIResponse({
+    apiKey: OPENAI_API_KEY,
+    conversationId: threadId,
+    assistant,
+    input: userMessage,
   });
-
-  // Create run
-  const runRes = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2'
-    },
-    body: JSON.stringify({ assistant_id: assistantOpenAIId })
-  });
-  const run = await runRes.json();
-
-  // Poll for completion
-  let attempts = 0;
-  while (attempts < 30) {
-    await new Promise(r => setTimeout(r, 2000));
-    const statusRes = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${run.id}`, {
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'OpenAI-Beta': 'assistants=v2'
-      }
-    });
-    const status = await statusRes.json();
-
-    if (status.status === 'completed') {
-      // Get last assistant message
-      const msgsRes = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages?limit=1&order=desc`, {
-        headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          'OpenAI-Beta': 'assistants=v2'
-        }
-      });
-      const msgs = await msgsRes.json();
-      const lastMsg = msgs.data?.[0];
-      if (lastMsg?.role === 'assistant') {
-        return lastMsg.content?.[0]?.text?.value ?? '';
-      }
-      break;
-    }
-    if (['failed', 'cancelled', 'expired'].includes(status.status)) break;
-    attempts++;
-  }
-
-  return 'Desculpe, não consegui processar sua mensagem.';
+  return result.text;
 }
 
 serve(async (req) => {
@@ -189,15 +141,17 @@ serve(async (req) => {
     // Step 2: Fetch assistant separately (no FK constraint on telegram_connections)
     let openAIAssistantId: string | null = null;
     let assistantName: string | null = null;
+    let assistantConfig: any = null;
 
     if (assistantId) {
       const { data: assistantData } = await supabase
         .from('assistants')
-        .select('openai_assistant_id, name')
+        .select('openai_assistant_id, name, instructions, model, tools, metadata')
         .eq('id', assistantId)
         .single();
       openAIAssistantId = assistantData?.openai_assistant_id ?? null;
       assistantName = assistantData?.name ?? null;
+      assistantConfig = assistantData;
     }
 
     if (!openAIAssistantId) {
@@ -304,7 +258,7 @@ serve(async (req) => {
     const threadId = await getOrCreateThread(chatId, botToken, userId, assistantId, contactName);
 
     // Run assistant
-    const aiReply = await runAssistant(threadId, openAIAssistantId, text);
+    const aiReply = await runAssistant(threadId, assistantConfig, text);
 
     // Send reply via Telegram
     await sendTelegramMessage(botToken, chatId, aiReply);

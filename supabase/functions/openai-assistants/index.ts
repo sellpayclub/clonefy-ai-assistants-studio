@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getSupabaseServiceKey } from '../_shared/openai-responses.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,7 +16,7 @@ if (!openAIApiKey) {
   console.error('OPENAI_API_KEY is not configured - please set it in Supabase Edge Function secrets');
 }
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabaseServiceKey = getSupabaseServiceKey();
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -275,40 +276,14 @@ async function syncVectorStore(userId: string, assistantId: string) {
 }
 
 async function updateOpenAIAssistantTools(openaiAssistantId: string, assistant: any, enableFileSearch: boolean, vectorStoreId?: string) {
-  // Build current tools from assistant config
-  const currentTools = Array.isArray(assistant.tools) ? [...assistant.tools] : [];
-  
-  // Remove any existing file_search tool
-  const toolsWithoutFileSearch = currentTools.filter((t: any) => t.type !== 'file_search');
-  
-  const tools = [...toolsWithoutFileSearch];
-  if (enableFileSearch) {
-    tools.push({ type: 'file_search' });
-  }
-
-  const body: any = { tools };
-  if (enableFileSearch && vectorStoreId) {
-    body.tool_resources = {
-      file_search: {
-        vector_store_ids: [vectorStoreId],
-      },
-    };
-  }
-
-  const resp = await fetch(`https://api.openai.com/v1/assistants/${openaiAssistantId}`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2',
-    },
-    body: JSON.stringify(body),
+  // Responses API receives tools and vector_store_ids on every response.
+  // Keep this compatibility function so existing sync flows continue working.
+  console.log('Responses tool configuration saved locally', {
+    openaiAssistantId,
+    enableFileSearch,
+    vectorStoreId,
+    toolCount: Array.isArray(assistant.tools) ? assistant.tools.length : 0,
   });
-
-  if (!resp.ok) {
-    const err = await resp.text();
-    console.error(`Failed to update assistant tools: ${err}`);
-  }
 }
 
 // ============================================================
@@ -372,59 +347,31 @@ async function createAssistant(userId: string, data: any) {
   if (agendify_enabled) tools.push(...buildAgendifyTools());
   if (calendar_enabled) tools.push(...buildCalendarTools());
 
-  // Create assistant in OpenAI
-  const openAIResponse = await fetch('https://api.openai.com/v1/assistants', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2',
-    },
-    body: JSON.stringify({
-      name,
-      description: description || null,
-      instructions: finalInstructions || null,
-      model,
-      tools,
-    }),
-  });
-
-  if (!openAIResponse.ok) {
-    const errorText = await openAIResponse.text();
-    console.error('OpenAI API error response:', errorText);
-    let error;
-    try { error = JSON.parse(errorText); } catch { error = { error: { message: errorText } }; }
-    throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
-  }
-
-  const openAIAssistant = await openAIResponse.json();
-  console.log('Assistant created successfully:', openAIAssistant.id);
+  // Assistants are now application-owned configurations. The Responses API
+  // receives this configuration on each request instead of creating an asst_*.
+  const localAssistantId = `resp_${crypto.randomUUID()}`;
+  const assistantMetadata = {
+    provider: 'openai_responses',
+    migrated_at: new Date().toISOString(),
+  };
 
   // Save in Supabase
   const { data: assistant, error } = await supabase
     .from('assistants')
     .insert({
       user_id: userId,
-      openai_assistant_id: openAIAssistant.id,
+      openai_assistant_id: localAssistantId,
       name,
       description: description || null,
       instructions: instructions || null,
       model,
       tools,
-      metadata: openAIAssistant,
+      metadata: assistantMetadata,
     })
     .select()
     .single();
 
   if (error) {
-    // Cleanup OpenAI assistant
-    try {
-      await fetch(`https://api.openai.com/v1/assistants/${openAIAssistant.id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${openAIApiKey}`, 'OpenAI-Beta': 'assistants=v2' },
-      });
-    } catch (e) { console.error('Cleanup failed:', e); }
-    
     let errorMessage = error.message;
     if (error.code === '23505') errorMessage = 'Já existe um agente com esse nome.';
     throw new Error(errorMessage);
@@ -502,51 +449,15 @@ async function updateAssistant(userId: string, assistantId: string, data: any) {
 
   const hasKnowledgeFiles = (knowledgeFiles || []).length > 0;
   
-  // Build OpenAI update body
-  const openAIBody: any = {
-    name,
-    description,
-    instructions: finalInstructions,
-    model,
-    tools: [...tools],
-  };
-
-  if (hasKnowledgeFiles) {
-    openAIBody.tools.push({ type: 'file_search' });
-    
-    // Get or create vector store
-    const metadata = currentAssistant.metadata as any;
-    const vectorStoreId = metadata?.vector_store_id;
-    if (vectorStoreId) {
-      openAIBody.tool_resources = {
-        file_search: { vector_store_ids: [vectorStoreId] },
-      };
-    }
-  }
-
-  const openAIResponse = await fetch(`https://api.openai.com/v1/assistants/${currentAssistant.openai_assistant_id}`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2',
-    },
-    body: JSON.stringify(openAIBody),
-  });
-
-  if (!openAIResponse.ok) {
-    const errorText = await openAIResponse.text();
-    console.error('OpenAI API update error:', errorText);
-    let error;
-    try { error = JSON.parse(errorText); } catch { error = { error: { message: errorText } }; }
-    throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
-  }
-
-  const openAIAssistant = await openAIResponse.json();
-
-  // Preserve vector_store_id in metadata
+  // Preserve the vector store; Responses consumes it directly per request.
   const existingMetadata = (currentAssistant.metadata as any) || {};
-  const newMetadata = { ...openAIAssistant, vector_store_id: existingMetadata.vector_store_id };
+  const newMetadata = {
+    ...existingMetadata,
+    provider: 'openai_responses',
+    migrated_at: existingMetadata.migrated_at || new Date().toISOString(),
+    vector_store_id: existingMetadata.vector_store_id,
+    has_knowledge_files: hasKnowledgeFiles,
+  };
 
   const { data: assistant, error } = await supabase
     .from('assistants')
@@ -579,14 +490,6 @@ async function deleteAssistant(userId: string, assistantId: string) {
     .single();
 
   if (fetchError) throw new Error(`Assistant not found: ${fetchError.message}`);
-
-  // Delete OpenAI assistant
-  try {
-    await fetch(`https://api.openai.com/v1/assistants/${currentAssistant.openai_assistant_id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${openAIApiKey}`, 'OpenAI-Beta': 'assistants=v2' },
-    });
-  } catch (e) { console.error('Failed to delete OpenAI assistant:', e); }
 
   // Delete vector store if exists
   const metadata = currentAssistant.metadata as any;
@@ -622,7 +525,7 @@ async function uploadKnowledgeFile(data: any) {
     const formData = new FormData();
     const blob = new Blob([binaryData], { type: mimeType });
     formData.append('file', blob, fileName);
-    formData.append('purpose', 'assistants');
+    formData.append('purpose', 'user_data');
 
     const response = await fetch('https://api.openai.com/v1/files', {
       method: 'POST',

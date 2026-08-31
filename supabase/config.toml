@@ -3,6 +3,9 @@ project_id = "ekfkrwueqwpqakpsrsjt"
 [functions.widget-config]
 verify_jwt = false
 
+[functions.widget-chat]
+verify_jwt = false
+
 [functions.widget-analytics]
 verify_jwt = false
 
@@ -10,6 +13,9 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.whatsapp-webhook]
+verify_jwt = false
+
+[functions.whatsapp-webhook-test]
 verify_jwt = false
 
 [functions.whatsapp-followup]

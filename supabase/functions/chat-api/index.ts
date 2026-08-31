@@ -2,10 +2,16 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import {
+  createOpenAIConversation,
+  getSupabaseServiceKey,
+  isResponsesConversationId,
+  runOpenAIResponse,
+} from '../_shared/openai-responses.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabaseServiceKey = getSupabaseServiceKey();
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -150,16 +156,12 @@ async function createThread(userId: string, data: any) {
     throw new Error('Assistant not found');
   }
 
-  // Create thread in OpenAI
-  const openAIThread = await requestOpenAIJson('https://api.openai.com/v1/threads', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2',
-    },
-    body: JSON.stringify({}),
-  }, 'criar a conversa');
+  // Responses API uses Conversations instead of Assistants Threads.
+  const openAIThread = await createOpenAIConversation(openAIApiKey!, {
+    user_id: userId,
+    assistant_id: assistantId,
+    channel: 'test_chat',
+  });
   if (typeof openAIThread.id !== 'string' || !openAIThread.id) {
     throw new Error('A OpenAI não retornou um identificador válido para a conversa.');
   }
@@ -205,26 +207,37 @@ async function sendMessage(userId: string, data: any) {
     throw new Error('Conversation not found');
   }
 
-  // Add user message to thread
-  const userMessageResponse = await fetch(`https://api.openai.com/v1/threads/${conversation.openai_thread_id}/messages`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2',
-    },
-    body: JSON.stringify({
-      role: 'user',
-      content: content
-    }),
-  });
+  let conversationStateId = conversation.openai_thread_id;
+  let responseInput: any = content;
 
-  if (!userMessageResponse.ok) {
-    const error = await userMessageResponse.json();
-    throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
+  // Lazily migrate old thread_* conversations and carry their local history.
+  if (!isResponsesConversationId(conversationStateId)) {
+    const migrated = await createOpenAIConversation(openAIApiKey!, {
+      user_id: userId,
+      assistant_id: conversation.assistant_id,
+      channel: 'test_chat',
+    });
+    conversationStateId = migrated.id;
+
+    const { data: history } = await supabase
+      .from('messages')
+      .select('role, content')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true })
+      .limit(100);
+
+    responseInput = [
+      ...(history || []).map((item: any) => ({ role: item.role, content: item.content })),
+      { role: 'user', content },
+    ];
+
+    await supabase
+      .from('conversations')
+      .update({ openai_thread_id: conversationStateId })
+      .eq('id', conversationId);
   }
 
-  const userMessage = await userMessageResponse.json();
+  const userMessage = { id: `local_${crypto.randomUUID()}`, role: 'user', content };
 
   // Save user message in database
   await supabase
@@ -236,154 +249,38 @@ async function sendMessage(userId: string, data: any) {
       openai_message_id: userMessage.id
     });
 
-  // Create and stream run
-  const runResponse = await fetch(`https://api.openai.com/v1/threads/${conversation.openai_thread_id}/runs`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2',
-    },
-    body: JSON.stringify({
-      assistant_id: conversation.assistants.openai_assistant_id
-    }),
-  });
-
-  if (!runResponse.ok) {
-    const error = await runResponse.json();
-    throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
-  }
-
-  const run = await runResponse.json();
-
-  // Wait for completion and handle tool calls
-  let runStatus = run;
-  while (runStatus.status === 'queued' || runStatus.status === 'in_progress' || runStatus.status === 'requires_action') {
-    if (runStatus.status === 'requires_action') {
-      // Handle tool calls through our proxy
-      const requiredAction = runStatus.required_action;
-      if (requiredAction && requiredAction.type === 'submit_tool_outputs') {
-        console.log('Processing tool calls...');
-        
-        const toolOutputs = [];
-        for (const toolCall of requiredAction.submit_tool_outputs.tool_calls) {
-          if (toolCall.type === 'function') {
-            // Check if it's a calendar function
-            const functionName = toolCall.function.name;
-            if (['check_availability', 'create_appointment', 'list_appointments', 'cancel_appointment', 'reschedule_appointment', 'update_appointment'].includes(functionName)) {
-              console.log(`Calling calendar function: ${functionName}`);
-              
-              // Call our calendar proxy to handle the function call
-              const proxyResponse = await supabase.functions.invoke('chat-proxy', {
-                body: {
-                  action: 'tool_call',
-                  run_id: run.id,
-                  thread_id: conversation.openai_thread_id,
-                  tool_call_id: toolCall.id,
-                  function_name: functionName,
-                  arguments: toolCall.function.arguments
-                }
-              });
-              
-              let result;
-              if (proxyResponse.error) {
-                result = `Erro ao executar ${functionName}: ${proxyResponse.error.message}`;
-              } else {
-                // The proxy already submits the tool outputs, so we just continue
-                break;
-              }
-            } else {
-              // For non-calendar functions, return a default message
-              toolOutputs.push({
-                tool_call_id: toolCall.id,
-                output: `Função ${functionName} não está disponível no momento.`
-              });
-            }
-          }
-        }
-        
-        // If we have non-calendar tool outputs to submit
-        if (toolOutputs.length > 0) {
-          const submitResponse = await fetch(`https://api.openai.com/v1/threads/${conversation.openai_thread_id}/runs/${run.id}/submit_tool_outputs`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${openAIApiKey}`,
-              'Content-Type': 'application/json',
-              'OpenAI-Beta': 'assistants=v2',
-            },
-            body: JSON.stringify({ tool_outputs: toolOutputs }),
-          });
-          
-          if (!submitResponse.ok) {
-            const error = await submitResponse.json();
-            console.error('Error submitting tool outputs:', error);
-          }
-        }
+  const result = await runOpenAIResponse({
+    apiKey: openAIApiKey!,
+    conversationId: conversationStateId,
+    assistant: conversation.assistants,
+    input: responseInput,
+    onToolCall: async (call) => {
+      const calendarFunctions = ['check_availability', 'create_appointment', 'list_appointments', 'cancel_appointment', 'reschedule_appointment', 'update_appointment'];
+      if (!calendarFunctions.includes(call.name)) {
+        return { success: false, error: `Função ${call.name} não está disponível no chat de teste.` };
       }
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const statusResponse = await fetch(`https://api.openai.com/v1/threads/${conversation.openai_thread_id}/runs/${run.id}`, {
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'OpenAI-Beta': 'assistants=v2',
-      },
-    });
-    
-    runStatus = await statusResponse.json();
-  }
-
-  // Get messages from thread
-  const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${conversation.openai_thread_id}/messages`, {
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'OpenAI-Beta': 'assistants=v2',
-    },
-  });
-
-  const messagesData = await messagesResponse.json();
-  const assistantMessage = messagesData.data.find((msg: any) => msg.role === 'assistant' && msg.run_id === run.id);
-
-  if (assistantMessage) {
-    // Extract text content safely (some messages may contain multiple content blocks)
-    let messageContent = '';
-    if (Array.isArray(assistantMessage.content)) {
-      for (const part of assistantMessage.content) {
-        if (part.type === 'text' && part.text?.value) {
-          messageContent += (messageContent ? '\n' : '') + part.text.value;
-        }
-      }
-    }
-    // Fallback
-    messageContent = messageContent || assistantMessage.content?.[0]?.text?.value || '';
-
-    // Replace any sandbox:* links with direct public URLs from our media library
-    const sanitizedContent = await replaceSandboxLinks(messageContent, conversation.assistant_id);
-    
-    // Save assistant message in database
-    await supabase
-      .from('messages')
-      .insert({
-        conversation_id: conversationId,
-        role: 'assistant',
-        content: sanitizedContent,
-        openai_message_id: assistantMessage.id
+      const calendarResponse = await supabase.functions.invoke('calendar-management', {
+        body: { action: call.name, assistant_id: conversation.assistant_id, ...call.arguments },
       });
+      if (calendarResponse.error) throw calendarResponse.error;
+      return calendarResponse.data;
+    },
+  });
 
-    return new Response(JSON.stringify({ 
-      userMessage, 
-      assistantMessage: {
-        id: assistantMessage.id,
-        content: sanitizedContent,
-        role: 'assistant'
-      }
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
+  const sanitizedContent = await replaceSandboxLinks(result.text, conversation.assistant_id);
+  await supabase.from('messages').insert({
+    conversation_id: conversationId,
+    role: 'assistant',
+    content: sanitizedContent,
+    openai_message_id: result.id,
+  });
 
-  throw new Error('No assistant response received');
+  return new Response(JSON.stringify({
+    userMessage,
+    assistantMessage: { id: result.id, content: sanitizedContent, role: 'assistant' },
+  }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
 }
 
 async function getConversations(userId: string) {

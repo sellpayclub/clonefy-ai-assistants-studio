@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createOpenAIConversation, getSupabaseServiceKey, isResponsesConversationId, runOpenAIResponse } from '../_shared/openai-responses.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+const SUPABASE_SERVICE_ROLE_KEY = getSupabaseServiceKey();
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') ?? '';
 const META_APP_SECRET = Deno.env.get('META_APP_SECRET') ?? '';
 
@@ -25,18 +26,18 @@ async function getOrCreateMetaThread(
     .eq('bot_token', threadKey)
     .maybeSingle();
 
-  if (existing) return existing.openai_thread_id;
+  if (existing && isResponsesConversationId(existing.openai_thread_id)) return existing.openai_thread_id;
 
-  const threadRes = await fetch('https://api.openai.com/v1/threads', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2'
-    },
-    body: JSON.stringify({})
+  const thread = await createOpenAIConversation(OPENAI_API_KEY, {
+    assistant_id: assistantId,
+    channel: 'meta',
   });
-  const thread = await threadRes.json();
+
+  if (existing) {
+    await supabase.from('telegram_threads').update({ openai_thread_id: thread.id })
+      .eq('telegram_chat_id', parseInt(senderId) || 0).eq('bot_token', threadKey);
+    return thread.id;
+  }
 
   await supabase.from('telegram_threads').insert({
     telegram_chat_id: parseInt(senderId) || 0,
@@ -50,58 +51,14 @@ async function getOrCreateMetaThread(
   return thread.id;
 }
 
-async function runAssistant(threadId: string, assistantOpenAIId: string, userMessage: string): Promise<string> {
-  await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2'
-    },
-    body: JSON.stringify({ role: 'user', content: userMessage })
+async function runAssistant(threadId: string, assistant: any, userMessage: string): Promise<string> {
+  const result = await runOpenAIResponse({
+    apiKey: OPENAI_API_KEY,
+    conversationId: threadId,
+    assistant,
+    input: userMessage,
   });
-
-  const runRes = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2'
-    },
-    body: JSON.stringify({ assistant_id: assistantOpenAIId })
-  });
-  const run = await runRes.json();
-
-  let attempts = 0;
-  while (attempts < 30) {
-    await new Promise(r => setTimeout(r, 2000));
-    const statusRes = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${run.id}`, {
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'OpenAI-Beta': 'assistants=v2'
-      }
-    });
-    const status = await statusRes.json();
-
-    if (status.status === 'completed') {
-      const msgsRes = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages?limit=1&order=desc`, {
-        headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          'OpenAI-Beta': 'assistants=v2'
-        }
-      });
-      const msgs = await msgsRes.json();
-      const lastMsg = msgs.data?.[0];
-      if (lastMsg?.role === 'assistant') {
-        return lastMsg.content?.[0]?.text?.value ?? '';
-      }
-      break;
-    }
-    if (['failed', 'cancelled', 'expired'].includes(status.status)) break;
-    attempts++;
-  }
-
-  return 'Desculpe, não consegui processar sua mensagem.';
+  return result.text;
 }
 
 // ── Send message via Graph API ──
@@ -170,7 +127,7 @@ serve(async (req) => {
           // Find meta_connection by page_id
           const { data: conn } = await supabase
             .from('meta_connections')
-            .select('*, assistants(openai_assistant_id, name)')
+            .select('*, assistants(openai_assistant_id, name, instructions, model, tools, metadata)')
             .eq('page_id', pageId)
             .eq('is_active', true)
             .limit(1)
@@ -281,7 +238,7 @@ serve(async (req) => {
 
           // Get or create thread & run AI
           const threadId = await getOrCreateMetaThread(senderId, pageId, userId, assistantId, contactName);
-          const aiReply = await runAssistant(threadId, openAIAssistantId, messageText);
+          const aiReply = await runAssistant(threadId, conn.assistants, messageText);
 
           // Send AI reply via Graph API
           await sendMetaMessage(pageAccessToken, senderId, aiReply);
