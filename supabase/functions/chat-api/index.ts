@@ -49,19 +49,41 @@ serve(async (req) => {
       });
     }
 
-    const { action, ...data } = await req.json();
+    let body: Record<string, any>;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'Corpo da requisição inválido.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { action, ...data } = body;
+    if (typeof action !== 'string' || !action) {
+      return new Response(JSON.stringify({ error: 'Ação não informada.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     
     // Get user from auth header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('No authorization header');
+      return new Response(JSON.stringify({ error: 'Sessão não encontrada. Entre novamente.' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      throw new Error('Invalid token');
+      return new Response(JSON.stringify({ error: 'Sessão expirada. Entre novamente.' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     console.log(`Chat API - Action: ${action}, User: ${user.id}`);
@@ -93,6 +115,10 @@ serve(async (req) => {
 
 async function createThread(userId: string, data: any) {
   const { assistantId, title } = data;
+
+  if (typeof assistantId !== 'string' || !assistantId) {
+    throw new Error('Selecione um agente válido para criar a conversa.');
+  }
 
   console.log('Creating thread for assistant:', assistantId);
 
