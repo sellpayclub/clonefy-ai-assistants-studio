@@ -1,11 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { createClient } from 'npm:@supabase/supabase-js@2';
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -13,10 +9,50 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+async function requestOpenAIJson(
+  url: string,
+  init: RequestInit,
+  operation: string,
+  retries = 1,
+) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const response = await fetch(url, init);
+    const rawBody = await response.text();
+    let payload: Record<string, any> = {};
+
+    if (rawBody) {
+      try {
+        payload = JSON.parse(rawBody);
+      } catch {
+        payload = {};
+      }
+    }
+
+    const transientFailure = !rawBody || response.status === 429 || response.status >= 500;
+    if (transientFailure && attempt < retries) {
+      await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+      continue;
+    }
+
+    if (!response.ok) {
+      const detail = payload.error?.message || rawBody || `HTTP ${response.status}`;
+      throw new Error(`OpenAI API error ao ${operation}: ${detail}`);
+    }
+
+    if (!rawBody) {
+      throw new Error(`A OpenAI retornou uma resposta vazia ao ${operation}. Tente novamente.`);
+    }
+
+    return payload;
+  }
+
+  throw new Error(`Não foi possível ${operation}. Tente novamente.`);
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
@@ -29,19 +65,41 @@ serve(async (req) => {
       });
     }
 
-    const { action, ...data } = await req.json();
+    let body: Record<string, any>;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'Corpo da requisição inválido.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { action, ...data } = body;
+    if (typeof action !== 'string' || !action) {
+      return new Response(JSON.stringify({ error: 'Ação não informada.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     
     // Get user from auth header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('No authorization header');
+      return new Response(JSON.stringify({ error: 'Sessão não encontrada. Entre novamente.' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      throw new Error('Invalid token');
+      return new Response(JSON.stringify({ error: 'Sessão expirada. Entre novamente.' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     console.log(`Chat API - Action: ${action}, User: ${user.id}`);
@@ -74,6 +132,10 @@ serve(async (req) => {
 async function createThread(userId: string, data: any) {
   const { assistantId, title } = data;
 
+  if (typeof assistantId !== 'string' || !assistantId) {
+    throw new Error('Selecione um agente válido para criar a conversa.');
+  }
+
   console.log('Creating thread for assistant:', assistantId);
 
   // Get assistant from database
@@ -89,7 +151,7 @@ async function createThread(userId: string, data: any) {
   }
 
   // Create thread in OpenAI
-  const openAIResponse = await fetch('https://api.openai.com/v1/threads', {
+  const openAIThread = await requestOpenAIJson('https://api.openai.com/v1/threads', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${openAIApiKey}`,
@@ -97,14 +159,10 @@ async function createThread(userId: string, data: any) {
       'OpenAI-Beta': 'assistants=v2',
     },
     body: JSON.stringify({}),
-  });
-
-  if (!openAIResponse.ok) {
-    const error = await openAIResponse.json();
-    throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
+  }, 'criar a conversa');
+  if (typeof openAIThread.id !== 'string' || !openAIThread.id) {
+    throw new Error('A OpenAI não retornou um identificador válido para a conversa.');
   }
-
-  const openAIThread = await openAIResponse.json();
 
   // Save conversation in Supabase
   const { data: conversation, error } = await supabase
@@ -332,19 +390,27 @@ async function getConversations(userId: string) {
   const { data: conversations, error } = await supabase
     .from('conversations')
     .select(`
-      *,
-      assistants(name),
-      messages(content, role, created_at)
+      id,
+      title,
+      assistant_id,
+      updated_at,
+      assistants(name)
     `)
     .eq('user_id', userId)
     .eq('is_active', true)
-    .order('updated_at', { ascending: false });
+    .order('updated_at', { ascending: false })
+    .limit(200);
 
   if (error) {
     throw new Error(`Database error: ${error.message}`);
   }
 
-  return new Response(JSON.stringify({ conversations }), {
+  const summaries = (conversations || []).map((conversation) => ({
+    ...conversation,
+    messages: [],
+  }));
+
+  return new Response(JSON.stringify({ conversations: summaries }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }
@@ -366,13 +432,14 @@ async function getMessages(userId: string, conversationId: string) {
     .from('messages')
     .select('*')
     .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false })
+    .limit(500);
 
   if (error) {
     throw new Error(`Database error: ${error.message}`);
   }
 
-  return new Response(JSON.stringify({ messages }), {
+  return new Response(JSON.stringify({ messages: (messages || []).reverse() }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }

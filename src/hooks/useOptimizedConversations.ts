@@ -19,6 +19,27 @@ interface Conversation {
   updated_at: string;
 }
 
+const getFunctionErrorMessage = async (error: any, fallback: string) => {
+  try {
+    const response = error?.context;
+    if (response && typeof response.clone === 'function') {
+      const rawBody = await response.clone().text();
+      if (rawBody) {
+        try {
+          const parsed = JSON.parse(rawBody);
+          if (typeof parsed?.error === 'string') return parsed.error;
+        } catch {
+          return rawBody;
+        }
+      }
+    }
+  } catch {
+    // Preserve the SDK error below when the response body is unavailable.
+  }
+
+  return error?.message || fallback;
+};
+
 export const useOptimizedConversations = (session: Session | null) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,7 +68,9 @@ export const useOptimizedConversations = (session: Session | null) => {
           headers: { Authorization: `Bearer ${session.access_token}` },
         });
 
-        if (response.error) throw response.error;
+        if (response.error) {
+          throw new Error(await getFunctionErrorMessage(response.error, 'Falha ao carregar conversas'));
+        }
 
         const conversationsList = response.data?.conversations || [];
         setConversations(conversationsList);
@@ -81,7 +104,9 @@ export const useOptimizedConversations = (session: Session | null) => {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
-      if (response.error) throw response.error;
+      if (response.error) {
+        throw new Error(await getFunctionErrorMessage(response.error, 'Falha ao carregar mensagens'));
+      }
 
       const messages = response.data?.messages || [];
       // Cache mensagens por 5 minutos
@@ -99,7 +124,9 @@ export const useOptimizedConversations = (session: Session | null) => {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
 
-    if (response.error) throw response.error;
+    if (response.error) {
+      throw new Error(await getFunctionErrorMessage(response.error, 'Falha ao enviar mensagem'));
+    }
 
     // Invalidar cache de mensagens para forçar reload
     performanceCache.invalidate(`messages_${conversationId}`);
@@ -116,7 +143,9 @@ export const useOptimizedConversations = (session: Session | null) => {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
 
-    if (response.error) throw response.error;
+    if (response.error) {
+      throw new Error(await getFunctionErrorMessage(response.error, 'Falha ao criar conversa'));
+    }
 
     // Invalidar cache de conversas
     performanceCache.invalidate(`conversations_${session.user.id}`);
@@ -133,7 +162,9 @@ export const useOptimizedConversations = (session: Session | null) => {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
 
-    if (response.error) throw response.error;
+    if (response.error) {
+      throw new Error(await getFunctionErrorMessage(response.error, 'Falha ao excluir conversa'));
+    }
 
     // Invalidar caches relacionados
     performanceCache.invalidate(`conversations_${session.user.id}`);

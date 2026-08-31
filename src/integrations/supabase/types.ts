@@ -4186,6 +4186,60 @@ export type Database = {
         }
         Relationships: []
       }
+      zapslim_checkout_rate_limits: {
+        Row: {
+          attempts: number
+          key_hash: string
+          updated_at: string
+          window_started_at: string
+        }
+        Insert: {
+          attempts?: number
+          key_hash: string
+          updated_at?: string
+          window_started_at?: string
+        }
+        Update: {
+          attempts?: number
+          key_hash?: string
+          updated_at?: string
+          window_started_at?: string
+        }
+        Relationships: []
+      }
+      zapslim_checkout_verification_codes: {
+        Row: {
+          attempts: number
+          channel: string
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          target_hash: string
+          used_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          channel: string
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          target_hash: string
+          used_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          channel?: string
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          target_hash?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       zapslim_dose_entries: {
         Row: {
           applied_at: string
@@ -4381,9 +4435,123 @@ export type Database = {
           },
         ]
       }
+      zapslim_payment_orders: {
+        Row: {
+          activated_at: string | null
+          amount: number
+          asaas_authorization_id: string | null
+          asaas_authorization_status: string
+          asaas_customer_id: string | null
+          asaas_initial_payment_id: string | null
+          canceled_at: string | null
+          cpf_hash: string
+          created_at: string
+          email: string
+          external_reference: string
+          full_name: string
+          id: string
+          last_asaas_payment_id: string | null
+          last_charge_due_date: string | null
+          next_charge_due_date: string | null
+          profile_id: string | null
+          provider: string
+          status: string
+          updated_at: string
+          whatsapp_phone: string
+        }
+        Insert: {
+          activated_at?: string | null
+          amount: number
+          asaas_authorization_id?: string | null
+          asaas_authorization_status?: string
+          asaas_customer_id?: string | null
+          asaas_initial_payment_id?: string | null
+          canceled_at?: string | null
+          cpf_hash: string
+          created_at?: string
+          email: string
+          external_reference: string
+          full_name: string
+          id?: string
+          last_asaas_payment_id?: string | null
+          last_charge_due_date?: string | null
+          next_charge_due_date?: string | null
+          profile_id?: string | null
+          provider: string
+          status?: string
+          updated_at?: string
+          whatsapp_phone: string
+        }
+        Update: {
+          activated_at?: string | null
+          amount?: number
+          asaas_authorization_id?: string | null
+          asaas_authorization_status?: string
+          asaas_customer_id?: string | null
+          asaas_initial_payment_id?: string | null
+          canceled_at?: string | null
+          cpf_hash?: string
+          created_at?: string
+          email?: string
+          external_reference?: string
+          full_name?: string
+          id?: string
+          last_asaas_payment_id?: string | null
+          last_charge_due_date?: string | null
+          next_charge_due_date?: string | null
+          profile_id?: string | null
+          provider?: string
+          status?: string
+          updated_at?: string
+          whatsapp_phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapslim_payment_orders_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profile_progress"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "zapslim_payment_orders_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "zapslim_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zapslim_payment_webhook_events: {
+        Row: {
+          event_type: string
+          payload: Json
+          processed_at: string
+          provider: string
+          provider_event_id: string
+        }
+        Insert: {
+          event_type: string
+          payload: Json
+          processed_at?: string
+          provider: string
+          provider_event_id: string
+        }
+        Update: {
+          event_type?: string
+          payload?: Json
+          processed_at?: string
+          provider?: string
+          provider_event_id?: string
+        }
+        Relationships: []
+      }
       zapslim_profiles: {
         Row: {
           admin_notes: string | null
+          asaas_customer_id: string | null
+          asaas_email: string | null
+          asaas_pix_authorization_id: string | null
           created_at: string
           current_dose: string | null
           current_weight_kg: number | null
@@ -4422,6 +4590,9 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          asaas_customer_id?: string | null
+          asaas_email?: string | null
+          asaas_pix_authorization_id?: string | null
           created_at?: string
           current_dose?: string | null
           current_weight_kg?: number | null
@@ -4460,6 +4631,9 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          asaas_customer_id?: string | null
+          asaas_email?: string | null
+          asaas_pix_authorization_id?: string | null
           created_at?: string
           current_dose?: string | null
           current_weight_kg?: number | null
@@ -4859,6 +5033,10 @@ export type Database = {
       upgrade_user_to_paid: {
         Args: { target_email: string }
         Returns: undefined
+      }
+      zapslim_consume_checkout_rate_limit: {
+        Args: { p_key_hash: string; p_limit: number; p_window_seconds: number }
+        Returns: boolean
       }
     }
     Enums: {
