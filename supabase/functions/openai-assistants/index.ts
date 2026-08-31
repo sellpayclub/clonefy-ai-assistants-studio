@@ -142,7 +142,6 @@ async function getOrCreateVectorStore(assistantId: string, openaiAssistantId: st
     const checkResp = await fetch(`https://api.openai.com/v1/vector_stores/${existingVsId}`, {
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
-        'OpenAI-Beta': 'assistants=v2',
       },
     });
     if (checkResp.ok) {
@@ -157,7 +156,6 @@ async function getOrCreateVectorStore(assistantId: string, openaiAssistantId: st
     headers: {
       'Authorization': `Bearer ${openAIApiKey}`,
       'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2',
     },
     body: JSON.stringify({
       name: `knowledge-${assistantId}`,
@@ -223,7 +221,6 @@ async function syncVectorStore(userId: string, assistantId: string) {
   const listResp = await fetch(`https://api.openai.com/v1/vector_stores/${vectorStoreId}/files?limit=100`, {
     headers: {
       'Authorization': `Bearer ${openAIApiKey}`,
-      'OpenAI-Beta': 'assistants=v2',
     },
   });
 
@@ -242,7 +239,6 @@ async function syncVectorStore(userId: string, assistantId: string) {
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2',
       },
       body: JSON.stringify({ file_id: fileId }),
     });
@@ -260,7 +256,6 @@ async function syncVectorStore(userId: string, assistantId: string) {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
-        'OpenAI-Beta': 'assistants=v2',
       },
     });
   }
@@ -497,7 +492,7 @@ async function deleteAssistant(userId: string, assistantId: string) {
     try {
       await fetch(`https://api.openai.com/v1/vector_stores/${metadata.vector_store_id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${openAIApiKey}`, 'OpenAI-Beta': 'assistants=v2' },
+        headers: { 'Authorization': `Bearer ${openAIApiKey}` },
       });
     } catch (e) { console.error('Failed to delete vector store:', e); }
   }

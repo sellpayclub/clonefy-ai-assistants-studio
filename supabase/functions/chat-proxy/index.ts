@@ -1,15 +1,15 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getSupabaseServiceKey } from '../_shared/openai-responses.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabaseServiceKey = getSupabaseServiceKey();
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -73,30 +73,13 @@ serve(async (req) => {
         result = JSON.stringify(calendarResponse.data);
       }
 
-      // Submeter o resultado para o OpenAI
-      const submitResponse = await fetch(`https://api.openai.com/v1/threads/${thread_id}/runs/${run_id}/submit_tool_outputs`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-          'OpenAI-Beta': 'assistants=v2',
-        },
-        body: JSON.stringify({
-          tool_outputs: [{
-            tool_call_id: tool_call_id,
-            output: result
-          }]
-        }),
-      });
-
-      if (!submitResponse.ok) {
-        const error = await submitResponse.json();
-        throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
-      }
-
-      const submitResult = await submitResponse.json();
-      
-      return new Response(JSON.stringify(submitResult), {
+      // Responses API tool outputs are submitted by the caller. This proxy now
+      // only executes the tool and returns its result.
+      return new Response(JSON.stringify({
+        success: true,
+        call_id: tool_call_id,
+        output: result,
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
