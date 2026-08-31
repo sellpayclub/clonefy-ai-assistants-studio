@@ -9,28 +9,44 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-async function readOpenAIResponse(response: Response, operation: string) {
-  const rawBody = await response.text();
-  let payload: Record<string, any> = {};
+async function requestOpenAIJson(
+  url: string,
+  init: RequestInit,
+  operation: string,
+  retries = 1,
+) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const response = await fetch(url, init);
+    const rawBody = await response.text();
+    let payload: Record<string, any> = {};
 
-  if (rawBody) {
-    try {
-      payload = JSON.parse(rawBody);
-    } catch {
-      payload = {};
+    if (rawBody) {
+      try {
+        payload = JSON.parse(rawBody);
+      } catch {
+        payload = {};
+      }
     }
+
+    const transientFailure = !rawBody || response.status === 429 || response.status >= 500;
+    if (transientFailure && attempt < retries) {
+      await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+      continue;
+    }
+
+    if (!response.ok) {
+      const detail = payload.error?.message || rawBody || `HTTP ${response.status}`;
+      throw new Error(`OpenAI API error ao ${operation}: ${detail}`);
+    }
+
+    if (!rawBody) {
+      throw new Error(`A OpenAI retornou uma resposta vazia ao ${operation}. Tente novamente.`);
+    }
+
+    return payload;
   }
 
-  if (!response.ok) {
-    const detail = payload.error?.message || rawBody || `HTTP ${response.status}`;
-    throw new Error(`OpenAI API error ao ${operation}: ${detail}`);
-  }
-
-  if (!rawBody) {
-    throw new Error(`A OpenAI retornou uma resposta vazia ao ${operation}. Tente novamente.`);
-  }
-
-  return payload;
+  throw new Error(`Não foi possível ${operation}. Tente novamente.`);
 }
 
 serve(async (req) => {
@@ -135,7 +151,7 @@ async function createThread(userId: string, data: any) {
   }
 
   // Create thread in OpenAI
-  const openAIResponse = await fetch('https://api.openai.com/v1/threads', {
+  const openAIThread = await requestOpenAIJson('https://api.openai.com/v1/threads', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${openAIApiKey}`,
@@ -143,9 +159,7 @@ async function createThread(userId: string, data: any) {
       'OpenAI-Beta': 'assistants=v2',
     },
     body: JSON.stringify({}),
-  });
-
-  const openAIThread = await readOpenAIResponse(openAIResponse, 'criar a conversa');
+  }, 'criar a conversa');
   if (typeof openAIThread.id !== 'string' || !openAIThread.id) {
     throw new Error('A OpenAI não retornou um identificador válido para a conversa.');
   }
