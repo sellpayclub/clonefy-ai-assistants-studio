@@ -1,11 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { createClient } from 'npm:@supabase/supabase-js@2';
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -13,10 +9,34 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+async function readOpenAIResponse(response: Response, operation: string) {
+  const rawBody = await response.text();
+  let payload: Record<string, any> = {};
+
+  if (rawBody) {
+    try {
+      payload = JSON.parse(rawBody);
+    } catch {
+      payload = {};
+    }
+  }
+
+  if (!response.ok) {
+    const detail = payload.error?.message || rawBody || `HTTP ${response.status}`;
+    throw new Error(`OpenAI API error ao ${operation}: ${detail}`);
+  }
+
+  if (!rawBody) {
+    throw new Error(`A OpenAI retornou uma resposta vazia ao ${operation}. Tente novamente.`);
+  }
+
+  return payload;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
@@ -99,12 +119,10 @@ async function createThread(userId: string, data: any) {
     body: JSON.stringify({}),
   });
 
-  if (!openAIResponse.ok) {
-    const error = await openAIResponse.json();
-    throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
+  const openAIThread = await readOpenAIResponse(openAIResponse, 'criar a conversa');
+  if (typeof openAIThread.id !== 'string' || !openAIThread.id) {
+    throw new Error('A OpenAI não retornou um identificador válido para a conversa.');
   }
-
-  const openAIThread = await openAIResponse.json();
 
   // Save conversation in Supabase
   const { data: conversation, error } = await supabase
@@ -332,19 +350,27 @@ async function getConversations(userId: string) {
   const { data: conversations, error } = await supabase
     .from('conversations')
     .select(`
-      *,
-      assistants(name),
-      messages(content, role, created_at)
+      id,
+      title,
+      assistant_id,
+      updated_at,
+      assistants(name)
     `)
     .eq('user_id', userId)
     .eq('is_active', true)
-    .order('updated_at', { ascending: false });
+    .order('updated_at', { ascending: false })
+    .limit(200);
 
   if (error) {
     throw new Error(`Database error: ${error.message}`);
   }
 
-  return new Response(JSON.stringify({ conversations }), {
+  const summaries = (conversations || []).map((conversation) => ({
+    ...conversation,
+    messages: [],
+  }));
+
+  return new Response(JSON.stringify({ conversations: summaries }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }
@@ -366,13 +392,14 @@ async function getMessages(userId: string, conversationId: string) {
     .from('messages')
     .select('*')
     .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false })
+    .limit(500);
 
   if (error) {
     throw new Error(`Database error: ${error.message}`);
   }
 
-  return new Response(JSON.stringify({ messages }), {
+  return new Response(JSON.stringify({ messages: (messages || []).reverse() }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }
