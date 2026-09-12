@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { ComponentType, Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,36 +19,58 @@ import NotFound from "./pages/NotFound";
 import ThankYou from "./pages/ThankYou";
 import LeadCapture from "./pages/LeadCapture";
 
-// Lazy load pages
-const LazyCRMSales = lazy(() => import("./pages/CRMSales"));
-const LazyDashboard = lazy(() => import("./pages/Dashboard"));
-const LazyBrandingSettings = lazy(() => import("./pages/BrandingSettings"));
-const LazyAssistants = lazy(() => import("./pages/Assistants"));
-const LazyWhatsApp = lazy(() => import("./pages/WhatsApp"));
-const LazyMetaChannels = lazy(() => import("./pages/MetaChannels"));
-const LazyConversations = lazy(() => import("./pages/Conversations"));
-const LazyAdmin = lazy(() => import("./pages/Admin"));
-const LazyEspanol = lazy(() => import("./pages/Espanol"));
-const LazyWidgetCustomization = lazy(() => import("./pages/WidgetCustomization"));
-const LazyWidgetAnalytics = lazy(() => import("./pages/WidgetAnalytics"));
-const LazyCRMLeads = lazy(() => import("./pages/CRMLeads"));
-const LazyWhatsAppLinkGenerator = lazy(() => import("./pages/tools/WhatsAppLinkGenerator"));
-const LazyWhatsAppWidgetGenerator = lazy(() => import("./pages/tools/WhatsAppWidgetGenerator"));
-const LazyNicheLinkGenerator = lazy(() => import("./pages/tools/NicheLinkGenerator"));
-const LazySectorIASolution = lazy(() => import("./pages/ia/SectorIASolution"));
-const LazyMercadoDigital = lazy(() => import("./pages/MercadoDigital"));
-const LazyVentasEspanol = lazy(() => import("./pages/VentasEspanol"));
+const chunkReloadKey = "clonefy:chunk-reload-attempted";
 
-const LazyLiveChat = lazy(() => import("./pages/LiveChat"));
-const LazySalesFunnels = lazy(() => import("./pages/SalesFunnels"));
-const LazyCalendar = lazy(() => import("./pages/Calendar"));
-const LazyChangelog = lazy(() => import("./pages/Changelog"));
-const LazyTechnicalDocs = lazy(() => import("./pages/TechnicalDocs"));
-const LazyVslDaniel = lazy(() => import("./pages/VslDaniel"));
-const LazyVslTalita = lazy(() => import("./pages/VslTalita"));
-const LazyPlanos = lazy(() => import("./pages/Planos"));
-const LazyApiBalance = lazy(() => import("./pages/ApiBalance"));
-const LazyProspeccao = lazy(() => import("./pages/Prospeccao"));
+const lazyWithRetry = (importer: () => Promise<{ default: ComponentType }>) => lazy(async () => {
+  try {
+    const loaded = await importer();
+    sessionStorage.removeItem(chunkReloadKey);
+    return loaded;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const isStaleChunk = /Failed to fetch dynamically imported module|Importing a module script failed|ChunkLoadError|Loading chunk/i.test(message);
+
+    if (isStaleChunk && sessionStorage.getItem(chunkReloadKey) !== "true") {
+      sessionStorage.setItem(chunkReloadKey, "true");
+      window.location.reload();
+      return new Promise<never>(() => undefined);
+    }
+
+    sessionStorage.removeItem(chunkReloadKey);
+    throw error;
+  }
+});
+
+// Lazy load pages with one automatic reload when a deployment replaces cached chunks.
+const LazyCRMSales = lazyWithRetry(() => import("./pages/CRMSales"));
+const LazyDashboard = lazyWithRetry(() => import("./pages/Dashboard"));
+const LazyBrandingSettings = lazyWithRetry(() => import("./pages/BrandingSettings"));
+const LazyAssistants = lazyWithRetry(() => import("./pages/Assistants"));
+const LazyWhatsApp = lazyWithRetry(() => import("./pages/WhatsApp"));
+const LazyMetaChannels = lazyWithRetry(() => import("./pages/MetaChannels"));
+const LazyConversations = lazyWithRetry(() => import("./pages/Conversations"));
+const LazyAdmin = lazyWithRetry(() => import("./pages/Admin"));
+const LazyEspanol = lazyWithRetry(() => import("./pages/Espanol"));
+const LazyWidgetCustomization = lazyWithRetry(() => import("./pages/WidgetCustomization"));
+const LazyWidgetAnalytics = lazyWithRetry(() => import("./pages/WidgetAnalytics"));
+const LazyCRMLeads = lazyWithRetry(() => import("./pages/CRMLeads"));
+const LazyWhatsAppLinkGenerator = lazyWithRetry(() => import("./pages/tools/WhatsAppLinkGenerator"));
+const LazyWhatsAppWidgetGenerator = lazyWithRetry(() => import("./pages/tools/WhatsAppWidgetGenerator"));
+const LazyNicheLinkGenerator = lazyWithRetry(() => import("./pages/tools/NicheLinkGenerator"));
+const LazySectorIASolution = lazyWithRetry(() => import("./pages/ia/SectorIASolution"));
+const LazyMercadoDigital = lazyWithRetry(() => import("./pages/MercadoDigital"));
+const LazyVentasEspanol = lazyWithRetry(() => import("./pages/VentasEspanol"));
+
+const LazyLiveChat = lazyWithRetry(() => import("./pages/LiveChat"));
+const LazySalesFunnels = lazyWithRetry(() => import("./pages/SalesFunnels"));
+const LazyCalendar = lazyWithRetry(() => import("./pages/Calendar"));
+const LazyChangelog = lazyWithRetry(() => import("./pages/Changelog"));
+const LazyTechnicalDocs = lazyWithRetry(() => import("./pages/TechnicalDocs"));
+const LazyVslDaniel = lazyWithRetry(() => import("./pages/VslDaniel"));
+const LazyVslTalita = lazyWithRetry(() => import("./pages/VslTalita"));
+const LazyPlanos = lazyWithRetry(() => import("./pages/Planos"));
+const LazyApiBalance = lazyWithRetry(() => import("./pages/ApiBalance"));
+const LazyProspeccao = lazyWithRetry(() => import("./pages/Prospeccao"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
