@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Archive, Bot, Clock, Copy, File, FileAudio, FileImage, Film, Link2, MessageSquare, Plus, Save, Trash2, Users } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Archive, Bot, Clock, Copy, File as FileIcon, FileAudio, FileImage, Film, Link2, MessageSquare, Mic, Plus, Save, Square, Trash2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,8 +22,8 @@ const stepLabels: Record<SalesStepType, string> = {
   wait_for_reply: 'Aguardar resposta',
 };
 
-const mediaIcons: Record<SalesMediaType, typeof File> = {
-  text: MessageSquare, audio: FileAudio, image: FileImage, video: Film, document: File,
+const mediaIcons: Record<SalesMediaType, typeof FileIcon> = {
+  text: MessageSquare, audio: FileAudio, image: FileImage, video: Film, document: FileIcon,
 };
 
 export default function SalesFunnels() {
@@ -36,6 +36,10 @@ export default function SalesFunnels() {
   const [assetContent, setAssetContent] = useState('');
   const [assetCaption, setAssetCaption] = useState('');
   const [assetFile, setAssetFile] = useState<File | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingStreamRef = useRef<MediaStream | null>(null);
+  const recordingChunksRef = useRef<Blob[]>([]);
   const [newFunnelName, setNewFunnelName] = useState('');
   const [newFunnelKind, setNewFunnelKind] = useState<SalesFunnel['flow_kind']>('automation');
   const [selectedFunnelId, setSelectedFunnelId] = useState<string | null>(null);
@@ -61,6 +65,11 @@ export default function SalesFunnels() {
     }
   }, [sales.funnels, selectedFunnelId]);
 
+  useEffect(() => () => {
+    if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop();
+    recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+  }, []);
+
   const run = async (action: () => Promise<unknown>, success: string) => {
     try {
       await action();
@@ -79,6 +88,44 @@ export default function SalesFunnels() {
       });
       setAssetName(''); setAssetContent(''); setAssetCaption(''); setAssetFile(null);
     }, 'Material salvo');
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const preferredMime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
+        .find((mime) => MediaRecorder.isTypeSupported(mime));
+      const recorder = new MediaRecorder(stream, preferredMime ? { mimeType: preferredMime } : undefined);
+      recordingChunksRef.current = [];
+      recordingStreamRef.current = stream;
+      mediaRecorderRef.current = recorder;
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) recordingChunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        const mimeType = recorder.mimeType || preferredMime || 'audio/webm';
+        const extension = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('ogg') ? 'ogg' : 'webm';
+        const recordedFile = new File(recordingChunksRef.current, `audio-${Date.now()}.${extension}`, { type: mimeType });
+        setAssetFile(recordedFile);
+        setAssetName((current) => current || 'Áudio gravado');
+        recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+        recordingStreamRef.current = null;
+        mediaRecorderRef.current = null;
+        setIsRecording(false);
+      };
+      recorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      toast({
+        title: 'Microfone indisponível',
+        description: error instanceof Error ? error.message : 'Permita o acesso ao microfone no navegador.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop();
   };
 
   const submitStep = async () => {
@@ -148,12 +195,24 @@ export default function SalesFunnels() {
               <CardContent className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2"><Label>Nome</Label><Input value={assetName} onChange={(e) => setAssetName(e.target.value)} placeholder="Ex.: Áudio de apresentação" /></div>
                 <div className="space-y-2"><Label>Pasta</Label><Input value={assetFolder} onChange={(e) => setAssetFolder(e.target.value)} /></div>
-                <div className="space-y-2"><Label>Tipo</Label><Select value={assetType} onValueChange={(value) => { setAssetType(value as SalesMediaType); setAssetFile(null); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(mediaLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-2"><Label>Tipo</Label><Select disabled={isRecording} value={assetType} onValueChange={(value) => { setAssetType(value as SalesMediaType); setAssetFile(null); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(mediaLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select></div>
                 {assetType === 'text' ? (
                   <div className="space-y-2 md:col-span-2"><Label>Texto</Label><Textarea value={assetContent} onChange={(e) => setAssetContent(e.target.value)} placeholder="Use {nome} e {telefone} para personalizar." /></div>
                 ) : (
                   <>
-                    <div className="space-y-2"><Label>Arquivo</Label><Input type="file" accept={assetType === 'audio' ? 'audio/*' : assetType === 'image' ? 'image/*' : assetType === 'video' ? 'video/*' : undefined} onChange={(e) => setAssetFile(e.target.files?.[0] || null)} /></div>
+                    <div className="space-y-2">
+                      <Label>{assetType === 'audio' ? 'Áudio' : 'Arquivo'}</Label>
+                      <Input disabled={isRecording} type="file" accept={assetType === 'audio' ? 'audio/*' : assetType === 'image' ? 'image/*' : assetType === 'video' ? 'video/*' : undefined} onChange={(e) => setAssetFile(e.target.files?.[0] || null)} />
+                      {assetType === 'audio' && (
+                        <div className="flex items-center gap-2">
+                          <Button type="button" variant={isRecording ? 'destructive' : 'outline'} onClick={isRecording ? stopRecording : startRecording}>
+                            {isRecording ? <Square className="h-4 w-4 mr-2" /> : <Mic className="h-4 w-4 mr-2" />}
+                            {isRecording ? 'Parar gravação' : 'Gravar pelo microfone'}
+                          </Button>
+                          {assetFile && !isRecording && <span className="text-xs text-muted-foreground truncate">{assetFile.name}</span>}
+                        </div>
+                      )}
+                    </div>
                     <div className="space-y-2 md:col-span-2"><Label>Legenda opcional</Label><Textarea value={assetCaption} onChange={(e) => setAssetCaption(e.target.value)} /></div>
                   </>
                 )}
