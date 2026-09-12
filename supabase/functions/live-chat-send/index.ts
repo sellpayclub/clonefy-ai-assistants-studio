@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Evolution API Config
 const EVOLUTION_API_URL = 'https://evolutionapi.clonefyia.com';
-const EVOLUTION_API_KEY = '94805bfbb25f77f37a029f5a3dbfe62b';
+const EVOLUTION_API_KEY = Deno.env.get('EVOLUTION_API_KEY') ?? '';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -23,11 +23,8 @@ serve(async (req) => {
   try {
     const {
       session_id,
-      instance_name,
-      contact_number,
       message,
       asset_id,
-      source,
       user_id
     } = await req.json();
 
@@ -42,7 +39,7 @@ serve(async (req) => {
 
     const { data: ownedSession } = await supabase
       .from('live_chat_sessions')
-      .select('id, contact_name')
+      .select('id, contact_name, instance_name, contact_number, source')
       .eq('id', session_id)
       .eq('user_id', authData.user.id)
       .maybeSingle();
@@ -52,6 +49,9 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+    const instance_name = ownedSession.instance_name;
+    const contact_number = ownedSession.contact_number;
+    const source = ownedSession.source;
 
     let outgoingMessage = typeof message === 'string' ? message.trim() : '';
     let outgoingType: 'text' | 'audio' | 'image' | 'document' | 'video' = 'text';
@@ -59,6 +59,7 @@ serve(async (req) => {
     let outgoingFileName: string | null = null;
 
     if (asset_id) {
+      if (source !== 'whatsapp') throw new Error('Materiais da biblioteca só podem ser enviados pelo WhatsApp');
       const { data: asset, error: assetError } = await supabase
         .from('sales_media_assets')
         .select('name, library_id, media_type, content, caption, storage_path, file_name')
@@ -195,6 +196,7 @@ serve(async (req) => {
     // 3b. Send via WhatsApp if source is whatsapp
     if (source === 'whatsapp') {
       console.log('📱 Enviando via WhatsApp Evolution API...');
+      if (!EVOLUTION_API_KEY) throw new Error('EVOLUTION_API_KEY não configurada');
 
       // Also update n8n_fluxogpt for human takeover
       await supabase

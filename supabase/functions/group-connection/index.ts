@@ -12,7 +12,7 @@ const corsHeaders = {
 
 // Evolution API Config
 const EVOLUTION_API_URL = 'https://evolutionapi.clonefyia.com';
-const EVOLUTION_API_KEY = Deno.env.get('EVOLUTION_API_KEY') || '94805bfbb25f77f37a029f5a3dbfe62b';
+const EVOLUTION_API_KEY = Deno.env.get('EVOLUTION_API_KEY') ?? '';
 
 serve(async (req) => {
     if (req.method === 'OPTIONS') {
