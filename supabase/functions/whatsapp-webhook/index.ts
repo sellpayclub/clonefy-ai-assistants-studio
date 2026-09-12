@@ -395,7 +395,7 @@ serve(async (req) => {
                             const arrayBuffer = await audioResponse.arrayBuffer();
 
                             // Converter para base64
-                            base64Audio = base64Encode(new Uint8Array(arrayBuffer));
+                            base64Audio = base64Encode(arrayBuffer);
                         }
                     }
 
@@ -1362,7 +1362,7 @@ serve(async (req) => {
                 if (elevenLabsResponse.ok) {
                     // Converter áudio para base64
                     const audioBuffer = await elevenLabsResponse.arrayBuffer();
-                    const audioBase64 = base64Encode(new Uint8Array(audioBuffer));
+                    const audioBase64 = base64Encode(audioBuffer);
 
                     // Enviar como áudio via Evolution API
                     const audioSendResponse = await fetch(`${EVOLUTION_API_URL}/message/sendWhatsAppAudio/${instanceName}`, {

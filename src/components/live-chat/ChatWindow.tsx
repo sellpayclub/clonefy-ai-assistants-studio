@@ -216,7 +216,7 @@ export const ChatWindow = memo(function ChatWindow({
     if (session) {
       inputRef.current?.focus();
     }
-  }, [session?.id]);
+  }, [session]);
 
   const handleSend = async () => {
     if (!inputValue.trim() || sending) return;
