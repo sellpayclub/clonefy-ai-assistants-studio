@@ -47,11 +47,12 @@ async function authenticatedUser(req: Request) {
 }
 
 function renderVariables(value: string, contactName: string | null, contactNumber: string) {
+  const fullName = contactName?.trim() || "";
+  const firstName = fullName.split(/\s+/)[0] || "";
   return value
-    .replaceAll("{{nome}}", contactName || "")
-    .replaceAll("{nome}", contactName || "")
-    .replaceAll("{{telefone}}", contactNumber)
-    .replaceAll("{telefone}", contactNumber);
+    .replace(/\{\{nome_completo\}\}|\{nome_completo\}/gi, fullName)
+    .replace(/\{\{(?:primeiro_nome|nome)\}\}|\{(?:primeiro_nome|nome)\}/gi, firstName)
+    .replace(/\{\{telefone\}\}|\{telefone\}/gi, contactNumber);
 }
 
 async function pauseAi(run: Run) {
