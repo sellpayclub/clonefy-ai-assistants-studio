@@ -161,7 +161,7 @@ export function useSalesLibrary() {
       folder: input.folder || 'Geral',
       media_type: input.mediaType,
       content: input.mediaType === 'text' ? input.content : null,
-      caption: input.caption || null,
+      caption: input.caption?.trim() ? input.caption : null,
       storage_path: storagePath,
       mime_type: input.file?.type || null,
       file_name: input.file?.name || null,
