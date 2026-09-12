@@ -87,11 +87,12 @@ serve(async (req) => {
       }
     }
 
+    const fullName = ownedSession.contact_name?.trim() || '';
+    const firstName = fullName.split(/\s+/)[0] || '';
     outgoingMessage = outgoingMessage
-      .replaceAll('{{nome}}', ownedSession.contact_name || '')
-      .replaceAll('{nome}', ownedSession.contact_name || '')
-      .replaceAll('{{telefone}}', contact_number)
-      .replaceAll('{telefone}', contact_number);
+      .replace(/\{\{nome_completo\}\}|\{nome_completo\}/gi, fullName)
+      .replace(/\{\{(?:primeiro_nome|nome)\}\}|\{(?:primeiro_nome|nome)\}/gi, firstName)
+      .replace(/\{\{telefone\}\}|\{telefone\}/gi, contact_number);
 
     console.log(`📤 Enviando mensagem do humano: ${(outgoingMessage || `[${outgoingType}]`).substring(0, 50)}...`);
     console.log(`📱 Instância: ${instance_name}, Contato: ${contact_number}`);
