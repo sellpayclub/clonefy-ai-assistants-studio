@@ -16,8 +16,6 @@ import {
   
   Sparkles,
   FileText,
-  Instagram,
-  Building2,
   Workflow,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
@@ -49,13 +47,6 @@ const menuItems = [
   { title: "sidebar.whatsapp.title", url: "/whatsapp", icon: Smartphone, description: "sidebar.whatsapp.description" },
   
   {
-    title: "Meta Channels",
-    url: "/meta-channels",
-    icon: Instagram,
-    description: "Instagram Direct e Messenger",
-    highlight: false,
-  },
-  {
     title: "Chat ao Vivo",
     url: "/live-chat",
     icon: Radio,
@@ -82,13 +73,6 @@ const menuItems = [
     description: "Personalize o chat para seu site",
   },
   { title: "CRM Leads", url: "/crm-leads", icon: Users, description: "Gestão inteligente de leads extraídos" },
-  {
-    title: "Prospecção Local",
-    url: "/prospeccao",
-    icon: Building2,
-    description: "Busque empresas por ramo e cidade via CNPJ",
-    adminOnly: true,
-  },
   {
     title: "Analytics do Chat",
     url: "/widget-analytics",
@@ -131,7 +115,7 @@ const AppSidebar = () => {
 
   const filteredMenuItems = useMemo(() => {
     return menuItems.filter((item) => {
-      if (item.url === "/admin" || (item as any).adminOnly) {
+      if (item.url === "/admin" || item.adminOnly) {
         return isAdmin;
       }
       return true;
