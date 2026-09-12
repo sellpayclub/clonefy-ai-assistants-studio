@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { SalesAsset, SalesFunnel, SalesMediaType, SalesStepType, useSalesLibrary } from '@/hooks/useSalesLibrary';
+import { formatFileSize, salesMediaRules, validateSalesFile } from '@/lib/sales-media';
 
 const mediaLabels: Record<SalesMediaType, string> = {
   text: 'Texto', audio: 'Áudio', image: 'Imagem', video: 'Vídeo', document: 'Documento',
@@ -90,6 +91,20 @@ export default function SalesFunnels() {
     }, 'Material salvo');
   };
 
+  const selectAssetFile = (file: File | null) => {
+    if (!file) {
+      setAssetFile(null);
+      return;
+    }
+    const validationError = validateSalesFile(file, assetType);
+    if (validationError) {
+      setAssetFile(null);
+      toast({ title: 'Arquivo não aceito', description: validationError, variant: 'destructive' });
+      return;
+    }
+    setAssetFile(file);
+  };
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -106,7 +121,13 @@ export default function SalesFunnels() {
         const mimeType = recorder.mimeType || preferredMime || 'audio/webm';
         const extension = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('ogg') ? 'ogg' : 'webm';
         const recordedFile = new File(recordingChunksRef.current, `audio-${Date.now()}.${extension}`, { type: mimeType });
-        setAssetFile(recordedFile);
+        const validationError = validateSalesFile(recordedFile, 'audio');
+        if (validationError) {
+          setAssetFile(null);
+          toast({ title: 'Gravação muito grande', description: validationError, variant: 'destructive' });
+        } else {
+          setAssetFile(recordedFile);
+        }
         setAssetName((current) => current || 'Áudio gravado');
         recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
         recordingStreamRef.current = null;
@@ -216,7 +237,7 @@ export default function SalesFunnels() {
                   <>
                     <div className="space-y-2">
                       <Label>{assetType === 'audio' ? 'Áudio' : 'Arquivo'}</Label>
-                      <Input disabled={isRecording} type="file" accept={assetType === 'audio' ? 'audio/*' : assetType === 'image' ? 'image/*' : assetType === 'video' ? 'video/*' : undefined} onChange={(e) => setAssetFile(e.target.files?.[0] || null)} />
+                      <Input disabled={isRecording} type="file" accept={salesMediaRules[assetType].accept} onChange={(e) => selectAssetFile(e.target.files?.[0] || null)} />
                       {assetType === 'audio' && (
                         <div className="flex items-center gap-2">
                           <Button type="button" variant={isRecording ? 'destructive' : 'outline'} onClick={isRecording ? stopRecording : startRecording}>
@@ -226,6 +247,9 @@ export default function SalesFunnels() {
                           {assetFile && !isRecording && <span className="text-xs text-muted-foreground truncate">{assetFile.name}</span>}
                         </div>
                       )}
+                      <p className="text-xs text-muted-foreground">
+                        {salesMediaRules[assetType].formats} · máximo {formatFileSize(salesMediaRules[assetType].maxBytes)}. {salesMediaRules[assetType].hint}
+                      </p>
                     </div>
                     <div className="space-y-2 md:col-span-2"><Label>Legenda opcional</Label><Textarea value={assetCaption} onChange={(e) => setAssetCaption(e.target.value)} /></div>
                   </>
