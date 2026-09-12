@@ -11,7 +11,7 @@ const corsHeaders = {
 
 // Evolution API Config
 const EVOLUTION_API_URL = 'https://evolutionapi.clonefyia.com';
-const EVOLUTION_API_KEY = '94805bfbb25f77f37a029f5a3dbfe62b';
+const EVOLUTION_API_KEY = Deno.env.get('EVOLUTION_API_KEY') ?? '';
 
 // Supabase Client
 const supabase = createClient(
@@ -135,7 +135,7 @@ serve(async (req) => {
 
                 if (elevenLabsResponse.ok) {
                     const audioBuffer = await elevenLabsResponse.arrayBuffer();
-                    const audioBase64 = base64Encode(new Uint8Array(audioBuffer));
+                    const audioBase64 = base64Encode(audioBuffer);
 
                     const audioSendResponse = await fetch(`${EVOLUTION_API_URL}/message/sendWhatsAppAudio/${instanceName}`, {
                         method: 'POST',

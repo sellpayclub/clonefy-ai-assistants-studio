@@ -21,6 +21,24 @@ verify_jwt = false
 [functions.whatsapp-followup]
 verify_jwt = false
 
+[functions.whatsapp-evolution]
+verify_jwt = false
+
+[functions.followup-dispatcher]
+verify_jwt = false
+
+[functions.group-connection]
+verify_jwt = false
+
+[functions.group-manager]
+verify_jwt = false
+
+[functions.group-report-scheduler]
+verify_jwt = false
+
+[functions.group-webhook]
+verify_jwt = false
+
 [functions.live-chat-send]
 verify_jwt = false
 
