@@ -18,6 +18,7 @@ import {
   FileText,
   Instagram,
   Building2,
+  Workflow,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -59,6 +60,13 @@ const menuItems = [
     url: "/live-chat",
     icon: Radio,
     description: "Monitore conversas em tempo real",
+    highlight: true,
+  },
+  {
+    title: "Funis de vendas",
+    url: "/sales-funnels",
+    icon: Workflow,
+    description: "Áudios, respostas prontas e automações",
     highlight: true,
   },
   {

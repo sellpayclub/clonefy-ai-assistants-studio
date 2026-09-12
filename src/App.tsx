@@ -40,6 +40,7 @@ const LazyMercadoDigital = lazy(() => import("./pages/MercadoDigital"));
 const LazyVentasEspanol = lazy(() => import("./pages/VentasEspanol"));
 
 const LazyLiveChat = lazy(() => import("./pages/LiveChat"));
+const LazySalesFunnels = lazy(() => import("./pages/SalesFunnels"));
 const LazyCalendar = lazy(() => import("./pages/Calendar"));
 const LazyChangelog = lazy(() => import("./pages/Changelog"));
 const LazyTechnicalDocs = lazy(() => import("./pages/TechnicalDocs"));
@@ -122,6 +123,7 @@ const App = () => {
                       <Route path="/meta-channels" element={<LazyPage><LazyMetaChannels /></LazyPage>} />
                       <Route path="/conversations" element={<LazyPage><LazyConversations /></LazyPage>} />
                       <Route path="/live-chat" element={<LazyPage><LazyLiveChat /></LazyPage>} />
+                      <Route path="/sales-funnels" element={<LazyPage><LazySalesFunnels /></LazyPage>} />
                       <Route path="/admin" element={<LazyPage><LazyAdmin /></LazyPage>} />
                       <Route path="/widget-customization" element={<LazyPage><LazyWidgetCustomization /></LazyPage>} />
                       <Route path="/widget-analytics" element={<LazyPage><LazyWidgetAnalytics /></LazyPage>} />

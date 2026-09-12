@@ -26,14 +26,77 @@ serve(async (req) => {
       instance_name,
       contact_number,
       message,
+      asset_id,
       source,
       user_id
     } = await req.json();
 
-    console.log(`📤 Enviando mensagem do humano: ${message.substring(0, 50)}...`);
+    const accessToken = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
+    const { data: authData } = accessToken ? await supabase.auth.getUser(accessToken) : { data: { user: null } };
+    if (!authData.user || authData.user.id !== user_id) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { data: ownedSession } = await supabase
+      .from('live_chat_sessions')
+      .select('id, contact_name')
+      .eq('id', session_id)
+      .eq('user_id', authData.user.id)
+      .maybeSingle();
+    if (!ownedSession) {
+      return new Response(JSON.stringify({ error: 'Session not found' }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    let outgoingMessage = typeof message === 'string' ? message.trim() : '';
+    let outgoingType: 'text' | 'audio' | 'image' | 'document' | 'video' = 'text';
+    let outgoingMediaUrl: string | null = null;
+    let outgoingFileName: string | null = null;
+
+    if (asset_id) {
+      const { data: asset, error: assetError } = await supabase
+        .from('sales_media_assets')
+        .select('name, library_id, media_type, content, caption, storage_path, file_name')
+        .eq('id', asset_id)
+        .eq('is_active', true)
+        .single();
+
+      if (assetError || !asset) throw new Error('Material não encontrado ou inativo');
+      const { data: membership } = await supabase
+        .from('sales_library_members')
+        .select('role')
+        .eq('library_id', asset.library_id)
+        .eq('user_id', authData.user.id)
+        .maybeSingle();
+      if (!membership) throw new Error('Você não tem acesso a este material');
+      outgoingType = asset.media_type;
+      outgoingMessage = asset.content || asset.caption || '';
+      outgoingFileName = asset.file_name || asset.name;
+
+      if (asset.storage_path) {
+        const { data: signed, error: signedError } = await supabase.storage
+          .from('sales-assets')
+          .createSignedUrl(asset.storage_path, 3600);
+        if (signedError || !signed?.signedUrl) throw new Error('Não foi possível liberar o arquivo para envio');
+        outgoingMediaUrl = signed.signedUrl;
+      }
+    }
+
+    outgoingMessage = outgoingMessage
+      .replaceAll('{{nome}}', ownedSession.contact_name || '')
+      .replaceAll('{nome}', ownedSession.contact_name || '')
+      .replaceAll('{{telefone}}', contact_number)
+      .replaceAll('{telefone}', contact_number);
+
+    console.log(`📤 Enviando mensagem do humano: ${(outgoingMessage || `[${outgoingType}]`).substring(0, 50)}...`);
     console.log(`📱 Instância: ${instance_name}, Contato: ${contact_number}`);
 
-    if (!message || !instance_name || !contact_number || !user_id) {
+    if ((!outgoingMessage && !outgoingMediaUrl) || !instance_name || !contact_number || !user_id) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -49,8 +112,9 @@ serve(async (req) => {
         instance_name,
         contact_number,
         sender_type: 'human',
-        content: message,
-        message_type: 'text',
+        content: outgoingMessage || `[${outgoingType}] ${outgoingFileName || ''}`.trim(),
+        message_type: outgoingType,
+        media_url: outgoingMediaUrl,
         source,
         is_read: true
       });
@@ -84,7 +148,7 @@ serve(async (req) => {
         status: 'human_takeover',
         human_takeover_until: takeoverUntil,
         last_message_at: new Date().toISOString(),
-        last_message_preview: message.substring(0, 100),
+        last_message_preview: (outgoingMessage || `[${outgoingType}] ${outgoingFileName || ''}`).substring(0, 100),
         last_sender_type: 'human'
       })
       .eq('id', session_id);
@@ -142,19 +206,38 @@ serve(async (req) => {
         .eq('nomeinstancia', instance_name)
         .eq('whatsappuser', contact_number);
 
-      // Send message via Evolution API
-      const sendResponse = await fetch(`${EVOLUTION_API_URL}/message/sendText/${instance_name}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': EVOLUTION_API_KEY
-        },
-        body: JSON.stringify({
-          number: contact_number,
-          text: message,
-          delay: 1
-        })
-      });
+      const evolutionHeaders = {
+        'Content-Type': 'application/json',
+        'apikey': EVOLUTION_API_KEY
+      };
+
+      let sendResponse: Response;
+      if (outgoingType === 'text') {
+        sendResponse = await fetch(`${EVOLUTION_API_URL}/message/sendText/${instance_name}`, {
+          method: 'POST',
+          headers: evolutionHeaders,
+          body: JSON.stringify({ number: contact_number, text: outgoingMessage, delay: 1 })
+        });
+      } else if (outgoingType === 'audio') {
+        sendResponse = await fetch(`${EVOLUTION_API_URL}/message/sendWhatsAppAudio/${instance_name}`, {
+          method: 'POST',
+          headers: evolutionHeaders,
+          body: JSON.stringify({ number: contact_number, audio: outgoingMediaUrl, delay: 1 })
+        });
+      } else {
+        sendResponse = await fetch(`${EVOLUTION_API_URL}/message/sendMedia/${instance_name}`, {
+          method: 'POST',
+          headers: evolutionHeaders,
+          body: JSON.stringify({
+            number: contact_number,
+            mediatype: outgoingType,
+            media: outgoingMediaUrl,
+            caption: outgoingMessage,
+            fileName: outgoingFileName,
+            delay: 1
+          })
+        });
+      }
 
       if (!sendResponse.ok) {
         const errorText = await sendResponse.text();

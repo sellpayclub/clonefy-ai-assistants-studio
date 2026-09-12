@@ -809,6 +809,7 @@ serve(async (req) => {
 
         // 📺 LIVE CHAT: Salvar mensagem do cliente e atualizar sessão
         let liveChatSessionId: string | null = null;
+        let resumedSalesFunnel = false;
         try {
             // Buscar ou criar sessão (inclui unread_count para incremento seguro)
             const { data: existingSession } = await supabase
@@ -894,8 +895,59 @@ serve(async (req) => {
                     });
             }
             console.log('📺 Live Chat: Mensagem do cliente salva');
+
+            // ▶️ FUNIL DE VENDAS: uma resposta libera a etapa "aguardar resposta".
+            // O cron do sales-funnel-engine fará o próximo envio no horário calculado.
+            const { data: waitingRun } = await supabase
+                .from('sales_funnel_runs')
+                .select('id, funnel_id, current_step_position')
+                .eq('instance_name', instanceName)
+                .eq('contact_number', contactNumber)
+                .eq('status', 'waiting_reply')
+                .order('started_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            if (waitingRun) {
+                const { data: waitingStep } = await supabase
+                    .from('sales_funnel_steps')
+                    .select('id, delay_seconds')
+                    .eq('funnel_id', waitingRun.funnel_id)
+                    .eq('position', waitingRun.current_step_position)
+                    .eq('step_type', 'wait_for_reply')
+                    .maybeSingle();
+
+                const delaySeconds = Math.max(0, Number(waitingStep?.delay_seconds || 0));
+                const nextRunAt = new Date(Date.now() + delaySeconds * 1000).toISOString();
+                await supabase.from('sales_funnel_runs').update({
+                    current_step_position: waitingRun.current_step_position + 1,
+                    status: 'waiting_time',
+                    next_run_at: nextRunAt,
+                    updated_at: new Date().toISOString()
+                }).eq('id', waitingRun.id).eq('status', 'waiting_reply');
+
+                await supabase.from('sales_funnel_events').insert({
+                    run_id: waitingRun.id,
+                    step_id: waitingStep?.id || null,
+                    event_type: 'customer_replied',
+                    details: { delay_seconds: delaySeconds, message_type: messageType }
+                });
+                resumedSalesFunnel = true;
+                console.log(`▶️ Funil ${waitingRun.id} retomado após resposta; próximo envio em ${delaySeconds}s`);
+            }
         } catch (liveChatError) {
             console.error('⚠️ Live Chat error (non-blocking):', liveChatError);
+        }
+
+        // Enquanto um funil controla a conversa, não permitir uma resposta paralela da IA.
+        if (resumedSalesFunnel) {
+            return new Response(JSON.stringify({
+                status: 'sales_funnel_resumed',
+                contact: contactNumber
+            }), {
+                status: 200,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
         }
 
         // 2. Buscar ou criar registro para este contato
