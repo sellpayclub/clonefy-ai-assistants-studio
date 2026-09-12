@@ -27,6 +27,7 @@ export function SalesToolsSheet({ session }: { session: LiveChatSession }) {
   const [assets, setAssets] = useState<SalesAsset[]>([]);
   const [funnels, setFunnels] = useState<SalesFunnel[]>([]);
   const [activeRun, setActiveRun] = useState<{ id: string; status: string; sales_funnels?: { name: string } } | null>(null);
+  const [lastRunError, setLastRunError] = useState<string | null>(null);
 
   const load = async () => {
     if (!user?.id || session.source !== 'whatsapp') return;
@@ -39,11 +40,14 @@ export function SalesToolsSheet({ session }: { session: LiveChatSession }) {
       const [assetsResult, funnelsResult, runResult] = await Promise.all([
         db.from('sales_media_assets').select('*').in('library_id', libraryIds).eq('is_active', true).order('folder').order('name'),
         db.from('sales_funnels').select('*, sales_funnel_steps(*)').in('library_id', libraryIds).eq('is_active', true).order('name'),
-        db.from('sales_funnel_runs').select('id, status, sales_funnels(name)').eq('session_id', session.id).in('status', ['running', 'processing', 'waiting_time', 'waiting_reply', 'paused']).maybeSingle(),
+        db.from('sales_funnel_runs').select('id, status, last_error, sales_funnels(name)').eq('session_id', session.id).order('started_at', { ascending: false }).limit(1).maybeSingle(),
       ]);
       setAssets((assetsResult.data || []) as SalesAsset[]);
       setFunnels((funnelsResult.data || []) as SalesFunnel[]);
-      setActiveRun(runResult.data || null);
+      const latestRun = runResult.data;
+      const activeStatuses = ['running', 'processing', 'waiting_time', 'waiting_reply', 'paused'];
+      setActiveRun(latestRun && activeStatuses.includes(latestRun.status) ? latestRun : null);
+      setLastRunError(latestRun?.status === 'failed' ? latestRun.last_error || 'A sequência não pôde ser concluída.' : null);
     } finally {
       setLoading(false);
     }
@@ -94,6 +98,7 @@ export function SalesToolsSheet({ session }: { session: LiveChatSession }) {
       }});
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+      setLastRunError(null);
       toast({ title: funnel.flow_kind === 'quick_reply' ? 'Resposta enviada' : 'Funil iniciado', description: funnel.name });
       await load();
     } catch (error) {
@@ -125,6 +130,7 @@ export function SalesToolsSheet({ session }: { session: LiveChatSession }) {
         <div className="relative mt-5"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar áudio, texto ou funil…" /></div>
 
         {activeRun && <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 p-3 flex items-center justify-between gap-3"><div><p className="font-medium text-sm">Funil em execução</p><p className="text-xs text-muted-foreground">{activeRun.sales_funnels?.name || 'Sequência ativa'} · {activeRun.status === 'waiting_reply' ? 'aguardando resposta' : 'aguardando próxima etapa'}</p></div><Button variant="destructive" size="sm" onClick={cancelRun} disabled={!!sendingId}><Square className="h-3 w-3 mr-2" />Parar</Button></div>}
+        {lastRunError && <div className="mt-4 rounded-lg border border-destructive/40 bg-destructive/10 p-3"><p className="font-medium text-sm text-destructive">A última sequência falhou</p><p className="text-xs text-muted-foreground mt-1">{lastRunError}</p></div>}
 
         <Tabs defaultValue="materials" className="mt-5"><TabsList className="grid grid-cols-2"><TabsTrigger value="materials">Materiais</TabsTrigger><TabsTrigger value="funnels">Fluxos</TabsTrigger></TabsList>
           <TabsContent value="materials" className="space-y-2 mt-4">{loading ? <p className="text-sm text-muted-foreground">Carregando…</p> : filteredAssets.map((asset) => { const Icon = icons[asset.media_type]; return <button key={asset.id} disabled={!!sendingId} onClick={() => sendAsset(asset)} className="w-full rounded-lg border p-3 text-left flex items-start gap-3 hover:border-primary hover:bg-primary/5 disabled:opacity-50"><Icon className="h-5 w-5 text-primary mt-0.5" /><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><p className="font-medium truncate">{asset.name}</p><Badge variant="secondary">{asset.folder}</Badge></div>{asset.content && <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{asset.content}</p>}</div></button>; })}{!loading && filteredAssets.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">Nenhum material disponível.</p>}</TabsContent>
