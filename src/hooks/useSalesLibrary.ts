@@ -50,6 +50,14 @@ export interface SalesFunnel {
 
 const db = supabase as any;
 
+const describeError = (caught: unknown) => {
+  const message = caught instanceof Error ? caught.message : String(caught);
+  if (/sales_library_members|schema cache|could not find|does not exist/i.test(message)) {
+    return 'A estrutura dos funis ainda não foi instalada no Supabase. Aplique a migration 20260912000000_sales_funnels.sql.';
+  }
+  return message || 'Não foi possível carregar a biblioteca.';
+};
+
 export function useSalesLibrary() {
   const { user } = useAuth();
   const [libraries, setLibraries] = useState<SalesLibrary[]>([]);
@@ -57,31 +65,41 @@ export function useSalesLibrary() {
   const [assets, setAssets] = useState<SalesAsset[]>([]);
   const [funnels, setFunnels] = useState<SalesFunnel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadLibraries = useCallback(async () => {
-    if (!user?.id) return;
-    setLoading(true);
-    const { data, error } = await db
-      .from('sales_library_members')
-      .select('role, sales_libraries(id, owner_id, name, share_code)')
-      .eq('user_id', user.id);
-
-    if (error) throw error;
-    let mapped = (data || []).map((row: any) => ({ ...row.sales_libraries, role: row.role })) as SalesLibrary[];
-
-    if (mapped.length === 0) {
-      const { data: created, error: createError } = await db
-        .from('sales_libraries')
-        .insert({ owner_id: user.id, name: 'Biblioteca comercial' })
-        .select('id, owner_id, name, share_code')
-        .single();
-      if (createError) throw createError;
-      mapped = [{ ...created, role: 'owner' }];
+    if (!user?.id) {
+      setLoading(false);
+      return;
     }
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error: queryError } = await db
+        .from('sales_library_members')
+        .select('role, sales_libraries(id, owner_id, name, share_code)')
+        .eq('user_id', user.id);
 
-    setLibraries(mapped);
-    setSelectedLibraryId((current) => current && mapped.some((item) => item.id === current) ? current : mapped[0].id);
-    setLoading(false);
+      if (queryError) throw queryError;
+      let mapped = (data || []).map((row: any) => ({ ...row.sales_libraries, role: row.role })) as SalesLibrary[];
+
+      if (mapped.length === 0) {
+        const { data: created, error: createError } = await db
+          .from('sales_libraries')
+          .insert({ owner_id: user.id, name: 'Biblioteca comercial' })
+          .select('id, owner_id, name, share_code')
+          .single();
+        if (createError) throw createError;
+        mapped = [{ ...created, role: 'owner' }];
+      }
+
+      setLibraries(mapped);
+      setSelectedLibraryId((current) => current && mapped.some((item) => item.id === current) ? current : mapped[0].id);
+    } catch (caught) {
+      setError(describeError(caught));
+    } finally {
+      setLoading(false);
+    }
   }, [user?.id]);
 
   const refresh = useCallback(async () => {
@@ -102,8 +120,8 @@ export function useSalesLibrary() {
     })) as SalesFunnel[]);
   }, [selectedLibraryId]);
 
-  useEffect(() => { loadLibraries().catch(console.error); }, [loadLibraries]);
-  useEffect(() => { refresh().catch(console.error); }, [refresh]);
+  useEffect(() => { void loadLibraries(); }, [loadLibraries]);
+  useEffect(() => { refresh().catch((caught) => setError(describeError(caught))); }, [refresh]);
 
   const joinLibrary = async (shareCode: string) => {
     const { error } = await db.rpc('join_sales_library', { _share_code: shareCode });
@@ -211,6 +229,8 @@ export function useSalesLibrary() {
     assets,
     funnels,
     loading,
+    error,
+    retry: loadLibraries,
     refresh,
     joinLibrary,
     createAsset,

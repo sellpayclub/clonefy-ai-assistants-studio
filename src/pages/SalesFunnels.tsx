@@ -145,6 +145,20 @@ export default function SalesFunnels() {
 
   if (sales.loading) return <main className="flex-1 flex items-center justify-center">Carregando biblioteca…</main>;
 
+  if (sales.error) return (
+    <main className="flex-1 overflow-auto p-4 md:p-6">
+      <Card className="max-w-2xl mx-auto mt-10">
+        <CardHeader>
+          <CardTitle>Não foi possível abrir a biblioteca</CardTitle>
+          <CardDescription>{sales.error}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={() => void sales.retry()}>Tentar novamente</Button>
+        </CardContent>
+      </Card>
+    </main>
+  );
+
   return (
     <main className="flex-1 overflow-auto p-4 md:p-6 space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
