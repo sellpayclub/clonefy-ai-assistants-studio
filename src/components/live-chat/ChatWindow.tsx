@@ -32,6 +32,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { LiveChatSession, LiveChatMessage } from '@/hooks/useLiveChat';
+import { SalesToolsSheet } from '@/components/live-chat/SalesToolsSheet';
 
 const DURATION_OPTIONS = [
   { value: '0.5', label: '30 min' },
@@ -124,9 +125,11 @@ const MessageBubble = memo(function MessageBubble({ message }: { message: LiveCh
         )}
 
         {/* Message content */}
-        <p className="text-sm whitespace-pre-wrap break-words">
-          {message.content}
-        </p>
+        {message.message_type === 'audio' && message.media_url && <audio controls className="max-w-full mb-2" src={message.media_url} />}
+        {message.message_type === 'image' && message.media_url && <img className="max-w-full max-h-80 rounded-lg mb-2" src={message.media_url} alt={message.content || 'Imagem'} />}
+        {message.message_type === 'video' && message.media_url && <video controls className="max-w-full max-h-80 rounded-lg mb-2" src={message.media_url} />}
+        {message.message_type === 'document' && message.media_url && <a className="text-sm underline block mb-2" href={message.media_url} target="_blank" rel="noreferrer">Abrir documento</a>}
+        {message.content && <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>}
 
         {/* Time */}
         <p className={cn(
@@ -213,7 +216,7 @@ export const ChatWindow = memo(function ChatWindow({
     if (session) {
       inputRef.current?.focus();
     }
-  }, [session?.id]);
+  }, [session]);
 
   const handleSend = async () => {
     if (!inputValue.trim() || sending) return;
@@ -388,6 +391,7 @@ export const ChatWindow = memo(function ChatWindow({
       {/* Input */}
       <div className="shrink-0 p-4 border-t border-border">
         <div className="flex gap-2 max-w-3xl mx-auto w-full">
+          <SalesToolsSheet session={session} />
           <Input
             ref={inputRef}
             placeholder="Digite sua mensagem..."
