@@ -2,8 +2,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { SalesMediaUploadType, validateSalesFile } from '@/lib/sales-media';
 
-export type SalesMediaType = 'text' | 'audio' | 'image' | 'video' | 'document';
+export type SalesMediaType = SalesMediaUploadType;
 export type SalesStepType = SalesMediaType | 'wait' | 'wait_for_reply';
 
 export interface SalesLibrary {
@@ -24,6 +25,7 @@ export interface SalesAsset {
   storage_path: string | null;
   mime_type: string | null;
   file_name: string | null;
+  file_size: number | null;
   caption: string | null;
   is_active: boolean;
 }
@@ -141,6 +143,8 @@ export function useSalesLibrary() {
     let storagePath: string | null = null;
     if (input.mediaType !== 'text') {
       if (!input.file) throw new Error('Selecione um arquivo');
+      const validationError = validateSalesFile(input.file, input.mediaType);
+      if (validationError) throw new Error(validationError);
       const extension = input.file.name.includes('.') ? input.file.name.split('.').pop() : 'bin';
       storagePath = `${selectedLibraryId}/${crypto.randomUUID()}.${extension}`;
       const { error: uploadError } = await supabase.storage.from('sales-assets').upload(storagePath, input.file, {
@@ -161,6 +165,7 @@ export function useSalesLibrary() {
       storage_path: storagePath,
       mime_type: input.file?.type || null,
       file_name: input.file?.name || null,
+      file_size: input.file?.size || null,
     });
     if (error) {
       if (storagePath) await supabase.storage.from('sales-assets').remove([storagePath]);
