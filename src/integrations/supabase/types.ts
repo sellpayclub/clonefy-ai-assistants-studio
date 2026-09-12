@@ -3151,6 +3151,324 @@ export type Database = {
           },
         ]
       }
+      sales_funnel_events: {
+        Row: {
+          created_at: string
+          details: Json
+          event_type: string
+          id: string
+          run_id: string
+          status: string
+          step_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          event_type: string
+          id?: string
+          run_id: string
+          status?: string
+          step_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          event_type?: string
+          id?: string
+          run_id?: string
+          status?: string
+          step_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_funnel_events_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "sales_funnel_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_funnel_events_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "sales_funnel_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_funnel_runs: {
+        Row: {
+          completed_at: string | null
+          contact_number: string
+          current_step_position: number
+          funnel_id: string
+          id: string
+          instance_name: string
+          last_error: string | null
+          next_run_at: string | null
+          session_id: string
+          started_at: string
+          started_by: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          contact_number: string
+          current_step_position?: number
+          funnel_id: string
+          id?: string
+          instance_name: string
+          last_error?: string | null
+          next_run_at?: string | null
+          session_id: string
+          started_at?: string
+          started_by: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          contact_number?: string
+          current_step_position?: number
+          funnel_id?: string
+          id?: string
+          instance_name?: string
+          last_error?: string | null
+          next_run_at?: string | null
+          session_id?: string
+          started_at?: string
+          started_by?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_funnel_runs_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "sales_funnels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_funnel_runs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "live_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_funnel_steps: {
+        Row: {
+          asset_id: string | null
+          content: string | null
+          created_at: string
+          delay_seconds: number
+          funnel_id: string
+          id: string
+          position: number
+          step_type: string
+          updated_at: string
+        }
+        Insert: {
+          asset_id?: string | null
+          content?: string | null
+          created_at?: string
+          delay_seconds?: number
+          funnel_id: string
+          id?: string
+          position: number
+          step_type: string
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string | null
+          content?: string | null
+          created_at?: string
+          delay_seconds?: number
+          funnel_id?: string
+          id?: string
+          position?: number
+          step_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_funnel_steps_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "sales_media_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_funnel_steps_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "sales_funnels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_funnels: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          flow_kind: string
+          id: string
+          is_active: boolean
+          library_id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          flow_kind?: string
+          id?: string
+          is_active?: boolean
+          library_id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          flow_kind?: string
+          id?: string
+          is_active?: boolean
+          library_id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_funnels_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "sales_libraries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_libraries: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          share_code: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id: string
+          share_code?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          share_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sales_library_members: {
+        Row: {
+          created_at: string
+          library_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          library_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          library_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_library_members_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "sales_libraries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_media_assets: {
+        Row: {
+          caption: string | null
+          content: string | null
+          created_at: string
+          created_by: string
+          file_name: string | null
+          folder: string
+          id: string
+          is_active: boolean
+          library_id: string
+          media_type: string
+          mime_type: string | null
+          name: string
+          storage_path: string | null
+          updated_at: string
+        }
+        Insert: {
+          caption?: string | null
+          content?: string | null
+          created_at?: string
+          created_by: string
+          file_name?: string | null
+          folder?: string
+          id?: string
+          is_active?: boolean
+          library_id: string
+          media_type: string
+          mime_type?: string | null
+          name: string
+          storage_path?: string | null
+          updated_at?: string
+        }
+        Update: {
+          caption?: string | null
+          content?: string | null
+          created_at?: string
+          created_by?: string
+          file_name?: string | null
+          folder?: string
+          id?: string
+          is_active?: boolean
+          library_id?: string
+          media_type?: string
+          mime_type?: string | null
+          name?: string
+          storage_path?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_media_assets_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "sales_libraries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_movements: {
         Row: {
           created_at: string | null
@@ -4947,6 +5265,10 @@ export type Database = {
         }[]
       }
       admin_get_global_stats: { Args: never; Returns: Json }
+      can_manage_sales_library: {
+        Args: { _library_id: string; _user_id?: string }
+        Returns: boolean
+      }
       cleanup_crm_leads_old: { Args: { p_days: number }; Returns: number }
       cleanup_live_chat_sessions: {
         Args: { p_days: number; p_only_closed?: boolean }
@@ -5008,6 +5330,11 @@ export type Database = {
         }
         Returns: undefined
       }
+      is_sales_library_member: {
+        Args: { _library_id: string; _user_id?: string }
+        Returns: boolean
+      }
+      join_sales_library: { Args: { _share_code: string }; Returns: string }
       process_prospect_outreach_queue: { Args: never; Returns: undefined }
       search_store_products: {
         Args: {
@@ -5078,12 +5405,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5107,11 +5434,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5132,11 +5459,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5157,11 +5484,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5174,11 +5501,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
