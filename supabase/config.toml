@@ -74,3 +74,53 @@ verify_jwt = false
 
 [functions.prospect-outreach]
 verify_jwt = false
+
+# Keep the deployed authentication mode explicit for every tracked function so
+# future CLI deployments cannot silently change the current runtime behavior.
+[functions.ai-calendar-proxy]
+verify_jwt = false
+
+[functions.calendar-management]
+verify_jwt = false
+
+[functions.chat-api]
+verify_jwt = false
+
+[functions.chat-proxy]
+verify_jwt = false
+
+[functions.check-user-limits]
+verify_jwt = false
+
+[functions.commerce-ai]
+verify_jwt = false
+
+[functions.commerce-payment]
+verify_jwt = false
+
+[functions.commerce-webhook]
+verify_jwt = false
+
+[functions.followup-scheduler]
+verify_jwt = false
+
+[functions.google-calendar-auth]
+verify_jwt = false
+
+[functions.kiwify-webhook]
+verify_jwt = false
+
+[functions.openai-assistants]
+verify_jwt = false
+
+[functions.purchase-webhook]
+verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.telegram-bot]
+verify_jwt = false
+
+[functions.web-scraper]
+verify_jwt = false

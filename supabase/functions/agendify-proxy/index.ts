@@ -75,9 +75,9 @@ async function callAgendifyAPI(
     const data = await response.json();
     console.log(`✅ Agendify API success`);
     return data;
-  } catch (error) {
+  } catch (error: unknown) {
     clearTimeout(timeout);
-    if (error.name === 'AbortError') {
+    if (error instanceof Error && error.name === 'AbortError') {
       throw new Error('Agendify API timeout');
     }
     throw error;
