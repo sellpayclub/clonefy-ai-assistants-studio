@@ -111,6 +111,7 @@ async function sendStep(run: Run, step: Step) {
   let mediaType = step.step_type;
   let mediaUrl: string | null = null;
   let assetName = "";
+  let assetFileName = "";
 
   if (step.asset_id) {
     const { data: asset, error } = await admin.from("sales_media_assets")
@@ -119,6 +120,7 @@ async function sendStep(run: Run, step: Step) {
     if (error || !asset) throw new Error("Material da etapa não foi encontrado");
 
     assetName = asset.name;
+    assetFileName = asset.file_name || asset.name;
     mediaType = asset.media_type;
     content = asset.content || asset.caption || content;
 
@@ -155,7 +157,7 @@ async function sendStep(run: Run, step: Step) {
         mediatype: mediaType,
         media: mediaUrl,
         caption: content,
-        fileName: assetName || undefined,
+        fileName: assetFileName || undefined,
       }),
     });
   }
@@ -266,6 +268,32 @@ async function advanceRun(run: Run) {
 
 async function processDueRuns() {
   const now = new Date().toISOString();
+  const staleBefore = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  const { data: staleRuns, error: staleError } = await admin.from("sales_funnel_runs")
+    .select("*")
+    .eq("status", "processing")
+    .lt("updated_at", staleBefore)
+    .limit(20);
+  if (staleError) throw staleError;
+
+  for (const staleRun of staleRuns || []) {
+    const message = "Execução interrompida durante o processamento; cancelada com segurança";
+    const { data: failedRun } = await admin.from("sales_funnel_runs").update({
+      status: "failed",
+      next_run_at: null,
+      last_error: message,
+      updated_at: now,
+    }).eq("id", staleRun.id).eq("status", "processing").select("*").maybeSingle();
+    if (!failedRun) continue;
+    await admin.from("sales_funnel_events").insert({
+      run_id: failedRun.id,
+      event_type: "failed",
+      status: "failed",
+      details: { reason: "stale_processing" },
+    });
+    await settleAi(failedRun as Run, true);
+  }
+
   const { data: runs, error } = await admin.from("sales_funnel_runs")
     .select("*")
     .in("status", ["running", "waiting_time"])
