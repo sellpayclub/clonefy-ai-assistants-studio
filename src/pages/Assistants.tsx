@@ -51,7 +51,7 @@ const Assistants = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { limits, reloadLimits } = useUserLimits();
-  const { assistants, loading: assistantsLoading, reloadAssistants } = useOptimizedAssistants(session);
+  const { assistants, loading: assistantsLoading, error: assistantsError, reloadAssistants } = useOptimizedAssistants(session);
   const { t } = useLanguage();
   const [embedDialogOpen, setEmbedDialogOpen] = useState(false);
   const [selectedAgentForEmbed, setSelectedAgentForEmbed] = useState<Assistant | null>(null);
