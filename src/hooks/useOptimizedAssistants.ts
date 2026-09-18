@@ -29,12 +29,6 @@ export const useOptimizedAssistants = (session: Session | null) => {
 
     try {
       const now = Date.now();
-      
-      // Rate limiting de 1 segundo
-      if (!forceRefresh && (now - lastLoadRef.current) < 1000) {
-        return;
-      }
-      lastLoadRef.current = now;
 
       // Check cache first
       const cacheKey = `assistants-${session.user.id}`;
@@ -46,6 +40,12 @@ export const useOptimizedAssistants = (session: Session | null) => {
           return;
         }
       }
+
+      // Rate limiting de 1 segundo (após o cache, para não deixar a lista vazia)
+      if (!forceRefresh && (now - lastLoadRef.current) < 1000) {
+        return;
+      }
+      lastLoadRef.current = now;
 
       // Call Edge Function
       const response = await supabase.functions.invoke('openai-assistants', {
