@@ -19,6 +19,7 @@ interface Assistant {
 export const useOptimizedAssistants = (session: Session | null) => {
   const [assistants, setAssistants] = useState<Assistant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const lastLoadRef = useRef<number>(0);
 
   const loadAssistants = useCallback(async (forceRefresh = false) => {
@@ -47,27 +48,35 @@ export const useOptimizedAssistants = (session: Session | null) => {
       }
       lastLoadRef.current = now;
 
-      // Call Edge Function
-      const response = await supabase.functions.invoke('openai-assistants', {
-        body: { action: 'list' },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      // Call Edge Function (com 1 nova tentativa em caso de falha temporária)
+      let lastError: any = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const response = await supabase.functions.invoke('openai-assistants', {
+          body: { action: 'list' },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
 
-      if (response.error) {
-        throw response.error;
+        if (!response.error) {
+          const assistantsList = response.data?.assistants || [];
+          setAssistants(assistantsList);
+          setError(null);
+          performanceCache.set(cacheKey, assistantsList, 15);
+          return;
+        }
+
+        lastError = response.error;
+        if (attempt === 0) await new Promise((r) => setTimeout(r, 800));
       }
 
-      const assistantsList = response.data?.assistants || [];
-      setAssistants(assistantsList);
-      
-      // Cache for 15 minutes
-      performanceCache.set(cacheKey, assistantsList, 15);
-    } catch (error: any) {
-      console.error('Error loading assistants:', error);
+      throw lastError;
+    } catch (err: any) {
+      console.error('Error loading assistants:', err);
+      // Nunca esvaziar a lista por causa de uma falha de rede.
+      setError(err?.message || 'Não foi possível carregar seus agentes.');
       if (forceRefresh) {
-        throw error;
+        throw err;
       }
     } finally {
       setLoading(false);
@@ -76,7 +85,7 @@ export const useOptimizedAssistants = (session: Session | null) => {
 
   const reloadAssistants = useCallback(async () => {
     if (session) {
-      performanceCache.clear();
+      performanceCache.invalidate(`assistants-${session.user.id}`);
     }
     setLoading(true);
     await loadAssistants(true);
@@ -86,5 +95,5 @@ export const useOptimizedAssistants = (session: Session | null) => {
     loadAssistants();
   }, [loadAssistants]);
 
-  return { assistants, loading, reloadAssistants };
+  return { assistants, loading, error, reloadAssistants };
 };
