@@ -51,7 +51,7 @@ const Assistants = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { limits, reloadLimits } = useUserLimits();
-  const { assistants, loading: assistantsLoading, reloadAssistants } = useOptimizedAssistants(session);
+  const { assistants, loading: assistantsLoading, error: assistantsError, reloadAssistants } = useOptimizedAssistants(session);
   const { t } = useLanguage();
   const [embedDialogOpen, setEmbedDialogOpen] = useState(false);
   const [selectedAgentForEmbed, setSelectedAgentForEmbed] = useState<Assistant | null>(null);
@@ -78,13 +78,19 @@ const Assistants = () => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             if (!isMounted) return;
-            
-            setSession(session);
-            setUser(session?.user ?? null);
-            
-            if (!session?.user) {
-              navigate('/auth');
+
+            if (session) {
+              setSession(session);
+              setUser(session.user ?? null);
               return;
+            }
+
+            // Só redireciona em logout explícito — eventos temporários
+            // (refresh de token) não devem expulsar o usuário.
+            if (event === 'SIGNED_OUT') {
+              setSession(null);
+              setUser(null);
+              navigate('/auth');
             }
           }
         );
@@ -517,7 +523,18 @@ const Assistants = () => {
 
             <TabsContent value="assistants" className="space-y-6">
               {/* Assistants Grid */}
-              {assistants.length === 0 ? (
+              {assistantsError && assistants.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <h3 className="text-lg font-semibold mb-2">Não conseguimos carregar seus agentes</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Seus agentes continuam salvos. Houve uma falha temporária de conexão: {assistantsError}
+                  </p>
+                  <Button onClick={reloadAssistants}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Tentar novamente
+                  </Button>
+                </Card>
+              ) : assistants.length === 0 ? (
                 <Card className="p-12 text-center">
                   <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
                     <Bot className="h-8 w-8 text-muted-foreground" />
