@@ -78,13 +78,19 @@ const Assistants = () => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             if (!isMounted) return;
-            
-            setSession(session);
-            setUser(session?.user ?? null);
-            
-            if (!session?.user) {
-              navigate('/auth');
+
+            if (session) {
+              setSession(session);
+              setUser(session.user ?? null);
               return;
+            }
+
+            // Só redireciona em logout explícito — eventos temporários
+            // (refresh de token) não devem expulsar o usuário.
+            if (event === 'SIGNED_OUT') {
+              setSession(null);
+              setUser(null);
+              navigate('/auth');
             }
           }
         );

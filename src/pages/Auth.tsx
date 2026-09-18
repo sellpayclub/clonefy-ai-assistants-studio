@@ -30,9 +30,9 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
 
   useEffect(() => {
-    // Clean up any existing auth state when landing on auth page
-    cleanupAuthState();
-    
+    // IMPORTANTE: não limpar a sessão ao abrir esta página.
+    // Um redirecionamento temporário para /auth apagava o login salvo do usuário.
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
