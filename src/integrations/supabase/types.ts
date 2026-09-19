@@ -3417,6 +3417,7 @@ export type Database = {
           created_at: string
           created_by: string
           file_name: string | null
+          file_size: number | null
           folder: string
           id: string
           is_active: boolean
@@ -3433,6 +3434,7 @@ export type Database = {
           created_at?: string
           created_by: string
           file_name?: string | null
+          file_size?: number | null
           folder?: string
           id?: string
           is_active?: boolean
@@ -3449,6 +3451,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           file_name?: string | null
+          file_size?: number | null
           folder?: string
           id?: string
           is_active?: boolean
