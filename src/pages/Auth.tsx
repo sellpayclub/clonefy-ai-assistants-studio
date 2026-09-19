@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { cleanupAuthState } from "@/lib/auth-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -117,21 +116,15 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Clean up any stale local auth state before a fresh sign-in.
-      // (No global signOut network call here — it can hang/error and blocks login.)
-      cleanupAuthState();
-
-
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim().toLowerCase(),
         password,
       });
 
       if (error) throw error;
 
-      if (data.user) {
-        // Force page reload for clean state
-        window.location.href = '/dashboard';
+      if (data.session?.user) {
+        navigate('/dashboard', { replace: true });
       }
     } catch (error: any) {
       toast({
