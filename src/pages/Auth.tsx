@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { User, Session } from '@supabase/supabase-js';
+import { useAuth } from '@/contexts/AuthContext';
+import { authErrorMessage } from '@/lib/auth-errors';
 import { useNavigate } from "react-router-dom";
 import { Bot } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -14,8 +15,7 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Auth = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const { user, loading: restoringSession } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { toast } = useToast();
@@ -29,35 +29,8 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
 
   useEffect(() => {
-    // IMPORTANTE: não limpar a sessão ao abrir esta página.
-    // Um redirecionamento temporário para /auth apagava o login salvo do usuário.
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          setTimeout(() => {
-            navigate('/dashboard');
-          }, 100);
-        }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        navigate('/dashboard');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    if (!restoringSession && user) navigate('/dashboard', { replace: true });
+  }, [user, restoringSession, navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +44,9 @@ const Auth = () => {
         .eq('email', email.toLowerCase().trim())
         .single();
 
-      if (emailCheckError || !authorizedEmail) {
+      if (emailCheckError && emailCheckError.code !== 'PGRST116') throw emailCheckError;
+
+      if (!authorizedEmail) {
         toast({
           title: "Email não autorizado",
           description: "Este email não está autorizado a criar conta. Entre em contato com o administrador.",
@@ -103,7 +78,7 @@ const Auth = () => {
     } catch (error: any) {
       toast({
         title: t("auth.signUpError"),
-        description: error.message,
+        description: authErrorMessage(error),
         variant: "destructive",
       });
     } finally {
@@ -129,7 +104,7 @@ const Auth = () => {
     } catch (error: any) {
       toast({
         title: t("auth.signInError"),
-        description: error.message,
+        description: authErrorMessage(error),
         variant: "destructive",
       });
     } finally {
@@ -165,7 +140,7 @@ const Auth = () => {
     } catch (error: any) {
       toast({
         title: "Erro ao enviar email",
-        description: error.message,
+        description: authErrorMessage(error),
         variant: "destructive",
       });
     } finally {

@@ -1,6 +1,5 @@
 import { useState, useEffect, memo, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Session } from '@supabase/supabase-js';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -42,9 +41,7 @@ interface Assistant {
 }
 
 const Assistants = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, session, loading } = useAuth();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingAssistant, setEditingAssistant] = useState<Assistant | null>(null);
   const [formLoading, setFormLoading] = useState(false);
@@ -69,73 +66,16 @@ const Assistants = () => {
   const [knowledgeUrls, setKnowledgeUrls] = useState<string[]>([]);
   const [newUrl, setNewUrl] = useState("");
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const initializeAuth = async () => {
-      try {
-        // Set up auth state listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            if (!isMounted) return;
-
-            if (session) {
-              setSession(session);
-              setUser(session.user ?? null);
-              return;
-            }
-
-            // Só redireciona em logout explícito — eventos temporários
-            // (refresh de token) não devem expulsar o usuário.
-            if (event === 'SIGNED_OUT') {
-              setSession(null);
-              setUser(null);
-              navigate('/auth');
-            }
-          }
-        );
-
-        // Check for existing session
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!isMounted) return;
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (!session?.user) {
-          navigate('/auth');
-          return;
-        }
-        
-        setLoading(false);
-
-        return () => {
-          subscription.unsubscribe();
-        };
-      } catch (error) {
-        console.error('Erro na inicialização:', error);
-        setLoading(false);
-      }
-    };
-
-    initializeAuth();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [navigate]);
-
   // Check for onboarding trigger
   useEffect(() => {
     const shouldTrigger = localStorage.getItem("trigger-create-agent");
-    if (shouldTrigger && assistants.length === 0) {
+    if (shouldTrigger && !assistantsLoading && !assistantsError && assistants.length === 0) {
       localStorage.removeItem("trigger-create-agent");
       setTimeout(() => {
         openCreateDialog();
       }, 500);
     }
-  }, [assistants]);
+  }, [assistants, assistantsLoading, assistantsError]);
 
 
 
@@ -522,6 +462,12 @@ const Assistants = () => {
             </TabsList>
 
             <TabsContent value="assistants" className="space-y-6">
+              {assistantsError && assistants.length > 0 && (
+                <div role="alert" className="rounded-lg border p-4 text-sm">
+                  Não foi possível atualizar a lista. Exibindo os últimos agentes carregados.
+                  <Button onClick={reloadAssistants} variant="outline" size="sm" className="ml-3">Tentar novamente</Button>
+                </div>
+              )}
               {/* Assistants Grid */}
               {assistantsError && assistants.length === 0 ? (
                 <Card className="p-12 text-center">

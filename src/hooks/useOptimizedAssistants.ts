@@ -1,99 +1,43 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { Session } from '@supabase/supabase-js';
-import { performanceCache } from '@/utils/performance';
 
-interface Assistant {
-  id: string;
-  name: string;
-  description: string;
-  instructions: string;
-  model: string;
-  openai_assistant_id: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  tools?: any[];
-}
-
+// Read the saved agents under the customer's RLS policy. Listing agents must
+// not depend on an Edge Function, an OpenAI key or an OpenAI balance.
 export const useOptimizedAssistants = (session: Session | null) => {
-  const [assistants, setAssistants] = useState<Assistant[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const lastLoadRef = useRef<number>(0);
-
-  const loadAssistants = useCallback(async (forceRefresh = false) => {
-    if (!session) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const now = Date.now();
-
-      // Check cache first
-      const cacheKey = `assistants-${session.user.id}`;
-      if (!forceRefresh) {
-        const cached = performanceCache.get(cacheKey) as Assistant[] | null;
-        if (cached) {
-          setAssistants(cached);
-          setLoading(false);
-          return;
-        }
-      }
-
-      // Rate limiting de 1 segundo (após o cache, para não deixar a lista vazia)
-      if (!forceRefresh && (now - lastLoadRef.current) < 1000) {
-        return;
-      }
-      lastLoadRef.current = now;
-
-      // Call Edge Function (com 1 nova tentativa em caso de falha temporária)
-      let lastError: any = null;
-      for (let attempt = 0; attempt < 2; attempt++) {
-        const response = await supabase.functions.invoke('openai-assistants', {
-          body: { action: 'list' },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
-
-        if (!response.error) {
-          const assistantsList = response.data?.assistants || [];
-          setAssistants(assistantsList);
-          setError(null);
-          performanceCache.set(cacheKey, assistantsList, 15);
-          return;
-        }
-
-        lastError = response.error;
-        if (attempt === 0) await new Promise((r) => setTimeout(r, 800));
-      }
-
-      throw lastError;
-    } catch (err: any) {
-      console.error('Error loading assistants:', err);
-      // Nunca esvaziar a lista por causa de uma falha de rede.
-      setError(err?.message || 'Não foi possível carregar seus agentes.');
-      if (forceRefresh) {
-        throw err;
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [session]);
+  const queryClient = useQueryClient();
+  const userId = session?.user.id;
+  const queryKey = ['assistants', userId];
+  const query = useQuery({
+    queryKey,
+    enabled: Boolean(userId),
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase
+        .from('assistants')
+        .select('*')
+        .eq('user_id', userId!)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .abortSignal(signal);
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 60_000,
+    refetchOnReconnect: true,
+    retry: (failures, error: { code?: string; status?: number }) =>
+      failures < 2 && !['42501', 'PGRST301', 'PGRST302'].includes(error.code ?? '') &&
+      error.status !== 401 && error.status !== 403,
+  });
 
   const reloadAssistants = useCallback(async () => {
-    if (session) {
-      performanceCache.invalidate(`assistants-${session.user.id}`);
-    }
-    setLoading(true);
-    await loadAssistants(true);
-  }, [loadAssistants, session]);
+    await queryClient.invalidateQueries({ queryKey: ['assistants', userId] });
+  }, [queryClient, userId]);
 
-  useEffect(() => {
-    loadAssistants();
-  }, [loadAssistants]);
-
-  return { assistants, loading, error, reloadAssistants };
+  return {
+    assistants: userId ? query.data ?? [] : [],
+    loading: Boolean(userId) && query.isPending,
+    error: query.error ? 'Não foi possível consultar seus agentes. Tente novamente em instantes.' : null,
+    reloadAssistants,
+  };
 };

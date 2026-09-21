@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
-import { performanceCache } from '@/utils/performance';
+import { useOptimizedAssistants } from './useOptimizedAssistants';
 
 export interface Assistant {
   id: string;
@@ -16,12 +16,11 @@ export interface Assistant {
 }
 
 export const useAssistants = (session: Session | null) => {
-  const [assistants, setAssistants] = useState<Assistant[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { assistants, loading, error, reloadAssistants } = useOptimizedAssistants(session);
+  const loadAssistants = reloadAssistants;
 
   // Memoize a função de chamada para evitar re-criações
-  const callFunction = useCallback(async (body: any) => {
+  const callFunction = useCallback(async (body: Record<string, unknown>) => {
     if (!session) {
       throw new Error('No session available');
     }
@@ -40,39 +39,6 @@ export const useAssistants = (session: Session | null) => {
     return response.data;
   }, [session]);
 
-  // Otimiza o carregamento de assistentes com cache mais longo
-  const loadAssistants = useCallback(async (forceRefresh = false) => {
-    if (!session) return;
-    
-    const cacheKey = `assistants_${session.user.id}`;
-    
-    // Verificar cache primeiro (só se não for refresh forçado)
-    if (!forceRefresh) {
-      const cachedData = performanceCache.get(cacheKey) as Assistant[] | null;
-      if (cachedData) {
-        setAssistants(cachedData);
-        return;
-      }
-    }
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const data = await callFunction({ action: 'list' });
-      const assistantsList = data.assistants || [];
-      
-      setAssistants(assistantsList);
-      // Cache por 15 minutos para melhor performance
-      performanceCache.set(cacheKey, assistantsList, 15);
-    } catch (err: any) {
-      setError(err.message);
-      console.error('Error loading assistants:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [session, callFunction]);
-
   const createAssistant = async (assistantData: {
     name: string;
     description?: string;
@@ -85,10 +51,7 @@ export const useAssistants = (session: Session | null) => {
     });
     
     // Invalidar cache e recarregar
-    if (session) {
-      performanceCache.invalidate(`assistants_${session.user.id}`);
-    }
-    await loadAssistants(true); // Force refresh
+    await loadAssistants(); // Force refresh
     return data.assistant;
   };
 
@@ -105,10 +68,7 @@ export const useAssistants = (session: Session | null) => {
     });
     
     // Invalidar cache e recarregar
-    if (session) {
-      performanceCache.invalidate(`assistants_${session.user.id}`);
-    }
-    await loadAssistants(true); // Force refresh
+    await loadAssistants(); // Force refresh
     return data.assistant;
   };
 
@@ -119,10 +79,7 @@ export const useAssistants = (session: Session | null) => {
     });
     
     // Invalidar cache e recarregar
-    if (session) {
-      performanceCache.invalidate(`assistants_${session.user.id}`);
-    }
-    await loadAssistants(true); // Force refresh
+    await loadAssistants(); // Force refresh
   };
 
   const getAssistant = async (assistantId: string) => {
@@ -133,22 +90,8 @@ export const useAssistants = (session: Session | null) => {
     return data.assistant;
   };
 
-  // Otimiza a execução do effect
-  useEffect(() => {
-    if (session) {
-      loadAssistants();
-    }
-  }, [session, loadAssistants]);
-
-  // Memoize o retorno para evitar re-renders desnecessários
-  return useMemo(() => ({
-    assistants,
-    loading,
-    error,
-    loadAssistants,
-    createAssistant,
-    updateAssistant,
-    deleteAssistant,
-    getAssistant,
-  }), [assistants, loading, error, loadAssistants]);
+  return {
+    assistants, loading, error, loadAssistants,
+    createAssistant, updateAssistant, deleteAssistant, getAssistant,
+  };
 };

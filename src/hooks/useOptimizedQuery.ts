@@ -21,12 +21,9 @@ export const useOptimizedQuery = ({
 }: QueryConfig) => {
   const queryClient = useQueryClient();
 
-  // Memoize the query function to prevent unnecessary re-renders
-  const memoizedQueryFn = useCallback(queryFn, []);
-
   const query = useQuery({
     queryKey,
-    queryFn: memoizedQueryFn,
+    queryFn,
     enabled,
     staleTime,
     gcTime: cacheTime,
