@@ -31,7 +31,7 @@ interface Assistant {
   id: string;
   name: string;
   description: string;
-  instructions: string;
+  instructions?: string | null;
   model: string;
   openai_assistant_id: string;
   is_active: boolean;
@@ -109,9 +109,20 @@ const Assistants = () => {
   const openEditDialog = (assistant: Assistant) => {
     setName(assistant.name);
     setDescription(assistant.description || "");
-    setInstructions(assistant.instructions || "");
+    setInstructions("");
     setEditingAssistant(assistant);
     setIsCreateOpen(true);
+
+    // The list intentionally omits large instructions so cards can appear fast.
+    // Fetch the complete editor content only after the user chooses to edit.
+    void supabase
+      .from('assistants')
+      .select('instructions')
+      .eq('id', assistant.id)
+      .single()
+      .then(({ data, error }) => {
+        if (!error) setInstructions(data?.instructions || "");
+      });
   };
 
   const handleSelectTemplate = (template: any) => {

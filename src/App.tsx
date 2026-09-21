@@ -1,23 +1,9 @@
 import { ComponentType, Suspense, lazy } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { BrandingProvider } from "@/contexts/BrandingContext";
-
-import AppLayout, { RestrictedRoute } from "@/components/AppLayout";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import AuthCallback from "./pages/AuthCallback";
-import ResetPassword from "./pages/ResetPassword";
-import EmbedChat from "./pages/EmbedChat";
-import NotFound from "./pages/NotFound";
-import ThankYou from "./pages/ThankYou";
-import LeadCapture from "./pages/LeadCapture";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { isAdminEmail } from "@/lib/admin";
 
 const chunkReloadKey = "clonefy:chunk-reload-attempted";
 
@@ -71,6 +57,16 @@ const LazyVslTalita = lazyWithRetry(() => import("./pages/VslTalita"));
 const LazyPlanos = lazyWithRetry(() => import("./pages/Planos"));
 const LazyApiBalance = lazyWithRetry(() => import("./pages/ApiBalance"));
 const LazyProspeccao = lazyWithRetry(() => import("./pages/Prospeccao"));
+const LazyIndex = lazyWithRetry(() => import("./pages/Index"));
+const LazyAuth = lazyWithRetry(() => import("./pages/Auth"));
+const LazyAuthCallback = lazyWithRetry(() => import("./pages/AuthCallback"));
+const LazyResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
+const LazyEmbedChat = lazyWithRetry(() => import("./pages/EmbedChat"));
+const LazyNotFound = lazyWithRetry(() => import("./pages/NotFound"));
+const LazyThankYou = lazyWithRetry(() => import("./pages/ThankYou"));
+const LazyLeadCapture = lazyWithRetry(() => import("./pages/LeadCapture"));
+const LazyAppLayout = lazyWithRetry(() => import("@/components/AppLayout"));
+const LazyNotifications = lazyWithRetry(() => import("@/components/NotificationLayer"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -103,28 +99,34 @@ const LazyPage = ({ children }: { children: React.ReactNode }) => (
   </Suspense>
 );
 
+const RestrictedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  return isAdminEmail(user?.email) ? <>{children}</> : <Navigate to="/dashboard" replace />;
+};
+
+const Notifications = () => {
+  const { pathname } = useLocation();
+  return pathname === '/' ? null : <Suspense fallback={null}><LazyNotifications /></Suspense>;
+};
+
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <AuthProvider>
-          <BrandingProvider>
-            <ThemeProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
+          <BrowserRouter>
+            <Notifications />
 
-                  <Routes>
+            <Routes>
                     {/* Public routes */}
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/embed/chat/:agentId" element={<EmbedChat />} />
-                    <Route path="/embed-chat/:assistantId" element={<EmbedChat />} />
-                    <Route path="/thank-you" element={<ThankYou />} />
-                    <Route path="/lead-capture" element={<LeadCapture />} />
+                    <Route path="/" element={<LazyPage><LazyIndex /></LazyPage>} />
+                    <Route path="/auth" element={<LazyPage><LazyAuth /></LazyPage>} />
+                    <Route path="/auth/callback" element={<LazyPage><LazyAuthCallback /></LazyPage>} />
+                    <Route path="/reset-password" element={<LazyPage><LazyResetPassword /></LazyPage>} />
+                    <Route path="/embed/chat/:agentId" element={<LazyPage><LazyEmbedChat /></LazyPage>} />
+                    <Route path="/embed-chat/:assistantId" element={<LazyPage><LazyEmbedChat /></LazyPage>} />
+                    <Route path="/thank-you" element={<LazyPage><LazyThankYou /></LazyPage>} />
+                    <Route path="/lead-capture" element={<LazyPage><LazyLeadCapture /></LazyPage>} />
 
                     {/* Public marketing pages */}
                     <Route path="/crm" element={<Suspense fallback={<LoadingFallback />}><LazyCRMSales /></Suspense>} />
@@ -138,7 +140,7 @@ const App = () => {
                     <Route path="/ia/:slug" element={<Suspense fallback={<LoadingFallback />}><LazySectorIASolution /></Suspense>} />
 
                     {/* Protected routes with persistent sidebar layout */}
-                    <Route element={<AppLayout />}>
+                    <Route element={<LazyPage><LazyAppLayout /></LazyPage>}>
                       <Route path="/dashboard" element={<LazyPage><LazyDashboard /></LazyPage>} />
                       <Route path="/assistants" element={<LazyPage><LazyAssistants /></LazyPage>} />
                       <Route path="/whatsapp" element={<LazyPage><LazyWhatsApp /></LazyPage>} />
@@ -166,12 +168,9 @@ const App = () => {
                     </Route>
 
                     {/* Catch-all */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </BrowserRouter>
-              </TooltipProvider>
-            </ThemeProvider>
-          </BrandingProvider>
+                    <Route path="*" element={<LazyPage><LazyNotFound /></LazyPage>} />
+            </Routes>
+          </BrowserRouter>
         </AuthProvider>
       </LanguageProvider>
     </QueryClientProvider>

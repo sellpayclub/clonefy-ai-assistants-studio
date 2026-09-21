@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import portugueseTranslations from '../translations/pt';
 
 type Language = 'pt' | 'es' | 'en' | 'de';
 type LanguageCode = Language;
@@ -59,12 +60,10 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     return detectUserLanguage();
   });
 
-  const [translations, setTranslations] = useState<Record<string, any>>({});
-  const [isLoading, setIsLoading] = useState(true);
+  const [translations, setTranslations] = useState<Record<string, any>>(portugueseTranslations);
 
   useEffect(() => {
     const loadTranslations = async () => {
-      setIsLoading(true);
       try {
         const module = await import(`../translations/${language}.ts`);
         setTranslations(module.default);
@@ -75,8 +74,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
           const fallback = await import('../translations/pt.ts');
           setTranslations(fallback.default);
         }
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -88,8 +85,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   }, [language]);
 
   const t = (key: string): string => {
-    if (isLoading) return key; // Return key while loading
-    
     const keys = key.split('.');
     let value: any = translations;
     
@@ -100,18 +95,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     
     return typeof value === 'string' ? value : key;
   };
-
-  // Don't render children until translations are loaded
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>

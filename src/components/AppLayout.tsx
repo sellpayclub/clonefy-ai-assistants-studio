@@ -5,6 +5,7 @@ import AppSidebar from '@/components/AppSidebar';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { isAdminEmail } from '@/lib/admin';
+import { BrandingProvider } from '@/contexts/BrandingContext';
 
 export const RestrictedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
@@ -40,15 +41,16 @@ const AppLayout = () => {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          
-          <Outlet />
+    <BrandingProvider>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <AppSidebar />
+          <div className="flex-1 flex flex-col min-w-0">
+            <Outlet />
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </BrandingProvider>
   );
 };
 

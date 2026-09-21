@@ -101,6 +101,20 @@ const menuItems = [
   },
 ];
 
+const prefetchPage = (url: string) => {
+  switch (url) {
+    case '/assistants':
+      void import('@/pages/Assistants');
+      break;
+    case '/conversations':
+      void import('@/pages/Conversations');
+      break;
+    case '/dashboard':
+      void import('@/pages/Dashboard');
+      break;
+  }
+};
+
 const AppSidebar = () => {
   const { state } = useSidebar();
   const location = useLocation();
@@ -165,6 +179,8 @@ const AppSidebar = () => {
                       <NavLink
                         to={item.url}
                         end
+                        onMouseEnter={() => prefetchPage(item.url)}
+                        onFocus={() => prefetchPage(item.url)}
                         className={`
                           flex items-center rounded-lg transition-all duration-200 relative
                           ${active

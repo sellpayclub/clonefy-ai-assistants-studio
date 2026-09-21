@@ -52,16 +52,8 @@ const ChatWidget = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, [checkMobile]);
 
-  // Pré-carrega o iframe para abertura instantânea
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 1000); // Carrega após 1 segundo para não impactar o carregamento inicial
-    
-    return () => clearTimeout(timer);
-  }, []);
-
   const toggleChat = useCallback(() => {
+    setIsLoaded(true);
     setIsOpen(prev => !prev);
   }, []);
 

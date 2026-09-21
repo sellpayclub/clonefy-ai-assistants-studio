@@ -15,7 +15,7 @@ export const useOptimizedAssistants = (session: Session | null) => {
     queryFn: async ({ signal }) => {
       const { data, error } = await supabase
         .from('assistants')
-        .select('*')
+        .select('id, name, description, model, openai_assistant_id, is_active, created_at, updated_at, tools')
         .eq('user_id', userId!)
         .eq('is_active', true)
         .order('created_at', { ascending: false })

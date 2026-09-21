@@ -553,6 +553,7 @@ const Index = () => {
               }}
               title="Chat com IA CLONEFY"
               allow="microphone"
+              loading="lazy"
               onLoad={() => setChatLoaded(true)}
             />
           </div>

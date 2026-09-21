@@ -8,7 +8,7 @@ interface Assistant {
   id: string;
   name: string;
   description: string;
-  instructions: string;
+  instructions?: string | null;
   model: string;
   openai_assistant_id: string;
   is_active: boolean;
@@ -31,12 +31,6 @@ export const OptimizedAssistantCard = memo(({
   onTest,
   onEmbed
 }: OptimizedAssistantCardProps) => {
-  // Memoize the truncated instructions to avoid recalculating
-  const truncatedInstructions = React.useMemo(() => {
-    const instructions = assistant.instructions || "Nenhuma instrução definida";
-    return instructions.length > 100 ? `${instructions.substring(0, 100)}...` : instructions;
-  }, [assistant.instructions]);
-
   return (
     <Card className="group hover:shadow-card transition-all duration-300 hover:scale-[1.02] h-full flex flex-col border-border/50 hover:border-primary/20">
       <CardHeader className="pb-4">
@@ -85,10 +79,10 @@ export const OptimizedAssistantCard = memo(({
       <CardContent className="pt-0 flex-1 flex flex-col">
         <div className="space-y-3 flex-1">
           <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Instruções
+            Configuração
           </div>
           <p className="text-sm leading-relaxed text-foreground/90 line-clamp-3">
-            {truncatedInstructions}
+            Pronto para testar e personalizar.
           </p>
         </div>
         
