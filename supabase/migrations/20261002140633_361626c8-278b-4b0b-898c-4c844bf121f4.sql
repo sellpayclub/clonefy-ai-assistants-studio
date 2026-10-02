@@ -1,0 +1,1 @@
+UPDATE public.assistants SET is_active = true WHERE id = '6e035e89-3fc3-49be-ba04-1cbd0e0b4c72'::uuid AND user_id = '139b35c6-af34-4b26-8c58-6020d520c266'::uuid AND name = 'Maria - apoyo TV SHOW' AND is_active = false;
