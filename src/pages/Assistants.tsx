@@ -25,6 +25,7 @@ import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { AssistantTemplates } from "@/components/AssistantTemplates";
 import { OptimizedAssistantCard } from "@/components/OptimizedAssistantCard";
 import { useOptimizedAssistants } from "@/hooks/useOptimizedAssistants";
+import { uploadAgentKnowledge, syncKnowledgeFiles } from "@/lib/knowledge-files";
 import { AgendifyIntegration } from "@/components/AgendifyIntegration";
 
 interface Assistant {
@@ -154,73 +155,10 @@ const Assistants = () => {
   const uploadPendingFiles = async (assistantId: string) => {
     if (pendingFiles.length === 0) return;
 
+    if (!session) throw new Error('Usuário não autenticado');
     for (const file of pendingFiles) {
-      try {
-        const { data: user } = await supabase.auth.getUser();
-        if (!user.user) continue;
-
-        // Upload para Supabase Storage
-        const fileName = `${user.user.id}/${assistantId}/${Date.now()}-${file.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from('assistant-knowledge')
-          .upload(fileName, file);
-
-        if (uploadError) {
-          console.error('Erro ao fazer upload:', uploadError);
-          continue;
-        }
-
-        // Obter URL público
-        const { data: { publicUrl } } = supabase.storage
-          .from('assistant-knowledge')
-          .getPublicUrl(fileName);
-
-        // Converter arquivo para base64
-        const fileToBase64 = (file: File): Promise<string> => {
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => {
-              const result = reader.result as string;
-              resolve(result.split(',')[1]);
-            };
-            reader.onerror = error => reject(error);
-          });
-        };
-
-        // Upload para OpenAI
-        const response = await supabase.functions.invoke('openai-assistants', {
-          body: {
-            action: 'upload-knowledge-file',
-            file: await fileToBase64(file),
-            fileName: file.name,
-            mimeType: file.type
-          },
-          headers: {
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-        });
-
-        if (response.error) {
-          console.error('Erro ao fazer upload para OpenAI:', response.error);
-          continue;
-        }
-
-        // Salvar metadados no banco
-        await supabase
-          .from('assistant_knowledge_files')
-          .insert({
-            assistant_id: assistantId,
-            user_id: user.user.id,
-            file_name: file.name,
-            file_url: publicUrl,
-            openai_file_id: response.data.openai_file_id,
-            file_size: file.size,
-            mime_type: file.type,
-          });
-      } catch (error) {
-        console.error('Erro ao processar arquivo:', error);
-      }
+      await uploadAgentKnowledge(session, assistantId, file);
+      setPendingFiles(current => current.filter(item => item !== file));
     }
   };
 
@@ -242,10 +180,10 @@ const Assistants = () => {
         });
 
         if (response.error) {
-          console.error('Erro ao processar URL:', response.error);
+          throw response.error;
         }
       } catch (error) {
-        console.error('Erro ao processar URL:', error);
+        throw error;
       }
     }
   };
@@ -278,8 +216,11 @@ const Assistants = () => {
 
       const createdAssistantId = response.data?.assistant?.id || response.data?.id;
 
-      // Se for criação, processar arquivos e URLs
-      if (!editingAssistant && createdAssistantId) {
+      // Preserve the saved agent if a document fails, avoiding duplicate creation.
+      if (!editingAssistant && response.data?.assistant) setEditingAssistant(response.data.assistant);
+
+      // Processar arquivos e URLs
+      if (createdAssistantId) {
         // Upload de arquivos pendentes
         if (pendingFiles.length > 0) {
           await uploadPendingFiles(createdAssistantId);
@@ -288,6 +229,8 @@ const Assistants = () => {
         // Processar URLs
         if (knowledgeUrls.length > 0) {
           await processKnowledgeUrls(createdAssistantId);
+          await syncKnowledgeFiles(session, createdAssistantId);
+          setKnowledgeUrls([]);
         }
       }
 

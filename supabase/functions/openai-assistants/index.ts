@@ -1,12 +1,9 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { syncIndexedFiles } from '../_shared/knowledge-index.ts';
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { getSupabaseServiceKey } from '../_shared/openai-responses.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -15,7 +12,7 @@ console.log('OpenAI API Key check:', openAIApiKey ? 'Key found' : 'Key NOT found
 if (!openAIApiKey) {
   console.error('OPENAI_API_KEY is not configured - please set it in Supabase Edge Function secrets');
 }
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const supabaseServiceKey = getSupabaseServiceKey();
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -128,12 +125,13 @@ FLUXO: list_services → list_professionals → check_availability → confirmar
 
 async function getOrCreateVectorStore(assistantId: string, openaiAssistantId: string): Promise<string> {
   // Check if we already have a vector store ID in metadata
-  const { data: assistant } = await supabase
+  const { data: assistant, error: metadataError } = await supabase
     .from('assistants')
     .select('metadata')
     .eq('id', assistantId)
     .single();
 
+  if (metadataError) throw metadataError;
   const metadata = assistant?.metadata as any;
   const existingVsId = metadata?.vector_store_id;
 
@@ -147,6 +145,7 @@ async function getOrCreateVectorStore(assistantId: string, openaiAssistantId: st
     if (checkResp.ok) {
       return existingVsId;
     }
+    if (checkResp.status !== 404) throw new Error(`Falha ao consultar base de conhecimento: HTTP ${checkResp.status}`);
     console.log(`Vector store ${existingVsId} no longer exists, creating new one`);
   }
 
@@ -171,13 +170,14 @@ async function getOrCreateVectorStore(assistantId: string, openaiAssistantId: st
   console.log(`Created vector store: ${vs.id} for assistant ${assistantId}`);
 
   // Save vector_store_id in metadata
-  await supabase
+  const { error: saveError } = await supabase
     .from('assistants')
     .update({
       metadata: { ...metadata, vector_store_id: vs.id },
     })
     .eq('id', assistantId);
 
+  if (saveError) throw saveError;
   return vs.id;
 }
 
@@ -196,88 +196,28 @@ async function syncVectorStore(userId: string, assistantId: string) {
     throw new Error('Assistant not found');
   }
 
-  // Get all knowledge files for this assistant
-  const { data: knowledgeFiles } = await supabase
+  const { data: knowledgeFiles, error: filesError } = await supabase
     .from('assistant_knowledge_files')
     .select('openai_file_id')
-    .eq('assistant_id', assistantId)
-    .not('openai_file_id', 'is', null);
-
-  const fileIds = (knowledgeFiles || []).map((f: any) => f.openai_file_id).filter(Boolean);
-
-  if (fileIds.length === 0) {
-    // No files - remove file_search from assistant
-    console.log('No knowledge files, removing file_search from assistant');
-    await updateOpenAIAssistantTools(assistant.openai_assistant_id, assistant, false);
-    return new Response(JSON.stringify({ success: true, message: 'No files to sync' }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    .eq('assistant_id', assistantId);
+  if (filesError) throw filesError;
+  if (knowledgeFiles?.some(file => !file.openai_file_id)) {
+    throw new Error('Há documentos sem arquivo na OpenAI. Remova e envie novamente esses documentos.');
   }
-
-  // Get or create vector store
-  const vectorStoreId = await getOrCreateVectorStore(assistantId, assistant.openai_assistant_id);
-
-  // Get current files in vector store
-  const listResp = await fetch(`https://api.openai.com/v1/vector_stores/${vectorStoreId}/files?limit=100`, {
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-    },
-  });
-
-  let existingFileIds: string[] = [];
-  if (listResp.ok) {
-    const listData = await listResp.json();
-    existingFileIds = (listData.data || []).map((f: any) => f.id);
-  }
-
-  // Add missing files to vector store
-  const filesToAdd = fileIds.filter((id: string) => !existingFileIds.includes(id));
-  for (const fileId of filesToAdd) {
-    console.log(`Adding file ${fileId} to vector store ${vectorStoreId}`);
-    const addResp = await fetch(`https://api.openai.com/v1/vector_stores/${vectorStoreId}/files`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ file_id: fileId }),
-    });
-    if (!addResp.ok) {
-      const err = await addResp.text();
-      console.error(`Failed to add file ${fileId} to vector store: ${err}`);
-    }
-  }
-
-  // Remove files no longer in DB
-  const filesToRemove = existingFileIds.filter((id: string) => !fileIds.includes(id));
-  for (const fileId of filesToRemove) {
-    console.log(`Removing file ${fileId} from vector store ${vectorStoreId}`);
-    await fetch(`https://api.openai.com/v1/vector_stores/${vectorStoreId}/files/${fileId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-      },
-    });
-  }
-
-  // Update OpenAI assistant with file_search tool + vector store
-  await updateOpenAIAssistantTools(assistant.openai_assistant_id, assistant, true, vectorStoreId);
-
-  console.log(`Vector store sync complete: ${filesToAdd.length} added, ${filesToRemove.length} removed`);
-  
-  return new Response(JSON.stringify({ success: true, vectorStoreId, filesAdded: filesToAdd.length, filesRemoved: filesToRemove.length }), {
+  const fileIds = [...new Set((knowledgeFiles || []).map(file => file.openai_file_id).filter((id): id is string => typeof id === 'string' && !!id))];
+  const metadata = (assistant.metadata as Record<string, unknown>) || {};
+  const existingId = typeof metadata.vector_store_id === 'string' ? metadata.vector_store_id : undefined;
+  const vectorStoreId = fileIds.length > 0
+    ? await getOrCreateVectorStore(assistantId, assistant.openai_assistant_id)
+    : existingId;
+  const result = vectorStoreId ? await syncIndexedFiles(openAIApiKey || '', vectorStoreId, fileIds) : { added: 0, removed: 0 };
+  const { error: saveError } = await supabase.from('assistants').update({
+    metadata: { ...metadata, vector_store_id: fileIds.length ? vectorStoreId : null, has_knowledge_files: fileIds.length > 0 },
+  }).eq('id', assistantId).eq('user_id', userId);
+  if (saveError) throw saveError;
+  return new Response(JSON.stringify({ success: true, vectorStoreId: fileIds.length ? vectorStoreId : null,
+    filesAdded: result.added, filesRemoved: result.removed }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
-}
-
-async function updateOpenAIAssistantTools(openaiAssistantId: string, assistant: any, enableFileSearch: boolean, vectorStoreId?: string) {
-  // Responses API receives tools and vector_store_ids on every response.
-  // Keep this compatibility function so existing sync flows continue working.
-  console.log('Responses tool configuration saved locally', {
-    openaiAssistantId,
-    enableFileSearch,
-    vectorStoreId,
-    toolCount: Array.isArray(assistant.tools) ? assistant.tools.length : 0,
   });
 }
 
@@ -513,6 +453,9 @@ async function deleteAssistant(userId: string, assistantId: string) {
 
 async function uploadKnowledgeFile(data: any) {
   const { file, fileName, mimeType } = data;
+  if (typeof file !== 'string' || !file || typeof fileName !== 'string' || !fileName || typeof mimeType !== 'string') {
+    throw new Error('Arquivo, nome e tipo são obrigatórios.');
+  }
   
   try {
     const binaryData = Uint8Array.from(atob(file), c => c.charCodeAt(0));

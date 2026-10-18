@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadAgentKnowledge, deleteAgentKnowledge, syncKnowledgeFiles } from "@/lib/knowledge-files";
 
 interface AssistantKnowledgeUploadProps {
   assistantId: string;
@@ -58,7 +59,7 @@ export const AssistantKnowledgeUpload = ({ assistantId, onUploadComplete }: Assi
   }, [assistantId]);
 
   const getFileIcon = () => {
-    return <FileText className="h-4 w-4 text-blue-500" />;
+    return <FileText className="h-4 w-4 text-primary" />;
   };
 
   const isValidFileType = (file: File): boolean => {
@@ -71,7 +72,7 @@ export const AssistantKnowledgeUpload = ({ assistantId, onUploadComplete }: Assi
       'application/json',
       'text/markdown'
     ];
-    return allowedTypes.includes(file.type);
+    return allowedTypes.includes(file.type) || /\.(pdf|doc|docx|txt|csv|json|md)$/i.test(file.name);
   };
 
   const uploadFile = async (file: File) => {
@@ -87,67 +88,9 @@ export const AssistantKnowledgeUpload = ({ assistantId, onUploadComplete }: Assi
         throw new Error('Tipo de arquivo não suportado. Use: PDF, DOC, DOCX, TXT, CSV, JSON ou MD');
       }
 
-      // Upload para o Supabase Storage
-      const fileName = `${user.user.id}/${assistantId}/${Date.now()}-${file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('assistant-knowledge')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      // Obter URL público
-      const { data: { publicUrl } } = supabase.storage
-        .from('assistant-knowledge')
-        .getPublicUrl(fileName);
-
-      // Upload para OpenAI (para file search)
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('purpose', 'assistants');
-
-      const { data: session } = await supabase.auth.getSession();
-      const response = await supabase.functions.invoke('openai-assistants', {
-        body: {
-          action: 'upload-knowledge-file',
-          file: await fileToBase64(file),
-          fileName: file.name,
-          mimeType: file.type
-        },
-        headers: {
-          Authorization: `Bearer ${session?.session?.access_token}`,
-        },
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message || 'Erro ao fazer upload para OpenAI');
-      }
-
-      // Salvar metadados no banco
-      const { error: dbError } = await supabase
-        .from('assistant_knowledge_files')
-        .insert({
-          assistant_id: assistantId,
-          user_id: user.user.id,
-          file_name: file.name,
-          file_url: publicUrl,
-          openai_file_id: response.data.openai_file_id,
-          file_size: file.size,
-          mime_type: file.type,
-          description: description || null,
-        });
-
-      if (dbError) throw dbError;
-
-      // Sync vector store after upload
-      try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        await supabase.functions.invoke('openai-assistants', {
-          body: { action: 'sync-vector-store', assistantId },
-          headers: { Authorization: `Bearer ${sessionData?.session?.access_token}` },
-        });
-      } catch (syncError) {
-        console.error('Error syncing vector store:', syncError);
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Usuário não autenticado');
+      await uploadAgentKnowledge(session, assistantId, file, description);
 
       toast.success('Arquivo de conhecimento enviado e indexado com sucesso!');
       setDescription("");
@@ -157,76 +100,38 @@ export const AssistantKnowledgeUpload = ({ assistantId, onUploadComplete }: Assi
     } catch (error: any) {
       console.error('Erro no upload:', error);
       toast.error(error.message || 'Erro ao enviar arquivo');
+      await loadKnowledgeFiles();
     } finally {
       setUploading(false);
     }
   };
 
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const result = reader.result as string;
-        resolve(result.split(',')[1]); // Remove data:type;base64, prefix
-      };
-      reader.onerror = error => reject(error);
-    });
+  const deleteFile = async (file: KnowledgeFile) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Usuário não autenticado');
+      await deleteAgentKnowledge(session, assistantId, file);
+      toast.success('Arquivo de conhecimento removido!');
+      await loadKnowledgeFiles();
+      onUploadComplete?.();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao remover arquivo');
+      await loadKnowledgeFiles();
+    }
   };
 
-  const deleteFile = async (knowledgeId: string, fileName: string, openaiFileId: string | null) => {
+  const retryIndexing = async () => {
+    setUploading(true);
     try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      // Deletar do OpenAI se tiver ID
-      if (openaiFileId) {
-        const { data: session } = await supabase.auth.getSession();
-        await supabase.functions.invoke('openai-assistants', {
-          body: {
-            action: 'delete-knowledge-file',
-            openai_file_id: openaiFileId
-          },
-          headers: {
-            Authorization: `Bearer ${session?.session?.access_token}`,
-          },
-        });
-      }
-
-      // Deletar do storage
-      const filePath = `${user.user.id}/${assistantId}/${fileName}`;
-      await supabase.storage
-        .from('assistant-knowledge')
-        .remove([filePath]);
-
-      // Deletar do banco
-      const { error } = await supabase
-        .from('assistant_knowledge_files')
-        .delete()
-        .eq('id', knowledgeId);
-
-      if (error) throw error;
-
-      // Sync vector store after delete
-      try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        await supabase.functions.invoke('openai-assistants', {
-          body: { action: 'sync-vector-store', assistantId },
-          headers: { Authorization: `Bearer ${sessionData?.session?.access_token}` },
-        });
-      } catch (syncError) {
-        console.error('Error syncing vector store:', syncError);
-      }
-
-      toast.success('Arquivo de conhecimento removido!');
-      loadKnowledgeFiles();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Usuário não autenticado');
+      await syncKnowledgeFiles(session, assistantId);
+      toast.success('Base de conhecimento pronta para consulta!');
       onUploadComplete?.();
-
-    } catch (error: any) {
-      console.error('Erro ao deletar:', error);
-      toast.error('Erro ao deletar arquivo');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao preparar documentos');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -244,7 +149,7 @@ export const AssistantKnowledgeUpload = ({ assistantId, onUploadComplete }: Assi
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
-        <Brain className="h-5 w-5 text-blue-500" />
+        <Brain className="h-5 w-5 text-primary" />
         <h3 className="text-lg font-semibold">Base de Conhecimento</h3>
       </div>
       
@@ -307,6 +212,12 @@ export const AssistantKnowledgeUpload = ({ assistantId, onUploadComplete }: Assi
         </div>
       </div>
 
+      {knowledgeFiles.length > 0 && (
+        <Button variant="outline" disabled={uploading} onClick={retryIndexing}>
+          <Brain className="h-4 w-4 mr-2" /> Reprocessar base de conhecimento
+        </Button>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="h-6 w-6 animate-spin" />
@@ -340,8 +251,8 @@ export const AssistantKnowledgeUpload = ({ assistantId, onUploadComplete }: Assi
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => deleteFile(file.id, file.file_name, file.openai_file_id)}
-                  className="text-red-500 hover:text-red-700"
+                  onClick={() => deleteFile(file)}
+                  className="text-destructive"
                 >
                   <X className="h-4 w-4" />
                 </Button>

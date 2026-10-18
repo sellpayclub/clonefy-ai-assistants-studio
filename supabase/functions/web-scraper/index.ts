@@ -106,7 +106,7 @@ serve(async (req) => {
       .upload(storageFileName, storageBlob);
 
     if (storageError) {
-      console.error('Storage error:', storageError);
+      throw new Error(`Falha ao salvar documento: ${storageError.message}`);
     }
 
     // Get public URL
@@ -129,7 +129,7 @@ serve(async (req) => {
       });
 
     if (dbError) {
-      console.error('Database error:', dbError);
+      throw new Error(`Falha ao registrar documento: ${dbError.message}`);
     }
 
     return new Response(JSON.stringify({ 
