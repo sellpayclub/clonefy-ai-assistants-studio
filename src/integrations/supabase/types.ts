@@ -5274,7 +5274,7 @@ export type Database = {
       }
       cleanup_crm_leads_old: { Args: { p_days: number }; Returns: number }
       cleanup_live_chat_sessions: {
-        Args: { p_days: number; p_only_closed?: boolean }
+        Args: { p_batch?: number; p_days: number; p_only_closed?: boolean }
         Returns: number
       }
       cleanup_old_group_messages: { Args: never; Returns: undefined }
