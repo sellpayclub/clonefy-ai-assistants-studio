@@ -140,9 +140,17 @@ export function useLiveChat() {
         (payload) => {
           if (payload.eventType === 'INSERT') {
             const newSession = payload.new as unknown as LiveChatSession;
+            if (newSession.last_sender_type === 'customer') playNewMessageSound();
             setSessions(prev => [newSession, ...prev]);
           } else if (payload.eventType === 'UPDATE') {
             const updatedSession = payload.new as unknown as LiveChatSession;
+            const oldSession = payload.old as Partial<LiveChatSession>;
+            if (
+              updatedSession.last_sender_type === 'customer' &&
+              updatedSession.last_message_at !== oldSession?.last_message_at
+            ) {
+              playNewMessageSound();
+            }
             setSessions(prev => {
               const filtered = prev.filter(s => s.id !== updatedSession.id);
               return [updatedSession, ...filtered].sort((a, b) =>
