@@ -385,7 +385,7 @@ const Conversations = memo(() => {
         description: error.message || "Falha ao apagar conversas",
       });
     }
-  }, [conversations, deleteOptimizedConversation, loadConversations, toast]);
+  }, [conversations, user, loadConversations, toast]);
 
   // Componentes memoizados
   const ConversationsList = useMemo(() => (
