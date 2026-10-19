@@ -294,7 +294,7 @@ const Conversations = memo(() => {
       if (threadData?.conversation?.id) {
         setSelectedConversation(threadData.conversation.id);
         setMessages([]);
-        await loadConversations(); // Recarregar lista de conversas
+        await loadConversations(true); // Recarregar lista de conversas
         
         // Remover toast desnecessário - ação já é visível
       }
@@ -327,7 +327,7 @@ const Conversations = memo(() => {
         setMessages([]);
       }
       
-      await loadConversations();
+      await loadConversations(true);
       
       // Remover toast desnecessário - ação já é visível
     } catch (error: any) {
@@ -356,6 +356,7 @@ const Conversations = memo(() => {
 
     try {
       // Apagar todas as conversas de uma vez no servidor
+      if (user) performanceCache.invalidate(`conversations_${user.id}`);
       const { data: { session: current } } = await supabase.auth.getSession();
       const response = await supabase.functions.invoke('chat-api', {
         body: { action: 'delete_all_conversations' },
@@ -370,7 +371,7 @@ const Conversations = memo(() => {
       
       setSelectedConversation(null);
       setMessages([]);
-      await loadConversations();
+      await loadConversations(true);
       
       toast({
         title: "Sucesso",
