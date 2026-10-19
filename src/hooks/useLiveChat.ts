@@ -350,12 +350,19 @@ export function useLiveChat() {
   // Limpar conversas antigas (e mensagens vinculadas) para não sobrecarregar
   const cleanupSessions = useCallback(async (days: number, onlyClosed: boolean) => {
     try {
-      const { data, error } = await supabase.rpc('cleanup_live_chat_sessions', {
-        p_days: days,
-        p_only_closed: onlyClosed,
-      });
-      if (error) throw error;
-      const count = (data as number) ?? 0;
+      // Apaga em lotes pequenos para não estourar o tempo limite do banco
+      let count = 0;
+      for (let i = 0; i < 100; i++) {
+        const { data, error } = await (supabase as any).rpc('cleanup_live_chat_sessions', {
+          p_days: days,
+          p_only_closed: onlyClosed,
+          p_batch: 200,
+        });
+        if (error) throw error;
+        const batch = (data as number) ?? 0;
+        count += batch;
+        if (batch < 200) break;
+      }
       if (selectedSessionId) setSelectedSessionId(null);
       await loadSessions();
       toast({

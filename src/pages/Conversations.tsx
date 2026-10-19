@@ -355,9 +355,17 @@ const Conversations = memo(() => {
     }
 
     try {
-      // Apagar todas as conversas uma por uma
-      for (const conversation of conversations) {
-        await deleteOptimizedConversation(conversation.id);
+      // Apagar todas as conversas de uma vez no servidor
+      const { data: { session: current } } = await supabase.auth.getSession();
+      const response = await supabase.functions.invoke('chat-api', {
+        body: { action: 'delete_all_conversations' },
+        headers: current ? { Authorization: `Bearer ${current.access_token}` } : undefined,
+      });
+      if (response.error) {
+        const ctx: any = (response.error as any).context;
+        let msg = response.error.message;
+        try { const j = await ctx?.json?.(); if (j?.error) msg = j.error; } catch { /* ignore */ }
+        throw new Error(msg || 'Falha ao apagar conversas');
       }
       
       setSelectedConversation(null);
